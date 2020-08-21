@@ -48,8 +48,8 @@ class Cell:
         self.balance = balance
 
 
-def read_serial_data(command):
-    with serial.Serial('/dev/ttyUSB2', baudrate=9600, timeout=0.1) as ser:
+def read_serial_data(command, port):
+    with serial.Serial(port, baudrate=9600, timeout=0.1) as ser:
         ser.write(command)
 
         count = 0
@@ -104,6 +104,9 @@ class Battery:
     temp2 = 0
     cells = []
 
+    def __init__(self, port):
+        self.port = port
+
     # degree_sign = u'\N{DEGREE SIGN}'
     command_cell = b"\xDD\xA5\x04\x00\xFF\xFC\x77"
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
@@ -139,33 +142,78 @@ class Battery:
         self.discharge_fet = self.is_bit_set(tmp[0])
 
     def log_battery_data(self):
-        voltage = str(self.voltage / 100)
-        current = str(self.current / 100)
-        remain = str(self.capacity_remain / 100)
-        cap = str(self.capacity / 100)
-        print("voltage    {0}V   current  {1}A".format(voltage, current))
-        print("   capacity   {0}Ah of {1}Ah   SOC {2}%".format(remain, cap, self.soc))
+        print("voltage    {0}V   current  {1}A".format(self.voltage, self.current))
+        print("   capacity   {0}Ah of {1}Ah   SOC {2}%".format(self.capacity_remain, self.capacity, self.soc))
 
         for c in range(self.cell_count):
             cell = str(c + 1)
             balance = "B" if self.cells[c].balance else " "
-            cell_volt = str(self.cells[c].voltage / 1000)
+            cell_volt = str(self.cells[c].voltage)
             print("C[" + cell.rjust(2, self.zero_char) + "]  " + balance + cell_volt + "V")
 
     def publish_battery_dbus(self):
-        self._dbusservice['/Dc/0/Voltage'] = round(self.voltage / 100, 2)
-        self._dbusservice['/Dc/0/Current'] = round(self.current / 100, 2)
+        # Update SOC, DC and System items
+        self._dbusservice['/System/NrOfCellsPerBattery'] = self.cell_count
         self._dbusservice['/Soc'] = round(self.soc, 2)
-        self._dbusservice['/Dc/0/Power'] = round(self.voltage * self.current / 10000, 2)
+        self._dbusservice['/Dc/0/Voltage'] = round(self.voltage, 2)
+        self._dbusservice['/Dc/0/Current'] = round(self.current, 2)
+        self._dbusservice['/Dc/0/Power'] = round(self.voltage * self.current, 2)
         self._dbusservice['/Dc/0/Temperature'] = round((float(self.temp1) + float(self.temp2)) / 2, 2)
+
+        # Update battery extras
+        self._dbusservice['/History/ChargeCycles'] = self.cycles
+        self._dbusservice['/Io/AllowToCharge'] = 1 if self.charge_fet else 0
+        self._dbusservice['/Io/AllowToDischarge'] = 1 if self.discharge_fet else 0
+
+        # Updates from cells
+        max_voltage = 0
+        max_cell = ''
+        min_voltage = 99
+        min_cell = ''
+        balance = False
+        for c in range(self.cell_count):
+            if max_voltage < self.cells[c].voltage:
+                max_voltage = self.cells[c].voltage
+                max_cell = c
+            if min_voltage > self.cells[c].voltage:
+                min_voltage = self.cells[c].voltage
+                min_cell = c
+            if self.cells[c].balance:
+                balance = True
+        self._dbusservice['/System/MaxCellVoltage'] = max_voltage
+        self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
+        self._dbusservice['/System/MinCellVoltage'] = min_voltage
+        self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
+        self._dbusservice['/Balancing'] = 1 if balance else 0
+
+        # Update the alarms
+        self._dbusservice['/Alarms/LowVoltage'] = 2 if self.protection.voltage_low else 0
+        self._dbusservice['/Alarms/HighVoltage'] = 2 if self.protection.voltage_high else 0
+        self._dbusservice['/Alarms/LowSoc'] = 2 if self.soc < 10 else 1 if self.soc < 20 else 0
+        self._dbusservice['/Alarms/HighChargeCurrent'] = 1 if self.protection.current_over else 0
+        self._dbusservice['/Alarms/HighDischargeCurrent'] = 1 if self.protection.current_under else 0
+        self._dbusservice['/Alarms/CellImbalance'] = 2 if self.protection.voltage_low_cell \
+                                                          or self.protection.voltage_high_cell else 0
+        self._dbusservice['/Alarms/InternalFailure'] = 2 if self.protection.short \
+                                                            or self.protection.IC_inspection \
+                                                            or self.protection.software_lock else 0
+        self._dbusservice['/Alarms/HighChargeTemperature'] = 1 if self.protection.temp_high_charge else 0
+        self._dbusservice['/Alarms/LowChargeTemperature'] = 1 if self.protection.temp_low_charge else 0
+        self._dbusservice['/Alarms/HighTemperature'] = 1 if self.protection.temp_high_discharge else 0
+        self._dbusservice['/Alarms/LowTemperature'] = 1 if self.protection.temp_low_discharge else 0
+
         logging.debug("logged to dbus ", round(self.voltage / 100, 2), round(self.current / 100, 2), round(self.soc, 2))
 
     def read_gen_data(self):
-        gen_data = read_serial_data(self.command_general)
+        gen_data = read_serial_data(self.command_general, self.port)
 
-        self.voltage, self.current, self.capacity_remain, self.capacity, self.cycles, self.production, balance, \
+        voltage, current, capacity_remain, capacity, self.cycles, self.production, balance, \
             balance2, protection, version, self.soc, fet, self.cell_count, self.temp_censors, temp1, temp2 \
             = unpack_from('>HhHHHHhHHBBBBBHH', gen_data)
+        self.voltage = voltage / 100
+        self.current = current / 100
+        self.capacity_remain = capacity_remain / 100
+        self.capacity = capacity / 100
         self.temp1 = (temp1 - 2731) / 10
         self.temp2 = (temp2 - 2731) / 10
         self.to_cell_bits(balance)
@@ -174,9 +222,9 @@ class Battery:
         self.to_protection_bits(protection)
 
     def read_cell_data(self):
-        cell_data = read_serial_data(self.command_cell)
+        cell_data = read_serial_data(self.command_cell, self.port)
         for c in range(self.cell_count):
-            self.cells[c].voltage = unpack_from('>H', cell_data, c * 2)[0]
+            self.cells[c].voltage = unpack_from('>H', cell_data, c * 2)[0] / 1000
 
     def publish_battery(self, loop):
         try:
@@ -189,55 +237,59 @@ class Battery:
             loop.quit()
 
     def setup_vedbus(self, instance):
-        self._dbusservice = VeDbusService("com.victronenergy.battery.socketcan_can0")
 
-        logging.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery.socketcan_can0", instance))
+        self._dbusservice = VeDbusService("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:])
+
+        logging.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:],
+                                                   instance))
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
-        self._dbusservice.add_path('/Mgmt/ProcessVersion',
-                                   'Unkown version, and running on Python ' + platform.python_version())
-        self._dbusservice.add_path('/Mgmt/Connection', 'CAN-bus')
+        self._dbusservice.add_path('/Mgmt/ProcessVersion', 'Python ' + platform.python_version())
+        self._dbusservice.add_path('/Mgmt/Connection', 'Serial ' + self.port)
 
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', instance)
-        self._dbusservice.add_path('/ProductId', 0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery DIY')
-        self._dbusservice.add_path('/FirmwareVersion', 0)
-        self._dbusservice.add_path('/HardwareVersion', 0)
+        self._dbusservice.add_path('/ProductId', 0x0)
+        self._dbusservice.add_path('/ProductName', 'SerialBattery for LLT Smart BMS')
+        self._dbusservice.add_path('/FirmwareVersion', self.version)
+        self._dbusservice.add_path('/HardwareVersion', 0x0)
         self._dbusservice.add_path('/Connected', 1)
+        # Create static battery info
+        self._dbusservice.add_path('/Info/BatteryLowVoltage', 46.0)
+        self._dbusservice.add_path('/Info/MaxChargeVoltage', 52.5)
+        self._dbusservice.add_path('/Info/MaxChargeCurrent', 50.0)
+        self._dbusservice.add_path('/Info/MaxDischargeCurrent', 70.0)
+        self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.cell_count, writeable=True)
+        # Create SOC, DC and System items
+        self._dbusservice.add_path('/Soc', None, writeable=True)
+        self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True)
+        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True)
+        self._dbusservice.add_path('/Dc/0/Power', None, writeable=True)
+        self._dbusservice.add_path('/Dc/0/Temperature', 21.0, writeable=True)
+        # Create battery extras
+        self._dbusservice.add_path('/System/MaxCellVoltage', 0.0, writeable=True)
+        self._dbusservice.add_path('/System/MaxVoltageCellId', '', writeable=True)
+        self._dbusservice.add_path('/System/MinCellVoltage', 0.0, writeable=True)
+        self._dbusservice.add_path('/System/MinVoltageCellId', '', writeable=True)
+        self._dbusservice.add_path('/History/ChargeCycles', 0, writeable=True)
+        self._dbusservice.add_path('/Balancing', 0, writeable=True)
+        self._dbusservice.add_path('/Io/AllowToCharge', 0, writeable=True)
+        self._dbusservice.add_path('/Io/AllowToDischarge', 0, writeable=True)
+        # Create the alarms
+        self._dbusservice.add_path('/Alarms/LowVoltage', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/HighVoltage', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/LowSoc', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/HighChargeCurrent', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/HighDischargeCurrent', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/CellImbalance', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/InternalFailure', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/HighChargeTemperature', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/LowChargeTemperature', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/HighTemperature', 0, writeable=True)
+        self._dbusservice.add_path('/Alarms/LowTemperature', 0, writeable=True)
 
         logger.info('Connected to dbus')
-
-        self._paths = {
-            '/Alarms/CellImbalance': {'initial': 0},
-            '/Alarms/HighChargeCurrent': {'initial': 0},
-            '/Alarms/HighChargeTemperature': {'initial': 0},
-            '/Alarms/HighDischargeCurrent': {'initial': 0},
-            '/Alarms/HighTemperature': {'initial': 0},
-            '/Alarms/HighVoltage': {'initial': 0},
-            '/Alarms/InternalFailure': {'initial': 0},
-            '/Alarms/LowChargeTemperature': {'initial': 0},
-            '/Alarms/LowTemperature': {'initial': 0},
-            '/Alarms/LowVoltage': {'initial': 0},
-
-            '/Soc': {'initial': None},
-            '/Dc/0/Voltage': {'initial': None},
-            '/Dc/0/Current': {'initial': None},
-            '/Dc/0/Power': {'initial': None},
-            '/Dc/0/Temperature': {'initial': 21.0},
-            '/Info/BatteryLowVoltage': {'initial': 45.0},
-            '/Info/MaxChargeCurrent': {'initial': 50.0},
-            '/Info/MaxChargeVoltage': {'initial': 54.0},
-            '/Info/MaxDischargeCurrent': {'initial': 70.0},
-        }
-        for path, settings in self._paths.iteritems():
-            self._dbusservice.add_path(
-                path, settings['initial'], writeable=True, onchangecallback=self._handle_dbus_change)
-
-    def _handle_dbus_change(self, path, value):
-        logging.debug("someone else updated %s to %s" % (path, value))
-        return True  # accept the change
 
 
 INTERVAL = 6000
@@ -248,8 +300,8 @@ def main():
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
     # create a new battery object that can read the battery
-    battery = Battery()
-    battery.setup_vedbus(instance=0)
+    battery = Battery('/dev/ttyUSB2')
+    battery.setup_vedbus(instance=1)
 
     def poll_battery(loop):
         # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
