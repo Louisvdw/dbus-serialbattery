@@ -3,24 +3,25 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from time import sleep
-from vedbus import VeDbusService
-from settingsdevice import SettingsDevice
+# from vedbus import VeDbusService
+# from settingsdevice import SettingsDevice
 from dbus.mainloop.glib import DBusGMainLoop
 from struct import *
 from threading import Thread
 import serial
-import dbus
+# import dbus
 import gobject
 import traceback
 import platform
 import logging
 import sys
 import os
-from logger import setup_logging
 
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'ext', 'velib_python'))
 
-logger = setup_logging(debug=True)
+# Logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Protection:
@@ -79,7 +80,7 @@ def read_serial_data(command):
             # print("data length=" + str(length))
             # print("checksum=" + str(checksum))
             # print("end=" + str(end))
-            return data[4:length]
+            return data[4:length+4]
         else:
             print(">>> ERROR: Incorrect Reply")
             return
@@ -151,7 +152,7 @@ class Battery:
             cell_volt = str(self.cells[c].voltage / 1000)
             print("C[" + cell.rjust(2, self.zero_char) + "]  " + balance + cell_volt + "V")
 
-    def read_gen_data(self, battery_data):
+    def read_gen_data(self):
         gen_data = read_serial_data(self.command_general)
 
         self.voltage, self.current, self.capacity_remain, self.capacity, self.cycles, self.production, balance, \
@@ -167,62 +168,57 @@ class Battery:
         for c in range(self.cell_count):
             self.cells[c].voltage = unpack_from('>H', cell_data, c * 2)[0]
 
-    def publish_battery(self):
-        self.read_gen_data()
-        self.read_cell_data()
-        self.log_battery_data()
+    def publish_battery(self, loop):
+        try:
+            self.read_gen_data()
+            self.read_cell_data()
+            self.log_battery_data()
+        except:
+            traceback.print_exc()
+            loop.quit()
 
 
-class SystemBus(dbus.bus.BusConnection):
-    def __new__(cls):
-        return dbus.bus.BusConnection.__new__(cls, dbus.bus.BusConnection.TYPE_SYSTEM)
+# class SystemBus(dbus.bus.BusConnection):
+#    def __new__(cls):
+#        return dbus.bus.BusConnection.__new__(cls, dbus.bus.BusConnection.TYPE_SYSTEM)
 
 
-class SessionBus(dbus.bus.BusConnection):
-    def __new__(cls):
-        return dbus.bus.BusConnection.__new__(cls, dbus.bus.BusConnection.TYPE_SESSION)
+# class SessionBus(dbus.bus.BusConnection):
+#    def __new__(cls):
+#        return dbus.bus.BusConnection.__new__(cls, dbus.bus.BusConnection.TYPE_SESSION)
 
 
-def dbusconnection():
-    return SessionBus() if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else SystemBus()
+# def dbusconnection():
+#    return SessionBus() if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else SystemBus()
 
 
 INTERVAL = 6000
 
 
 def main():
-    # create a new battery object that can read the batter
-    # battery = Battery()
-
+    logger.info('dbus-serialbattery')
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     # DBusGMainLoop(set_as_default=True)
 
-    def poll_battery(loop, bat):
-        from time import time
-        idx = 0
+    def poll_battery(loop):
+        # create a new battery object that can read the battery
+        battery = Battery()
 
-        try:
-            # bat.publish_battery()
-            logging.info('publishing battery {0}V', bat.voltage)
-        except:
-            traceback.print_exc()
-            loop.quit()
+        # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
+        poller = Thread(target=lambda: battery.publish_battery(loop))
+        # Tread will die with us if deamon
+        poller.daemon = True
+        poller.start()
+        return True
 
-    # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
     gobject.threads_init()
     mainloop = gobject.MainLoop()
-
-    poller = Thread(target=lambda: poll_battery(mainloop, battery))
-    poller.daemon = True
-    poller.start()
-
-    gobject.timeout_add(INTERVAL, poller.run())
+    # Poll the battery at INTERVAL
+    gobject.timeout_add(INTERVAL, lambda: poll_battery(mainloop))
 
     try:
         mainloop.run()
     except KeyboardInterrupt:
-        pass
-    finally:
         pass
 
 
