@@ -3,13 +3,11 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from time import sleep
-# from vedbus import VeDbusService
-# from settingsdevice import SettingsDevice
 from dbus.mainloop.glib import DBusGMainLoop
 from struct import *
 from threading import Thread
 import serial
-# import dbus
+import dbus
 import gobject
 import traceback
 import platform
@@ -17,7 +15,9 @@ import logging
 import sys
 import os
 
-sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'ext', 'velib_python'))
+# Victron packages
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
+from vedbus import VeDbusService
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -152,12 +152,22 @@ class Battery:
             cell_volt = str(self.cells[c].voltage / 1000)
             print("C[" + cell.rjust(2, self.zero_char) + "]  " + balance + cell_volt + "V")
 
+    def publish_battery_dbus(self):
+        self._dbusservice['/Dc/0/Voltage'] = round(self.voltage / 100, 2)
+        self._dbusservice['/Dc/0/Current'] = round(self.current / 100, 2)
+        self._dbusservice['/Soc'] = round(self.soc, 2)
+        self._dbusservice['/Dc/0/Power'] = round(self.voltage * self.current / 10000, 2)
+        self._dbusservice['/Dc/0/Temperature'] = round((float(self.temp1) + float(self.temp2)) / 2, 2)
+        logging.debug("logged to dbus ", round(self.voltage / 100, 2), round(self.current / 100, 2), round(self.soc, 2))
+
     def read_gen_data(self):
         gen_data = read_serial_data(self.command_general)
 
         self.voltage, self.current, self.capacity_remain, self.capacity, self.cycles, self.production, balance, \
-            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_censors, self.temp1, self.temp2 \
+            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_censors, temp1, temp2 \
             = unpack_from('>HhHHHHhHHBBBBBHH', gen_data)
+        self.temp1 = (temp1 - 2731) / 10
+        self.temp2 = (temp2 - 2731) / 10
         self.to_cell_bits(balance)
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
@@ -172,24 +182,62 @@ class Battery:
         try:
             self.read_gen_data()
             self.read_cell_data()
-            self.log_battery_data()
+            # self.log_battery_data()
+            self.publish_battery_dbus()
         except:
             traceback.print_exc()
             loop.quit()
 
+    def setup_vedbus(self, instance):
+        self._dbusservice = VeDbusService("com.victronenergy.battery.socketcan_can0")
 
-# class SystemBus(dbus.bus.BusConnection):
-#    def __new__(cls):
-#        return dbus.bus.BusConnection.__new__(cls, dbus.bus.BusConnection.TYPE_SYSTEM)
+        logging.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery.socketcan_can0", instance))
 
+        # Create the management objects, as specified in the ccgx dbus-api document
+        self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
+        self._dbusservice.add_path('/Mgmt/ProcessVersion',
+                                   'Unkown version, and running on Python ' + platform.python_version())
+        self._dbusservice.add_path('/Mgmt/Connection', 'CAN-bus')
 
-# class SessionBus(dbus.bus.BusConnection):
-#    def __new__(cls):
-#        return dbus.bus.BusConnection.__new__(cls, dbus.bus.BusConnection.TYPE_SESSION)
+        # Create the mandatory objects
+        self._dbusservice.add_path('/DeviceInstance', instance)
+        self._dbusservice.add_path('/ProductId', 0)
+        self._dbusservice.add_path('/ProductName', 'SerialBattery DIY')
+        self._dbusservice.add_path('/FirmwareVersion', 0)
+        self._dbusservice.add_path('/HardwareVersion', 0)
+        self._dbusservice.add_path('/Connected', 1)
 
+        logger.info('Connected to dbus')
 
-# def dbusconnection():
-#    return SessionBus() if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else SystemBus()
+        self._paths = {
+            '/Alarms/CellImbalance': {'initial': 0},
+            '/Alarms/HighChargeCurrent': {'initial': 0},
+            '/Alarms/HighChargeTemperature': {'initial': 0},
+            '/Alarms/HighDischargeCurrent': {'initial': 0},
+            '/Alarms/HighTemperature': {'initial': 0},
+            '/Alarms/HighVoltage': {'initial': 0},
+            '/Alarms/InternalFailure': {'initial': 0},
+            '/Alarms/LowChargeTemperature': {'initial': 0},
+            '/Alarms/LowTemperature': {'initial': 0},
+            '/Alarms/LowVoltage': {'initial': 0},
+
+            '/Soc': {'initial': None},
+            '/Dc/0/Voltage': {'initial': None},
+            '/Dc/0/Current': {'initial': None},
+            '/Dc/0/Power': {'initial': None},
+            '/Dc/0/Temperature': {'initial': 21.0},
+            '/Info/BatteryLowVoltage': {'initial': 45.0},
+            '/Info/MaxChargeCurrent': {'initial': 50.0},
+            '/Info/MaxChargeVoltage': {'initial': 54.0},
+            '/Info/MaxDischargeCurrent': {'initial': 70.0},
+        }
+        for path, settings in self._paths.iteritems():
+            self._dbusservice.add_path(
+                path, settings['initial'], writeable=True, onchangecallback=self._handle_dbus_change)
+
+    def _handle_dbus_change(self, path, value):
+        logging.debug("someone else updated %s to %s" % (path, value))
+        return True  # accept the change
 
 
 INTERVAL = 6000
@@ -198,12 +246,12 @@ INTERVAL = 6000
 def main():
     logger.info('dbus-serialbattery')
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
-    # DBusGMainLoop(set_as_default=True)
+    DBusGMainLoop(set_as_default=True)
+    # create a new battery object that can read the battery
+    battery = Battery()
+    battery.setup_vedbus(instance=0)
 
     def poll_battery(loop):
-        # create a new battery object that can read the battery
-        battery = Battery()
-
         # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
         poller = Thread(target=lambda: battery.publish_battery(loop))
         # Tread will die with us if deamon
@@ -211,8 +259,11 @@ def main():
         poller.start()
         return True
 
+    logger.info('Connected to dbus')
+
     gobject.threads_init()
     mainloop = gobject.MainLoop()
+    poll_battery(mainloop)
     # Poll the battery at INTERVAL
     gobject.timeout_add(INTERVAL, lambda: poll_battery(mainloop))
 
