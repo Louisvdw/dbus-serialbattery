@@ -20,6 +20,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService
 
 # Logging
+logging.info('Starting dbus-serialbattery')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -59,7 +60,7 @@ def read_serial_data(command, port):
             toread = ser.inWaiting()
             count += 1
             if count > 50:
-                print(">>> ERROR: No reply")
+                logger.error(">>> ERROR: No reply")
                 exit(1)
 
         res = ser.read(toread)
@@ -74,19 +75,20 @@ def read_serial_data(command, port):
         checksum, end = unpack_from('HB', data, length+4)
 
         if end == 119:
-            # print("start=" + str(start))
-            # print("flag=" + str(flag))
-            # print("command=" + str(command1))
-            # print("data length=" + str(length))
-            # print("checksum=" + str(checksum))
-            # print("end=" + str(end))
+            # logger.info("start=" + str(start))
+            # logger.info("flag=" + str(flag))
+            # logger.info("command=" + str(command1))
+            # logger.info("data length=" + str(length))
+            # logger.info("checksum=" + str(checksum))
+            # logger.info("end=" + str(end))
             return data[4:length+4]
         else:
-            print(">>> ERROR: Incorrect Reply")
-            return
+            logger.error(">>> ERROR: Incorrect Reply")
+            return False
 
 
 class Battery:
+    hardware_version = ""
     voltage = 0
     current = 0
     capacity_remain = 0
@@ -108,8 +110,9 @@ class Battery:
         self.port = port
 
     # degree_sign = u'\N{DEGREE SIGN}'
-    command_cell = b"\xDD\xA5\x04\x00\xFF\xFC\x77"
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
+    command_cell = b"\xDD\xA5\x04\x00\xFF\xFC\x77"
+    command_hardware = b"\xDD\xA5\x05\x00\xFF\xFB\x77"
     zero_char = chr(48)
 
     def to_protection_bits(self, byte_data):
@@ -142,14 +145,14 @@ class Battery:
         self.discharge_fet = self.is_bit_set(tmp[0])
 
     def log_battery_data(self):
-        print("voltage    {0}V   current  {1}A".format(self.voltage, self.current))
-        print("   capacity   {0}Ah of {1}Ah   SOC {2}%".format(self.capacity_remain, self.capacity, self.soc))
+        logger.debug("voltage    {0}V   current  {1}A".format(self.voltage, self.current))
+        logger.debug("   capacity   {0}Ah of {1}Ah   SOC {2}%".format(self.capacity_remain, self.capacity, self.soc))
 
         for c in range(self.cell_count):
             cell = str(c + 1)
             balance = "B" if self.cells[c].balance else " "
             cell_volt = str(self.cells[c].voltage)
-            print("C[" + cell.rjust(2, self.zero_char) + "]  " + balance + cell_volt + "V")
+            logger.debug("C[" + cell.rjust(2, self.zero_char) + "]  " + balance + cell_volt + "V")
 
     def publish_battery_dbus(self):
         # Update SOC, DC and System items
@@ -164,6 +167,8 @@ class Battery:
         self._dbusservice['/History/ChargeCycles'] = self.cycles
         self._dbusservice['/Io/AllowToCharge'] = 1 if self.charge_fet else 0
         self._dbusservice['/Io/AllowToDischarge'] = 1 if self.discharge_fet else 0
+        self._dbusservice['/System/MinCellTemperature'] = min(self.temp1, self.temp2)
+        self._dbusservice['/System/MaxCellTemperature'] = max(self.temp1, self.temp2)
 
         # Updates from cells
         max_voltage = 0
@@ -206,6 +211,9 @@ class Battery:
 
     def read_gen_data(self):
         gen_data = read_serial_data(self.command_general, self.port)
+        # check if connect sucess
+        if gen_data is False:
+            return gen_data
 
         voltage, current, capacity_remain, capacity, self.cycles, self.production, balance, \
             balance2, protection, version, self.soc, fet, self.cell_count, self.temp_censors, temp1, temp2 \
@@ -223,8 +231,22 @@ class Battery:
 
     def read_cell_data(self):
         cell_data = read_serial_data(self.command_cell, self.port)
+        # check if connect sucess
+        if cell_data is False:
+            return cell_data
+
         for c in range(self.cell_count):
             self.cells[c].voltage = unpack_from('>H', cell_data, c * 2)[0] / 1000
+
+    def read_hardware_data(self):
+        hardware_data = read_serial_data(self.command_hardware, self.port)
+        # check if connect sucess
+        if hardware_data is False:
+            return hardware_data
+
+        self.hardware_version = unpack_from('>' + str(len(hardware_data)) + 's', hardware_data)[0]
+        logger.info(self.hardware_version)
+        return True
 
     def publish_battery(self, loop):
         try:
@@ -240,7 +262,7 @@ class Battery:
 
         self._dbusservice = VeDbusService("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:])
 
-        logging.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:],
+        logger.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:],
                                                    instance))
 
         # Create the management objects, as specified in the ccgx dbus-api document
@@ -253,7 +275,7 @@ class Battery:
         self._dbusservice.add_path('/ProductId', 0x0)
         self._dbusservice.add_path('/ProductName', 'SerialBattery for LLT Smart BMS')
         self._dbusservice.add_path('/FirmwareVersion', self.version)
-        self._dbusservice.add_path('/HardwareVersion', 0x0)
+        self._dbusservice.add_path('/HardwareVersion', self.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', 46.0)
@@ -261,6 +283,14 @@ class Battery:
         self._dbusservice.add_path('/Info/MaxChargeCurrent', 50.0)
         self._dbusservice.add_path('/Info/MaxDischargeCurrent', 70.0)
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.cell_count, writeable=True)
+        self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
+        self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
+        # Not used at this stage
+        # self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
+        # self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
+        # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
+        # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
+        self._dbusservice.add_path('/Capacity', self.capacity, writeable=True)
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
         self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True)
@@ -268,6 +298,8 @@ class Battery:
         self._dbusservice.add_path('/Dc/0/Power', None, writeable=True)
         self._dbusservice.add_path('/Dc/0/Temperature', 21.0, writeable=True)
         # Create battery extras
+        self._dbusservice.add_path('/System/MinCellTemperature', None, writeable=True)
+        self._dbusservice.add_path('/System/MaxCellTemperature', None, writeable=True)
         self._dbusservice.add_path('/System/MaxCellVoltage', 0.0, writeable=True)
         self._dbusservice.add_path('/System/MaxVoltageCellId', '', writeable=True)
         self._dbusservice.add_path('/System/MinCellVoltage', 0.0, writeable=True)
@@ -289,19 +321,11 @@ class Battery:
         self._dbusservice.add_path('/Alarms/HighTemperature', 0, writeable=True)
         self._dbusservice.add_path('/Alarms/LowTemperature', 0, writeable=True)
 
-        logger.info('Connected to dbus')
 
-
-INTERVAL = 6000
+INTERVAL = 3000
 
 
 def main():
-    logger.info('dbus-serialbattery')
-    # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
-    DBusGMainLoop(set_as_default=True)
-    # create a new battery object that can read the battery
-    battery = Battery('/dev/ttyUSB2')
-    battery.setup_vedbus(instance=1)
 
     def poll_battery(loop):
         # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
@@ -311,14 +335,26 @@ def main():
         poller.start()
         return True
 
-    logger.info('Connected to dbus')
+    logger.info('dbus-serialbattery')
+    # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
+    DBusGMainLoop(set_as_default=True)
+    # create a new battery object that can read the battery
+    port = '/dev/ttyUSB2'
+    battery = Battery(port)
+    result = battery.read_hardware_data()
+    if result is False:
+        logger.error("ERROR >>> No battery connection at " + port)
+        return
 
     gobject.threads_init()
     mainloop = gobject.MainLoop()
-    poll_battery(mainloop)
-    # Poll the battery at INTERVAL
-    gobject.timeout_add(INTERVAL, lambda: poll_battery(mainloop))
+    # Get the initial values for the battery used by setup_vedbus
+    battery.read_gen_data()
+    battery.setup_vedbus(instance=1)
+    logger.info('Battery connected to dbus from ' + port)
 
+    # Poll the battery at INTERVAL and run the main loop
+    gobject.timeout_add(INTERVAL, lambda: poll_battery(mainloop))
     try:
         mainloop.run()
     except KeyboardInterrupt:
