@@ -105,6 +105,7 @@ class Battery:
     temp1 = 0
     temp2 = 0
     cells = []
+    control_charging = False
 
     def __init__(self, port):
         self.port = port
@@ -176,7 +177,9 @@ class Battery:
         min_voltage = 99
         min_cell = ''
         balance = False
+        total_voltage = 0
         for c in range(self.cell_count):
+            total_voltage += self.cells[c].voltage
             if max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage
                 max_cell = c
@@ -190,6 +193,7 @@ class Battery:
         self._dbusservice['/System/MinCellVoltage'] = min_voltage
         self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
         self._dbusservice['/Balancing'] = 1 if balance else 0
+        self.manage_control_charging(max_voltage, min_voltage, total_voltage, balance)
 
         # Update the alarms
         self._dbusservice['/Alarms/LowVoltage'] = 2 if self.protection.voltage_low else 0
@@ -229,6 +233,24 @@ class Battery:
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
 
+    def manage_control_charging(self, max_voltage, min_voltage, total_voltage, balance):
+        # If all cells are low then we can charge at max
+        if max_voltage < 3.50 or not balance or min_voltage > 3.5 or total_voltage > MAX_BATTERY_VOLTAGE:
+            self.control_charging = False
+            self._dbusservice['/History/ChargeCycles'] = MAX_BATTERY_VOLTAGE
+            logging.info(">STOP< control charging min {0} max {1} tot {2}".
+                         format(max_voltage, min_voltage, total_voltage))
+            return
+
+        # Limit the charge voltage if a few cells get too high
+        if max_voltage > 3.60 and min_voltage < 3.50 and balance:
+            self.control_charging = True
+            self._dbusservice['/History/ChargeCycles'] = min(MAX_BATTERY_VOLTAGE, total_voltage)
+            logging.info(">START< control charging min {0} max {1} tot {2}".
+                         format(max_voltage, min_voltage, total_voltage))
+            return
+
+
     def read_cell_data(self):
         cell_data = read_serial_data(self.command_cell, self.port)
         # check if connect sucess
@@ -261,9 +283,8 @@ class Battery:
     def setup_vedbus(self, instance):
 
         self._dbusservice = VeDbusService("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:])
-
-        logger.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:],
-                                                   instance))
+        logger.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery." +
+                                                  self.port[self.port.rfind('/')+1:], instance))
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -279,7 +300,7 @@ class Battery:
         self._dbusservice.add_path('/Connected', 1)
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', 46.0)
-        self._dbusservice.add_path('/Info/MaxChargeVoltage', 52.5)
+        self._dbusservice.add_path('/Info/MaxChargeVoltage', MAX_BATTERY_VOLTAGE, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeCurrent', 50.0)
         self._dbusservice.add_path('/Info/MaxDischargeCurrent', 70.0)
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.cell_count, writeable=True)
@@ -323,7 +344,7 @@ class Battery:
 
 
 INTERVAL = 3000
-
+MAX_BATTERY_VOLTAGE = 52.5
 
 def main():
 
