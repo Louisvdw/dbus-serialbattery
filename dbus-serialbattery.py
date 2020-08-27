@@ -136,6 +136,8 @@ class Battery:
 
     def to_cell_bits(self, byte_data):
         tmp = bin(byte_data)[2:].rjust(self.cell_count, self.zero_char)
+        for c in self.cells:
+            self.cells.remove(c)
         for bit in reversed(tmp):
             self.cells.append(Cell(self.is_bit_set(bit)))
 
