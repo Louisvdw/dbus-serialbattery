@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -324,7 +324,7 @@ class Battery:
         self._dbusservice.add_path('/Alarms/LowTemperature', 0, writeable=True)
 
 
-INTERVAL = 3000
+INTERVAL = 2000
 
 
 def main():
@@ -340,8 +340,15 @@ def main():
     logger.info('dbus-serialbattery')
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
+
+    # Get the port we need to use from the argument
+    if len(sys.argv) > 1:
+        port = sys.argv[1]
+    else:
+        logger.info('No Port')
+        port = '/dev/ttyUSB2'
+
     # create a new battery object that can read the battery
-    port = '/dev/ttyUSB2'
     battery = Battery(port)
     result = battery.read_hardware_data()
     if result is False:
