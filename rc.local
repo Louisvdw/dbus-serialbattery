@@ -1,2 +1,2 @@
 #!/bin/sh
-ln -s /data/etc/dbus-serialbattery/service /service/dbus-serialbattery
+ln -s /data/etc/dbus-serialbattery /opt/victronenergy/dbus-serialbattery
