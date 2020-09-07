@@ -285,7 +285,6 @@ class Battery:
                     logger.info(">UP< control charging {0}A {1}V".format(self.control_current, self.control_voltage))
                     return
 
-
     def read_gen_data(self):
         gen_data = read_serial_data(self.command_general, self.port)
         # check if connect sucess
