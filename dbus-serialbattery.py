@@ -51,6 +51,8 @@ class Cell:
 
 def read_serial_data(command, port):
     with serial.Serial(port, baudrate=9600, timeout=0.1) as ser:
+        ser.flushOutput()
+        ser.flushInput()
         ser.write(command)
 
         count = 0
@@ -106,6 +108,10 @@ class Battery:
     temp2 = 0
     cells = []
     control_charging = False
+    control_voltage = 0
+    control_current = 0
+    control_previous_total = 0
+    control_previous_max = 0
 
     def __init__(self, port):
         self.port = port
@@ -215,6 +221,71 @@ class Battery:
 
         logging.debug("logged to dbus ", round(self.voltage / 100, 2), round(self.current / 100, 2), round(self.soc, 2))
 
+    def manage_control_charging(self, max_voltage, min_voltage, total_voltage, balance):
+        # Nothing to do if we cannot charge
+        if not self.charge_fet or self.current < 0:
+            if self.control_charging:
+                self.control_charging = False
+                self._dbusservice['/Info/MaxChargeVoltage'] = MAX_BATTERY_VOLTAGE
+                self._dbusservice['/Info/MaxChargeCurrent'] = MAX_BATTERY_CURRENT
+                logger.info(">STOP< control charging")
+            return
+        if max_voltage > 3.50:
+            logger.info(">CHECK< control charging min {0} max {1} tot {2} Bal {3}".format(min_voltage,
+                                                                                          max_voltage,
+                                                                                          total_voltage,
+                                                                                          1 if balance else 0))
+        if not self.control_charging and max_voltage > 3.50 and min_voltage < 3.45:
+            # should we start
+            self.control_charging = True
+            self.control_previous_total = total_voltage
+            self.control_current = min(MAX_BATTERY_CURRENT, 0.5)
+            self.control_voltage = min(MAX_BATTERY_VOLTAGE, total_voltage - 1)
+            self.control_previous_max = max_voltage
+            self._dbusservice['/Info/MaxChargeVoltage'] = self.control_voltage
+            self._dbusservice['/Info/MaxChargeCurrent'] = self.control_current
+            logger.info(">START< control charging {0}A {1}V".format(self.control_current, self.control_voltage))
+        else:
+            # If all cells are low then we can stop control
+            if self.control_charging and max_voltage < 3.45:
+                self.control_charging = False
+                self._dbusservice['/Info/MaxChargeVoltage'] = MAX_BATTERY_VOLTAGE
+                self._dbusservice['/Info/MaxChargeCurrent'] = MAX_BATTERY_CURRENT
+                logger.info(">STOP< control charging")
+                return
+
+            if self.control_charging and max_voltage > 3.64:
+                self._dbusservice['/Info/MaxChargeVoltage'] = min(MAX_BATTERY_VOLTAGE, 48)
+                self._dbusservice['/Info/MaxChargeCurrent'] = min(MAX_BATTERY_CURRENT, 0.001)
+                logger.info(">STOP< No Balancing!")
+                return
+
+            # Limit the charge voltage if a few cells get too high
+            if max_voltage > (self.control_previous_max + 0.01):
+                # Still to high
+                self.control_current -= 0.005
+                self.control_voltage -= 0.01
+                self.control_current = max(0.2, self.control_current)
+                self.control_voltage = max(MAX_BATTERY_VOLTAGE-4, self.control_voltage)
+                self.control_previous_total = total_voltage
+                self._dbusservice['/Info/MaxChargeVoltage'] = self.control_voltage
+                self._dbusservice['/Info/MaxChargeCurrent'] = self.control_current
+                logger.info(">DOWN< control charging {0}A {1}V".format(self.control_current, self.control_voltage))
+                return
+            else:
+                if total_voltage < (self.control_previous_total - 0.03):
+                    # To low
+                    self.control_current += 0.005
+                    self.control_voltage += 0.01
+                    self.control_current = min(MAX_BATTERY_CURRENT, self.control_current)
+                    self.control_voltage = min(MAX_BATTERY_VOLTAGE, self.control_voltage)
+                    self.control_previous_total = total_voltage
+                    self._dbusservice['/Info/MaxChargeVoltage'] = self.control_voltage
+                    self._dbusservice['/Info/MaxChargeCurrent'] = self.control_current
+                    logger.info(">UP< control charging {0}A {1}V".format(self.control_current, self.control_voltage))
+                    return
+
+
     def read_gen_data(self):
         gen_data = read_serial_data(self.command_general, self.port)
         # check if connect sucess
@@ -234,24 +305,6 @@ class Battery:
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
-
-    def manage_control_charging(self, max_voltage, min_voltage, total_voltage, balance):
-        # If all cells are low then we can charge at max
-        if max_voltage < 3.50 or not balance or min_voltage > 3.5 or total_voltage > MAX_BATTERY_VOLTAGE:
-            self.control_charging = False
-            self._dbusservice['/History/ChargeCycles'] = MAX_BATTERY_VOLTAGE
-            logging.info(">STOP< control charging min {0} max {1} tot {2}".
-                         format(max_voltage, min_voltage, total_voltage))
-            return
-
-        # Limit the charge voltage if a few cells get too high
-        if max_voltage > 3.60 and min_voltage < 3.50 and balance:
-            self.control_charging = True
-            self._dbusservice['/History/ChargeCycles'] = min(MAX_BATTERY_VOLTAGE, total_voltage)
-            logging.info(">START< control charging min {0} max {1} tot {2}".
-                         format(max_voltage, min_voltage, total_voltage))
-            return
-
 
     def read_cell_data(self):
         cell_data = read_serial_data(self.command_cell, self.port)
@@ -303,7 +356,7 @@ class Battery:
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', 46.0)
         self._dbusservice.add_path('/Info/MaxChargeVoltage', MAX_BATTERY_VOLTAGE, writeable=True)
-        self._dbusservice.add_path('/Info/MaxChargeCurrent', 50.0)
+        self._dbusservice.add_path('/Info/MaxChargeCurrent', MAX_BATTERY_CURRENT, writeable=True)
         self._dbusservice.add_path('/Info/MaxDischargeCurrent', 70.0)
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.cell_count, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
@@ -345,8 +398,9 @@ class Battery:
         self._dbusservice.add_path('/Alarms/LowTemperature', 0, writeable=True)
 
 
-INTERVAL = 2000
+INTERVAL = 1000
 MAX_BATTERY_VOLTAGE = 52.5
+MAX_BATTERY_CURRENT = 50.0
 
 def main():
 
