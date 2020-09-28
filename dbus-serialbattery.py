@@ -62,8 +62,9 @@ def read_serial_data(command, port):
             toread = ser.inWaiting()
             count += 1
             if count > 50:
-                logger.error(">>> ERROR: No reply")
-                exit(1)
+                logger.error(">>> ERROR: No reply - returning")
+                return False
+                # raise Exception("No reply from {}".format(port))
 
         res = ser.read(toread)
         start, flag, command1, length = unpack_from('BBBB', res)
@@ -424,8 +425,15 @@ def main():
 
     # create a new battery object that can read the battery
     battery = Battery(port)
-    result = battery.read_hardware_data()
-    if result is False:
+    count = 3
+    while count > 0:
+        result = battery.read_hardware_data()
+        if result is False:
+            count -= 1
+        else:
+            break
+
+    if count == 0:
         logger.error("ERROR >>> No battery connection at " + port)
         return
 
