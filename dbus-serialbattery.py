@@ -50,44 +50,48 @@ class Cell:
 
 
 def read_serial_data(command, port):
-    with serial.Serial(port, baudrate=9600, timeout=0.1) as ser:
-        ser.flushOutput()
-        ser.flushInput()
-        ser.write(command)
+    try:
+        with serial.Serial(port, baudrate=9600, timeout=0.1) as ser:
+            ser.flushOutput()
+            ser.flushInput()
+            ser.write(command)
 
-        count = 0
-        toread = ser.inWaiting()
-        while toread < 4:
-            sleep(0.01)
+            count = 0
             toread = ser.inWaiting()
-            count += 1
-            if count > 50:
-                logger.error(">>> ERROR: No reply - returning")
+            while toread < 4:
+                sleep(0.01)
+                toread = ser.inWaiting()
+                count += 1
+                if count > 50:
+                    logger.error(">>> ERROR: No reply - returning")
+                    return False
+                    # raise Exception("No reply from {}".format(port))
+
+            res = ser.read(toread)
+            start, flag, command1, length = unpack_from('BBBB', res)
+
+            data = bytearray(res)
+            while len(data) <= length + 6:
+                res = ser.read(length+3)
+                data.extend(res)
+                sleep(0.2)
+
+            checksum, end = unpack_from('HB', data, length+4)
+
+            if end == 119:
+                # logger.info("start=" + str(start))
+                # logger.info("flag=" + str(flag))
+                # logger.info("command=" + str(command1))
+                # logger.info("data length=" + str(length))
+                # logger.info("checksum=" + str(checksum))
+                # logger.info("end=" + str(end))
+                return data[4:length+4]
+            else:
+                logger.error(">>> ERROR: Incorrect Reply")
                 return False
-                # raise Exception("No reply from {}".format(port))
-
-        res = ser.read(toread)
-        start, flag, command1, length = unpack_from('BBBB', res)
-
-        data = bytearray(res)
-        while len(data) <= length + 6:
-            res = ser.read(length+3)
-            data.extend(res)
-            sleep(0.2)
-
-        checksum, end = unpack_from('HB', data, length+4)
-
-        if end == 119:
-            # logger.info("start=" + str(start))
-            # logger.info("flag=" + str(flag))
-            # logger.info("command=" + str(command1))
-            # logger.info("data length=" + str(length))
-            # logger.info("checksum=" + str(checksum))
-            # logger.info("end=" + str(end))
-            return data[4:length+4]
-        else:
-            logger.error(">>> ERROR: Incorrect Reply")
-            return False
+    except serial.SerialException as e:
+        logger.error(e)
+        return False
 
 
 class Battery:
@@ -202,6 +206,7 @@ class Battery:
         self._dbusservice['/System/MinCellVoltage'] = min_voltage
         self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
         self._dbusservice['/Balancing'] = 1 if balance else 0
+        self.manage_charge_current()
         # self.manage_control_charging(max_voltage, min_voltage, total_voltage, balance)
 
         # Update the alarms
@@ -221,6 +226,29 @@ class Battery:
         self._dbusservice['/Alarms/LowTemperature'] = 1 if self.protection.temp_low_discharge else 0
 
         logging.debug("logged to dbus ", round(self.voltage / 100, 2), round(self.current / 100, 2), round(self.soc, 2))
+
+    def manage_charge_current(self):
+        if self.soc == 100:
+            self._dbusservice['/Io/AllowToCharge'] = 0
+            self._dbusservice['/System/NrOfModulesBlockingCharge'] = 1
+        elif 98 < self.soc <= 99:
+            self._dbusservice['/Info/MaxChargeCurrent'] = 0.5
+        elif 95 < self.soc <= 97:
+            self._dbusservice['/Info/MaxChargeCurrent'] = 4
+            self._dbusservice['/Io/AllowToCharge'] = 1
+            self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0
+        elif 91 < self.soc <= 95:
+            self._dbusservice['/Info/MaxChargeCurrent'] = MAX_BATTERY_CURRENT/2
+        elif 85 < self.soc <= 91:
+            self._dbusservice['/Info/MaxChargeCurrent'] = MAX_BATTERY_CURRENT
+        elif 35 < self.soc <= 40:
+            self._dbusservice['/Info/MaxDischargeCurrent'] = MAX_BATTERY_DISCHARGE_CURRENT
+        elif 30 < self.soc <= 35:
+            self._dbusservice['/Info/MaxDischargeCurrent'] = MAX_BATTERY_DISCHARGE_CURRENT/2
+        elif 20 < self.soc <= 30:
+            self._dbusservice['/Info/MaxDischargeCurrent'] = MAX_BATTERY_DISCHARGE_CURRENT/4
+        elif self.soc <= 20:
+            self._dbusservice['/Info/MaxDischargeCurrent'] = 5
 
     def manage_control_charging(self, max_voltage, min_voltage, total_voltage, balance):
         # Nothing to do if we cannot charge
@@ -309,7 +337,7 @@ class Battery:
     def read_cell_data(self):
         cell_data = read_serial_data(self.command_cell, self.port)
         # check if connect sucess
-        if cell_data is False:
+        if cell_data is False or len(cell_data) < self.cell_count*2:
             return cell_data
 
         for c in range(self.cell_count):
@@ -317,7 +345,7 @@ class Battery:
 
     def read_hardware_data(self):
         hardware_data = read_serial_data(self.command_hardware, self.port)
-        # check if connect sucess
+        # check if connection success
         if hardware_data is False:
             return hardware_data
 
@@ -357,13 +385,13 @@ class Battery:
         self._dbusservice.add_path('/Info/BatteryLowVoltage', 46.0)
         self._dbusservice.add_path('/Info/MaxChargeVoltage', MAX_BATTERY_VOLTAGE, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeCurrent', MAX_BATTERY_CURRENT, writeable=True)
-        self._dbusservice.add_path('/Info/MaxDischargeCurrent', 70.0)
+        self._dbusservice.add_path('/Info/MaxDischargeCurrent', MAX_BATTERY_DISCHARGE_CURRENT, writeable=True)
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.cell_count, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
+        self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
+        self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
         # Not used at this stage
-        # self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
-        # self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
         # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
         # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
         self._dbusservice.add_path('/Capacity', self.capacity, writeable=True)
@@ -399,8 +427,9 @@ class Battery:
 
 
 INTERVAL = 1000
-MAX_BATTERY_VOLTAGE = 52.5
+MAX_BATTERY_VOLTAGE = 51.0
 MAX_BATTERY_CURRENT = 50.0
+MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
 def main():
 
@@ -430,6 +459,7 @@ def main():
         result = battery.read_hardware_data()
         if result is False:
             count -= 1
+            sleep(0.5)
         else:
             break
 
