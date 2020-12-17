@@ -20,6 +20,7 @@ Planned support:
    - copy the dbus-serialbattery-{version} folder from the archive to `/data/etc/` and rename it to `dbus-serialbattery`
    - copy or move rc.local to `/data/`
    - copy or move serial-starter.d to `/data/conf/`
+   - change permissions to allow execute (rwxr-xr-x) to /data/rc.local and /data/etc/dbus-serialbattery/dbus-serialbattery.py
    - reboot your VenusOS device and check if your battery is connected
 
 ### Forum help
