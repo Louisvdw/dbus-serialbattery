@@ -6,7 +6,7 @@ and publish this data to the dbus used by VenusOS. The main purpose is to supply
 to the inverter, but many extra parameters is also published if available from the BMS.
 
 Driver support:
- * Smart BMS range from [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/) 
+ * Smart BMS range from [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/) / [Jiabaida BMS](https://dgjbd.en.alibaba.com/)
 (Cell values are currently only supported for the first 16 cells: Min Cell V, Max Cell V, Cell Balance) 
 
 Planned support:
@@ -21,3 +21,6 @@ Planned support:
    - copy or move rc.local to `/data/`
    - copy or move serial-starter.d to `/data/conf/`
    - reboot your VenusOS device and check if your battery is connected
+
+### Forum help
+Forum thead for this driver can be [found here](https://energytalk.co.za/t/diy-serial-battery-driver-for-victron-gx/80)
