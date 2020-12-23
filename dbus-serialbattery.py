@@ -216,10 +216,10 @@ class Battery:
         self._dbusservice['/Alarms/HighChargeCurrent'] = 1 if self.protection.current_over else 0
         self._dbusservice['/Alarms/HighDischargeCurrent'] = 1 if self.protection.current_under else 0
         self._dbusservice['/Alarms/CellImbalance'] = 2 if self.protection.voltage_low_cell \
-                                                          or self.protection.voltage_high_cell else 0
+            or self.protection.voltage_high_cell else 0
         self._dbusservice['/Alarms/InternalFailure'] = 2 if self.protection.short \
-                                                            or self.protection.IC_inspection \
-                                                            or self.protection.software_lock else 0
+            or self.protection.IC_inspection \
+            or self.protection.software_lock else 0
         self._dbusservice['/Alarms/HighChargeTemperature'] = 1 if self.protection.temp_high_charge else 0
         self._dbusservice['/Alarms/LowChargeTemperature'] = 1 if self.protection.temp_low_charge else 0
         self._dbusservice['/Alarms/HighTemperature'] = 1 if self.protection.temp_high_discharge else 0
@@ -228,11 +228,11 @@ class Battery:
         logging.debug("logged to dbus ", round(self.voltage / 100, 2), round(self.current / 100, 2), round(self.soc, 2))
 
     def manage_charge_current(self):
-        if self.soc == 100:
+        if self.soc > 99:
             self._dbusservice['/Io/AllowToCharge'] = 0
             self._dbusservice['/System/NrOfModulesBlockingCharge'] = 1
         elif 98 < self.soc <= 99:
-            self._dbusservice['/Info/MaxChargeCurrent'] = 0.5
+            self._dbusservice['/Info/MaxChargeCurrent'] = 1
         elif 95 < self.soc <= 97:
             self._dbusservice['/Info/MaxChargeCurrent'] = 4
             self._dbusservice['/Io/AllowToCharge'] = 1
@@ -316,7 +316,7 @@ class Battery:
 
     def read_gen_data(self):
         gen_data = read_serial_data(self.command_general, self.port)
-        # check if connect sucess
+        # check if connect success
         if gen_data is False:
             return gen_data
 
@@ -336,7 +336,7 @@ class Battery:
 
     def read_cell_data(self):
         cell_data = read_serial_data(self.command_cell, self.port)
-        # check if connect sucess
+        # check if connect success
         if cell_data is False or len(cell_data) < self.cell_count*2:
             return cell_data
 
@@ -382,7 +382,7 @@ class Battery:
         self._dbusservice.add_path('/HardwareVersion', self.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
         # Create static battery info
-        self._dbusservice.add_path('/Info/BatteryLowVoltage', 46.0)
+        self._dbusservice.add_path('/Info/BatteryLowVoltage', MIN_BATTERY_VOLTAGE, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeVoltage', MAX_BATTERY_VOLTAGE, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeCurrent', MAX_BATTERY_CURRENT, writeable=True)
         self._dbusservice.add_path('/Info/MaxDischargeCurrent', MAX_BATTERY_DISCHARGE_CURRENT, writeable=True)
@@ -427,9 +427,11 @@ class Battery:
 
 
 INTERVAL = 1000
-MAX_BATTERY_VOLTAGE = 51.0
+MIN_BATTERY_VOLTAGE = 46.0
+MAX_BATTERY_VOLTAGE = 51.8
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+
 
 def main():
 
