@@ -19,6 +19,13 @@ import os
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
 
+# Constants - Need to dynamically get them in future
+INTERVAL = 1000
+MIN_BATTERY_VOLTAGE = 46.0
+MAX_BATTERY_VOLTAGE = 51.8
+MAX_BATTERY_CURRENT = 50.0
+MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+
 # Logging
 logging.info('Starting dbus-serialbattery')
 logger = logging.getLogger(__name__)
@@ -424,13 +431,6 @@ class Battery:
         self._dbusservice.add_path('/Alarms/LowChargeTemperature', 0, writeable=True)
         self._dbusservice.add_path('/Alarms/HighTemperature', 0, writeable=True)
         self._dbusservice.add_path('/Alarms/LowTemperature', 0, writeable=True)
-
-
-INTERVAL = 1000
-MIN_BATTERY_VOLTAGE = 46.0
-MAX_BATTERY_VOLTAGE = 51.8
-MAX_BATTERY_CURRENT = 50.0
-MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
 
 def main():
