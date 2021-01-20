@@ -14,7 +14,6 @@ import platform
 import logging
 import sys
 import os
-
 # Victron packages
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
@@ -124,6 +123,9 @@ class Battery:
     control_current = 0
     control_previous_total = 0
     control_previous_max = 0
+    control_discharge_current = 0
+    control_charge_current = 0
+    control_allow_charge = True
 
     def __init__(self, port):
         self.port = port
@@ -149,6 +151,15 @@ class Battery:
         self.protection.short = self.is_bit_set(tmp[2])
         self.protection.IC_inspection = self.is_bit_set(tmp[1])
         self.protection.software_lock = self.is_bit_set(tmp[0])
+
+    def to_temp(self, sensor, value):
+        # Keep the temp value between -20 and 100 to handle sensor issues or no data.
+        # The BMS should have already protected before those limits have been reached.
+        if sensor == 1:
+            self.temp1 = max(min(value, -20), 100)
+        if sensor == 2:
+            self.temp2 = max(min(value, -20), 100)
+
 
     def is_bit_set(self, tmp):
         return False if tmp == self.zero_char else True
@@ -235,27 +246,49 @@ class Battery:
         logging.debug("logged to dbus ", round(self.voltage / 100, 2), round(self.current / 100, 2), round(self.soc, 2))
 
     def manage_charge_current(self):
+        # Start with the current values
+        charge_current = self.control_charge_current
+        discharge_current = self.control_discharge_current
+        allow_charge = self.control_allow_charge
+
+        # Change depending on the SOC values
         if self.soc > 99:
-            self._dbusservice['/Io/AllowToCharge'] = 0
-            self._dbusservice['/System/NrOfModulesBlockingCharge'] = 1
-        elif 98 < self.soc <= 99:
-            self._dbusservice['/Info/MaxChargeCurrent'] = 1
+            allow_charge = False
         elif 95 < self.soc <= 97:
-            self._dbusservice['/Info/MaxChargeCurrent'] = 4
-            self._dbusservice['/Io/AllowToCharge'] = 1
-            self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0
+            allow_charge = True
+        # Change depending on the SOC values
+        if 98 < self.soc <= 100:
+            charge_current = 1
+        elif 95 < self.soc <= 97:
+            charge_current = 4
         elif 91 < self.soc <= 95:
-            self._dbusservice['/Info/MaxChargeCurrent'] = MAX_BATTERY_CURRENT/2
-        elif 85 < self.soc <= 91:
-            self._dbusservice['/Info/MaxChargeCurrent'] = MAX_BATTERY_CURRENT
-        elif 35 < self.soc <= 40:
-            self._dbusservice['/Info/MaxDischargeCurrent'] = MAX_BATTERY_DISCHARGE_CURRENT
-        elif 30 < self.soc <= 35:
-            self._dbusservice['/Info/MaxDischargeCurrent'] = MAX_BATTERY_DISCHARGE_CURRENT/2
+            charge_current = MAX_BATTERY_CURRENT/2
+        else:
+            charge_current = MAX_BATTERY_CURRENT
+        # Change depending on the SOC values
+        if self.soc <= 20:
+            discharge_current = 5
         elif 20 < self.soc <= 30:
-            self._dbusservice['/Info/MaxDischargeCurrent'] = MAX_BATTERY_DISCHARGE_CURRENT/4
-        elif self.soc <= 20:
-            self._dbusservice['/Info/MaxDischargeCurrent'] = 5
+            discharge_current = MAX_BATTERY_DISCHARGE_CURRENT/4
+        elif 30 < self.soc <= 35:
+            discharge_current = MAX_BATTERY_DISCHARGE_CURRENT/2
+        else:
+            discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+
+        # Update the dbus values if they changed
+        if charge_current != self.control_charge_current:
+            self.control_charge_current = charge_current
+            self._dbusservice['/Info/MaxChargeCurrent'] = self.control_charge_current
+        if discharge_current != self.control_discharge_current:
+            self.control_discharge_current = discharge_current
+            self._dbusservice['/Info/MaxDischargeCurrent'] = self.control_discharge_current
+        if allow_charge != self.control_allow_charge:
+            if allow_charge and self.charge_fet:
+                self._dbusservice['/Io/AllowToCharge'] = 1
+                self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0
+            else:
+                self._dbusservice['/Io/AllowToCharge'] = 0
+                self._dbusservice['/System/NrOfModulesBlockingCharge'] = 1
 
     def manage_control_charging(self, max_voltage, min_voltage, total_voltage, balance):
         # Nothing to do if we cannot charge
@@ -334,8 +367,8 @@ class Battery:
         self.current = current / 100
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
-        self.temp1 = (temp1 - 2731) / 10
-        self.temp2 = (temp2 - 2731) / 10
+        self.to_temp(1, (temp1 - 2731) / 10)
+        self.to_temp(2, (temp2 - 2731) / 10)
         self.to_cell_bits(balance)
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
@@ -384,7 +417,7 @@ class Battery:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery for LLT Smart BMS')
+        self._dbusservice.add_path('/ProductName', 'SerialBattery (LTT)')
         self._dbusservice.add_path('/FirmwareVersion', self.version)
         self._dbusservice.add_path('/HardwareVersion', self.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
