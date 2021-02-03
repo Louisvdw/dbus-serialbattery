@@ -7,7 +7,7 @@ to the inverter, but many extra parameters is also published if available from t
 
 Driver support:
  * Smart BMS range from [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/) / [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/) / Overkill Solar or BMS that use the Xiaoxiang phone app
-![Xiaoxian app](images/Android_xiaoxiang.jpg)
+<img src="images/Android_xiaoxiang.jpg" alt="Xiaoxian app" width="40%" height="40%">
 
 Planned support:
  * Smart Daly BMS
@@ -31,7 +31,7 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
     - Discharge Current Limit(DCL)
     - CVL (Battery Max) automatically adjusted by cell count * 3.45V
     - Battery Min automatically adjusted by cell count * 3.1V
-![VenusOS values](images/GXvalues.png)
+<img src="images/GXvalues.png" alt="VenusOS values" width="50%" height="50%">
   
 * Charge current control management.
   CCCM limits the charge/discharge current depending on the SOC
@@ -44,7 +44,7 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
     - between 20% - 30% => 1/4 Max discharge
     - below < 20% => 5A
 
-![VenusOS values](images/VRMChargeLimits.png)
+<img src="images/VRMChargeLimits.png" alt="VenusOS values" width="50%" height="50%">
 
 ### How to install
 1. You need to have a VenusOS device set up and running on your system and have [root access](https://www.victronenergy.com/live/ccgx:root_access).
