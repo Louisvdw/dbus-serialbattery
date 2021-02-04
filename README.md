@@ -60,6 +60,7 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
       - /data/etc/dbus-serialbattery/service/log/run
       - /data/etc/dbus-serialbattery/service/run
    - reboot your VenusOS device and check if your battery is connected
+4. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/dbus-serialbattery.py . There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
 
 ### Troubleshoot
 Look for a log file under /data/log/dbus-serialbattery.ttyUSB0/current where ttyUSB0 will be your USB port (ttyUSB0/ttyUSB1/ttyUSB2/etc.)
