@@ -47,10 +47,10 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
 <img src="images/VRMChargeLimits.png" alt="VenusOS values" width="50%" height="50%">
 
 ### How to install
-1. You need to have a VenusOS device set up and running on your system and have [root access](https://www.victronenergy.com/live/ccgx:root_access).
+1. You need to have a VenusOS device set up and running on your system.
 2. You also need to connect your BMS to the VenusOS device using a serial interface. A USB->232 converter like the FT232R. The FT232R already has a driver included in the VenusOS. Only connect the Ground, Rx & Tx to the BMS. If you don't want issues use a Victron branded cable.
-3.a [Automatic Option] Copy the [latest release venus-data.tar.gz](https://github.com/Louisvdw/dbus-serialbattery/releases) to the root of a USB flash drive or SD card, plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.  
-3.b [Manual Option] Use a FTP client that support SFTP to copy the driver files to the rooted VenusOS device. [Filezilla](https://filezilla-project.org/) is a good option
+3. [Automatic Option] Copy the [latest release venus-data.tar.gz](https://github.com/Louisvdw/dbus-serialbattery/releases) to the root of a USB flash drive or SD card, plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.  
+4. Or [Manual Option] Use a FTP client that support SFTP to copy the driver files to the rooted VenusOS device. [Filezilla](https://filezilla-project.org/) is a good option. You will need to have [root access](https://www.victronenergy.com/live/ccgx:root_access)
    - copy the dbus-serialbattery-{version} folder from the archive to `/data/etc/` and rename it to `dbus-serialbattery`
    - copy or move rc.local to `/data/`
    - copy or move serial-starter.d to `/data/conf/`
@@ -60,7 +60,7 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
       - /data/etc/dbus-serialbattery/service/log/run
       - /data/etc/dbus-serialbattery/service/run
    - reboot your VenusOS device and check if your battery is connected
-4. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/dbus-serialbattery.py . There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
+5. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/dbus-serialbattery.py . There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
 
 ### Troubleshoot
 Look for a log file under /data/log/dbus-serialbattery.ttyUSB0/current where ttyUSB0 will be your USB port (ttyUSB0/ttyUSB1/ttyUSB2/etc.)
