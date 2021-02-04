@@ -2,7 +2,7 @@
 This is a driver for VenusOS devices (any GX device sold by Victron or a Raspberry Pi running the VenusOS image). 
 
 The driver will communicate with a Battery Management System (BMS) that support serial communication (RS232 or RS485) 
-Modbus ASCII commands and publish this data to the dbus used by VenusOS. The main purpose is to supply up to date State Of Charge (SOC) values
+Modbus RTU type commands and publish this data to the dbus used by VenusOS. The main purpose is to supply up to date State Of Charge (SOC) values
 to the inverter, but many extra parameters is also published if available from the BMS.
 
 Driver support:
