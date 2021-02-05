@@ -63,12 +63,25 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
 5. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/dbus-serialbattery.py . There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
 
 ### Troubleshoot
-Look for a log file under /data/log/dbus-serialbattery.ttyUSB0/current where ttyUSB0 will be your USB port (ttyUSB0/ttyUSB1/ttyUSB2/etc.)
+There are 2 important log files on the VenusOS device to look at.
+* /data/log/serial-starter/current
+  - serial starter will show if the driver was started against a USB port.
+  > Create daemontools service dbus-serialbattery.ttyUSB0
+  
+  > Start service dbus-serialbattery.ttyUSB0 once
+* /data/log/dbus-serialbattery.ttyUSB0/current where ttyUSB0 will be your USB port (ttyUSB0/ttyUSB1/ttyUSB2/etc.)
+  > INFO:__main__:dbus-serialbattery
+
+  > INFO:__main__:Battery connected to dbus from /dev/ttyUSB0
+    
+    If you see an error like below your battery is most likely connecting using a different ttyUSB port
+  > ERROR:__main__:ERROR >>> No battery connection at /dev/ttyUSB3
+
 The log file will tell you what the driver did and where it failed.
-If you do not find a log folder under /data/log/dbus-serialbattery* then check
+If there is no log folder under /data/log/dbus-serialbattery* then check
    - Do you have all the files and folders as in the downloaded archive?
-   - Do the files have the execute permissions?
-   - Have you moved the 2 files to their locations?
+   - Do the files have execute permissions?
+   - Confirm all the file locations as per the manual install option 4. 
    - Look at the logfile at /data/log/serial-starter/current to see if the serial-starter service found any error starting the serialbattery driver.
 
 ### Forum help
