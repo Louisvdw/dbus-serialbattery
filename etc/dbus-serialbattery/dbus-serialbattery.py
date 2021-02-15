@@ -17,6 +17,7 @@ import os
 # Victron packages
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
+from settingsdevice import SettingsDevice
 
 # Constants - Need to dynamically get them in future
 # Cell min/max voltages - used with the cell cound to get the min/max battery voltage
@@ -502,6 +503,7 @@ def main():
 
     # create a new battery object that can read the battery
     battery = Battery(port)
+    # try to establish communications with the battery 3 times, else exit
     count = 3
     while count > 0:
         result = battery.read_hardware_data()
@@ -515,11 +517,27 @@ def main():
         logger.error("ERROR >>> No battery connection at " + port)
         return
 
+    # get an instance from localsetting
+    localSettings = SettingsDevice(
+        bus=dbus.SystemBus() if (platform.machine() == 'armv7l') else dbus.SessionBus(),
+        supportedSettings={
+            'loggingenabled': ['/Settings/Logscript/Enabled', 1, 0, 1],
+            'proxyaddress': ['/Settings/Logscript/Http/Proxy', '', 0, 0],
+            'proxyport': ['/Settings/Logscript/Http/ProxyPort', '', 0, 0],
+            'backlogenabled': ['/Settings/Logscript/LogFlash/Enabled', 1, 0, 1],
+            'backlogpath': ['/Settings/Logscript/LogFlash/Path', '', 0, 0],  # When empty, default path will be used.
+            'interval': ['/Settings/Logscript/LogInterval', 900, 0, 0],
+            'url': ['/Settings/Logscript/Url', '', 0, 0]  # When empty, the default url will be used.
+        },
+        eventCallback=none)
+    localSettings.AddSetting(path='/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance',('battery', 1))
+    instance = localsettings.GetValue('/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance')
+
     gobject.threads_init()
     mainloop = gobject.MainLoop()
     # Get the initial values for the battery used by setup_vedbus
     battery.read_gen_data()
-    battery.setup_vedbus(instance=1)
+    battery.setup_vedbus(instance=instance)
     logger.info('Battery connected to dbus from ' + port)
 
     # Poll the battery at INTERVAL and run the main loop
