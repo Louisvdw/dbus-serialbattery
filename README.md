@@ -50,15 +50,23 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
 1. You need to have a VenusOS device set up and running on your GX system (VenusGX, Cerbo, Raspberry Pi).
 2. You also need to connect your BMS to the VenusOS device using a serial interface. Use a Victron branded USB->RS485 or USB->Ve.Direct(RS232) cable for best compatibility. Most FTDI/FT232R USB->serial also works (make sure it is not a fake if you don't want issues). The FT232R already has a driver included in the VenusOS. Only connect the Ground, Rx & Tx to the BMS.
 3. [Option] Automatic Installer: Download and copy the [latest release venus-data.tar.gz](https://github.com/Louisvdw/dbus-serialbattery/releases) to the root of a USB flash drive or SD card, plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.  
-3. [Option] SSH installer script: Log into your VenusOS device and run this script to install the latest version. This can also be used to update to the latest version. You will need to have [root access](https://www.victronenergy.com/live/ccgx:root_access) 
+3. [Option] SSH installer script ( Require [root access](https://www.victronenergy.com/live/ccgx:root_access) ): Log into your VenusOS device and run this script to install the latest version. This can also be used to update to the latest version. 
   > curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/latest | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -qiO - | tar -zxf venus-data.tar.gz -C /data
-3. [Option] Manual install: Use a FTP client that support SFTP to copy the driver files to the rooted VenusOS device. The files in the archive have to go into /data/ folder keeping the file structure from the archive as below. [Filezilla](https://filezilla-project.org/) is a good option. You will need to have [root access](https://www.victronenergy.com/live/ccgx:root_access)
-   - copy the /etc/dbus-serialbattery folder from the archive to `/data/etc/`
-   - copy rc.local to `/data/`
-   - copy /conf/serial-starter.d to `/data/conf/`
-   - change permissions to allow execute (rwxr-xr-x) to 
-      > chmod 755 /data/rc.local /data/etc/dbus-serialbattery/dbus-serialbattery.py /data/etc/dbus-serialbattery/service/log/run /data/etc/dbus-serialbattery/service/run
-   - reboot your VenusOS device and check if your battery is connected
+3. [Option] Manual install ( Require [root access](https://www.victronenergy.com/live/ccgx:root_access) ): 
+    <details>
+      <summary>Show details</summary>
+   
+      Use an FTP client that support SFTP to copy the driver files to the rooted VenusOS device. The files in the archive have to go into /data/ folder keeping the file structure from the archive as below. [Filezilla](https://filezilla-project.org/) is a good option.
+       
+      - copy the /etc/dbus-serialbattery folder from the archive to `/data/etc/`
+      - copy rc.local to `/data/`
+      - copy /conf/serial-starter.d to `/data/conf/`
+      - change permissions to allow execute (rwxr-xr-x)
+      - reboot your VenusOS device and check if your battery is connected
+          
+   > chmod 755 /data/rc.local /data/etc/dbus-serialbattery/dbus-serialbattery.py /data/etc/dbus-serialbattery/service/log/run /data/etc/dbus-serialbattery/service/run
+   
+     </details>
 4. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/dbus-serialbattery.py . There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
 
 ### Troubleshoot
