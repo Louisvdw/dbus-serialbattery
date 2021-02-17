@@ -268,7 +268,9 @@ class Battery:
         else:
             allow_charge = True
         # Change depending on the SOC values
-        if 98 < self.soc <= 100:
+        if self.soc >= 100:
+            charge_current = 0
+        elif 98 < self.soc < 100:
             charge_current = 1
         elif 95 < self.soc <= 97:
             charge_current = 4
