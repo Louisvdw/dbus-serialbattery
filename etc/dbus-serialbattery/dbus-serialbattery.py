@@ -417,11 +417,27 @@ class Battery:
             traceback.print_exc()
             loop.quit()
 
-    def setup_vedbus(self, instance):
+    def handle_changed_setting(self, setting, oldvalue, newvalue):
+        if setting == 'instance':
+            value = self.settings['instance'].split(':')
+            self._dbusservice['/DeviceInstance'] = int(value[1])
+            logger.debug("DeviceInstance = %d", instance)
+            return
+
+    def setup_instance(self):
+
+        path = '/Settings/Devices/serialbattery-'+ str(self.port)
+        default_instance = 'battery:1'
+        settings = { 'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], }
+
+        self.settings = SettingsDevice(self._dbusservice, settings, self.handle_changed_setting)
+        self.role, self.instance = self.get_role_instance()
+
+    def setup_vedbus(self):
 
         self._dbusservice = VeDbusService("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:])
-        logger.debug("%s /DeviceInstance = %d" % ("com.victronenergy.battery." +
-                                                  self.port[self.port.rfind('/')+1:], instance))
+        self.setup_instance()
+        logger.debug("%s" % ("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:]))
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -429,7 +445,8 @@ class Battery:
         self._dbusservice.add_path('/Mgmt/Connection', 'Serial ' + self.port)
 
         # Create the mandatory objects
-        self._dbusservice.add_path('/DeviceInstance', instance)
+        self._dbusservice.add_path('/DeviceInstance', self.instance)
+
         self._dbusservice.add_path('/ProductId', 0x0)
         self._dbusservice.add_path('/ProductName', 'SerialBattery (LTT)')
         self._dbusservice.add_path('/FirmwareVersion', self.version)
@@ -490,6 +507,8 @@ def main():
         poller.start()
         return True
 
+
+
     logger.info('dbus-serialbattery')
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
@@ -517,27 +536,17 @@ def main():
         logger.error("ERROR >>> No battery connection at " + port)
         return
 
-    # get an instance from localsetting
-    localSettings = SettingsDevice(
-        bus=dbus.SystemBus() if (platform.machine() == 'armv7l') else dbus.SessionBus(),
-        supportedSettings={
-            'loggingenabled': ['/Settings/Logscript/Enabled', 1, 0, 1],
-            'proxyaddress': ['/Settings/Logscript/Http/Proxy', '', 0, 0],
-            'proxyport': ['/Settings/Logscript/Http/ProxyPort', '', 0, 0],
-            'backlogenabled': ['/Settings/Logscript/LogFlash/Enabled', 1, 0, 1],
-            'backlogpath': ['/Settings/Logscript/LogFlash/Path', '', 0, 0],  # When empty, default path will be used.
-            'interval': ['/Settings/Logscript/LogInterval', 900, 0, 0],
-            'url': ['/Settings/Logscript/Url', '', 0, 0]  # When empty, the default url will be used.
-        },
-        eventCallback=none)
-    localSettings.AddSetting(path='/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance',('battery', 1))
-    instance = localsettings.GetValue('/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance')
+
+    # localSettings.AddSetting(path='/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance', value=('battery', 1))
+    # instance = localsettings.GetValue('/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance')
+    #localSettings['/Settings/Devices/serialbattery-' + str(port) + '/ClassAndVrmInstance'] = ('battery', 1)
+    #instance = localsettings['/Settings/Devices/serialbattery-'+ str(port) + '/ClassAndVrmInstance']
 
     gobject.threads_init()
     mainloop = gobject.MainLoop()
     # Get the initial values for the battery used by setup_vedbus
     battery.read_gen_data()
-    battery.setup_vedbus(instance=instance)
+    battery.setup_vedbus()
     logger.info('Battery connected to dbus from ' + port)
 
     # Poll the battery at INTERVAL and run the main loop
