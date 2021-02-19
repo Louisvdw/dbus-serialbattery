@@ -104,6 +104,10 @@ def read_serial_data(command, port):
         return False
 
 
+def get_bus():
+    return dbus.SessionBus() if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else dbus.SystemBus()
+
+
 class Battery:
     hardware_version = ""
     voltage = 0
@@ -132,6 +136,8 @@ class Battery:
     control_allow_charge = True
     max_battery_voltage = 0
     min_battery_voltage = 0
+    role = 'battery'
+    instance = 1
 
     def __init__(self, port):
         self.port = port
@@ -419,23 +425,27 @@ class Battery:
 
     def handle_changed_setting(self, setting, oldvalue, newvalue):
         if setting == 'instance':
-            value = self.settings['instance'].split(':')
-            self._dbusservice['/DeviceInstance'] = int(value[1])
-            logger.debug("DeviceInstance = %d", instance)
+            self.role, self.instance = self.get_role_instance()
+            self._dbusservice['/DeviceInstance'] = self.instance
+            logger.debug("DeviceInstance = %d", self.instance)
             return
+
+    def get_role_instance(self):
+        val = self.settings['instance'].split(':')
+        return val[0], int(val[1])
 
     def setup_instance(self):
 
-        path = '/Settings/Devices/serialbattery-'+ str(self.port)
-        default_instance = 'battery:1'
+        path = '/Settings/Devices/serialbattery'
+        default_instance = 'battery:256'
         settings = { 'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], }
 
-        self.settings = SettingsDevice(self._dbusservice, settings, self.handle_changed_setting)
+        self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
         self.role, self.instance = self.get_role_instance()
 
     def setup_vedbus(self):
-
-        self._dbusservice = VeDbusService("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:])
+        # Set up dbus service and device instance
+        self._dbusservice = VeDbusService("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:], get_bus())
         self.setup_instance()
         logger.debug("%s" % ("com.victronenergy.battery." + self.port[self.port.rfind('/')+1:]))
 
