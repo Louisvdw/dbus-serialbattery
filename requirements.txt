@@ -1,0 +1,2 @@
+pyserial==3.4
+velib_python==2.60
