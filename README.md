@@ -5,6 +5,13 @@ The driver will communicate with a Battery Management System (BMS) that support 
 Modbus RTU type commands and publish this data to the dbus used by VenusOS. The main purpose is to supply up to date State Of Charge (SOC) values
 to the inverter, but many extra parameters is also published if available from the BMS.
 
+Donations:
+
+If you would like to donate to this project, you can buy me a Ko-Fi.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1)
+
+
 Driver support:
  * Smart BMS range from [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/) / [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/) / Overkill Solar or BMS that use the Xiaoxiang phone app
 <img src="images/Android_xiaoxiang.jpg" alt="Xiaoxian app" width="40%" height="40%">
