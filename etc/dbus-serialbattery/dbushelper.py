@@ -21,6 +21,7 @@ class DbusHelper:
     def __init__(self, battery):
         self.battery = battery
         self.instance = 1
+        self.settings = None
         self._dbusservice = VeDbusService("com.victronenergy.battery." +
                                           self.battery.port[self.battery.port.rfind('/') + 1:],
                                           get_bus())
@@ -39,7 +40,7 @@ class DbusHelper:
 
     def handle_changed_setting(self, setting, oldvalue, newvalue):
         if setting == 'instance':
-            self.role, self.instance = self.get_role_instance()
+            self.battery.role, self.instance = self.get_role_instance()
             self._dbusservice['/DeviceInstance'] = self.instance
             logger.debug("DeviceInstance = %d", self.instance)
             return
@@ -52,7 +53,7 @@ class DbusHelper:
 
         # Get the settings for the battery
         if not self.battery.get_settings():
-            return False;
+            return False
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -140,6 +141,8 @@ class DbusHelper:
                                                         and self.battery.control_allow_charge else 1
         self._dbusservice['/System/MinCellTemperature'] = min(self.battery.temp1, self.battery.temp2)
         self._dbusservice['/System/MaxCellTemperature'] = max(self.battery.temp1, self.battery.temp2)
+
+        # Charge control
         self._dbusservice['/Info/MaxChargeCurrent'] = self.battery.control_charge_current
         self._dbusservice['/Info/MaxDischargeCurrent'] = self.battery.control_discharge_current
 
