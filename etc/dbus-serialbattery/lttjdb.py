@@ -114,7 +114,7 @@ class LttJdb(Battery):
         self.discharge_fet = is_bit_set(tmp[0])
 
     def read_gen_data(self):
-        gen_data = read_serial_data(self.command_general, self.port)
+        gen_data = read_serial_data(self.command_general, self.port, self.baud_rate)
         # check if connect success
         if gen_data is False:
             return False
@@ -136,7 +136,7 @@ class LttJdb(Battery):
         self.min_battery_voltage = self.MIN_CELL_VOLTAGE * self.cell_count
 
     def read_cell_data(self):
-        cell_data = read_serial_data(self.command_cell, self.port)
+        cell_data = read_serial_data(self.command_cell, self.port, self.baud_rate)
         # check if connect success
         if cell_data is False or len(cell_data) < self.cell_count*2:
             return False
@@ -145,7 +145,7 @@ class LttJdb(Battery):
             self.cells[c].voltage = unpack_from('>H', cell_data, c * 2)[0] / 1000
 
     def read_hardware_data(self):
-        hardware_data = read_serial_data(self.command_hardware, self.port)
+        hardware_data = read_serial_data(self.command_hardware, self.port, self.baud_rate)
         # check if connection success
         if hardware_data is False:
             return False

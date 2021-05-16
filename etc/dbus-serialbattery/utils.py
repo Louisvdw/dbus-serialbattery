@@ -16,9 +16,9 @@ def is_bit_set(tmp):
 def kelvin_to_celsius(kelvin_temp):
     return kelvin_temp - 273.1
 
-def read_serial_data(command, port):
+def read_serial_data(command, port, baud):
     try:
-        with serial.Serial(port, baudrate=9600, timeout=0.1) as ser:
+        with serial.Serial(port, baudrate=baud, timeout=0.1) as ser:
             ser.flushOutput()
             ser.flushInput()
             ser.write(command)
