@@ -21,6 +21,7 @@ class DbusHelper:
     def __init__(self, battery):
         self.battery = battery
         self.instance = 1
+        self.settings = None
         self._dbusservice = VeDbusService("com.victronenergy.battery." +
                                           self.battery.port[self.battery.port.rfind('/') + 1:],
                                           get_bus())
@@ -52,7 +53,7 @@ class DbusHelper:
 
         # Get the settings for the battery
         if not self.battery.get_settings():
-            return False;
+            return False
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -145,11 +146,13 @@ class DbusHelper:
 
         # Updates from cells
         min_cell = self.battery.get_min_cell()
+        if min_cell is not None:
+            self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
+            self._dbusservice['/System/MinCellVoltage'] = self.battery.cells[min_cell].voltage
         max_cell = self.battery.get_max_cell()
-        self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
-        self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
-        self._dbusservice['/System/MinCellVoltage'] = self.battery.cells[min_cell].voltage
-        self._dbusservice['/System/MaxCellVoltage'] = self.battery.cells[max_cell].voltage
+        if max_cell is not None:
+            self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
+            self._dbusservice['/System/MaxCellVoltage'] = self.battery.cells[max_cell].voltage
         self._dbusservice['/Balancing'] = 1 if self.battery.get_balancing() else 0
 
         # Update the alarms

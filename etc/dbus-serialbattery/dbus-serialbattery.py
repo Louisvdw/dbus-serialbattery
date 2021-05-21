@@ -80,7 +80,7 @@ def main():
     helper = DbusHelper(battery)
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
-        return;
+        return
     logger.info('Battery connected to dbus from ' + port)
 
 
