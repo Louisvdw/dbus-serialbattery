@@ -40,7 +40,7 @@ class DbusHelper:
 
     def handle_changed_setting(self, setting, oldvalue, newvalue):
         if setting == 'instance':
-            self.role, self.instance = self.get_role_instance()
+            self.battery.role, self.instance = self.get_role_instance()
             self._dbusservice['/DeviceInstance'] = self.instance
             logger.debug("DeviceInstance = %d", self.instance)
             return
@@ -141,6 +141,8 @@ class DbusHelper:
                                                         and self.battery.control_allow_charge else 1
         self._dbusservice['/System/MinCellTemperature'] = min(self.battery.temp1, self.battery.temp2)
         self._dbusservice['/System/MaxCellTemperature'] = max(self.battery.temp1, self.battery.temp2)
+
+        # Charge control
         self._dbusservice['/Info/MaxChargeCurrent'] = self.battery.control_charge_current
         self._dbusservice['/Info/MaxDischargeCurrent'] = self.battery.control_discharge_current
 
@@ -149,10 +151,16 @@ class DbusHelper:
         if min_cell is not None:
             self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
             self._dbusservice['/System/MinCellVoltage'] = self.battery.cells[min_cell].voltage
+        else:
+            self._dbusservice['/System/MinVoltageCellId'] = None
+            self._dbusservice['/System/MinCellVoltage'] = None
         max_cell = self.battery.get_max_cell()
         if max_cell is not None:
             self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
             self._dbusservice['/System/MaxCellVoltage'] = self.battery.cells[max_cell].voltage
+        else:
+            self._dbusservice['/System/MaxVoltageCellId'] = None
+            self._dbusservice['/System/MaxCellVoltage'] = None
         self._dbusservice['/Balancing'] = 1 if self.battery.get_balancing() else 0
 
         # Update the alarms
