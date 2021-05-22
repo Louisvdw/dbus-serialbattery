@@ -4,10 +4,10 @@ from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
 
-class LttJdbProtection(Protection):
+class LttJbdProtection(Protection):
 
     def __init__(self):
-        super(LttJdbProtection, self).__init__()
+        super(LttJbdProtection, self).__init__()
         self.voltage_high_cell = False
         self.voltage_low_cell = False
         self.short = False
@@ -43,17 +43,17 @@ class LttJdbProtection(Protection):
                                         or self.software_lock else 0)
 
 
-class LttJdb(Battery):
+class LttJbd(Battery):
 
     def __init__(self, port,baud):
-        super(LttJdb, self).__init__(port,baud)
-        self.protection = LttJdbProtection()
+        super(LttJbd, self).__init__(port,baud)
+        self.protection = LttJbdProtection()
 
 # degree_sign = u'\N{DEGREE SIGN}'
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
     command_cell = b"\xDD\xA5\x04\x00\xFF\xFC\x77"
     command_hardware = b"\xDD\xA5\x05\x00\xFF\xFB\x77"
-    BATTERYTYPE = "LTT/JDB"
+    BATTERYTYPE = "LTT/JBD"
     MIN_CELL_VOLTAGE = 3.1
     MAX_CELL_VOLTAGE = 3.45
     MAX_BATTERY_CURRENT = 50.0
@@ -87,7 +87,7 @@ class LttJdb(Battery):
         # Software implementations for low soc
         self.protection.soc_low = 2 if self.soc < 10 else 1 if self.soc < 20 else 0
 
-        # extra protection flags for LttJdb
+        # extra protection flags for LttJbd
         self.protection.set_voltage_low_cell = is_bit_set(tmp[11])
         self.protection.set_voltage_high_cell = is_bit_set(tmp[12])
         self.protection.set_software_lock = is_bit_set(tmp[0])
