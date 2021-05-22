@@ -12,7 +12,7 @@ import sys
 
 from dbushelper import DbusHelper
 import battery
-from lttjdb import LttJdb
+from lttjbd import LttJbd
 
 # Constants - Need to dynamically get them in future
 # update interval (ms)
@@ -36,7 +36,7 @@ def main():
     def get_battery_type(_port):
         # all the different batteries the driver support and need to test for
         battery_types = [
-            LttJdb(port=_port, baud=9600)
+            LttJbd(port=_port, baud=9600)
         ]
 
         # try to establish communications with the battery 3 times, else exit
@@ -80,7 +80,7 @@ def main():
     helper = DbusHelper(battery)
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
-        return;
+        return
     logger.info('Battery connected to dbus from ' + port)
 
 

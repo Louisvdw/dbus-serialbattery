@@ -4,10 +4,10 @@ from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
 
-class LttJdbProtection(Protection):
+class LttJbdProtection(Protection):
 
     def __init__(self):
-        super(LttJdbProtection, self).__init__()
+        super(LttJbdProtection, self).__init__()
         self.voltage_high_cell = False
         self.voltage_low_cell = False
         self.short = False
@@ -43,17 +43,17 @@ class LttJdbProtection(Protection):
                                         or self.software_lock else 0)
 
 
-class LttJdb(Battery):
+class LttJbd(Battery):
 
     def __init__(self, port,baud):
-        super(LttJdb, self).__init__(port,baud)
-        self.protection = LttJdbProtection()
+        super(LttJbd, self).__init__(port,baud)
+        self.protection = LttJbdProtection()
 
 # degree_sign = u'\N{DEGREE SIGN}'
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
     command_cell = b"\xDD\xA5\x04\x00\xFF\xFC\x77"
     command_hardware = b"\xDD\xA5\x05\x00\xFF\xFB\x77"
-    BATTERYTYPE = "LTT/JDB"
+    BATTERYTYPE = "LTT/JBD"
     MIN_CELL_VOLTAGE = 3.1
     MAX_CELL_VOLTAGE = 3.45
     MAX_BATTERY_CURRENT = 50.0
@@ -64,13 +64,13 @@ class LttJdb(Battery):
 
     def get_settings(self):
         self.type = self.BATTERYTYPE
-        self.read_gen_data();
+        self.read_gen_data()
         return True
 
     def refresh_data(self):
-        self.read_gen_data()
-        self.read_cell_data()
-        return True
+        result = self.read_gen_data()
+        result = result and self.read_cell_data()
+        return result
 
     def to_protection_bits(self, byte_data):
         tmp = bin(byte_data)[2:].rjust(13, zero_char)
@@ -87,7 +87,7 @@ class LttJdb(Battery):
         # Software implementations for low soc
         self.protection.soc_low = 2 if self.soc < 10 else 1 if self.soc < 20 else 0
 
-        # extra protection flags for LttJdb
+        # extra protection flags for LttJbd
         self.protection.set_voltage_low_cell = is_bit_set(tmp[11])
         self.protection.set_voltage_high_cell = is_bit_set(tmp[12])
         self.protection.set_software_lock = is_bit_set(tmp[0])
@@ -116,7 +116,7 @@ class LttJdb(Battery):
     def read_gen_data(self):
         gen_data = read_serial_data(self.command_general, self.port, self.baud_rate)
         # check if connect success
-        if gen_data is False:
+        if gen_data is False or len(gen_data) < 27:
             return False
 
         voltage, current, capacity_remain, capacity, self.cycles, self.production, balance, \
@@ -134,6 +134,7 @@ class LttJdb(Battery):
         self.to_protection_bits(protection)
         self.max_battery_voltage = self.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = self.MIN_CELL_VOLTAGE * self.cell_count
+        return True
 
     def read_cell_data(self):
         cell_data = read_serial_data(self.command_cell, self.port, self.baud_rate)
@@ -142,7 +143,13 @@ class LttJdb(Battery):
             return False
 
         for c in range(self.cell_count):
-            self.cells[c].voltage = unpack_from('>H', cell_data, c * 2)[0] / 1000
+            try:
+                cell_volts = unpack_from('>H', cell_data, c * 2)
+                if len(cell_volts) != 0:
+                    self.cells[c].voltage = cell_volts[0] / 1000
+            except struct.error:
+                self.cells[c].voltage = 0
+        return True
 
     def read_hardware_data(self):
         hardware_data = read_serial_data(self.command_hardware, self.port, self.baud_rate)

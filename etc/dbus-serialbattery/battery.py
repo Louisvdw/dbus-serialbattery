@@ -27,7 +27,7 @@ class Protection(object):
 
 
 class Cell:
-    voltage = 0
+    voltage = None
     balance = None
 
     def __init__(self, balance):
@@ -97,8 +97,6 @@ class Battery(object):
 
     def manage_charge_current(self):
         # Start with the current values
-        charge_current = self.control_charge_current
-        discharge_current = self.control_discharge_current
 
         # Change depending on the SOC values
         if self.soc > 99:
@@ -129,7 +127,7 @@ class Battery(object):
         min_voltage = 9999
         min_cell = None
         for c in range(self.cell_count):
-            if min_voltage > self.cells[c].voltage:
+            if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
                 min_voltage = self.cells[c].voltage
                 min_cell = c
         return min_cell
@@ -138,13 +136,13 @@ class Battery(object):
         max_voltage = 0
         max_cell = None
         for c in range(self.cell_count):
-            if max_voltage < self.cells[c].voltage:
+            if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage
                 max_cell = c
         return max_cell
 
     def get_balancing(self):
         for c in range(self.cell_count):
-            if self.cells[c].balance:
+            if self.cells[c].balance is not None and self.cells[c].balance:
                 return True
         return False
