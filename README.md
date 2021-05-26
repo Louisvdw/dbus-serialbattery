@@ -7,7 +7,7 @@ to the inverter, but many extra parameters is also published if available from t
 
 Donations:
 
-If you would like to donate to this project, you can buy me a Ko-Fi.
+If you would like to donate to this project, you can buy me a Ko-Fi. Get in contact if you would like to donate hardware.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1)
 
@@ -55,11 +55,11 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
 
 ### How to install
 1. You need to have a VenusOS device set up and running on your GX system (VenusGX, Cerbo, Raspberry Pi).
-2. You also need to connect your BMS to the VenusOS device using a serial interface. Use a Victron branded USB->RS485 or USB->Ve.Direct(RS232) cable for best compatibility. Most FTDI/FT232R USB->serial also works (make sure it is not a fake if you don't want issues). The FT232R already has a driver included in the VenusOS. Only connect the Ground, Rx & Tx to the BMS.
-3. [Option] Automatic Installer: Download and copy the [latest release venus-data.tar.gz](https://github.com/Louisvdw/dbus-serialbattery/releases) to the root of a USB flash drive or SD card(not for Raspberry Pi), plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices. (The Cerbo GX currently has an known issue where this install method is not working. It should be fixed in future VenusOS releases.)
-3. [Option] SSH installer script ( Require [root access](https://www.victronenergy.com/live/ccgx:root_access) ): Log into your VenusOS device and run this script to install the latest version. This can also be used to update to the latest version. 
+2. You also need to connect your BMS to the VenusOS device using a serial interface. Use a Victron branded USB->RS485 or USB->Ve.Direct(RS232) cable for best compatibility. Most FTDI/FT232R USB->serial also works (make sure it is not a fake if you don't want issues, as fakes do not have unique serialnumbers which cause problems). The FT232R already has a driver included in the VenusOS. **NB!  Only connect the Ground, Rx & Tx to the BMS** unless using a isolated cable like the Victron cables.
+3. [Option] Automatic Installer: Download and copy the [latest release venus-data.tar.gz](https://github.com/Louisvdw/dbus-serialbattery/releases) to the root of a USB flash drive or SD card(SD car option not for Raspberry Pi as you already boot from it), plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices. (The Cerbo GX currently has an known issue where this install method is not working. It should be fixed in future VenusOS releases.)
+4. Another [Option] is the SSH installer script ( Require [root access](https://www.victronenergy.com/live/ccgx:root_access) ): Log into your VenusOS device and run this script to install the latest version. This can also be used to update to the latest version. 
   > curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/latest | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \\" | wget -O venus-data.tar.gz -qi - | tar -zxf venus-data.tar.gz -C /data
-3. [Option] Manual install ( Require [root access](https://www.victronenergy.com/live/ccgx:root_access) ): 
+5. [Option] Manual install ( Require [root access](https://www.victronenergy.com/live/ccgx:root_access) ): 
     <details>
       <summary>Show details</summary>
    
@@ -74,7 +74,8 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
    > chmod 755 /data/rc.local /data/etc/dbus-serialbattery/dbus-serialbattery.py /data/etc/dbus-serialbattery/service/log/run /data/etc/dbus-serialbattery/service/run
    
      </details>
-4. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/dbus-serialbattery.py . There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
+6. On your GX device you need to set DVCC On. All the Share Sense option can be Off. <img src="images/DVCC.png" alt="DVCC values" width="75%" height="75%">
+7. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/battery.py . If you only need to lower these current limits, the latest VenusOS (2.65+) have to option to set a lower limit under the DVCC settings. The lowest of these values will be the limit used. There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
 
 ### Troubleshoot
 There are 2 important log files on the VenusOS device to look at.
