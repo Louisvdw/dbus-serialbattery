@@ -9,7 +9,7 @@ Donations:
 
 If you would like to donate to this project, you can buy me a Ko-Fi. Get in contact if you would like to donate hardware.
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
 
 
 Driver support:
