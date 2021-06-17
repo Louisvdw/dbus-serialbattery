@@ -2,14 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import utils
 
-# Constants - Need to dynamically get them in future
-# Cell min/max voltages - used with the cell count to get the min/max battery voltage
-MIN_CELL_VOLTAGE = 3.1
-MAX_CELL_VOLTAGE = 3.45
-# max battery charge/discharge current
-MAX_BATTERY_CURRENT = 50.0
-MAX_BATTERY_DISCHARGE_CURRENT = 60.0
-
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
     def __init__(self):
@@ -67,6 +59,9 @@ class Battery(object):
         self.control_discharge_current = None
         self.control_charge_current = None
         self.control_allow_charge = None
+        # max battery charge/discharge current
+        self.max_battery_current = None
+        self.max_battery_discharge_current = None
 
     def test_connection(self):
         # Each driver must override this function to test if a connection can be made
@@ -109,19 +104,19 @@ class Battery(object):
         elif 95 < self.soc <= 97:
             self.control_charge_current = 4
         elif 91 < self.soc <= 95:
-            self.control_charge_current = MAX_BATTERY_CURRENT/2
+            self.control_charge_current = self.max_battery_current/2
         else:
-            self.control_charge_current = MAX_BATTERY_CURRENT
+            self.control_charge_current = self.max_battery_current
 
         # Change depending on the SOC values
         if self.soc <= 20:
             self.control_discharge_current = 5
         elif 20 < self.soc <= 30:
-            self.control_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT/4
+            self.control_discharge_current = self.max_battery_discharge_current/4
         elif 30 < self.soc <= 35:
-            self.control_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT/2
+            self.control_discharge_current = self.max_battery_discharge_current/2
         else:
-            self.control_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+            self.control_discharge_current = self.max_battery_discharge_current
 
     def get_min_cell(self):
         min_voltage = 9999

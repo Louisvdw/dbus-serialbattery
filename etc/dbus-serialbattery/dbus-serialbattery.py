@@ -11,8 +11,10 @@ import logging
 import sys
 
 from dbushelper import DbusHelper
+from utils import DRIVER_VERSION, DRIVER_SUBVERSION
 import battery
-from lttjbd import LttJbd
+from lltjbd import LltJbd
+from daly import Daly
 
 # Constants - Need to dynamically get them in future
 # update interval (ms)
@@ -36,7 +38,9 @@ def main():
     def get_battery_type(_port):
         # all the different batteries the driver support and need to test for
         battery_types = [
-            LttJbd(port=_port, baud=9600)
+            Daly(port=_port, baud=9600, address=b"\x40"),
+            Daly(port=_port, baud=9600, address=b"\x80"),
+            LltJbd(port=_port, baud=9600),
         ]
 
         # try to establish communications with the battery 3 times, else exit
@@ -44,6 +48,7 @@ def main():
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in battery_types:
+                logger.info('Testing ' + test.__class__.__name__)
                 if test.test_connection() is True:
                     return test
 
@@ -61,7 +66,7 @@ def main():
             logger.info('No Port')
             return '/dev/ttyUSB2'
 
-    logger.info('dbus-serialbattery')
+    logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
     port = get_port()
     battery = get_battery_type(port)
