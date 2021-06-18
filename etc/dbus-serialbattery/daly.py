@@ -68,7 +68,7 @@ class Daly(Battery):
         buffer = bytearray(self.command_base)
         buffer[1] = self.command_address   # Always serial 40 for now
         buffer[2] = command
-        buffer[12] = sum(buffer[:11]) & 0xFF   #checksum calc
+        buffer[12] = sum(buffer[:12]) & 0xFF   #checksum calc
         return buffer
 
     def read_serial_data_daly(self, command):
@@ -77,9 +77,9 @@ class Daly(Battery):
             return False
 
         start, flag, command_ret, length = unpack_from('BBBB', data)
-        checksum = sum(data[4:8]) & 0xFF
+        checksum = sum(data[:-1]) & 0xFF
 
-        if start == b"\xA5" and length == 8 and checksum == data[:-1]:
+        if start == b"\xA5" and length == 8 and checksum == data[-1:]:
             return data[3:length]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
