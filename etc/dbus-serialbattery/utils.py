@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.4
-DRIVER_SUBVERSION = 'beta4'
+DRIVER_VERSION = 0.5
+DRIVER_SUBVERSION = 'beta1'
 zero_char = chr(48)
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
 MIN_CELL_VOLTAGE = 3.1
