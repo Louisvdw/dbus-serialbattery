@@ -23,7 +23,7 @@ class Daly(Battery):
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
     BATTERYTYPE = "Daly"
-    LENGTH_CHECK = 5
+    LENGTH_CHECK = 4
     LENGTH_POS = 3
 
     def test_connection(self):
@@ -31,7 +31,8 @@ class Daly(Battery):
 
     def get_settings(self):
         self.type = self.BATTERYTYPE
-
+        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
@@ -48,6 +49,9 @@ class Daly(Battery):
         self.cell_count, self.temp_censors, self.charger_connected, self.load_connected, \
             state, self.cycles = unpack_from('>bb??bhx', status_data)
 
+        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+
         self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
         return True
@@ -58,7 +62,7 @@ class Daly(Battery):
         if soc_data is False:
             return False
 
-        voltage, current, soc = struct.unpack_from('>hxhh', status_data)
+        voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
         self.voltage = voltage / 10
         self.current = (current- 30000) / 10
         self.soc = soc / 10
@@ -79,8 +83,8 @@ class Daly(Battery):
         start, flag, command_ret, length = unpack_from('BBBB', data)
         checksum = sum(data[:-1]) & 0xFF
 
-        if start == b"\xA5" and length == 8 and checksum == data[-1:]:
-            return data[3:length]
+        if start == 165 and length == 8 and checksum == data[12]:
+            return data[4:length+4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
