@@ -154,7 +154,7 @@ class DbusHelper:
         else:
             self._dbusservice['/System/MinVoltageCellId'] = None
             self._dbusservice['/System/MinCellVoltage'] = None
-
+        max_cell = self.battery.get_max_cell()
         if max_cell is not None:
             self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
             self._dbusservice['/System/MaxCellVoltage'] = self.battery.cells[max_cell].voltage
