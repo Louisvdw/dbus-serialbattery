@@ -70,7 +70,7 @@ class Daly(Battery):
 
     def generate_command(self, command):
         buffer = bytearray(self.command_base)
-        buffer[1] = self.command_address   # Always serial 40 for now
+        buffer[1] = self.command_address   # Always serial 40 or 80
         buffer[2] = command
         buffer[12] = sum(buffer[:12]) & 0xFF   #checksum calc
         return buffer
