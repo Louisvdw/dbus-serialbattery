@@ -141,3 +141,34 @@ class Battery(object):
             if self.cells[c].balance is not None and self.cells[c].balance:
                 return True
         return False
+
+    def get_temp(self):
+        if self.temp1 is not None and self.temp2 is not None:
+            return round((float(self.battery.temp1) + float(self.battery.temp2)) / 2, 2)
+        if self.temp1 is not None and self.temp2 is None:
+            return round(float(self.battery.temp1) , 2)
+        if self.temp1 is None and self.temp2 is not None:
+            return round(float(self.battery.temp2) , 2)
+        else:
+            return None
+
+    def get_min_temp(self):
+        if self.temp1 is not None and self.temp2 is not None:
+            return min(self.battery.temp1, self.battery.temp2)
+        if self.temp1 is not None and self.temp2 is None:
+            return self.battery.temp1
+        if self.temp1 is None and self.temp2 is not None:
+            return self.battery.temp2
+        else:
+            return None
+
+    def get_max_temp(self):
+        if self.temp1 is not None and self.temp2 is not None:
+            return max(self.battery.temp1, self.battery.temp2)
+        if self.temp1 is not None and self.temp2 is None:
+            return self.battery.temp1
+        if self.temp1 is None and self.temp2 is not None:
+            return self.battery.temp2
+        else:
+            return None
+        

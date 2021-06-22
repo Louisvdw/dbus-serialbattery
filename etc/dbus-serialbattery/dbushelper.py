@@ -130,7 +130,7 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Voltage'] = round(self.battery.voltage, 2)
         self._dbusservice['/Dc/0/Current'] = round(self.battery.current, 2)
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
-        self._dbusservice['/Dc/0/Temperature'] = round((float(self.battery.temp1) + float(self.battery.temp2)) / 2, 2)
+        self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
 
         # Update battery extras
         self._dbusservice['/History/ChargeCycles'] = self.battery.cycles
@@ -139,8 +139,8 @@ class DbusHelper:
         self._dbusservice['/Io/AllowToDischarge'] = 1 if self.battery.discharge_fet else 0
         self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0 if self.battery.charge_fet \
                                                         and self.battery.control_allow_charge else 1
-        self._dbusservice['/System/MinCellTemperature'] = min(self.battery.temp1, self.battery.temp2)
-        self._dbusservice['/System/MaxCellTemperature'] = max(self.battery.temp1, self.battery.temp2)
+        self._dbusservice['/System/MinCellTemperature'] = self.battery.get_min_temp()
+        self._dbusservice['/System/MaxCellTemperature'] = self.battery.get_max_temp()
 
         # Charge control
         self._dbusservice['/Info/MaxChargeCurrent'] = self.battery.control_charge_current
@@ -179,5 +179,3 @@ class DbusHelper:
         logging.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
                       round(self.battery.soc, 2))
-
-
