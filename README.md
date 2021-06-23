@@ -9,12 +9,12 @@ Donations:
 
 If you would like to donate to this project, you can buy me a Ko-Fi. Get in contact if you would like to donate hardware.
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
 
 
 Driver support:
  * Smart BMS range from [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/) / [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/) / Overkill Solar or BMS that use the Xiaoxiang phone app
-<img src="images/Android_xiaoxiang.jpg" alt="Xiaoxian app" width="40%" height="40%">
+<img src="images/Android_xiaoxiang.jpg" alt="Xiaoxian app" width="40%" height="40%"><img src="images/IOSapp.jpg" alt="Xiaoxian app" width="40%" height="40%">
 
 Planned support:
  * Smart Daly BMS
@@ -74,7 +74,7 @@ The driver will act as Battery Monitor inside VenusOS and update the following v
    > chmod 755 /data/rc.local /data/etc/dbus-serialbattery/dbus-serialbattery.py /data/etc/dbus-serialbattery/service/log/run /data/etc/dbus-serialbattery/service/run
    
      </details>
-6. On your GX device you need to set DVCC On. All the Share Sense option can be Off. <img src="images/DVCC.png" alt="DVCC values" width="75%" height="75%">
+6. On your GX device you need to set DVCC On. All the Share Sense option can be Off. <img src="images/DVCC.png" alt="DVCC values" width="50%" height="50%">
 7. The current versions use a hard coded current limit for the BMS (50A charge/60A discharge). If your battery cannot handle that please edit the MAX_BATTERY_CURRENT and MAX_BATTERY_DISCHARGE_CURRENT constants at the top of the file etc/dbus-serialbattery/utils.py . If you only need to lower these current limits, the latest VenusOS (2.65+) have to option to set a lower limit under the DVCC settings. The lowest of these values will be the limit used. There is an open [issue](https://github.com/Louisvdw/dbus-serialbattery/issues/4) to fix this. 
 
 ### Troubleshoot

@@ -1,2 +1,3 @@
 service sbattery		dbus-serialbattery
-alias	default		sbattery
+alias default gps:vedirect:sbattery
+alias rs485 cgwacs:fzsonick:imt:modbus:sbattery
