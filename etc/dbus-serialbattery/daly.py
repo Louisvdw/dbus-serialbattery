@@ -11,6 +11,10 @@ class Daly(Battery):
         self.charger_connected = None
         self.load_connected = None
         self.command_address = address
+        self.cell_min_voltage = None
+        self.cell_max_voltage = None
+        self.cell_min_no = None
+        self.cell_max_no = None
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
     command_soc = b"\x90"
@@ -25,6 +29,8 @@ class Daly(Battery):
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 4
     LENGTH_POS = 3
+    CURRENT_ZERO_CONSTANT = 30000
+    TEMP_ZERO_CONSTANT = 40
 
     def test_connection(self):
         return self.read_status_data()
@@ -37,6 +43,9 @@ class Daly(Battery):
 
     def refresh_data(self):
         result = self.read_soc_data()
+        result = result and self.read_cell_voltage_range_data()
+        result = result and self.read_temperature_range_data()
+        result = result and self.read_fed_data()
 
         return result
 
@@ -64,8 +73,40 @@ class Daly(Battery):
 
         voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
         self.voltage = voltage / 10
-        self.current = (current- 30000) / 10
+        self.current = (current - CURRENT_ZERO_CONSTANT) / -10
         self.soc = soc / 10
+        return True
+
+    def read_cell_voltage_range_data(self):
+        minmax_data = self.read_serial_data_daly(self.command_minmax_cell_volts)
+        # check if connection success
+        if minmax_data is False:
+            return False
+
+        cell_max_voltage,self.cell_max_no,cell_min_voltage, self.cell_min_no = unpack_from('>hbhb', minmax_data)
+        self.cell_max_voltage = cell_max_voltage / 10
+        self.cell_min_voltage = cell_min_voltage / 10
+        return True
+
+    def read_temperature_range_data(self):
+        minmax_data = self.read_serial_data_daly(self.command_minmax_temp)
+        # check if connection success
+        if minmax_data is False:
+            return False
+
+        max_temp,max_no,min_temp, min_no = unpack_from('>bbbb', minmax_data)
+        self.temp1 = min_temp - TEMP_ZERO_CONSTANT
+        self.temp2 = max_temp - TEMP_ZERO_CONSTANT
+        return True
+
+    def read_fed_data(self):
+        fed_data = self.read_serial_data_daly(self.command_fet)
+        # check if connection success
+        if fed_data is False:
+            return False
+
+        status, self.charge_fet, self.discharge_fet, self.cycles, capacity_remain = unpack_from('>b??BL', fed_data)
+        self.capacity_remain = capacity_remain / 1000
         return True
 
     def generate_command(self, command):
