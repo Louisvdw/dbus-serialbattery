@@ -121,6 +121,9 @@ class Battery(object):
     def get_min_cell(self):
         min_voltage = 9999
         min_cell = None
+        if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
+            return self.cell_min_voltage
+
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
                 min_voltage = self.cells[c].voltage
@@ -130,6 +133,9 @@ class Battery(object):
     def get_max_cell(self):
         max_voltage = 0
         max_cell = None
+        if len(self.cells) == 0 and hasattr(self, 'cell_max_voltage'):
+            return self.cell_max_voltage
+
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage

@@ -37,7 +37,7 @@ def read_serial_data(command, port, baud, length_pos, length_check):
             toread = ser.inWaiting()
 
             while toread < (length_pos+1):
-                sleep(0.01)
+                sleep(0.001)
                 toread = ser.inWaiting()
                 count += 1
                 if count > 50:
@@ -54,7 +54,7 @@ def read_serial_data(command, port, baud, length_pos, length_check):
                 res = ser.read(length + length_check)
                 data.extend(res)
                 #logger.info('serial data length ' + str(len(data)))
-                sleep(0.01)
+                sleep(0.001)
 
             return data
 

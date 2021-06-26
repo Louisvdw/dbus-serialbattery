@@ -73,7 +73,7 @@ class Daly(Battery):
 
         voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
         self.voltage = voltage / 10
-        self.current = (current - CURRENT_ZERO_CONSTANT) / -10
+        self.current = (current - self.CURRENT_ZERO_CONSTANT) / -10
         self.soc = soc / 10
         return True
 
@@ -95,8 +95,8 @@ class Daly(Battery):
             return False
 
         max_temp,max_no,min_temp, min_no = unpack_from('>bbbb', minmax_data)
-        self.temp1 = min_temp - TEMP_ZERO_CONSTANT
-        self.temp2 = max_temp - TEMP_ZERO_CONSTANT
+        self.temp1 = min_temp - self.TEMP_ZERO_CONSTANT
+        self.temp2 = max_temp - self.TEMP_ZERO_CONSTANT
         return True
 
     def read_fed_data(self):
