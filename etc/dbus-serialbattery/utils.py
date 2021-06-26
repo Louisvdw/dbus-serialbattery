@@ -11,7 +11,7 @@ logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.5
-DRIVER_SUBVERSION = 'beta4'
+DRIVER_SUBVERSION = 'beta5'
 zero_char = chr(48)
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
 MIN_CELL_VOLTAGE = 3.1
@@ -37,7 +37,7 @@ def read_serial_data(command, port, baud, length_pos, length_check):
             toread = ser.inWaiting()
 
             while toread < (length_pos+1):
-                sleep(0.001)
+                sleep(0.005)
                 toread = ser.inWaiting()
                 count += 1
                 if count > 50:
@@ -54,7 +54,7 @@ def read_serial_data(command, port, baud, length_pos, length_check):
                 res = ser.read(length + length_check)
                 data.extend(res)
                 #logger.info('serial data length ' + str(len(data)))
-                sleep(0.001)
+                sleep(0.005)
 
             return data
 

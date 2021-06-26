@@ -148,19 +148,11 @@ class DbusHelper:
 
         # Updates from cells
         min_cell = self.battery.get_min_cell()
-        if min_cell is not None:
-            self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
-            self._dbusservice['/System/MinCellVoltage'] = self.battery.cells[min_cell].voltage
-        else:
-            self._dbusservice['/System/MinVoltageCellId'] = None
-            self._dbusservice['/System/MinCellVoltage'] = None
         max_cell = self.battery.get_max_cell()
-        if max_cell is not None:
-            self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
-            self._dbusservice['/System/MaxCellVoltage'] = self.battery.cells[max_cell].voltage
-        else:
-            self._dbusservice['/System/MaxVoltageCellId'] = None
-            self._dbusservice['/System/MaxCellVoltage'] = None
+        self._dbusservice['/System/MinVoltageCellId'] = None if min_cell is None else 'C' + str(min_cell + 1)
+        self._dbusservice['/System/MaxVoltageCellId'] = None if max_cell is None else 'C' + str(max_cell + 1)
+        self._dbusservice['/System/MinCellVoltage'] = self.battery.get_min_cell_voltage()
+        self._dbusservice['/System/MaxCellVoltage'] = self.battery.get_max_cell_voltage()
         self._dbusservice['/Balancing'] = 1 if self.battery.get_balancing() else 0
 
         # Update the alarms

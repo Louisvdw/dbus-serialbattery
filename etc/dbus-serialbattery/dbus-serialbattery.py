@@ -16,10 +16,6 @@ import battery
 from lltjbd import LltJbd
 from daly import Daly
 
-# Constants - Need to dynamically get them in future
-# update interval (ms)
-INTERVAL = 1000
-
 # Logging
 logging.info('Starting dbus-serialbattery')
 logger = logging.getLogger(__name__)
@@ -90,7 +86,7 @@ def main():
 
 
     # Poll the battery at INTERVAL and run the main loop
-    gobject.timeout_add(INTERVAL, lambda: poll_battery(mainloop))
+    gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
     try:
         mainloop.run()
     except KeyboardInterrupt:

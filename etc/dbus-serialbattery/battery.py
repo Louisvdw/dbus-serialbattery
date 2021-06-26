@@ -33,6 +33,7 @@ class Battery(object):
         self.baud_rate = baud
         self.role = 'battery'
         self.type = 'Generic'
+        self.poll_interval = 1000
 
         self.hardware_version = None
         self.voltage = None
@@ -142,6 +143,26 @@ class Battery(object):
                 max_cell = c
         return max_cell
 
+    def get_min_cell_voltage(self):
+        min_voltage = 9999
+        if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
+            return self.cell_min_voltage
+
+        for c in range(min(len(self.cells), self.cell_count)):
+            if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
+                min_voltage = self.cells[c].voltage
+        return min_voltage
+
+    def get_max_cell_voltage(self):
+        max_voltage = 0
+        if len(self.cells) == 0 and hasattr(self, 'cell_max_voltage'):
+            return self.cell_max_voltage
+
+        for c in range(min(len(self.cells), self.cell_count)):
+            if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
+                max_voltage = self.cells[c].voltage
+        return max_voltage
+
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].balance is not None and self.cells[c].balance:
@@ -150,31 +171,31 @@ class Battery(object):
 
     def get_temp(self):
         if self.temp1 is not None and self.temp2 is not None:
-            return round((float(self.battery.temp1) + float(self.battery.temp2)) / 2, 2)
+            return round((float(self.temp1) + float(self.temp2)) / 2, 2)
         if self.temp1 is not None and self.temp2 is None:
-            return round(float(self.battery.temp1) , 2)
+            return round(float(self.temp1) , 2)
         if self.temp1 is None and self.temp2 is not None:
-            return round(float(self.battery.temp2) , 2)
+            return round(float(self.temp2) , 2)
         else:
             return None
 
     def get_min_temp(self):
         if self.temp1 is not None and self.temp2 is not None:
-            return min(self.battery.temp1, self.battery.temp2)
+            return min(self.temp1, self.temp2)
         if self.temp1 is not None and self.temp2 is None:
-            return self.battery.temp1
+            return self.temp1
         if self.temp1 is None and self.temp2 is not None:
-            return self.battery.temp2
+            return self.temp2
         else:
             return None
 
     def get_max_temp(self):
         if self.temp1 is not None and self.temp2 is not None:
-            return max(self.battery.temp1, self.battery.temp2)
+            return max(self.temp1, self.temp2)
         if self.temp1 is not None and self.temp2 is None:
-            return self.battery.temp1
+            return self.temp1
         if self.temp1 is None and self.temp2 is not None:
-            return self.battery.temp2
+            return self.temp2
         else:
             return None
         

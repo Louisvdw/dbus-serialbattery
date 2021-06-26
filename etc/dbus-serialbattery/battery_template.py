@@ -8,6 +8,7 @@ class BatteryTemplate(Battery):
 
     def __init__(self, port,baud,address):
         super(BatteryTemplate, self).__init__(port,baud)
+        self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "Template"
     LENGTH_CHECK = 4
@@ -22,9 +23,8 @@ class BatteryTemplate(Battery):
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
-        # Set the battery type, current limits, populate cell count, etc
+        # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.type = self.BATTERYTYPE
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True

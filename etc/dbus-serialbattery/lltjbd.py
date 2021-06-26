@@ -53,6 +53,7 @@ class LltJbd(Battery):
     def __init__(self, port,baud):
         super(LltJbd, self).__init__(port,baud)
         self.protection = LltJbdProtection()
+        self.type = self.BATTERYTYPE
 
 # degree_sign = u'\N{DEGREE SIGN}'
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
@@ -66,7 +67,6 @@ class LltJbd(Battery):
         return self.read_hardware_data()
 
     def get_settings(self):
-        self.type = self.BATTERYTYPE
         self.read_gen_data()
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT

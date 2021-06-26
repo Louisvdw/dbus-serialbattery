@@ -15,6 +15,8 @@ class Daly(Battery):
         self.cell_max_voltage = None
         self.cell_min_no = None
         self.cell_max_no = None
+        self.poll_interval = 2000
+        self.type = self.BATTERYTYPE
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
     command_soc = b"\x90"
@@ -36,7 +38,6 @@ class Daly(Battery):
         return self.read_status_data()
 
     def get_settings(self):
-        self.type = self.BATTERYTYPE
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
