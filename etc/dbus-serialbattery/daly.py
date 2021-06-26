@@ -105,7 +105,7 @@ class Daly(Battery):
         if fed_data is False:
             return False
 
-        status, self.charge_fet, self.discharge_fet, self.cycles, capacity_remain = unpack_from('>b??BL', fed_data)
+        status, self.charge_fet, self.discharge_fet, bms_cycles, capacity_remain = unpack_from('>b??BL', fed_data)
         self.capacity_remain = capacity_remain / 1000
         return True
 
