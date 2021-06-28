@@ -2,14 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import utils
 
-# Constants - Need to dynamically get them in future
-# Cell min/max voltages - used with the cell count to get the min/max battery voltage
-MIN_CELL_VOLTAGE = 3.1
-MAX_CELL_VOLTAGE = 3.45
-# max battery charge/discharge current
-MAX_BATTERY_CURRENT = 50.0
-MAX_BATTERY_DISCHARGE_CURRENT = 60.0
-
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
     def __init__(self):
@@ -41,6 +33,7 @@ class Battery(object):
         self.baud_rate = baud
         self.role = 'battery'
         self.type = 'Generic'
+        self.poll_interval = 1000
 
         self.hardware_version = None
         self.voltage = None
@@ -67,6 +60,9 @@ class Battery(object):
         self.control_discharge_current = None
         self.control_charge_current = None
         self.control_allow_charge = None
+        # max battery charge/discharge current
+        self.max_battery_current = None
+        self.max_battery_discharge_current = None
 
     def test_connection(self):
         # Each driver must override this function to test if a connection can be made
@@ -109,24 +105,27 @@ class Battery(object):
         elif 95 < self.soc <= 97:
             self.control_charge_current = 4
         elif 91 < self.soc <= 95:
-            self.control_charge_current = MAX_BATTERY_CURRENT/2
+            self.control_charge_current = self.max_battery_current/2
         else:
-            self.control_charge_current = MAX_BATTERY_CURRENT
+            self.control_charge_current = self.max_battery_current
 
         # Change depending on the SOC values
         if self.soc <= 20:
             self.control_discharge_current = 5
         elif 20 < self.soc <= 30:
-            self.control_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT/4
+            self.control_discharge_current = self.max_battery_discharge_current/4
         elif 30 < self.soc <= 35:
-            self.control_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT/2
+            self.control_discharge_current = self.max_battery_discharge_current/2
         else:
-            self.control_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+            self.control_discharge_current = self.max_battery_discharge_current
 
     def get_min_cell(self):
         min_voltage = 9999
         min_cell = None
-        for c in range(self.cell_count):
+        if len(self.cells) == 0 and hasattr(self, 'cell_min_no'):
+            return self.cell_min_no
+
+        for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
                 min_voltage = self.cells[c].voltage
                 min_cell = c
@@ -135,14 +134,68 @@ class Battery(object):
     def get_max_cell(self):
         max_voltage = 0
         max_cell = None
-        for c in range(self.cell_count):
+        if len(self.cells) == 0 and hasattr(self, 'cell_max_no'):
+            return self.cell_max_no
+
+        for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage
                 max_cell = c
         return max_cell
 
+    def get_min_cell_voltage(self):
+        min_voltage = 9999
+        if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
+            return self.cell_min_voltage
+
+        for c in range(min(len(self.cells), self.cell_count)):
+            if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
+                min_voltage = self.cells[c].voltage
+        return min_voltage
+
+    def get_max_cell_voltage(self):
+        max_voltage = 0
+        if len(self.cells) == 0 and hasattr(self, 'cell_max_voltage'):
+            return self.cell_max_voltage
+
+        for c in range(min(len(self.cells), self.cell_count)):
+            if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
+                max_voltage = self.cells[c].voltage
+        return max_voltage
+
     def get_balancing(self):
-        for c in range(self.cell_count):
+        for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].balance is not None and self.cells[c].balance:
                 return True
         return False
+
+    def get_temp(self):
+        if self.temp1 is not None and self.temp2 is not None:
+            return round((float(self.temp1) + float(self.temp2)) / 2, 2)
+        if self.temp1 is not None and self.temp2 is None:
+            return round(float(self.temp1) , 2)
+        if self.temp1 is None and self.temp2 is not None:
+            return round(float(self.temp2) , 2)
+        else:
+            return None
+
+    def get_min_temp(self):
+        if self.temp1 is not None and self.temp2 is not None:
+            return min(self.temp1, self.temp2)
+        if self.temp1 is not None and self.temp2 is None:
+            return self.temp1
+        if self.temp1 is None and self.temp2 is not None:
+            return self.temp2
+        else:
+            return None
+
+    def get_max_temp(self):
+        if self.temp1 is not None and self.temp2 is not None:
+            return max(self.temp1, self.temp2)
+        if self.temp1 is not None and self.temp2 is None:
+            return self.temp1
+        if self.temp1 is None and self.temp2 is not None:
+            return self.temp2
+        else:
+            return None
+        

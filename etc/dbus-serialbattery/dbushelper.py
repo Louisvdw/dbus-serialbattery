@@ -63,15 +63,15 @@ class DbusHelper:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery (' + self.battery.type + ')')
+        self._dbusservice.add_path('/ProductName', 'SerialBattery (' + self.battery.type + ') v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeVoltage', self.battery.max_battery_voltage, writeable=True)
-        self._dbusservice.add_path('/Info/MaxChargeCurrent', self.battery.MAX_BATTERY_CURRENT, writeable=True)
-        self._dbusservice.add_path('/Info/MaxDischargeCurrent', self.battery.MAX_BATTERY_DISCHARGE_CURRENT, writeable=True)
+        self._dbusservice.add_path('/Info/MaxChargeCurrent', self.battery.max_battery_current, writeable=True)
+        self._dbusservice.add_path('/Info/MaxDischargeCurrent', self.battery.max_battery_discharge_current, writeable=True)
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.battery.cell_count, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
@@ -130,7 +130,7 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Voltage'] = round(self.battery.voltage, 2)
         self._dbusservice['/Dc/0/Current'] = round(self.battery.current, 2)
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
-        self._dbusservice['/Dc/0/Temperature'] = round((float(self.battery.temp1) + float(self.battery.temp2)) / 2, 2)
+        self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
 
         # Update battery extras
         self._dbusservice['/History/ChargeCycles'] = self.battery.cycles
@@ -139,8 +139,8 @@ class DbusHelper:
         self._dbusservice['/Io/AllowToDischarge'] = 1 if self.battery.discharge_fet else 0
         self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0 if self.battery.charge_fet \
                                                         and self.battery.control_allow_charge else 1
-        self._dbusservice['/System/MinCellTemperature'] = min(self.battery.temp1, self.battery.temp2)
-        self._dbusservice['/System/MaxCellTemperature'] = max(self.battery.temp1, self.battery.temp2)
+        self._dbusservice['/System/MinCellTemperature'] = self.battery.get_min_temp()
+        self._dbusservice['/System/MaxCellTemperature'] = self.battery.get_max_temp()
 
         # Charge control
         self._dbusservice['/Info/MaxChargeCurrent'] = self.battery.control_charge_current
@@ -148,19 +148,11 @@ class DbusHelper:
 
         # Updates from cells
         min_cell = self.battery.get_min_cell()
-        if min_cell is not None:
-            self._dbusservice['/System/MinVoltageCellId'] = 'C' + str(min_cell + 1)
-            self._dbusservice['/System/MinCellVoltage'] = self.battery.cells[min_cell].voltage
-        else:
-            self._dbusservice['/System/MinVoltageCellId'] = None
-            self._dbusservice['/System/MinCellVoltage'] = None
         max_cell = self.battery.get_max_cell()
-        if max_cell is not None:
-            self._dbusservice['/System/MaxVoltageCellId'] = 'C' + str(max_cell + 1)
-            self._dbusservice['/System/MaxCellVoltage'] = self.battery.cells[max_cell].voltage
-        else:
-            self._dbusservice['/System/MaxVoltageCellId'] = None
-            self._dbusservice['/System/MaxCellVoltage'] = None
+        self._dbusservice['/System/MinVoltageCellId'] = None if min_cell is None else 'C' + str(min_cell + 1)
+        self._dbusservice['/System/MaxVoltageCellId'] = None if max_cell is None else 'C' + str(max_cell + 1)
+        self._dbusservice['/System/MinCellVoltage'] = self.battery.get_min_cell_voltage()
+        self._dbusservice['/System/MaxCellVoltage'] = self.battery.get_max_cell_voltage()
         self._dbusservice['/Balancing'] = 1 if self.battery.get_balancing() else 0
 
         # Update the alarms
@@ -179,5 +171,3 @@ class DbusHelper:
         logging.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
                       round(self.battery.soc, 2))
-
-

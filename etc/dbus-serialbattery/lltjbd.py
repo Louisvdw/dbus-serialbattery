@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Protection, Battery, Cell
+import logging
 from utils import *
 from struct import *
 
-class LttJbdProtection(Protection):
+# Logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+class LltJbdProtection(Protection):
 
     def __init__(self):
-        super(LttJbdProtection, self).__init__()
+        super(LltJbdProtection, self).__init__()
         self.voltage_high_cell = False
         self.voltage_low_cell = False
         self.short = False
@@ -43,28 +48,28 @@ class LttJbdProtection(Protection):
                                         or self.software_lock else 0)
 
 
-class LttJbd(Battery):
+class LltJbd(Battery):
 
     def __init__(self, port,baud):
-        super(LttJbd, self).__init__(port,baud)
-        self.protection = LttJbdProtection()
+        super(LltJbd, self).__init__(port,baud)
+        self.protection = LltJbdProtection()
+        self.type = self.BATTERYTYPE
 
 # degree_sign = u'\N{DEGREE SIGN}'
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
     command_cell = b"\xDD\xA5\x04\x00\xFF\xFC\x77"
     command_hardware = b"\xDD\xA5\x05\x00\xFF\xFB\x77"
-    BATTERYTYPE = "LTT/JBD"
-    MIN_CELL_VOLTAGE = 3.1
-    MAX_CELL_VOLTAGE = 3.45
-    MAX_BATTERY_CURRENT = 50.0
-    MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+    BATTERYTYPE = "LLT/JBD"
+    LENGTH_CHECK = 6
+    LENGTH_POS = 3
 
     def test_connection(self):
         return self.read_hardware_data()
 
     def get_settings(self):
-        self.type = self.BATTERYTYPE
         self.read_gen_data()
+        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
@@ -87,7 +92,7 @@ class LttJbd(Battery):
         # Software implementations for low soc
         self.protection.soc_low = 2 if self.soc < 10 else 1 if self.soc < 20 else 0
 
-        # extra protection flags for LttJbd
+        # extra protection flags for LltJbd
         self.protection.set_voltage_low_cell = is_bit_set(tmp[11])
         self.protection.set_voltage_high_cell = is_bit_set(tmp[12])
         self.protection.set_software_lock = is_bit_set(tmp[0])
@@ -114,7 +119,7 @@ class LttJbd(Battery):
         self.discharge_fet = is_bit_set(tmp[0])
 
     def read_gen_data(self):
-        gen_data = read_serial_data(self.command_general, self.port, self.baud_rate)
+        gen_data = self.read_serial_data_llt(self.command_general)
         # check if connect success
         if gen_data is False or len(gen_data) < 27:
             return False
@@ -132,12 +137,13 @@ class LttJbd(Battery):
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
-        self.max_battery_voltage = self.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = self.MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+
         return True
 
     def read_cell_data(self):
-        cell_data = read_serial_data(self.command_cell, self.port, self.baud_rate)
+        cell_data = self.read_serial_data_llt(self.command_cell)
         # check if connect success
         if cell_data is False or len(cell_data) < self.cell_count*2:
             return False
@@ -152,7 +158,7 @@ class LttJbd(Battery):
         return True
 
     def read_hardware_data(self):
-        hardware_data = read_serial_data(self.command_hardware, self.port, self.baud_rate)
+        hardware_data = self.read_serial_data_llt(self.command_hardware)
         # check if connection success
         if hardware_data is False:
             return False
@@ -160,3 +166,17 @@ class LttJbd(Battery):
         self.hardware_version = unpack_from('>' + str(len(hardware_data)) + 's', hardware_data)[0]
         logger.info(self.hardware_version)
         return True
+
+    def read_serial_data_llt(self, command):
+        data = read_serial_data(command, self.port, self.baud_rate, length_pos=self.LENGTH_POS, length_check = self.LENGTH_CHECK)
+        if data is False:
+            return False
+
+        start, flag, command_ret, length = unpack_from('BBBB', data)
+        checksum, end = unpack_from('HB', data, length + 4)
+
+        if end == 119:
+            return data[4:length + 4]
+        else:
+            logger.error(">>> ERROR: Incorrect Reply")
+            return False
