@@ -85,8 +85,8 @@ class Daly(Battery):
             return False
 
         cell_max_voltage,self.cell_max_no,cell_min_voltage, self.cell_min_no = unpack_from('>hbhb', minmax_data)
-        self.cell_max_voltage = cell_max_voltage / 10
-        self.cell_min_voltage = cell_min_voltage / 10
+        self.cell_max_voltage = cell_max_voltage / 1000
+        self.cell_min_voltage = cell_min_voltage / 1000
         return True
 
     def read_temperature_range_data(self):
