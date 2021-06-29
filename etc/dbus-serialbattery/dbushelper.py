@@ -77,7 +77,8 @@ class DbusHelper:
         self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
-        self._dbusservice.add_path('/Capacity', self.battery.capacity, writeable=True)
+        self._dbusservice.add_path('/Capacity', self.battery.capacity_remain, writeable=True)
+        self._dbusservice.add_path('/InstalledCapacity', self.battery.capacity, writeable=True)
         # Not used at this stage
         # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
         # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
@@ -131,6 +132,7 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Current'] = round(self.battery.current, 2)
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
         self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
+        self._dbusservice['/Capacity'] = self.battery.capacity_remain
 
         # Update battery extras
         self._dbusservice['/History/ChargeCycles'] = self.battery.cycles
