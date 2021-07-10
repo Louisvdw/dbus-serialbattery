@@ -15,6 +15,7 @@ from utils import DRIVER_VERSION, DRIVER_SUBVERSION
 import battery
 from lltjbd import LltJbd
 from daly import Daly
+from MNB_BMS import MNB
 
 # Logging
 logging.info('Starting dbus-serialbattery')
@@ -37,6 +38,7 @@ def main():
             Daly(port=_port, baud=9600, address=b"\x40"),
             Daly(port=_port, baud=9600, address=b"\x80"),
             LltJbd(port=_port, baud=9600),
+            MNB(port=_port, baud=9600),
         ]
 
         # try to establish communications with the battery 3 times, else exit
@@ -59,6 +61,8 @@ def main():
             return sys.argv[1]
         else:
             # just for testing purpose
+            logger.info('No Port needed')
+            return '/dev/tty/USB9'
 
     logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
