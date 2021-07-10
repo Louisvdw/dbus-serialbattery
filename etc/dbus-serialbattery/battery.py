@@ -48,7 +48,7 @@ class Battery(object):
         self.charge_fet = None
         self.discharge_fet = None
         self.cell_count = None
-        self.temp_censors = None
+        self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
         self.cells = []

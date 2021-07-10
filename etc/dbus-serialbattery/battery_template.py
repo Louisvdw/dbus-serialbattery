@@ -43,7 +43,7 @@ class BatteryTemplate(Battery):
         if status_data is False:
             return False
 
-        self.cell_count, self.temp_censors, self.charger_connected, self.load_connected, \
+        self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
             state, self.cycles = unpack_from('>bb??bhx', status_data)
 
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
