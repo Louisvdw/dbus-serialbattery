@@ -59,8 +59,6 @@ def main():
             return sys.argv[1]
         else:
             # just for testing purpose
-            logger.info('No Port')
-            return '/dev/ttyUSB2'
 
     logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
