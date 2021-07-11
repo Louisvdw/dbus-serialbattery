@@ -57,8 +57,8 @@ class MNB(Battery):
         self.cell_max_no = None
         self.poll_interval = 2000
         self.type = self.BATTERYTYPE
-        self.inst_capacity = None
         self.capacity = None
+        self.capacity_remain = None
         self.current = None
         self.temp3 = None
         self.temp4 = None
@@ -82,7 +82,7 @@ class MNB(Battery):
         self.V_C_min = 2.55
         self.V_C_max = 3.65
         self.cell_count =8
-        self.inst_capacity = 36*3.6 
+        self.capacity = 36*3.6
         self.version = "V1.02"
         self.temp_sensors =6
         #self.T_Cells = [25]*self.temp_sensors
