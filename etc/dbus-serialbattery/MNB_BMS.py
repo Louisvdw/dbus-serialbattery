@@ -65,7 +65,7 @@ class MNB(Battery):
         self.cells_v= [3.3,3.31,3.33,3.34,3.35,3.36,3.37]
         self.cells_b=[0,0,0,0,0,0,0,0]
         
-    BATTERYTYPE = "MNB-Li" 
+    BATTERYTYPE = "MNB-Li SPI"
 
     def test_connection(self):
         init_max()
@@ -101,7 +101,7 @@ class MNB(Battery):
         self.charger_connected = True
         self.load_connected = True
         self.state = True  
-        self.cycles = 200
+        self.cycles = None
         
         return True
 #************************************************************************
