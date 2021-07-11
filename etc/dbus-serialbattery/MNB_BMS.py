@@ -42,6 +42,14 @@ class MNB_Protection(Protection):
                                         or self.IC_inspection \
                                         or self.software_lock else 0)
 
+class MNBCell(Cell):
+    def __init__(self,balance, voltage):
+        super(MNB_Cell, self, balance).__init__()
+        self.voltage = voltage
+
+    resistance = None
+
+
 class MNB(Battery):
 
     def __init__(self, port,baud,address=0):
