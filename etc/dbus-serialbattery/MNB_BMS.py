@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Protection, Battery, Cell
 from struct import *
-from max17853 import *
+from utilis_max17853 import *
 
 class MNB_Protection(Protection):
 
