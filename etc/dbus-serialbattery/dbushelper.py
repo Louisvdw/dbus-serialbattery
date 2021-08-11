@@ -63,37 +63,45 @@ class DbusHelper:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery (' + self.battery.type + ') v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+        self._dbusservice.add_path('/ProductName', 'SerialBattery (' + self.battery.type + ') v' +
+                                   str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
-        self._dbusservice.add_path('/Info/MaxChargeVoltage', self.battery.max_battery_voltage, writeable=True)
-        self._dbusservice.add_path('/Info/MaxChargeCurrent', self.battery.max_battery_current, writeable=True)
-        self._dbusservice.add_path('/Info/MaxDischargeCurrent', self.battery.max_battery_discharge_current, writeable=True)
+        self._dbusservice.add_path('/Info/MaxChargeVoltage', self.battery.max_battery_voltage, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.2f}V".format(v))
+        self._dbusservice.add_path('/Info/MaxChargeCurrent', self.battery.max_battery_current, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.2f}A".format(v))
+        self._dbusservice.add_path('/Info/MaxDischargeCurrent', self.battery.max_battery_discharge_current,
+                                   writeable=True, gettextcallback=lambda p, v: "{:0.2f}A".format(v))
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.battery.cell_count, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
-        self._dbusservice.add_path('/Capacity', self.battery.capacity_remain, writeable=True)
-        self._dbusservice.add_path('/InstalledCapacity', self.battery.capacity, writeable=True)
+        self._dbusservice.add_path('/Capacity', self.battery.capacity_remain, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.2f}Ah".format(v))
+        self._dbusservice.add_path('/InstalledCapacity', self.battery.capacity, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.0f}Ah".format(v))
         # Not used at this stage
         # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
         # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
-        self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True)
-        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True)
-        self._dbusservice.add_path('/Dc/0/Power', None, writeable=True)
+        self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}V".format(v))
+        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}A".format(v))
+        self._dbusservice.add_path('/Dc/0/Power', None, writeable=True, gettextcallback=lambda p, v: "{:0.0f}W".format(v))
         self._dbusservice.add_path('/Dc/0/Temperature', None, writeable=True)
         # Create battery extras
         self._dbusservice.add_path('/System/MinCellTemperature', None, writeable=True)
         self._dbusservice.add_path('/System/MaxCellTemperature', None, writeable=True)
-        self._dbusservice.add_path('/System/MaxCellVoltage', None, writeable=True)
+        self._dbusservice.add_path('/System/MaxCellVoltage', None, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.3f}V".format(v))
         self._dbusservice.add_path('/System/MaxVoltageCellId', None, writeable=True)
-        self._dbusservice.add_path('/System/MinCellVoltage', None, writeable=True)
+        self._dbusservice.add_path('/System/MinCellVoltage', None, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.3f}V".format(v))
         self._dbusservice.add_path('/System/MinVoltageCellId', None, writeable=True)
         self._dbusservice.add_path('/History/ChargeCycles', None, writeable=True)
         self._dbusservice.add_path('/Balancing', None, writeable=True)
@@ -149,13 +157,11 @@ class DbusHelper:
         self._dbusservice['/Info/MaxDischargeCurrent'] = self.battery.control_discharge_current
 
         # Updates from cells
-        min_cell = self.battery.get_min_cell()
-        max_cell = self.battery.get_max_cell()
-        self._dbusservice['/System/MinVoltageCellId'] = None if min_cell is None else 'C' + str(min_cell + 1)
-        self._dbusservice['/System/MaxVoltageCellId'] = None if max_cell is None else 'C' + str(max_cell + 1)
+        self._dbusservice['/System/MinVoltageCellId'] = self.battery.get_min_cell_desc()
+        self._dbusservice['/System/MaxVoltageCellId'] = self.battery.get_max_cell_desc()
         self._dbusservice['/System/MinCellVoltage'] = self.battery.get_min_cell_voltage()
         self._dbusservice['/System/MaxCellVoltage'] = self.battery.get_max_cell_voltage()
-        self._dbusservice['/Balancing'] = 1 if self.battery.get_balancing() else 0
+        self._dbusservice['/Balancing'] = self.battery.get_balancing()
 
         # Update the alarms
         self._dbusservice['/Alarms/LowVoltage'] = self.battery.protection.voltage_low

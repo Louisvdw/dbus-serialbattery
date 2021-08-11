@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.5
-DRIVER_SUBVERSION = ''
+DRIVER_VERSION = 0.6
+DRIVER_SUBVERSION = 'beta'
 zero_char = chr(48)
+degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
 MIN_CELL_VOLTAGE = 3.1
 MAX_CELL_VOLTAGE = 3.45
@@ -25,6 +26,11 @@ def is_bit_set(tmp):
 
 def kelvin_to_celsius(kelvin_temp):
     return kelvin_temp - 273.1
+
+def format_value(value, prefix, suffix):
+    return None if value is None else ('' if prefix is None else prefix) + \
+                                      str(value) + \
+                                      ('' if suffix is None else suffix)
 
 def read_serial_data(command, port, baud, length_pos, length_check):
     try:
