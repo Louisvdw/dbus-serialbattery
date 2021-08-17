@@ -11,12 +11,12 @@ def init_spi():
 
 
 	# temp home for BMS constants
-        err_no = 0
-	Q_time = 0
-	Q_Batt = 1.8*60
-	Q_B_chg = 0
-	Q_Cycles = 0
-        kWh_dis = 0
+    err_no = 0
+    Q_time = 0
+    Q_Batt = 1.8*60
+    Q_B_chg = 0
+    Q_Cycles = 0
+    kWh_dis = 0
 	kWh_chg = 0
 	cum_bp_kwh_in=0
 	cum_bp_kwh_out=0
@@ -24,21 +24,20 @@ def init_spi():
 	Q_nom = 3.6*36
 	SOH = 1
 	R_shunt = 0.025
-        V_Cells = [0]*8
-        T_Cells = [11]*8
+    V_Cells = [0]*8
+    T_Cells = [11]*8
 	Vt_ref = 3.299
 	V_bat_Sum = 25
 	Ai = 0
 	Ai_offs = 0.6
 	Ah_b_max = 0
-        Ah_b_min = 300
-        Tj = 25
+    Ah_b_min = 300
+    Tj = 25
 	Tbat = 25
 	bal_stat = 0
 	bal_stat2 = 0
-        bal_count = [0]*8
-        #self.cells_b = [0]*8
-	p_genrun  = False
+    bal_count = [0]*8
+    p_genrun  = False
 	p_charging = True
 	p_loadshed = False
 	Fan_run_b = False
@@ -48,10 +47,11 @@ def init_spi():
 	Genrun = LED(4)
 	Fan_run = LED(17)
 
-	spi = spidev.SpiDev()
-	spi.open(0,0)
-	spi.max_speed_hz = 500000
-	spi.mode = 0
+	#spi = spidev.SpiDev()
+	#spi.open(0,0)
+	#spi.max_speed_hz = 500000
+	#spi.mode = 0
+        spi = None
 	return (spi)
 
 def CrcA_MAX17( InputWord,WORD_LEN):
@@ -79,6 +79,9 @@ def spi_xfer_MAX17(RW,Adr,xdata):
     #*********************
     # Python 2.7 can't cope with 32 bit numbers
     #****************************
+    print("SPI:",RW,"{:02x}".format(Adr),"{:04x}".format(xdata))
+    return(0,0,Adr,xdata,0,0)
+
     txdata = [0,0,0,0]
     rxdata = [0,0,0,0]
     tdwd = RW<<8^Adr
@@ -118,7 +121,7 @@ def spi_xfer_MAX17(RW,Adr,xdata):
     time.sleep(.01)
     return(flags,crcs,radr,rdat,rcrc,rxok)
 
-def init_max():
+def init_max(self):
     #*************************************8
     # need to pick up cell min and max to set cell voltage 
     # thresholds et al.
@@ -130,29 +133,48 @@ def init_max():
     spi_xfer_MAX17(0,0x14,0x02)    	# set spi int on AL out
     spi_xfer_MAX17(0,0x15,0x04)	    #disable spi to
     spi_xfer_MAX17(0,0x16,0x00)	    #enable gpio anlg in
-    spi_xfer_MAX17(0,0x18,0x2999)	# top cell selection
+    t_cell = self.cell_count+1
+    tc = 0x2000
+    tc = tc | t_cell<<8 |t_cell<<4 | t_cell
+    spi_xfer_MAX17(0,0x18,tc)	# top cell selection
     spi_xfer_MAX17(0,0x19,0x3faf)	#IRQ enable
-    spi_xfer_MAX17(0,0x1a,0x41fe)	# Over voltage enable
-    spi_xfer_MAX17(0,0x1b,0x41fe)	# Under voltage enable
-    spi_xfer_MAX17(0,0x1c,0x3f)     # Aux Over voltage enable 0-5
-    spi_xfer_MAX17(0,0x1d,0x3f)     # Aux Under voltage enable 0-5
-    spi_xfer_MAX17(0,0x1f,0xb34c)	# over voltage clear thr 3.5V/.305mV <<2
-    spi_xfer_MAX17(0,0x20,0xb86c)	# over voltage set thr 3.6V/.305mV <<2
-    spi_xfer_MAX17(0,0x21,0x8530)	# under voltage clear thr 2.6V/.305mV <<2
-    spi_xfer_MAX17(0,0x22,0x8010)	# under voltage set thr 2.5V/.305mV <<2
+    ov = 0x4000
+    for i in range(1,t_cell):
+        ov |= 1<<i 
+    spi_xfer_MAX17(0,0x1a,ov)	# Over voltage enable
+    spi_xfer_MAX17(0,0x1b,ov)	# Under voltage enable
+    spi_xfer_MAX17(0,0x1c,0xf)     # Aux Over voltage enable 0-5
+    spi_xfer_MAX17(0,0x1d,0xf)     # Aux Under voltage enable 0-5
+    ovc = int((self.V_C_max-0.1)/0.000305) # V_Cell max - 100mV
+    spi_xfer_MAX17(0,0x1f,ovc<<2)	# over voltage clear thr 3.5V/.305mV <<2
+    ovs = int((self.V_C_max)/0.000305) # V_Cell max
+    spi_xfer_MAX17(0,0x20,ovs<<2)	# over voltage set thr 3.6V/.305mV <<2
+    uvc = int((self.V_C_min+0.1)/0.000305) # V_Cell min - 100mV
+    spi_xfer_MAX17(0,0x21,uvc<<2)	# under voltage clear thr 2.6V/.305mV <<2
+    uvs = int((self.V_C_min)/0.000305) # V_Cell min 
+    spi_xfer_MAX17(0,0x22,uvs<<2)	# under voltage set thr 2.5V/.305mV <<2
     spi_xfer_MAX17(0,0x23,0x514)	# cell mismatch set thr 0.1V/.305mV <<2
-    spi_xfer_MAX17(0,0x28,0x9604)	# block ov clear thr 1.934/0.205mV <<2
-    spi_xfer_MAX17(0,0x29,0x99e8)	# block ov set thr 1.984/0.201mV <<2
-    spi_xfer_MAX17(0,0x2a,0x5210)	# block uv cl thr 0.9907/0.201mV <<2
-    spi_xfer_MAX17(0,0x2b,0x48f8)	# block uv set thr 0.9407/0.201mV <<2
-    spi_xfer_MAX17(0,0x30,0x9607)   # Aux ov clear thr 28V/3.967mV <<2
-    spi_xfer_MAX17(0,0x31,0x99e8)   # Aux ov set thr 28V/3.967mV <<2
-    spi_xfer_MAX17(0,0x32,0x2cd8)   # Aux uv cl thr 20.8V/3.967mV <<2
-    spi_xfer_MAX17(0,0x33,0x2eec)   # Aux uv set thr 20.8V/3.967mV <<2
+    bovc = int((self.max_battery_voltage-0.25)/0.001934) #max battery volt - 0.25
+    spi_xfer_MAX17(0,0x28,bovc<<2)	# block ov clear thr 1.934/0.205mV <<2
+    bovs = int((self.max_battery_voltage)/0.001934) #max battery volt 
+    spi_xfer_MAX17(0,0x29,bovs<<2)	# block ov set thr 1.984/0.201mV <<2
+    buvc = int((self.min_battery_voltage+0.25)/0.001934) #max battery volt + 0.25
+    spi_xfer_MAX17(0,0x2a,buvc<<2)	# block uv cl thr 0.9907/0.201mV <<2
+    buvs = int((self.min_battery_voltage)/0.001934) #max battery volt 
+    spi_xfer_MAX17(0,0x2b,buvs<<2)	# block uv set thr 0.9407/0.201mV <<2
+    tovc = xtemp(self.T_C_min+5)    # Aux under temp clear T cell min + 5c - Neg temp coeff!!
+    spi_xfer_MAX17(0,0x30,tovc<<2)   # Aux undertemp clear thr V/3.967mV <<2
+    tovs = xtemp(self.T_C_min)    # Aux under temp set T cell min 
+    spi_xfer_MAX17(0,0x31,tovs)   # Aux under temp set thr V/3.967mV <<2
+    tuvc = xtemp(self.T_C_max-5)    # Aux over temp clear T cell max - 5c - Neg temp coeff!!
+    spi_xfer_MAX17(0,0x32,tuvc<<2)   # Aux uv cl thr V/3.967mV <<2
+    tuvs = xtemp(self.T_C_max)    # Aux over temp set T cell max  - Neg temp coeff!!
+    spi_xfer_MAX17(0,0x33,tuvs<<2)   # Aux uv set thr 20.8V/3.967mV <<2
     spi_xfer_MAX17(0,0x5f,0x01)		# ADC Polarity
     spi_xfer_MAX17(0,0x62,0x4800)	# ADCQ CFG
     spi_xfer_MAX17(0,0x63,0x303)	# BALSWDLY 3 x 96uS
-    spi_xfer_MAX17(0,0x64,0x41ff)	# cell measure enable
+    cms = tc+1
+    spi_xfer_MAX17(0,0x64,cms)	# cell measure enable
     spi_xfer_MAX17(0,0x65,0x803F)	# filter init, AUX meas enable
     spi_xfer_MAX17(0,0x66,0xe21)	# configure and init scan
     spi_xfer_MAX17(0,0x80,0x00)         #reset Bal CTRL
@@ -160,6 +182,12 @@ def init_max():
     spi_xfer_MAX17(0,0x7e,0x01)         #set bal uv thr = mincell
     spi_xfer_MAX17(0,0x6b,1)        # set die temp diag 1.
     return()
+
+def xtemp(temp):
+    t = temp+12.74
+    s = math.exp(0.01988*t)
+    r = int(0x3fff/s)
+    return(r)
 
 def vblk_dec(xdata,ref,adr):
     global V_bat_Sum,VBS_max,VBS_min,min_rst_en,Q_Batt
@@ -275,23 +303,20 @@ def v_cell_d(self):
     vc_min = 4
     i_min =0
     i_max = 0
-    
     b_lim = False
-    i=0
     for index,v in enumerate(V_Cells):
-        if i <8:
-            if v > 3.55:
-                b_lim = True
-            if v> vc_max:
-                vc_max = v
-                i_max = index
-            if v < vc_min:
-                vc_min = v
-                i_min = index
-            i+=1
-	self.cell_min_voltage = vc_min
-	self.cell_max_voltage = vc_max  
-	self.cell_min_no = i_min
+        if v > 3.55:
+            b_lim = True
+        if v> vc_max:
+            vc_max = v
+            i_max = index
+        if v < vc_min:
+            vc_min = v
+            i_min = index
+        
+    self.cell_min_voltage = vc_min
+    self.cell_max_voltage = vc_max  
+    self.cell_min_no = i_min
     self.cell_max_no = i_max      
     vc_del = vc_max - vc_min
     # current control done elsewhere.
@@ -349,8 +374,7 @@ def calc_Ah(Ai,self):
     Q_act = Q_nom*SOH/100
     Q_Cycles = cum_bp_kwh_out/Q_nom*.00005 
     self.cycles = Q_Cycles
-    # Need to convert SOH to cycles...
-    # or add soh as dbus channel
+    
     if Ai>0:
         Q_B_chg += dQ_Batt
         kWh_chg += dQ_Batt*V_bat_Sum/1000
@@ -363,7 +387,6 @@ def calc_Ah(Ai,self):
     return()
 
 def gpio_decode(xdata,adr,self): 
-    # need to mask 4 & 5 in alert register
     # need to add Dbus channel for device temp
     global Vt_ref,Tbat,T_Cells
     try:
@@ -375,16 +398,30 @@ def gpio_decode(xdata,adr,self):
         print("gpio_dec",e)
         print("gpio_dec",adr,"{:04x}".format(xdata))
         T_Cells[adr] = 25
-    self.temp1 = (T_Cells[0]+T_Cells[1] )/2
-    self.temp2 = (T_Cells[2]+T_Cells[3] )/2
+
+    t_min = 100
+    t_max = 0
+    for i in range(0,4):
+        if T_Cells[i] > t_max:
+            t_max = T_Cells[i]
+            imax = i 
+        if T_Cells[i] < t_min:
+            t_min = T_Cells[i]
+            imin = i
+    print('gpio')
+    self.temp1 = t_max
+    self.temp2 = t_min
     self.temp3 = (T_Cells[5]+T_Cells[6] )/2
+    self.temp_max_no = imax
+    self.temp_min_no = imin
     return()
 
 def cell_balance(V_Cells,vc_min,vc_max,self):
     global bal_count,bal_stat,bal_stat2
     # need to add dbus channel for displaing balancing as 8 bit bianry?
-    f = spi_xfer_MAX17(1,0x80,0x00)
-    bal_stat = f[3]>>14
+#    f = spi_xfer_MAX17(1,0x80,0x00)
+ #   bal_stat = f[3]>>14
+    bal_stat = 0
     if bal_stat ==3:
         spi_xfer_MAX17(0,0x80,0x0)
         spi_xfer_MAX17(0,0x6f,0x00)
@@ -405,8 +442,10 @@ def cell_balance(V_Cells,vc_min,vc_max,self):
         cb_duty = int((vc_max-vc_min-0.01)*500)
         if cb_duty >15:
             cb_duty  = 0xf
-        max_cell = (f[3]>>8)&0x07
-        min_cell = f[3]&0x07
+#        max_cell = (f[3]>>8)&0x07
+#        min_cell = f[3]&0x07
+#     missing read to minmax cell register?
+
         for i in range (1,9):
             Vc_t = int((V_Cells[i-1]-vc_min)/(vc_max-vc_min)*15)
             if Vc_t < 0:
@@ -414,33 +453,37 @@ def cell_balance(V_Cells,vc_min,vc_max,self):
                 Vc_t = 0 # remove -ve 
             if Vc_t >=0 and V_Cells[i-1]>3.35:
                 bal_count[i-1]+=Vc_t
-                self.cells_b[i-1] = 1
+                self.cells[i-1].balance = 1
                 if bal_count[i-1]>65535:
                     for j in range(0,8):
                         bal_count[j] = bal_count[j]>>1
+                print("cba",i,Vc_t)
             else:
                 Vc_t = 0
-                self.cells_b[i-1] = 0
-            cb_sum += Vc_t
-            spi_xfer_MAX17(0,0x70+i,Vc_t) #set cell timers
-            f = spi_xfer_MAX17(1,0x70+i,0) # and read back
-            if f[3] != Vc_t:
-                print(471,"Can't set T bal :",i)
-                f = spi_xfer_MAX17(1,3,0)
-                print("prt write rjt",f[3]&1)
-        if cb_sum !=0:
-            #enable cells & start timer
-            f = spi_xfer_MAX17(0,0x6f,0x1fe) 
-            if f[0] != 0:
-                stat_clr()
-            #R_bal_stat() Temporary for diagnostic
-            xdata = 0x2002 | cb_duty<<4
-            xdata = xdata%0xc7ff
-            f = spi_xfer_MAX17(0,0x80,xdata)  
-            print(480,"{:04x}".format(f[3]),"{:02x}".format(f[0]))
-            f = spi_xfer_MAX17(1,0x80,0)
-            print(481,"{:04x}".format(f[3]),"{:02x}".format(f[0]))
-    return()    
+                print("cb",i,Vc_t)
+                self.cells[i-1].balance = 0
+
+    return() #tewst
+#            cb_sum += Vc_t
+#            spi_xfer_MAX17(0,0x70+i,Vc_t) #set cell timers
+#            f = spi_xfer_MAX17(1,0x70+i,0) # and read back
+#            if f[3] != Vc_t:
+#                print(471,"Can't set T bal :",i)
+#                f = spi_xfer_MAX17(1,3,0)
+#                print("prt write rjt",f[3]&1)
+#        if cb_sum !=0:
+#            #enable cells & start timer
+#            f = spi_xfer_MAX17(0,0x6f,0x1fe) 
+#            if f[0] != 0:
+#                stat_clr()
+#            #R_bal_stat() Temporary for diagnostic
+#            xdata = 0x2002 | cb_duty<<4
+#            xdata = xdata%0xc7ff
+#            f = spi_xfer_MAX17(0,0x80,xdata)  
+#            print(480,"{:04x}".format(f[3]),"{:02x}".format(f[0]))
+#            f = spi_xfer_MAX17(1,0x80,0)
+#            print(481,"{:04x}".format(f[3]),"{:02x}".format(f[0]))
+#    return()    
 
 def R_bal_stat():
     for i in range(0x6f,0x84):
@@ -454,11 +497,13 @@ def stat_clr():
     return()
 
 def die_temp():
+    return(35)
     global Tj,tmaxp,Fan_run_b
     f= spi_xfer_MAX17(1,0x57,0) # read diag 1 register
     Vptat = f[3]>>2
     Vptat = Vptat/0x4000*2.3077
     Tj = Vptat/0.0032+8.3-273
+    self.temp4 = Tj
     if Tj >45:
         Fan_run_b = True
     elif Tj < 40:
@@ -493,12 +538,13 @@ def inpins(self):
     return()
 
 def data_cycle(self):
-    global err_no,T_Cells, vc_max
+    global err_no,V_Cells,T_Cells, vc_max
     #print("data_cycle")
     spi_xfer_MAX17(0,0x66,0xe21)
-    f = spi_xfer_MAX17(1,0x66,0x00)
-    scn_dn = f[3]>>15
-    dat_rdy = (f[3]&0x2000)>>13
+    #f = spi_xfer_MAX17(1,0x66,0x00)
+    #scn_dn = f[3]>>15
+    #dat_rdy = (f[3]&0x2000)>>13
+    dat_rdy = 1 #test
     while dat_rdy == 0 :
         f = spi_xfer_MAX17(1,0x66,0x00)
         time.sleep(0.005)
@@ -506,40 +552,50 @@ def data_cycle(self):
         dat_rdy = (f[3]&0x2000)>>13
                 
     Tj = die_temp()
-    f = spi_xfer_MAX17(1,0x66,0x00) # scan ctrl
-    scn_dn = f[3]&0x8000>>15
-    dat_rdy = f[3]&0x2000>>13
+    #f = spi_xfer_MAX17(1,0x66,0x00) # scan ctrl
+    #scn_dn = f[3]&0x8000>>15
+    #dat_rdy = f[3]&0x2000>>13
     spi_xfer_MAX17(0,0x83,0x1)# manual xfer
     f = spi_xfer_MAX17(0,0x66,0x1e28)
     if f[0]> 0:
         stat_clr()
-    V_bat_sum = 0
-    for i in range(72,0x50):
-        f= spi_xfer_MAX17(1,i,0)
-        v = vblk_dec((f[3]>>2),0.000305,i-72) #no change
-        V_bat_sum += v
-        V_Cells[i-72] = v
-        cb_b = v_cell_d(self)
-        time.sleep(0.005)
-    self.voltage = V_bat_sum
-    self.cells_v = V_Cells
+    #V_bat_sum = 0
+    #for i in range(72,0x50):
+    #    f= spi_xfer_MAX17(1,i,0)
+    #    v = vblk_dec((f[3]>>2),0.000305,i-72) #no change
+    #    V_bat_sum += v
+    #    V_Cells[i-72] = v
+    #    cb_b = v_cell_d(self)
+    #    time.sleep(0.005)
+    V_Cells = [3.0,3.1,3.2,3.3,3.4,3.5,3.55,3.55]
+    cb_b = v_cell_d(self)
+    self.voltage = 26.8 #V_bat_sum
+    for i in range(self.cell_count):
+        self.cells[i].voltage = V_Cells[i]
+
     if (vc_del >0.015 and Ai >1.0 and err_no <16 ) or cb_b == True or vc_max>3.45:
-        stime = 3 # need to link this with scan time
+        self.poll_interval = 3000 
         cell_balance(V_Cells,vc_min,vc_max,self)
     else:
         spi_xfer_MAX17(0,0x80,0x00)
         spi_xfer_MAX17(0,0x6f,0x00)
-        stime = 0.5
-    f= spi_xfer_MAX17(1,0x47,0)
-    CSA(f[3]>>2,self)
-    f= spi_xfer_MAX17(1,0x55,0)  # remeber to deduct V0 (AMPS) from V blk.
-    vblk_dec((f[3]>>2),0.003967,22) 
-    f= spi_xfer_MAX17(1,0x56,0)
-    vblk_dec(f[3],0.00122,2) #02
+        self.poll_interval = 1000
+
+
+#    f= spi_xfer_MAX17(1,0x47,0)
+#    CSA(f[3]>>2,self)
+    CSA(0x2014,self)
+	
+#    f= spi_xfer_MAX17(1,0x55,0)  # remeber to deduct V0 (AMPS) from V blk.
+#    vblk_dec((f[3]>>2),0.003967,22) 
+#    f= spi_xfer_MAX17(1,0x56,0)
+#    vblk_dec(f[3],0.00122,2) #02
     for i in range(0x59,0x5f,1):
-        f= spi_xfer_MAX17(1,i,0)
-        gpio_decode(f[3]>>2,i-89,self) #49-64
-        time.sleep(0.005)
+ #       f= spi_xfer_MAX17(1,i,0)
+ #       gpio_decode(f[3]>>2,i-89,self) #49-64
+         gpio_decode(0x2000+i,i-89,self)
+         time.sleep(0.005)
     stat_scan(self)
+    print('sys tmp', self.temp_max_no)
     return(True)
 

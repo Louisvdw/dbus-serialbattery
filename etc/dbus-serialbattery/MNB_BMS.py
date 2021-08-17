@@ -2,12 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Protection, Battery, Cell
 from struct import *
-from utilis_max17853 import *
+#from test_max17853 import *#{these two lines are mutually}
+from util_max17853 import * #{exclusive. use test for testing}
 
-class MNB_Protection(Protection):
+class MNBProtection(Protection):
 
     def __init__(self):
-        super(MNB_Protection, self).__init__()
+        super(MNBProtection, self).__init__()
         self.voltage_high_cell = False
         self.voltage_low_cell = False
         self.short = False
@@ -42,41 +43,58 @@ class MNB_Protection(Protection):
                                         or self.IC_inspection \
                                         or self.software_lock else 0)
 
-class MNBCell(Cell):
+class MNBCell:
     def __init__(self,balance, voltage):
         super(MNB_Cell, self, balance).__init__()
+
         self.voltage = voltage
+    
+    r_cells = None
 
-    resistance = None
-
+    def __init__(self, balance):
+        self.balance = balance
 
 class MNB(Battery):
 
     def __init__(self, port,baud,address=0):
         super(MNB, self).__init__(port,baud)
+        self.protection = MNBProtection()
         self.hardware_version = 1.02
         self.voltage = 26
         self.charger_connected = None
         self.load_connected = None
         self.command_address = address
-        self.cell_min_voltage = None
-        self.cell_max_voltage = None
+        self.cell_min_voltage = 3.3
+        self.cell_max_voltage = 3.3
+        self.soc = 50
         self.cell_min_no = None
         self.cell_max_no = None
-        self.poll_interval = 2000
+        self.temp_sensors = None
+        self.temp_max_no = None
+        self.temp_min_no = None
+        self.T_C_max = None
+        self.T_C_min = None
+        self.poll_interval = None
         self.type = self.BATTERYTYPE
+        self.inst_capacity = None
+        self.max_battery_current = None
+        self.max_battery_discharge_current = None
+        self.V_C_min = None
+        self.V_C_max = None
+        self.max_battery_voltage = None
+        self.min_battery_voltage = None
         self.capacity = None
-        self.capacity_remain = None
+        self.C_rating = None
         self.current = None
         self.temp3 = None
         self.temp4 = None
-        self.cells_v= [3.3,3.31,3.33,3.34,3.35,3.36,3.37]
-        self.cells_b=[0,0,0,0,0,0,0,0]
+        self.cells= []
+        #self.cells_b=[]
         
-    BATTERYTYPE = "MNB-Li SPI"
-
+    BATTERYTYPE = "MNB-Li" 
+    
     def test_connection(self):
-        init_max()
+        init_max(self)
         return self.read_status_data()
 
     def get_settings(self):  # imutable constants for the battery
@@ -85,18 +103,23 @@ class MNB(Battery):
         # cell voltage values. Other BMS user parameters
         # also need to be defined here so all settings are in one place.
         #*****************************************************************
-        self.max_battery_current = 200 #MAX_BATTERY_CURRENT
-        self.max_battery_discharge_current = 200 #MAX_BATTERY_DISCHARGE_CURRENT
-        self.V_C_min = 2.55
-        self.V_C_max = 3.65
-        self.cell_count =8
-        self.capacity = 36*3.6
-        self.version = "V1.02"
+        self.inst_capacity = 36*3.6 # Equivalent cell capacity Ah
+        self.C_rating = 1      # Max current/Ah eg 1, 0.5 or 0.25
+        self.max_battery_current = self.inst_capacity*self.C_rating #MAX_BATTERY_CURRENT = Crating * Capacity
+        self.max_battery_discharge_current = self.inst_capacity*self.C_rating #MAX_BATTERY_DISCHARGE_CURRENT
+        self.V_C_min = 2.55     # Min cell voltage permitted
+        self.V_C_max = 3.65     # Max cell voltage permitted
+        self.cell_count = 8      # Number of cells in series (max) 8 for 24V
+        self.version = "V2.01"
         self.temp_sensors =6
-        #self.T_Cells = [25]*self.temp_sensors
+        self.T_C_max = 40
+        self.T_C_min = 15
         self.max_battery_voltage = self.V_C_max * self.cell_count
         self.min_battery_voltage = self.V_C_min * self.cell_count
         self.hardware_version = "MNB_BMS " + str(self.cell_count) + " cells"
+        self.poll_interval = 1000 #scan repeat time, ms
+        for c in range(self.cell_count):
+            self.cells.append(MNBCell(0))
         return True
 
     def refresh_data(self):
@@ -112,51 +135,7 @@ class MNB(Battery):
         self.cycles = None
         
         return True
-#************************************************************************
-# Following routines are not used, as all work is done in data_cycle()
-# These can exist, just commented out for development.
-#************************************************************************
 
-    # def read_soc_data(self):
-        
-    #     # voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
-    #     self.voltage = 26.7
-    #     self.current = 15.3
-    #     self.soc = 65.0
-    #     self.capacity_remain = self.soc*self.capacity #soc * capacity?
-    #     return True
-
-    # def read_cell_voltage_range_data(self):
-        
-
-    #     self.cell_max_voltage = 3.39
-    #     self.cell_max_no=6
-    #     self.cell_min_voltage = 3.18
-    #     self.cell_min_no = 2
-        
-    #     return True
-
-    # def read_temperature_range_data(self):
-        
-    #     max_temp = 0
-    #     min_temp = 45
-    #     for index,t in enumerate(self.T_cells):
-    #         if t > max_temp:
-    #             max_temp = t 
-    #         if t < min_temp:
-    #             min_temp = t
-    #     self.temp1 = min_temp 
-    #     self.temp2 = max_temp 
-    #     return True
-
-    # def read_fed_data(self):
-        
-    #     # Relay status
-    #     status = True
-    #     self.charge_fet = True
-    #     self.discharge_fet = True 
-    #     bms_cycles =15
-    #     return True
 
     def manage_charge_current(self):
         # Start with the current values
@@ -195,8 +174,22 @@ class MNB(Battery):
         else:
             self.control_discharge_current = self.max_battery_discharge_current   
 
+    def get_min_cell(self):
+        min_cell = self.cell_min_no 
+        return min_cell
+
+    def get_max_cell(self):
+        max_cell = self.cell_max_no
+        return max_cell
+
+    def get_min_cell_voltage(self):
+        return(self.cell_min_voltage)
+
+    def get_max_cell_voltage(self):
+        return(self.cell_max_voltage)
+
     def get_balancing(self):
         for c in range(self.cell_count):
-            if self.cells_b[c] is not None and self.cells_b[c]:
+            if self.cells[c].balance is not None and self.cells[c].balance:
                 return True
         return False
