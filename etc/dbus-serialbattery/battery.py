@@ -143,6 +143,18 @@ class Battery(object):
                 max_cell = c
         return max_cell
 
+    def get_min_cell_desc(self):
+        cell_no = self.get_min_cell()
+        if cell_no is None:
+            return None
+        return 'C' + str(cell_no + 1)
+
+    def get_max_cell_desc(self):
+        cell_no = self.get_max_cell()
+        if cell_no is None:
+            return None
+        return 'C' + str(cell_no + 1)
+
     def get_min_cell_voltage(self):
         min_voltage = 9999
         if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
@@ -166,8 +178,8 @@ class Battery(object):
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].balance is not None and self.cells[c].balance:
-                return True
-        return False
+                return 1
+        return 0
 
     def get_temp(self):
         if self.temp1 is not None and self.temp2 is not None:
