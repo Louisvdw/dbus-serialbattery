@@ -43,16 +43,6 @@ class MNBProtection(Protection):
                                         or self.IC_inspection \
                                         or self.software_lock else 0)
 
-class MNBCell:
-    def __init__(self,balance, voltage):
-        super(MNB_Cell, self, balance).__init__()
-
-        self.voltage = voltage
-    
-    r_cells = None
-
-    def __init__(self, balance):
-        self.balance = balance
 
 class MNB(Battery):
 
@@ -91,9 +81,10 @@ class MNB(Battery):
         self.cells= []
         #self.cells_b=[]
         
-    BATTERYTYPE = "MNB-Li" 
+    BATTERYTYPE = "MNB-Li SPI" 
     
     def test_connection(self):
+        self.get_settings()
         init_max(self)
         return self.read_status_data()
 
@@ -119,7 +110,7 @@ class MNB(Battery):
         self.hardware_version = "MNB_BMS " + str(self.cell_count) + " cells"
         self.poll_interval = 1000 #scan repeat time, ms
         for c in range(self.cell_count):
-            self.cells.append(MNBCell(0))
+            self.cells.append(Cell(False))
         return True
 
     def refresh_data(self):

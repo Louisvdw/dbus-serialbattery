@@ -27,7 +27,7 @@ def main():
     def poll_battery(loop):
         # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
         poller = Thread(target=lambda: helper.publish_battery(loop))
-        # Tread will die with us if deamon
+        # Thread will die with us if deamon
         poller.daemon = True
         poller.start()
         return True
@@ -60,7 +60,7 @@ def main():
         if len(sys.argv) > 1:
             return sys.argv[1]
         else:
-            # just for testing purpose
+            # just for MNB-SPI
             logger.info('No Port needed')
             return '/dev/tty/USB9'
 
