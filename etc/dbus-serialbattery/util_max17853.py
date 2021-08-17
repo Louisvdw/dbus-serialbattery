@@ -24,8 +24,8 @@ def init_spi(self):
     Q_nom = self.inst_capacity
     SOH = 1
     R_shunt = 0.025
-    V_Cells = [0]*8
-    T_Cells = [11]*8
+    V_Cells = [0]*self.cell_count
+    T_Cells = [11]*self.cell_count
     Vt_ref = 3.299
     V_bat_Sum = 25
     Ai = 0
@@ -36,7 +36,7 @@ def init_spi(self):
     Tbat = 25
     bal_stat = 0
     bal_stat2 = 0
-    bal_count = [0]*8
+    bal_count = [0]*self.cell_count
     p_genrun = False
     p_charging = True
     p_loadshed = False

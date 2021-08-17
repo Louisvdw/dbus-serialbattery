@@ -79,7 +79,6 @@ class MNB(Battery):
         self.temp3 = None
         self.temp4 = None
         self.cells= []
-        #self.cells_b=[]
         
     BATTERYTYPE = "MNB-Li SPI" 
     
