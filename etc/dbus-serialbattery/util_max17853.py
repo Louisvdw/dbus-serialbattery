@@ -452,13 +452,13 @@ def cell_balance(V_Cells,vc_min,vc_max,self):
                 Vc_t = 0 # remove -ve 
             if Vc_t >=0 and V_Cells[i-1]>3.35:
                 bal_count[i-1]+=Vc_t
-                self.cells[i-1].balance = 1
+                self.cells[i-1].balance = True
                 if bal_count[i-1]>65535:
                     for j in range(0,8):
                         bal_count[j] = bal_count[j]>>1
             else:
                 Vc_t = 0
-                self.cells[i-1].balance = 0
+                self.cells[i-1].balance = False
             cb_sum += Vc_t
             spi_xfer_MAX17(0,0x70+i,Vc_t) #set cell timers
             f = spi_xfer_MAX17(1,0x70+i,0) # and read back
