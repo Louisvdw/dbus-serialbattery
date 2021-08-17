@@ -106,7 +106,7 @@ class DbusHelper:
         self._dbusservice.add_path('/Balancing', None, writeable=True)
         self._dbusservice.add_path('/Io/AllowToCharge', 0, writeable=True)
         self._dbusservice.add_path('/Io/AllowToDischarge', 0, writeable=True)
-        # self._dbusservice.add_path('/Io/SystemSwitch',1,writeable=True)
+        # self._dbusservice.add_path('/SystemSwitch',1,writeable=True)
         # Create the alarms
         self._dbusservice.add_path('/Alarms/LowVoltage', None, writeable=True)
         self._dbusservice.add_path('/Alarms/HighVoltage', None, writeable=True)
