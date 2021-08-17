@@ -164,23 +164,3 @@ class MNB(Battery):
             self.control_discharge_current = self.max_battery_discharge_current*b
         else:
             self.control_discharge_current = self.max_battery_discharge_current   
-
-    def get_min_cell(self):
-        min_cell = self.cell_min_no 
-        return min_cell
-
-    def get_max_cell(self):
-        max_cell = self.cell_max_no
-        return max_cell
-
-    def get_min_cell_voltage(self):
-        return(self.cell_min_voltage)
-
-    def get_max_cell_voltage(self):
-        return(self.cell_max_voltage)
-
-    def get_balancing(self):
-        for c in range(self.cell_count):
-            if self.cells[c].balance is not None and self.cells[c].balance:
-                return True
-        return False
