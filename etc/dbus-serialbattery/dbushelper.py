@@ -77,7 +77,7 @@ class DbusHelper:
                                    writeable=True, gettextcallback=lambda p, v: "{:0.2f}A".format(v))
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.battery.cell_count, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
-        self._dbusservice.add_path('/System/NrOfModulesOffline', 0, writeable=True)
+        self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
         self._dbusservice.add_path('/Capacity', self.battery.capacity_remain, writeable=True,
