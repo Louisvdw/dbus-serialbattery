@@ -7,7 +7,7 @@ from struct import *
 
 class Ant(Battery):
 
-    def __init__(self, port, baud, address):
+    def __init__(self, port, baud):
         super(Ant, self).__init__(port, baud)
         self.type = self.BATTERYTYPE
 
