@@ -13,8 +13,8 @@ class Ant(Battery):
 
     command_general = b"\xDB\xDB\x00\x00\x00\x00"
     BATTERYTYPE = "ANT"
-    LENGTH_CHECK = 4
-    LENGTH_POS = 3
+    LENGTH_CHECK = -1
+    LENGTH_POS = 139
     LENGTH_FIXED = 140
 
     def test_connection(self):
@@ -36,7 +36,6 @@ class Ant(Battery):
         # This will be called for every iteration (1 second)
         # Return True if success, False for failure
         result = self.read_status_data()
-
         return result
 
     def read_status_data(self):
@@ -45,14 +44,25 @@ class Ant(Battery):
         if status_data is False:
             return False
 
-        voltage = unpack_from('>H', status_data, 8)
+        voltage = unpack_from('>H', status_data, 4)
         self.voltage = voltage[0]*0.1
-        current, self.soc = unpack_from('>iH', status_data, 70)
-        self.voltage = current*0.1 if current <= 2147483648 else -2147483648+current*0.1
+        current, self.soc = unpack_from('>lB', status_data, 70)
+        self.current = 0.0 if current == 0 else current / -10
 
-        self.cell_count = 16
+        self.cell_count = unpack_from('>b', status_data, 123)[0]
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+
+        cell_max_no, cell_max_voltage, cell_min_no, cell_min_voltage = unpack_from('>bhbh', status_data, 115)
+        self.cell_max_no = cell_max_no - 1
+        self.cell_min_no = cell_min_no - 1
+        self.cell_max_voltage = cell_max_voltage / 1000
+        self.cell_min_voltage = cell_min_voltage / 1000
+
+        capacity_remain = unpack_from('>L', status_data, 79)
+        self.capacity_remain = capacity_remain[0] / 1000000
+
+        self.temp1, self.temp2 = unpack_from('>bxb',status_data, 96)
 
         self.hardware_version = "ANT BMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
@@ -63,10 +73,11 @@ class Ant(Battery):
         data = read_serial_data(command, self.port, self.baud_rate,
                                 self.LENGTH_POS, self.LENGTH_CHECK, self.LENGTH_FIXED)
         if data is False:
+            logger.info(">>> ERROR: Incorrect Data")
             return False
 
-        if data.length == self.LENGTH_FIXED:
+        if len(data) == self.LENGTH_FIXED:
             return data
         else:
-            logger.error(">>> ERROR: Incorrect Reply")
+            logger.info(">>> ERROR: Incorrect Reply")
             return False
