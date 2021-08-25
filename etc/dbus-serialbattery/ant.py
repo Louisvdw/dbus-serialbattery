@@ -72,8 +72,8 @@ class Ant(Battery):
         
         total_ah_drawn = unpack_from('>L', status_data, 83)
         self.total_ah_drawn = total_ah_drawn[0] / 1000 
-        
         self.cycles = self.total_ah_drawn / self.capacity
+        
         self.charge_fet, self.discharge_fet, self.balancing = unpack_from('>bbb',status_data, 103)
 
         self.temp1, self.temp2 = unpack_from('>bxb',status_data, 96)
