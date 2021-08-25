@@ -12,8 +12,8 @@ class Ant(Battery):
         self.type = self.BATTERYTYPE
 
     command_general = b"\xDB\xDB\x00\x00\x00\x00"
-    command_capacity_low = b"\x5A\x5A\x1F\x00\x00\x1F"
-    command_capacity_high = b"\x5A\x5A\x20\x00\x00\x20"
+    # command_capacity_low = b"\x5A\x5A\x1F\x00\x00\x1F"
+    # command_capacity_high = b"\x5A\x5A\x20\x00\x00\x20"
     balancing = 0
     BATTERYTYPE = "ANT"
     LENGTH_CHECK = -1
@@ -80,7 +80,7 @@ class Ant(Battery):
 
         self.hardware_version = "ANT BMS " + str(self.cell_count) + " cells"
         
-        # Alarm
+        # Alarms
         self.protection.voltage_high = 2 if self.charge_fet==2 else 0
         self.protection.voltage_low = 2 if self.discharge_fet==2 or self.discharge_fet==5 else 0
         self.protection.voltage_cell_low = 2 if self.cell_min_voltage < MIN_CELL_VOLTAGE - 0.1 else 1 if self.cell_min_voltage < MIN_CELL_VOLTAGE else 0
