@@ -12,6 +12,9 @@ class Ant(Battery):
         self.type = self.BATTERYTYPE
 
     command_general = b"\xDB\xDB\x00\x00\x00\x00"
+    command_capacity_low = b"\x5A\x5A\x1F\x00\x00\x1F"
+    command_capacity_high = b"\x5A\x5A\x20\x00\x00\x20"
+    balancing = 0
     BATTERYTYPE = "ANT"
     LENGTH_CHECK = -1
     LENGTH_POS = 139
@@ -29,6 +32,8 @@ class Ant(Battery):
         # Return True if success, False for failure
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.version = "ANT BMS V2.0"
+        logger.info(self.hardware_version)
         return True
 
     def refresh_data(self):
@@ -58,15 +63,36 @@ class Ant(Battery):
         self.cell_min_no = cell_min_no - 1
         self.cell_max_voltage = cell_max_voltage / 1000
         self.cell_min_voltage = cell_min_voltage / 1000
+        
+        capacity = unpack_from('>L', status_data, 75)
+        self.capacity = capacity[0] / 1000000
 
         capacity_remain = unpack_from('>L', status_data, 79)
         self.capacity_remain = capacity_remain[0] / 1000000
+        
+        total_ah_drawn = unpack_from('>L', status_data, 83)
+        self.total_ah_drawn = total_ah_drawn[0] / 1000 
+        
+        self.cycles = self.total_ah_drawn / self.capacity
+        self.charge_fet, self.discharge_fet, self.balancing = unpack_from('>bbb',status_data, 103)
 
         self.temp1, self.temp2 = unpack_from('>bxb',status_data, 96)
 
         self.hardware_version = "ANT BMS " + str(self.cell_count) + " cells"
-        logger.info(self.hardware_version)
+        
+        # Alarm
+        self.protection.voltage_high = 2 if self.charge_fet==2 else 0
+        self.protection.voltage_low = 2 if self.discharge_fet==2 or self.discharge_fet==5 else 0
+        self.protection.voltage_cell_low = 2 if self.cell_min_voltage < MIN_CELL_VOLTAGE - 0.1 else 1 if self.cell_min_voltage < MIN_CELL_VOLTAGE else 0
+        self.protection.temp_high_charge = 1 if self.charge_fet==3 or self.charge_fet==6  else 0
+        self.protection.temp_high_discharge = 1 if self.discharge_fet==7 or self.discharge_fet==6 else 0
+        self.protection.current_over = 2 if self.charge_fet==3 else 0
+        self.protection.current_under = 2 if self.discharge_fet==3 else 0
+        
         return True
+        
+    def get_balancing(self): 
+        return 1 if self.balancing or self.balancing == 2 else 0
 
     def read_serial_data_ant(self, command):
         # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
