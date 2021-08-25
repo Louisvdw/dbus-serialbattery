@@ -122,7 +122,7 @@ class Daly(Battery):
         return buffer
 
     def read_serial_data_daly(self, command):
-        data = read_serial_data(self.generate_command(command), self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK)
+        data = read_serial_data(self.generate_command(command), self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK, None)
         if data is False:
             return False
 
