@@ -11,7 +11,7 @@ logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.6
-DRIVER_SUBVERSION = 'beta'
+DRIVER_SUBVERSION = 'beta2'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -32,7 +32,7 @@ def format_value(value, prefix, suffix):
                                       str(value) + \
                                       ('' if suffix is None else suffix)
 
-def read_serial_data(command, port, baud, length_pos, length_check):
+def read_serial_data(command, port, baud, length_pos, length_check, length_fixed):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.1) as ser:
             ser.flushOutput()
@@ -52,7 +52,7 @@ def read_serial_data(command, port, baud, length_pos, length_check):
                     # raise Exception("No reply from {}".format(port))
             #logger.info('serial data toread ' + str(toread))
             res = ser.read(toread)
-            length = unpack_from('B', res,length_pos)[0]
+            length = length_fixed if length_fixed is not None else unpack_from('B', res,length_pos)[0]
             #logger.info('serial data length ' + str(length))
 
             data = bytearray(res)
