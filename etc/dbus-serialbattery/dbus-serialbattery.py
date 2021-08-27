@@ -15,8 +15,8 @@ from utils import DRIVER_VERSION, DRIVER_SUBVERSION
 import battery
 from lltjbd import LltJbd
 from daly import Daly
-from mnb import MNB
 from ant import Ant
+#from mnb import MNB
 
 # Logging
 logging.info('Starting dbus-serialbattery')
@@ -40,7 +40,7 @@ def main():
             Ant(port=_port, baud=19200),
             Daly(port=_port, baud=9600, address=b"\x40"),
             Daly(port=_port, baud=9600, address=b"\x80"),
-            MNB(port=_port, baud=9600),
+            # MNB(port=_port, baud=9600),
         ]
 
         # try to establish communications with the battery 3 times, else exit
