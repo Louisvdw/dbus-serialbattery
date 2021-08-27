@@ -15,7 +15,7 @@ from utils import DRIVER_VERSION, DRIVER_SUBVERSION
 import battery
 from lltjbd import LltJbd
 from daly import Daly
-from MNB_BMS import MNB
+from mnb_bms import MNB
 from ant import Ant
 
 # Logging
