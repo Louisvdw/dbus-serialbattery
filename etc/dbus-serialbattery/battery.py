@@ -7,6 +7,7 @@ class Protection(object):
     def __init__(self):
         self.voltage_high = None
         self.voltage_low = None
+        self.voltage_cell_low = None
         self.soc_low = None
         self.current_over = None
         self.current_under = None
@@ -41,6 +42,7 @@ class Battery(object):
         self.capacity_remain = None
         self.capacity = None
         self.cycles = None
+        self.total_ah_drawn = None
         self.production = None
         self.protection = Protection()
         self.version = None

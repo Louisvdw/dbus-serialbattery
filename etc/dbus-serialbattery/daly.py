@@ -86,8 +86,8 @@ class Daly(Battery):
 
         cell_max_voltage,self.cell_max_no,cell_min_voltage, self.cell_min_no = unpack_from('>hbhb', minmax_data)
         # Daly cells numbers are 1 based and not 0 based
-        self.cell_min_no -= 1;
-        self.cell_max_no -= 1;
+        self.cell_min_no -= 1
+        self.cell_max_no -= 1
         # Voltage is returned in mV
         self.cell_max_voltage = cell_max_voltage / 1000
         self.cell_min_voltage = cell_min_voltage / 1000
@@ -122,7 +122,7 @@ class Daly(Battery):
         return buffer
 
     def read_serial_data_daly(self, command):
-        data = read_serial_data(self.generate_command(command), self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK)
+        data = read_serial_data(self.generate_command(command), self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK, None)
         if data is False:
             return False
 

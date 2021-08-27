@@ -77,7 +77,7 @@ class DbusHelper:
                                    writeable=True, gettextcallback=lambda p, v: "{:0.2f}A".format(v))
         self._dbusservice.add_path('/System/NrOfCellsPerBattery', self.battery.cell_count, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesOnline', 1, writeable=True)
-        self._dbusservice.add_path('/System/NrOfModulesOffline', None, writeable=True)
+        self._dbusservice.add_path('/System/NrOfModulesOffline', 0, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
         self._dbusservice.add_path('/Capacity', self.battery.capacity_remain, writeable=True,
@@ -103,6 +103,7 @@ class DbusHelper:
                                    gettextcallback=lambda p, v: "{:0.3f}V".format(v))
         self._dbusservice.add_path('/System/MinVoltageCellId', None, writeable=True)
         self._dbusservice.add_path('/History/ChargeCycles', None, writeable=True)
+        self._dbusservice.add_path('/History/TotalAhDrawn', None, writeable=True)
         self._dbusservice.add_path('/Balancing', None, writeable=True)
         self._dbusservice.add_path('/Io/AllowToCharge', 0, writeable=True)
         self._dbusservice.add_path('/Io/AllowToDischarge', 0, writeable=True)
@@ -146,11 +147,13 @@ class DbusHelper:
 
         # Update battery extras
         self._dbusservice['/History/ChargeCycles'] = self.battery.cycles
+        self._dbusservice['/History/TotalAhDrawn'] = self.battery.total_ah_drawn
         self._dbusservice['/Io/AllowToCharge'] = 1 if self.battery.charge_fet \
                                                       and self.battery.control_allow_charge else 0
         self._dbusservice['/Io/AllowToDischarge'] = 1 if self.battery.discharge_fet else 0
         self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0 if self.battery.charge_fet \
                                                         and self.battery.control_allow_charge else 1
+        self._dbusservice['/System/NrOfModulesBlockingDischarge'] = 0 if self.battery.discharge_fet else 1
         self._dbusservice['/System/MinCellTemperature'] = self.battery.get_min_temp()
         self._dbusservice['/System/MaxCellTemperature'] = self.battery.get_max_temp()
 
@@ -167,6 +170,7 @@ class DbusHelper:
 
         # Update the alarms
         self._dbusservice['/Alarms/LowVoltage'] = self.battery.protection.voltage_low
+        self._dbusservice['/Alarms/LowCellVoltage'] = self.battery.protection.voltage_cell_low
         self._dbusservice['/Alarms/HighVoltage'] = self.battery.protection.voltage_high
         self._dbusservice['/Alarms/LowSoc'] = self.battery.protection.soc_low
         self._dbusservice['/Alarms/HighChargeCurrent'] = self.battery.protection.current_over

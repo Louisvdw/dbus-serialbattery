@@ -16,6 +16,7 @@ import battery
 from lltjbd import LltJbd
 from daly import Daly
 from MNB_BMS import MNB
+from ant import Ant
 
 # Logging
 logging.info('Starting dbus-serialbattery')
@@ -39,6 +40,7 @@ def main():
             Daly(port=_port, baud=9600, address=b"\x80"),
             LltJbd(port=_port, baud=9600),
             MNB(port=_port, baud=9600),
+            Ant(port=_port, baud=19200),
         ]
 
         # try to establish communications with the battery 3 times, else exit
@@ -48,6 +50,7 @@ def main():
             for test in battery_types:
                 logger.info('Testing ' + test.__class__.__name__)
                 if test.test_connection() is True:
+                    logger.info('Connection established to ' + test.__class__.__name__)
                     return test
 
             count -= 1
