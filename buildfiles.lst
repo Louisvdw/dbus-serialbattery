@@ -13,4 +13,4 @@ etc/dbus-serialbattery/lltjbd.py
 etc/dbus-serialbattery/daly.py
 etc/dbus-serialbattery/ant.py
 etc/dbus-serialbattery/util_max17853.py
-etc/dbus-serialbattery/mnb_bms.py
+etc/dbus-serialbattery/mnb.py
