@@ -55,12 +55,17 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
             length = length_fixed if length_fixed is not None else unpack_from('B', res,length_pos)[0]
             #logger.info('serial data length ' + str(length))
 
+            count = 0
             data = bytearray(res)
             while len(data) <= length + length_check:
                 res = ser.read(length + length_check)
                 data.extend(res)
                 #logger.info('serial data length ' + str(len(data)))
                 sleep(0.005)
+                count += 1
+                if count > 150:
+                    logger.error(">>> ERROR: No reply - returning")
+                    return False
 
             return data
 
