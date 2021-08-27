@@ -8,7 +8,6 @@ import traceback
 # Victron packages
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
-
 from settingsdevice import SettingsDevice
 import battery
 from utils import *
@@ -108,10 +107,12 @@ class DbusHelper:
         self._dbusservice.add_path('/Balancing', None, writeable=True)
         self._dbusservice.add_path('/Io/AllowToCharge', 0, writeable=True)
         self._dbusservice.add_path('/Io/AllowToDischarge', 0, writeable=True)
+        # self._dbusservice.add_path('/SystemSwitch',1,writeable=True)
         # Create the alarms
         self._dbusservice.add_path('/Alarms/LowVoltage', None, writeable=True)
         self._dbusservice.add_path('/Alarms/HighVoltage', None, writeable=True)
         self._dbusservice.add_path('/Alarms/LowCellVoltage', None, writeable=True)
+        self._dbusservice.add_path('/Alarms/HighCellVoltage', None, writeable=True)
         self._dbusservice.add_path('/Alarms/LowSoc', None, writeable=True)
         self._dbusservice.add_path('/Alarms/HighChargeCurrent', None, writeable=True)
         self._dbusservice.add_path('/Alarms/HighDischargeCurrent', None, writeable=True)

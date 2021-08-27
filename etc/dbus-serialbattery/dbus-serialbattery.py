@@ -15,6 +15,7 @@ from utils import DRIVER_VERSION, DRIVER_SUBVERSION
 import battery
 from lltjbd import LltJbd
 from daly import Daly
+from mnb import MNB
 from ant import Ant
 
 # Logging
@@ -27,7 +28,7 @@ def main():
     def poll_battery(loop):
         # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
         poller = Thread(target=lambda: helper.publish_battery(loop))
-        # Tread will die with us if deamon
+        # Thread will die with us if deamon
         poller.daemon = True
         poller.start()
         return True
@@ -38,6 +39,7 @@ def main():
             Daly(port=_port, baud=9600, address=b"\x40"),
             Daly(port=_port, baud=9600, address=b"\x80"),
             LltJbd(port=_port, baud=9600),
+            MNB(port=_port, baud=9600),
             Ant(port=_port, baud=19200),
         ]
 
@@ -61,9 +63,9 @@ def main():
         if len(sys.argv) > 1:
             return sys.argv[1]
         else:
-            # just for testing purpose
-            logger.info('No Port')
-            return '/dev/ttyUSB2'
+            # just for MNB-SPI
+            logger.info('No Port needed')
+            return '/dev/tty/USB9'
 
     logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 

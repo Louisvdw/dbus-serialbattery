@@ -125,7 +125,7 @@ class LltJbd(Battery):
             return False
 
         voltage, current, capacity_remain, capacity, self.cycles, self.production, balance, \
-            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_censors, temp1, temp2 \
+            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_sensors, temp1, temp2 \
             = unpack_from('>HhHHHHhHHBBBBBHH', gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
