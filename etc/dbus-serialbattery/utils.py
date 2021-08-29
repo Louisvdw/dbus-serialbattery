@@ -32,7 +32,7 @@ def format_value(value, prefix, suffix):
                                       str(value) + \
                                       ('' if suffix is None else suffix)
 
-def read_serial_data(command, port, baud, length_pos, length_check, length_fixed):
+def read_serial_data(command, port, baud, length_pos, length_check, length_fixed=None, length_size=None):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.1) as ser:
             ser.flushOutput()
@@ -52,7 +52,8 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
                     # raise Exception("No reply from {}".format(port))
             #logger.info('serial data toread ' + str(toread))
             res = ser.read(toread)
-            length = length_fixed if length_fixed is not None else unpack_from('B', res,length_pos)[0]
+            length_size = length_size if length_size is not None else 'B'
+            length = length_fixed if length_fixed is not None else unpack_from(length_size, res,length_pos)[0]
             #logger.info('serial data length ' + str(length))
 
             count = 0

@@ -59,9 +59,9 @@ class BatteryTemplate(Battery):
         if soc_data is False:
             return False
 
-        voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
+        voltage, current, soc = unpack_from('>hxxhh', soc_data)
         self.voltage = voltage / 10
-        self.current = (current - CURRENT_ZERO_CONSTANT) / -10
+        self.current = current / -10
         self.soc = soc / 10
         return True
 

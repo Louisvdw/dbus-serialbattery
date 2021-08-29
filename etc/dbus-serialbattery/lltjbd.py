@@ -168,7 +168,7 @@ class LltJbd(Battery):
         return True
 
     def read_serial_data_llt(self, command):
-        data = read_serial_data(command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK, None)
+        data = read_serial_data(command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK)
         if data is False:
             return False
 
