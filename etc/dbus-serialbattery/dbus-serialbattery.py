@@ -17,6 +17,7 @@ from lltjbd import LltJbd
 from daly import Daly
 from mnb import MNB
 from ant import Ant
+from jkbms import Jkbms
 #from mnb import MNB
 
 # Logging
@@ -42,6 +43,7 @@ def main():
             Ant(port=_port, baud=19200),
             Daly(port=_port, baud=9600, address=b"\x40"),
             Daly(port=_port, baud=9600, address=b"\x80"),
+            Jkbms(port=_port, baud=115200),
             # MNB(port=_port, baud=9600),
         ]
 
