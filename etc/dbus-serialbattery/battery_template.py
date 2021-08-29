@@ -6,7 +6,7 @@ from struct import *
 
 class BatteryTemplate(Battery):
 
-    def __init__(self, port,baud,address):
+    def __init__(self, port,baud):
         super(BatteryTemplate, self).__init__(port,baud)
         self.type = self.BATTERYTYPE
 
