@@ -31,6 +31,8 @@ class Jkbms(Battery):
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+
+        self.hardware_version = "JKBMS " + str(self.cell_count) + " cells"
         return True
 
     def refresh_data(self):
@@ -53,20 +55,34 @@ class Jkbms(Battery):
         if status_data is False:
             return False
 
-        cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
-        self.cell_count = cellbyte_count / 3
+        # cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
+        # self.cell_count = cellbyte_count / 3
+        self.cell_count = unpack_from('>H', self.get_data(status_data, b'\x8A', 2))[0]
+
+        temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', 2))[0] 
+        temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', 2))[0] 
+        self.to_temp(1, temp1 if temp1 <= 100 else 100 - temp1)
+        self.to_temp(2, temp2 if temp2 <= 100 else 100 - temp2)
         
         voltage = unpack_from('>H', self.get_data(status_data, b'\x83', 2))[0]
-        current = unpack_from('>H', self.get_data(status_data, b'\x84', 2))[0]
-        self.soc =  unpack_from('>B', self.get_data(status_data, b'\x85', 1))[0] 
-
         self.voltage = voltage / 100
+
+        current = unpack_from('>H', self.get_data(status_data, b'\x84', 2))[0]
         self.current = current / -100 if current < self.CURRENT_ZERO_CONSTANT else (current - self.CURRENT_ZERO_CONSTANT) / 100
 
-        # self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
-        #     state, self.cycles = unpack_from('>bb??bhx', status_data)
+        self.soc =  unpack_from('>B', self.get_data(status_data, b'\x85', 1))[0] 
 
-        # self.hardware_version = "JKBMS " + str(self.cell_count) + " cells"
+        self.cycles =  unpack_from('>H', self.get_data(status_data, b'\x87', 2))[0] 
+
+        # self.capacity = unpack_from('>L', self.get_data(status_data, b'\x89', 4))[0] 
+
+        # self.production
+        # self.to_cell_bits(balance, balance2)
+        # self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
+        # self.to_fet_bits(fet)
+        # self.to_protection_bits(protection)
+
+
         # logger.info(self.hardware_version)
         return True
 
