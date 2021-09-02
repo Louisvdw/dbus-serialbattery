@@ -53,14 +53,15 @@ class Jkbms(Battery):
         if status_data is False:
             return False
 
-        self.cell_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
+        cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
+        self.cell_count = cellbyte_count / 3
+        
         voltage = unpack_from('>H', self.get_data(status_data, b'\x83', 2))[0]
         current = unpack_from('>H', self.get_data(status_data, b'\x84', 2))[0]
         self.soc =  unpack_from('>B', self.get_data(status_data, b'\x85', 1))[0] 
 
         self.voltage = voltage / 100
-        self.current = 0.0 if current == 0 else (current if current < self.CURRENT_ZERO_CONSTANT 
-                                                else current - self.CURRENT_ZERO_CONSTANT) / -100
+        self.current = current / -100 if current < self.CURRENT_ZERO_CONSTANT else (current - self.CURRENT_ZERO_CONSTANT) / 100
 
         # self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
         #     state, self.cycles = unpack_from('>bb??bhx', status_data)
