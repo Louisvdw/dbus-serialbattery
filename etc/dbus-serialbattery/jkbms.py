@@ -55,10 +55,11 @@ class Jkbms(Battery):
         if status_data is False:
             return False
 
-        # cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
-        # self.cell_count = cellbyte_count / 3
         self.cell_count = unpack_from('>H', self.get_data(status_data, b'\x8A', 2))[0]
 
+        # cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
+        # celldata = unpack_from('>'+str(self.cell_count)+'BH', self.get_data(status_data, b'\x79', 1 + cellbyte_count),1)
+        
         temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', 2))[0] 
         temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', 2))[0] 
         self.to_temp(1, temp1 if temp1 <= 100 else 100 - temp1)
@@ -85,6 +86,16 @@ class Jkbms(Battery):
 
         # logger.info(self.hardware_version)
         return True
+
+    # def to_cells(self, byte_data):
+    #     # clear the list
+    #     for c in self.cells:
+    #         self.cells.remove(c)
+    #     # get up to the first 16 cells
+    #     tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), zero_char)
+    #     for bit in reversed(tmp):
+    #         self.cells.append(Cell(is_bit_set(bit)))
+        
 
     def read_serial_data_jkbms(self, command):
         # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
