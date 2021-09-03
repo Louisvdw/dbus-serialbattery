@@ -165,7 +165,7 @@ class Battery(object):
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
                 min_voltage = self.cells[c].voltage
-        return min_voltage
+        return None if min_voltage == 9999 else min_voltage
 
     def get_max_cell_voltage(self):
         max_voltage = 0
@@ -175,7 +175,7 @@ class Battery(object):
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage
-        return max_voltage
+        return None if max_voltage == 0 else max_voltage
 
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):
