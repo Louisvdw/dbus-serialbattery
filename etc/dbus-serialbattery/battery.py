@@ -69,7 +69,7 @@ class Battery(object):
     def test_connection(self):
         # Each driver must override this function to test if a connection can be made
         # return false when fail, true if successful
-        return false
+        return False
 
     def get_settings(self):
         # Each driver must override this function to read/set the battery settings
@@ -77,13 +77,13 @@ class Battery(object):
         # Values:  battery_type, version, hardware_version, min_battery_voltage, max_battery_voltage,
         #   MAX_BATTERY_CURRENT, MAX_BATTERY_DISCHARGE_CURRENT, cell_count, capacity
         # return false when fail, true if successful
-        return false
+        return False
 
     def refresh_data(self):
         # Each driver must override this function to read battery data and populate this class
         # It is called each poll just before the data is published to vedbus
         # return false when fail, true if successful
-        return false
+        return False
 
     def to_temp(self, sensor, value):
         # Keep the temp value between -20 and 100 to handle sensor issues or no data.

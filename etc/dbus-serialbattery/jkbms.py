@@ -32,6 +32,10 @@ class Jkbms(Battery):
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
 
+        # init the cell array
+        for c in range(self.cell_count):
+          self.cells.append(Cell(False))
+
         self.hardware_version = "JKBMS " + str(self.cell_count) + " cells"
         return True
 
@@ -57,8 +61,12 @@ class Jkbms(Battery):
 
         self.cell_count = unpack_from('>H', self.get_data(status_data, b'\x8A', 2))[0]
 
-        # cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
-        # celldata = unpack_from('>'+str(self.cell_count)+'BH', self.get_data(status_data, b'\x79', 1 + cellbyte_count),1)
+        # cell voltages
+        cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
+        if cellbyte_count == 3*self.cell_count and self.cell_count == len(self.cells):
+            celldata =  self.get_data(status_data, b'\x79', 1 + cellbyte_count)
+            for c in range(self.cell_count):
+                self.cells[c].voltage = unpack_from('>'+str(self.cell_count)+'xH', celldata, c * 3)[0]
         
         temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', 2))[0] 
         temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', 2))[0] 
@@ -109,5 +117,5 @@ class Jkbms(Battery):
         if start == 0x4E57 and end == 0x68:
             return data[10:length-19]
         else:
-            logger.error(">>> ERROR: Incorrect Reply")
+            logger.error(">>> ERROR: Incorrect Reply ")
             return False
