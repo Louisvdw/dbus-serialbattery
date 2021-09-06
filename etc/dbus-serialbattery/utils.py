@@ -58,7 +58,7 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
             count = 0
             data = bytearray(res)
             while len(data) <= length + length_check:
-                res = ser.read((length + length_check) - len(data))
+                res = ser.read(length + length_check)
                 data.extend(res)
                 #logger.info('serial data length ' + str(len(data)))
                 sleep(0.005)

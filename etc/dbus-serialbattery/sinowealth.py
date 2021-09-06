@@ -53,8 +53,15 @@ class Sinowealth(Battery):
         
         if self.cell_count is None:
           self.read_pack_config_data()
+        
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        
+        self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
+        logger.info(self.hardware_version)
+        
+        for c in range(self.cell_count):
+          self.cells.append(Cell(False))
         return True
 
     def refresh_data(self):
@@ -88,8 +95,7 @@ class Sinowealth(Battery):
         
         if self.cell_count is None:
           self.read_pack_config_data()
-        self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
-        logger.info(self.hardware_version)
+        
         return True
         
     def read_battery_status(self):
@@ -188,21 +194,11 @@ class Sinowealth(Battery):
           
         cell_index = 1
         while cell_index <= self.cell_count:
-          self.cell_voltages[cell_index] = self.read_cell_voltage(cell_index)
-          if self.cell_voltages[cell_index] is False:
+          self.cells[cell_index - 1].voltage = self.read_cell_voltage(cell_index)
+          if self.cells[cell_index - 1].voltage is None:
             return False
           cell_index += 1
         
-        self.cell_max_no = max(self.cell_voltages, key=int) - 1
-        self.cell_max_voltage = max(self.cell_voltages.values())
-        self.cell_min_no = min(self.cell_voltages, key=int) - 1
-        self.cell_min_voltage = min(self.cell_voltages.values())
-        
-        logger.info(">>> INFO: Max cell voltage: %u:%f", self.cell_max_no, self.cell_max_voltage)
-        logger.info(">>> INFO: Min cell voltage: %u:%f", self.cell_min_no, self.cell_min_voltage)
-        
-        self.max_battery_voltage = 3.65 * self.cell_count
-        self.min_battery_voltage = 2.5 * self.cell_count
         return True
         
     def read_cell_voltage(self, cell_index):
@@ -220,21 +216,19 @@ class Sinowealth(Battery):
         temp_ext1_data = self.read_serial_data_sinowealth(self.command_temp_ext1)
         if temp_ext1_data is False:
             return False
-        kelvin = 273.1
+            
         temp_ext1 = unpack_from('>H', temp_ext1_data[:-1])
-        logger.info(">>> INFO: BMS external temperature 1: %f C", temp_ext1[0]/10 - kelvin )
+        self.temp1 = kelvin_to_celsius(temp_ext1[0]/10)
+        logger.info(">>> INFO: BMS external temperature 1: %f C", self.temp1 )
 
-        self.temp1 = temp_ext1[0]/100
-        
         if self.temp_sensors is 2:
             temp_ext2_data = self.read_serial_data_sinowealth(self.command_temp_ext2)
             if temp_ext2_data is False:
                 return False
             
             temp_ext2 = unpack_from('>H', temp_ext2_data[:-1])
-            logger.info(">>> INFO: BMS external temperature 2: %f C", temp_ext2[0]/10 - kelvin )
-
-            self.temp2 = temp_ext2[0]/100
+            self.temp2 = kelvin_to_celsius(temp_ext2[0]/10)
+            logger.info(">>> INFO: BMS external temperature 2: %f C", self.temp2 )
         
         # Internal temperature 1 seems to give a logical value 
         temp_int1_data = self.read_serial_data_sinowealth(self.command_temp_int1)
@@ -242,7 +236,7 @@ class Sinowealth(Battery):
             return False
             
         temp_int1 = unpack_from('>H', temp_int1_data[:-1])
-        logger.info(">>> INFO: BMS internal temperature 1: %f C", temp_int1[0]/10 - kelvin )
+        logger.info(">>> INFO: BMS internal temperature 1: %f C", kelvin_to_celsius(temp_int1[0]/10) )
         
         # Internal temperature 2 seems to give a useless value 
         temp_int2_data = self.read_serial_data_sinowealth(self.command_temp_int2)
@@ -250,7 +244,7 @@ class Sinowealth(Battery):
             return False
             
         temp_int2 = unpack_from('>H', temp_int2_data[:-1])
-        logger.info(">>> INFO: BMS internal temperature 2: %f C", temp_int2[0]/10 - kelvin )
+        logger.info(">>> INFO: BMS internal temperature 2: %f C", kelvin_to_celsius(temp_int2[0]/10) )
         return True
 
     def generate_command(self, command):
