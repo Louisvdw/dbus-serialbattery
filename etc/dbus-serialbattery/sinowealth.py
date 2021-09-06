@@ -215,43 +215,42 @@ class Sinowealth(Battery):
         return cell_voltage[0]/1000
 
     def read_temperature_data(self):
-        # TODO: get number of supported sensors and select correct one to read,
-        # currently none of the temperatures match the one in the bluetooth app
+        if self.temp_sensors is None:
+            self.read_pack_config_data()
         temp_ext1_data = self.read_serial_data_sinowealth(self.command_temp_ext1)
-        # check if connection success
         if temp_ext1_data is False:
             return False
-            
+        kelvin = 273.1
         temp_ext1 = unpack_from('>H', temp_ext1_data[:-1])
-        logger.info(">>> INFO: BMS external temperature 1: %f C", temp_ext1[0]/100 )
+        logger.info(">>> INFO: BMS external temperature 1: %f C", temp_ext1[0]/10 - kelvin )
 
         self.temp1 = temp_ext1[0]/100
         
-        temp_ext2_data = self.read_serial_data_sinowealth(self.command_temp_ext2)
-        # check if connection success
-        if temp_ext2_data is False:
-            return False
+        if self.temp_sensors is 2:
+            temp_ext2_data = self.read_serial_data_sinowealth(self.command_temp_ext2)
+            if temp_ext2_data is False:
+                return False
             
-        temp_ext2 = unpack_from('>H', temp_ext2_data[:-1])
-        logger.info(">>> INFO: BMS external temperature 2: %f C", temp_ext2[0]/100 )
+            temp_ext2 = unpack_from('>H', temp_ext2_data[:-1])
+            logger.info(">>> INFO: BMS external temperature 2: %f C", temp_ext2[0]/10 - kelvin )
 
-        self.temp2 = temp_ext2[0]/100
+            self.temp2 = temp_ext2[0]/100
         
+        # Internal temperature 1 seems to give a logical value 
         temp_int1_data = self.read_serial_data_sinowealth(self.command_temp_int1)
-        # check if connection success
         if temp_int1_data is False:
             return False
             
         temp_int1 = unpack_from('>H', temp_int1_data[:-1])
-        logger.info(">>> INFO: BMS internal temperature 1: %f C", temp_int1[0]/100 )
+        logger.info(">>> INFO: BMS internal temperature 1: %f C", temp_int1[0]/10 - kelvin )
         
+        # Internal temperature 2 seems to give a useless value 
         temp_int2_data = self.read_serial_data_sinowealth(self.command_temp_int2)
-        # check if connection success
         if temp_int2_data is False:
             return False
             
         temp_int2 = unpack_from('>H', temp_int2_data[:-1])
-        logger.info(">>> INFO: BMS internal temperature 2: %f C", temp_int2[0]/100 )
+        logger.info(">>> INFO: BMS internal temperature 2: %f C", temp_int2[0]/10 - kelvin )
         return True
 
     def generate_command(self, command):
