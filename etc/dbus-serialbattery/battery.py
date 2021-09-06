@@ -103,9 +103,9 @@ class Battery(object):
             self.control_allow_charge = True
         # Change depending on the SOC values
         if 98 < self.soc <= 100:
-            self.control_charge_current = 1
+            self.control_charge_current = 5
         elif 95 < self.soc <= 97:
-            self.control_charge_current = 4
+            self.control_charge_current = self.max_battery_current/4
         elif 91 < self.soc <= 95:
             self.control_charge_current = self.max_battery_current/2
         else:
