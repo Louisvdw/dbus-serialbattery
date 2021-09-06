@@ -65,8 +65,9 @@ class Jkbms(Battery):
         cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
         if cellbyte_count == 3*self.cell_count and self.cell_count == len(self.cells):
             celldata =  self.get_data(status_data, b'\x79', 1 + cellbyte_count)
+            # logger.info("cell data: " + celldata.hex())
             for c in range(self.cell_count):
-                self.cells[c].voltage = unpack_from('>'+str(self.cell_count)+'xH', celldata, c * 3)[0]
+                self.cells[c].voltage = unpack_from('>xH', celldata, c * 3 + 1)[0]/1000
         
         temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', 2))[0] 
         temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', 2))[0] 
