@@ -16,6 +16,7 @@ import battery
 from lltjbd import LltJbd
 from daly import Daly
 from ant import Ant
+from sinowealth import Sinowealth
 #from mnb import MNB
 
 # Logging
@@ -40,6 +41,7 @@ def main():
             Ant(port=_port, baud=19200),
             Daly(port=_port, baud=9600, address=b"\x40"),
             Daly(port=_port, baud=9600, address=b"\x80"),
+            Sinowealth(port=_port, baud=9600),
             # MNB(port=_port, baud=9600),
         ]
 

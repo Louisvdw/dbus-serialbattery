@@ -72,3 +72,4 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
     except serial.SerialException as e:
         logger.error(e)
         return False
+        
