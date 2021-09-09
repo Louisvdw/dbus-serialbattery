@@ -21,13 +21,13 @@ class LltJbdProtection(Protection):
 
     def set_voltage_high_cell(self, value):
         self.voltage_high_cell = value
-        self.set_cell_imbalance(2 if self.voltage_low_cell \
-                                        or self.voltage_high_cell else 0)
+        self.cell_imbalance = 2 if self.voltage_low_cell \
+                                        or self.voltage_high_cell else 0
 
     def set_voltage_low_cell(self, value):
         self.voltage_low_cell = value
-        self.set_cell_imbalance(2 if self.voltage_low_cell \
-                                        or self.voltage_high_cell else 0)
+        self.cell_imbalance = 2 if self.voltage_low_cell \
+                                        or self.voltage_high_cell else 0
 
     def set_short(self, value):
         self.short = value
@@ -168,7 +168,7 @@ class LltJbd(Battery):
         return True
 
     def read_serial_data_llt(self, command):
-        data = read_serial_data(command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK, None)
+        data = read_serial_data(command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK)
         if data is False:
             return False
 

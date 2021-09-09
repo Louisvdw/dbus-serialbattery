@@ -69,7 +69,7 @@ class Battery(object):
     def test_connection(self):
         # Each driver must override this function to test if a connection can be made
         # return false when fail, true if successful
-        return false
+        return False
 
     def get_settings(self):
         # Each driver must override this function to read/set the battery settings
@@ -77,13 +77,13 @@ class Battery(object):
         # Values:  battery_type, version, hardware_version, min_battery_voltage, max_battery_voltage,
         #   MAX_BATTERY_CURRENT, MAX_BATTERY_DISCHARGE_CURRENT, cell_count, capacity
         # return false when fail, true if successful
-        return false
+        return False
 
     def refresh_data(self):
         # Each driver must override this function to read battery data and populate this class
         # It is called each poll just before the data is published to vedbus
         # return false when fail, true if successful
-        return false
+        return False
 
     def to_temp(self, sensor, value):
         # Keep the temp value between -20 and 100 to handle sensor issues or no data.
@@ -103,9 +103,9 @@ class Battery(object):
             self.control_allow_charge = True
         # Change depending on the SOC values
         if 98 < self.soc <= 100:
-            self.control_charge_current = 1
+            self.control_charge_current = 5
         elif 95 < self.soc <= 97:
-            self.control_charge_current = 4
+            self.control_charge_current = self.max_battery_current/4
         elif 91 < self.soc <= 95:
             self.control_charge_current = self.max_battery_current/2
         else:
@@ -165,7 +165,7 @@ class Battery(object):
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
                 min_voltage = self.cells[c].voltage
-        return min_voltage
+        return None if min_voltage == 9999 else min_voltage
 
     def get_max_cell_voltage(self):
         max_voltage = 0
@@ -175,7 +175,7 @@ class Battery(object):
         for c in range(min(len(self.cells), self.cell_count)):
             if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage
-        return max_voltage
+        return None if max_voltage == 0 else max_voltage
 
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):

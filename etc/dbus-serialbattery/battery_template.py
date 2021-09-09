@@ -6,7 +6,7 @@ from struct import *
 
 class BatteryTemplate(Battery):
 
-    def __init__(self, port,baud,address):
+    def __init__(self, port,baud):
         super(BatteryTemplate, self).__init__(port,baud)
         self.type = self.BATTERYTYPE
 
@@ -27,6 +27,8 @@ class BatteryTemplate(Battery):
         # Return True if success, False for failure
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
         return True
 
     def refresh_data(self):
@@ -46,9 +48,6 @@ class BatteryTemplate(Battery):
         self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
             state, self.cycles = unpack_from('>bb??bhx', status_data)
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
-
         self.hardware_version = "TemplateBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
         return True
@@ -59,9 +58,9 @@ class BatteryTemplate(Battery):
         if soc_data is False:
             return False
 
-        voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
+        voltage, current, soc = unpack_from('>hxxhh', soc_data)
         self.voltage = voltage / 10
-        self.current = (current - CURRENT_ZERO_CONSTANT) / -10
+        self.current = current / -10
         self.soc = soc / 10
         return True
 
