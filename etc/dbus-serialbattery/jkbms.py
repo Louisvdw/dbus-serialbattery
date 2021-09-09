@@ -83,7 +83,10 @@ class Jkbms(Battery):
 
         self.cycles =  unpack_from('>H', self.get_data(status_data, b'\x87', 2))[0] 
 
-        # self.capacity = unpack_from('>L', self.get_data(status_data, b'\x89', 4))[0] 
+        self.capacity = unpack_from('>L', self.get_data(status_data, b'\xAA', 4))[0] 
+        self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', 4))[0]
+        
+        self.to_fet_bits(unpack_from('>H', self.get_data(status_data, b'\x8C', 2))[0] )
 
         # self.production
         # self.to_cell_bits(balance, balance2)
@@ -95,7 +98,30 @@ class Jkbms(Battery):
         # logger.info(self.hardware_version)
         return True
        
+    def to_fet_bits(self, byte_data):
+        tmp = bin(byte_data)[2:].rjust(2, zero_char)
+        self.charge_fet = is_bit_set(tmp[1])
+        self.discharge_fet = is_bit_set(tmp[0])
 
+    def to_protection_bits(self, byte_data):
+        pos=13
+        tmp = bin(byte_data)[15-pos:].rjust(pos + 1, zero_char)
+        logger.info(tmp)
+        self.protection.soc_low = 2 if is_bit_set(tmp[pos-0]) else 0
+        self.protection.set_IC_inspection = 2 if is_bit_set(tmp[pos-1]) else 0 # BMS over temp
+        self.protection.voltage_high = 2 if is_bit_set(tmp[pos-2]) else 0
+        self.protection.voltage_low = 2 if is_bit_set(tmp[pos-3]) else 0
+        self.protection.current_over = 1 if is_bit_set(tmp[pos-5]) else 0
+        self.protection.current_under = 1 if is_bit_set(tmp[pos-6]) else 0
+        self.protection.cell_imbalance = 2 if is_bit_set(tmp[pos-7]) else 1 if is_bit_set(tmp[pos-10]) else 0
+        self.protection.voltage_cell_low = 2 if is_bit_set(tmp[pos-11]) else 0        
+        # there is just a BMS and Battery temp alarm (not high/low)
+        self.protection.temp_high_charge = 1 if is_bit_set(tmp[pos-4]) or is_bit_set(tmp[pos-8]) else 0
+        self.protection.temp_low_charge = 1 if is_bit_set(tmp[pos-4]) or is_bit_set(tmp[pos-8]) else 0
+        self.protection.temp_high_discharge = 1 if is_bit_set(tmp[pos-4]) or is_bit_set(tmp[pos-8]) else 0
+        self.protection.temp_low_discharge = 1 if is_bit_set(tmp[pos-4]) or is_bit_set(tmp[pos-8]) else 0
+
+        
     def read_serial_data_jkbms(self, command):
         # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
         data = read_serial_data(command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK,None, self.LENGTH_SIZE)
