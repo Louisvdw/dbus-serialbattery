@@ -89,8 +89,8 @@ class DbusHelper:
         # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
-        self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}V".format(v))
-        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}A".format(v))
+        self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
+        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:3.2f}A".format(v))
         self._dbusservice.add_path('/Dc/0/Power', None, writeable=True, gettextcallback=lambda p, v: "{:0.0f}W".format(v))
         self._dbusservice.add_path('/Dc/0/Temperature', None, writeable=True)
         # Create battery extras
@@ -149,11 +149,12 @@ class DbusHelper:
         self._dbusservice['/History/ChargeCycles'] = self.battery.cycles
         self._dbusservice['/History/TotalAhDrawn'] = self.battery.total_ah_drawn
         self._dbusservice['/Io/AllowToCharge'] = 1 if self.battery.charge_fet \
-                                                      and self.battery.control_allow_charge else 0
+                                and self.battery.control_allow_charge else 0
         self._dbusservice['/Io/AllowToDischarge'] = 1 if self.battery.discharge_fet else 0
-        self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0 if self.battery.charge_fet \
-                                                        and self.battery.control_allow_charge else 1
-        self._dbusservice['/System/NrOfModulesBlockingDischarge'] = 0 if self.battery.discharge_fet else 1
+        self._dbusservice['/System/NrOfModulesBlockingCharge'] = 0 if self.battery.charge_fet is None or \
+                                (self.battery.charge_fet and self.battery.control_allow_charge) else 1
+        self._dbusservice['/System/NrOfModulesBlockingDischarge'] = 0 if self.battery.discharge_fet is None \
+                                or self.battery.discharge_fet else 1
         self._dbusservice['/System/MinCellTemperature'] = self.battery.get_min_temp()
         self._dbusservice['/System/MaxCellTemperature'] = self.battery.get_max_temp()
 
