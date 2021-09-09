@@ -26,7 +26,9 @@ class DbusHelper:
                                           get_bus())
 
     def setup_instance(self):
-        path = '/Settings/Devices/serialbattery'
+        bms_id = self.battery.production if self.battery.production is not None else \
+            self.battery.port[self.battery.port.rfind('/') + 1:]
+        path = '/Settings/Devices/serialbattery_' + str(bms_id).replace(" ", "_")
         default_instance = 'battery:1'
         settings = {'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], }
 
@@ -41,7 +43,7 @@ class DbusHelper:
         if setting == 'instance':
             self.battery.role, self.instance = self.get_role_instance()
             self._dbusservice['/DeviceInstance'] = self.instance
-            logger.debug("DeviceInstance = %d", self.instance)
+            logger.info("DeviceInstance = %d", self.instance)
             return
 
     def setup_vedbus(self):
