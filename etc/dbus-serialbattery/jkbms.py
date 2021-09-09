@@ -87,13 +87,10 @@ class Jkbms(Battery):
         self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', 4))[0]
         
         self.to_fet_bits(unpack_from('>H', self.get_data(status_data, b'\x8C', 2))[0] )
+        self.to_protection_bits(unpack_from('>H', self.get_data(status_data, b'\x8B', 2))[0] )
 
-        # self.production
-        # self.to_cell_bits(balance, balance2)
-        # self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
-        # self.to_fet_bits(fet)
-        # self.to_protection_bits(protection)
-
+        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', 8))[0]
+        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', 15))[0]
 
         # logger.info(self.hardware_version)
         return True
