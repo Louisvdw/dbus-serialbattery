@@ -96,8 +96,8 @@ class Jkbms(Battery):
         offset = cellbyte_count + 22
         self.cycles =  unpack_from('>H', self.get_data(status_data, b'\x87', offset, 2))[0] 
 
-        offset = cellbyte_count + 25
-        self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', offset, 4))[0]
+        # offset = cellbyte_count + 25
+        # self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', offset, 4))[0]
         offset = cellbyte_count + 121
         self.capacity = unpack_from('>L', self.get_data(status_data, b'\xAA', offset, 4))[0] 
         
