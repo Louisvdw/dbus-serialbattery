@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
+import binascii
 
 class Jkbms(Battery):
 
@@ -47,8 +48,10 @@ class Jkbms(Battery):
 
         return result
 
-    def get_data(self, bytes, idcode, length):
-        start = bytes.find(idcode)
+    def get_data(self, bytes, idcode, start, length):
+        # logger.info("start "+str(start) + " length " + str(length))
+        # logger.info(binascii.hexlify(bytearray(bytes[start:start + 1 + length])).decode('ascii'))
+        start = bytes.find(idcode, start, start + 1 + length)
         if start < 0: return False
         return bytes[start+1:start+length+1]
 
@@ -59,38 +62,54 @@ class Jkbms(Battery):
         if status_data is False:
             return False
 
-        self.cell_count = unpack_from('>H', self.get_data(status_data, b'\x8A', 2))[0]
-
         # cell voltages
-        cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', 1))[0]
+        offset = 1
+        cellbyte_count = unpack_from('>B', self.get_data(status_data, b'\x79', offset, 1))[0]
+
+        offset = cellbyte_count + 30
+        self.cell_count = unpack_from('>H', self.get_data(status_data, b'\x8A', offset, 2))[0]
+
         if cellbyte_count == 3*self.cell_count and self.cell_count == len(self.cells):
-            celldata =  self.get_data(status_data, b'\x79', 1 + cellbyte_count)
+            offset = 1
+            celldata =  self.get_data(status_data, b'\x79', offset, 1 + cellbyte_count)
             for c in range(self.cell_count):
                 self.cells[c].voltage = unpack_from('>xH', celldata, c * 3 + 1)[0]/1000
         
-        temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', 2))[0] 
-        temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', 2))[0] 
+        offset = cellbyte_count + 6
+        temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', offset, 2))[0] 
+        offset = cellbyte_count + 9
+        temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', offset, 2))[0] 
         self.to_temp(1, temp1 if temp1 <= 100 else 100 - temp1)
         self.to_temp(2, temp2 if temp2 <= 100 else 100 - temp2)
         
-        voltage = unpack_from('>H', self.get_data(status_data, b'\x83', 2))[0]
+        offset = cellbyte_count + 12
+        voltage = unpack_from('>H', self.get_data(status_data, b'\x83', offset, 2))[0]
         self.voltage = voltage / 100
 
-        current = unpack_from('>H', self.get_data(status_data, b'\x84', 2))[0]
+        offset = cellbyte_count + 15
+        current = unpack_from('>H', self.get_data(status_data, b'\x84', offset, 2))[0]
         self.current = current / -100 if current < self.CURRENT_ZERO_CONSTANT else (current - self.CURRENT_ZERO_CONSTANT) / 100
 
-        self.soc =  unpack_from('>B', self.get_data(status_data, b'\x85', 1))[0] 
+        offset = cellbyte_count + 18
+        self.soc =  unpack_from('>B', self.get_data(status_data, b'\x85', offset, 1))[0] 
 
-        self.cycles =  unpack_from('>H', self.get_data(status_data, b'\x87', 2))[0] 
+        offset = cellbyte_count + 22
+        self.cycles =  unpack_from('>H', self.get_data(status_data, b'\x87', offset, 2))[0] 
 
-        self.capacity = unpack_from('>L', self.get_data(status_data, b'\xAA', 4))[0] 
-        self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', 4))[0]
+        offset = cellbyte_count + 25
+        self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', offset, 4))[0]
+        offset = cellbyte_count + 121
+        self.capacity = unpack_from('>L', self.get_data(status_data, b'\xAA', offset, 4))[0] 
         
-        self.to_fet_bits(unpack_from('>H', self.get_data(status_data, b'\x8C', 2))[0] )
-        self.to_protection_bits(unpack_from('>H', self.get_data(status_data, b'\x8B', 2))[0] )
+        offset = cellbyte_count + 33
+        self.to_protection_bits(unpack_from('>H', self.get_data(status_data, b'\x8B', offset, 2))[0] )
+        offset = cellbyte_count + 36
+        self.to_fet_bits(unpack_from('>H', self.get_data(status_data, b'\x8C', offset, 2))[0] )
 
-        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', 8))[0]
-        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', 15))[0]
+        offset = cellbyte_count + 155
+        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', offset, 8))[0]
+        offset = cellbyte_count + 174
+        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', offset, 15))[0]
 
         # logger.info(self.hardware_version)
         return True
