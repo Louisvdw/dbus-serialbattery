@@ -128,6 +128,23 @@ class DbusHelper:
         self._dbusservice.add_path('/Alarms/HighTemperature', None, writeable=True)
         self._dbusservice.add_path('/Alarms/LowTemperature', None, writeable=True)
 
+        # self.settings['InstalledCapacity'] = self.battery.capacity
+        # self.settings['MaxChargeVoltage'] = self.battery.max_battery_voltage
+        # self.settings['MaxChargeCurrent'] = self.battery.max_battery_current
+        # self.settings['MaxDischargeCurrent'] = self.battery.max_battery_discharge_current
+        # self.settings['/Soc'] = None
+        # self.settings['/Dc/0/Voltage'] = None
+        # self.settings['/Dc/0/Current'] = None
+        # self.settings['/Dc/0/Power'] = None
+        # self.settings['/System/MinCellTemperature'] = None
+        # self.settings['/System/MaxCellTemperature'] = None
+        # self.settings['/System/MaxCellVoltage'] = None
+        # self.settings['/System/MaxVoltageCellId'] = None
+        # self.settings['/System/MinCellVoltage'] = None
+        # self.settings['/System/MinVoltageCellId']= None
+        # self.settings['/Io/AllowToCharge'] = 0
+        # self.settings['/Io/AllowToDischarge'] = 0
+
         return True
 
     def publish_battery(self, loop):
@@ -149,7 +166,10 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
         self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
         self._dbusservice['/Capacity'] = self.battery.capacity_remain
-
+        # self.settings['/Soc'] = self.battery.soc
+        # self.settings['/Dc/0/Voltage'] = self.battery.voltage
+        # self.settings['/Dc/0/Current'] = self.battery.current
+        
         midpoint, deviation = self.battery.get_midvoltage()
         if (midpoint is not None):
             self._dbusservice['/Dc/0/MidVoltage'] = midpoint
