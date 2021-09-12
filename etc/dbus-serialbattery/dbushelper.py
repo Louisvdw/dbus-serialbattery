@@ -93,12 +93,13 @@ class DbusHelper:
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
         self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
-        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:3.2f}A".format(v))
+        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}A".format(v))
         self._dbusservice.add_path('/Dc/0/Power', None, writeable=True, gettextcallback=lambda p, v: "{:0.0f}W".format(v))
         self._dbusservice.add_path('/Dc/0/Temperature', None, writeable=True)
         self._dbusservice.add_path('/Dc/0/MidVoltage', None, writeable=True,
-                                   gettextcallback=lambda p, v: "{:0.3f}V".format(v))
-        self._dbusservice.add_path('/Dc/0/MidVoltageDeviation', None, writeable=True)
+                                   gettextcallback=lambda p, v: "{:0.2f}V".format(v))
+        self._dbusservice.add_path('/Dc/0/MidVoltageDeviation', None, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.1f}%".format(v))
         # Create battery extras
         self._dbusservice.add_path('/System/MinCellTemperature', None, writeable=True)
         self._dbusservice.add_path('/System/MaxCellTemperature', None, writeable=True)
