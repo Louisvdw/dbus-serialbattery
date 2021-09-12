@@ -221,7 +221,7 @@ class Sinowealth(Battery):
         self.temp1 = kelvin_to_celsius(temp_ext1[0]/10)
         logger.info(">>> INFO: BMS external temperature 1: %f C", self.temp1 )
 
-        if self.temp_sensors is 2:
+        if self.temp_sensors == 2:
             temp_ext2_data = self.read_serial_data_sinowealth(self.command_temp_ext2)
             if temp_ext2_data is False:
                 return False

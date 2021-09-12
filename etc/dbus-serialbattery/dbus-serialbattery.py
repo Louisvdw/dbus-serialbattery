@@ -44,8 +44,8 @@ def main():
         battery_types = [
             LltJbd(port=_port, baud=9600),
             Ant(port=_port, baud=19200),
-            # Daly(port=_port, baud=9600, address=b"\x40"),
-            # Daly(port=_port, baud=9600, address=b"\x80"),
+            Daly(port=_port, baud=9600, address=b"\x40"),
+            Daly(port=_port, baud=9600, address=b"\x80"),
             Jkbms(port=_port, baud=115200),
             Sinowealth(port=_port, baud=9600),
             # MNB(port=_port, baud=9600),
