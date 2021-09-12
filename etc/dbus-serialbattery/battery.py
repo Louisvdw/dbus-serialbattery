@@ -179,18 +179,19 @@ class Battery(object):
         return None if max_voltage == 0 else max_voltage
 
     def get_midvoltage(self):
-        if self.cell_count == 0:
-            return None
+        return None, None
+        # if self.cell_count == 0:
+        #     return None, None
 
-        halfcount = int(math.floor(self.cell_count/2))
-        half1voltage = 0
-        half2voltage = 0
+        # halfcount = int(math.floor(self.cell_count/2))
+        # half1voltage = 0
+        # half2voltage = 0
         
-        for c in range(halfcount):
-            half1voltage += self.cells[c].voltage
-            half2voltage += self.cells[halfcount + c].voltage
-        midpoint = (half1voltage + half2voltage)/2    
-        return midpoint, abs(max(abs(midpoint-half1voltage), abs(midpoint-half2voltage)) / midpoint) * 100
+        # for c in range(halfcount):
+        #     half1voltage += self.cells[c].voltage
+        #     half2voltage += self.cells[halfcount + c].voltage
+        # midpoint = (half1voltage + half2voltage)/2    
+        # return midpoint, abs(max(abs(midpoint-half1voltage), abs(midpoint-half2voltage)) / midpoint) * 100
 
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):
