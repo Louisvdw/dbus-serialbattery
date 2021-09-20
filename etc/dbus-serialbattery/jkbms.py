@@ -123,7 +123,7 @@ class Jkbms(Battery):
     def to_protection_bits(self, byte_data):
         pos=13
         tmp = bin(byte_data)[15-pos:].rjust(pos + 1, zero_char)
-        logger.info(tmp)
+        # logger.info(tmp)
         self.protection.soc_low = 2 if is_bit_set(tmp[pos-0]) else 0
         self.protection.set_IC_inspection = 2 if is_bit_set(tmp[pos-1]) else 0 # BMS over temp
         self.protection.voltage_high = 2 if is_bit_set(tmp[pos-2]) else 0

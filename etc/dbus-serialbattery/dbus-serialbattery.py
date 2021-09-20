@@ -6,7 +6,11 @@ from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from threading import Thread
 import dbus
-import gobject
+import sys
+if sys.version_info.major == 2:
+    import gobject
+else:
+    from gi.repository import GObject as gobject
 import logging
 import sys
 
@@ -83,7 +87,8 @@ def main():
 
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
-    gobject.threads_init()
+    if sys.version_info.major == 2:
+        gobject.threads_init()
     mainloop = gobject.MainLoop()
 
     # Get the initial values for the battery used by setup_vedbus

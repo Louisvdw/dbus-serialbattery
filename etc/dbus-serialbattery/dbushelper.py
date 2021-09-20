@@ -26,7 +26,10 @@ class DbusHelper:
                                           get_bus())
 
     def setup_instance(self):
-        path = '/Settings/Devices/serialbattery'
+        # bms_id = self.battery.production if self.battery.production is not None else \
+        #     self.battery.port[self.battery.port.rfind('/') + 1:]
+        bms_id = self.battery.port[self.battery.port.rfind('/') + 1:]
+        path = '/Settings/Devices/serialbattery_' + str(bms_id).replace(" ", "_")
         default_instance = 'battery:1'
         settings = {'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], }
 
@@ -41,7 +44,7 @@ class DbusHelper:
         if setting == 'instance':
             self.battery.role, self.instance = self.get_role_instance()
             self._dbusservice['/DeviceInstance'] = self.instance
-            logger.debug("DeviceInstance = %d", self.instance)
+            logger.info("DeviceInstance = %d", self.instance)
             return
 
     def setup_vedbus(self):
@@ -90,9 +93,13 @@ class DbusHelper:
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
         self._dbusservice.add_path('/Dc/0/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
-        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:3.2f}A".format(v))
+        self._dbusservice.add_path('/Dc/0/Current', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}A".format(v))
         self._dbusservice.add_path('/Dc/0/Power', None, writeable=True, gettextcallback=lambda p, v: "{:0.0f}W".format(v))
         self._dbusservice.add_path('/Dc/0/Temperature', None, writeable=True)
+        self._dbusservice.add_path('/Dc/0/MidVoltage', None, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.2f}V".format(v))
+        self._dbusservice.add_path('/Dc/0/MidVoltageDeviation', None, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.1f}%".format(v))
         # Create battery extras
         self._dbusservice.add_path('/System/MinCellTemperature', None, writeable=True)
         self._dbusservice.add_path('/System/MaxCellTemperature', None, writeable=True)
@@ -144,6 +151,11 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
         self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
         self._dbusservice['/Capacity'] = self.battery.capacity_remain
+        
+        midpoint, deviation = self.battery.get_midvoltage()
+        if (midpoint is not None):
+            self._dbusservice['/Dc/0/MidVoltage'] = midpoint
+            self._dbusservice['/Dc/0/MidVoltageDeviation'] = deviation
 
         # Update battery extras
         self._dbusservice['/History/ChargeCycles'] = self.battery.cycles

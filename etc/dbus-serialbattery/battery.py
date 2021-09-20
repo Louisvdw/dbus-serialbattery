@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import utils
+import math
 
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
@@ -176,6 +177,23 @@ class Battery(object):
             if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
                 max_voltage = self.cells[c].voltage
         return None if max_voltage == 0 else max_voltage
+
+    def get_midvoltage(self):
+        if self.cell_count is None or self.cell_count == 0:
+            return None, None
+
+        halfcount = int(math.floor(self.cell_count/2))
+        half1voltage = 0
+        half2voltage = 0
+        
+        for c in range(halfcount):
+            half1voltage += self.cells[c].voltage
+            half2voltage += self.cells[halfcount + c].voltage
+        # handle uneven cells
+        extra = 0 if (2*halfcount == self.cell_count) else self.cells[self.cell_count-1].voltage/2
+        # get the midpoint of the battery
+        midpoint = (half1voltage + half2voltage)/2 + extra   
+        return midpoint, abs(1 - half1voltage/half2voltage) * 100
 
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):
