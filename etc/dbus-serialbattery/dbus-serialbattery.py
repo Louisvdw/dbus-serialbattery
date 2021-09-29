@@ -11,7 +11,6 @@ if sys.version_info.major == 2:
     import gobject
 else:
     from gi.repository import GObject as gobject
-import logging
 import sys
 
 from dbushelper import DbusHelper
@@ -24,10 +23,7 @@ from jkbms import Jkbms
 from sinowealth import Sinowealth
 #from mnb import MNB
 
-# Logging
-logging.info('Starting dbus-serialbattery')
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.info('Starting dbus-serialbattery')
 
 def main():
 
@@ -58,7 +54,7 @@ def main():
             for test in battery_types:
                 logger.info('Testing ' + test.__class__.__name__)
                 if test.test_connection() is True:
-                    logger.info('Connection established to ' + test.__class__.__name__)
+                    logger.warning('Connection established to ' + test.__class__.__name__)
                     return test
 
             count -= 1
@@ -75,7 +71,7 @@ def main():
             logger.info('No Port needed')
             return '/dev/tty/USB9'
 
-    logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+    logger.warning('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
     port = get_port()
     battery = get_battery_type(port)
@@ -96,7 +92,7 @@ def main():
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         return
-    logger.info('Battery connected to dbus from ' + port)
+    logger.warning('Battery connected to dbus from ' + port)
 
 
     # Poll the battery at INTERVAL and run the main loop

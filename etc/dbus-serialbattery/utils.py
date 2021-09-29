@@ -6,8 +6,8 @@ from time import sleep
 from struct import *
 
 # Logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = logging.getLogger("SerialBattery")
+logger.setLevel(logging.WARNING)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.9

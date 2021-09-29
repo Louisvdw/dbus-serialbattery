@@ -49,8 +49,8 @@ class Jkbms(Battery):
         return result
 
     def get_data(self, bytes, idcode, start, length):
-        # logger.info("start "+str(start) + " length " + str(length))
-        # logger.info(binascii.hexlify(bytearray(bytes[start:start + 1 + length])).decode('ascii'))
+        # logger.debug("start "+str(start) + " length " + str(length))
+        # logger.debug(binascii.hexlify(bytearray(bytes[start:start + 1 + length])).decode('ascii'))
         start = bytes.find(idcode, start, start + 1 + length)
         if start < 0: return False
         return bytes[start+1:start+length+1]
@@ -123,7 +123,7 @@ class Jkbms(Battery):
     def to_protection_bits(self, byte_data):
         pos=13
         tmp = bin(byte_data)[15-pos:].rjust(pos + 1, zero_char)
-        # logger.info(tmp)
+        # logger.debug(tmp)
         self.protection.soc_low = 2 if is_bit_set(tmp[pos-0]) else 0
         self.protection.set_IC_inspection = 2 if is_bit_set(tmp[pos-1]) else 0 # BMS over temp
         self.protection.voltage_high = 2 if is_bit_set(tmp[pos-2]) else 0

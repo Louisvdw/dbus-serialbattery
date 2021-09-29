@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Protection, Battery, Cell
-import logging
 from utils import *
 from struct import *
-
-# Logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class LltJbdProtection(Protection):
 
@@ -164,7 +159,7 @@ class LltJbd(Battery):
             return False
 
         self.hardware_version = unpack_from('>' + str(len(hardware_data)) + 's', hardware_data)[0]
-        logger.info(self.hardware_version)
+        logger.debug(self.hardware_version)
         return True
 
     def read_serial_data_llt(self, command):

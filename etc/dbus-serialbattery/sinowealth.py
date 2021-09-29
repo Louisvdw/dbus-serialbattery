@@ -15,7 +15,6 @@ class Sinowealth(Battery):
         self.cell_min_no = None
         self.cell_max_no = None
         self.cell_count = None
-        self.cell_voltages = {}
         self.poll_interval = 2000
         self.type = self.BATTERYTYPE
     # command bytes [StartFlag=0A][Command byte][response dataLength=2 to 20 bytes][checksum]

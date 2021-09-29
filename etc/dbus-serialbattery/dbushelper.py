@@ -44,7 +44,7 @@ class DbusHelper:
         if setting == 'instance':
             self.battery.role, self.instance = self.get_role_instance()
             self._dbusservice['/DeviceInstance'] = self.instance
-            logger.info("DeviceInstance = %d", self.instance)
+            logger.debug("DeviceInstance = %d", self.instance)
             return
 
     def setup_vedbus(self):
@@ -195,6 +195,6 @@ class DbusHelper:
         self._dbusservice['/Alarms/HighTemperature'] = self.battery.protection.temp_high_discharge
         self._dbusservice['/Alarms/LowTemperature'] = self.battery.protection.temp_low_discharge
 
-        logging.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
+        logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
                       round(self.battery.soc, 2))
