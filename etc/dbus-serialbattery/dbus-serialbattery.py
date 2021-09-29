@@ -10,18 +10,19 @@ import sys
 if sys.version_info.major == 2:
     import gobject
 else:
-    from gi.repository import GObject as gobject
+    from gi.repository import GLib as gobject
 import sys
 
 from dbushelper import DbusHelper
-from utils import DRIVER_VERSION, DRIVER_SUBVERSION
-import battery
+from utils import DRIVER_VERSION, DRIVER_SUBVERSION, logger
+import logging
 from lltjbd import LltJbd
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
 from sinowealth import Sinowealth
 #from mnb import MNB
+
 
 logger.info('Starting dbus-serialbattery')
 
@@ -52,7 +53,7 @@ def main():
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in battery_types:
-                logger.info('Testing ' + test.__class__.__name__)
+                logger.warning('Testing ' + test.__class__.__name__)
                 if test.test_connection() is True:
                     logger.warning('Connection established to ' + test.__class__.__name__)
                     return test
