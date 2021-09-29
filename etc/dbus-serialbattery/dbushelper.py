@@ -198,3 +198,4 @@ class DbusHelper:
         logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
                       round(self.battery.soc, 2))
+        self.battery.log_cell_data()

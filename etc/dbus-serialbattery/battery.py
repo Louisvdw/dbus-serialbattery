@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-import utils
+from utils import *
 import math
 
 class Protection(object):
@@ -230,4 +230,13 @@ class Battery(object):
             return self.temp2
         else:
             return None
-        
+
+    def log_cell_data(self):
+        if logger.getEffectiveLevel() > logging.INFO:
+            return False
+
+        cell_res = ""
+        for c in range(self.cell_count):
+            cell_res += "[{0}]{1}V ".format(c+1, self.cells[c].voltage)
+        logger.info("Cells:" + cell_res)
+        return True
