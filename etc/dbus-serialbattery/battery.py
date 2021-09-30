@@ -179,16 +179,18 @@ class Battery(object):
         return None if max_voltage == 0 else max_voltage
 
     def get_midvoltage(self):
-        if self.cell_count is None or self.cell_count == 0 or self.cell_count < 4:
+        if self.cell_count is None or self.cell_count == 0 or self.cell_count < 4 or len(self.cells) != self.cell_count:
             return None, None
 
         halfcount = int(math.floor(self.cell_count/2))
         half1voltage = 0
         half2voltage = 0
         
-        for c in range(halfcount):
-            half1voltage += self.cells[c].voltage
-            half2voltage += self.cells[halfcount + c].voltage
+        try:
+            half1voltage = sum(c.voltage for c in self.cells[:halfcount] if c.voltage is not None)
+            half2voltage = sum(c.voltage for c in self.cells[halfcount:halfcount*2] if c.voltage is not None)
+        except ValueError:
+            pass
         # handle uneven cells by giving half the voltage of the last cell to half1 and half2
         extra = 0 if (2*halfcount == self.cell_count) else self.cells[self.cell_count-1].voltage/2
         # get the midpoint of the battery
