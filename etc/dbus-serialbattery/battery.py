@@ -105,7 +105,7 @@ class Battery(object):
         # Change depending on the SOC values
         if 98 < self.soc <= 100:
             self.control_charge_current = 5
-        elif 95 < self.soc <= 97:
+        elif 95 < self.soc <= 98:
             self.control_charge_current = self.max_battery_current/4
         elif 91 < self.soc <= 95:
             self.control_charge_current = self.max_battery_current/2
@@ -113,11 +113,11 @@ class Battery(object):
             self.control_charge_current = self.max_battery_current
 
         # Change depending on the SOC values
-        if self.soc <= 20:
+        if self.soc <= 10:
             self.control_discharge_current = 5
-        elif 20 < self.soc <= 30:
+        elif 10 < self.soc <= 20:
             self.control_discharge_current = self.max_battery_discharge_current/4
-        elif 30 < self.soc <= 35:
+        elif 20 < self.soc <= 30:
             self.control_discharge_current = self.max_battery_discharge_current/2
         else:
             self.control_discharge_current = self.max_battery_discharge_current
@@ -148,35 +148,33 @@ class Battery(object):
 
     def get_min_cell_desc(self):
         cell_no = self.get_min_cell()
-        if cell_no is None:
-            return None
-        return 'C' + str(cell_no + 1)
+        return cell_no if cell_no is None else 'C' + str(cell_no + 1)
 
     def get_max_cell_desc(self):
         cell_no = self.get_max_cell()
-        if cell_no is None:
-            return None
-        return 'C' + str(cell_no + 1)
+        return cell_no if cell_no is None else 'C' + str(cell_no + 1)
 
     def get_min_cell_voltage(self):
-        min_voltage = 9999
+        min_voltage = None
         if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
             return self.cell_min_voltage
 
-        for c in range(min(len(self.cells), self.cell_count)):
-            if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
-                min_voltage = self.cells[c].voltage
-        return None if min_voltage == 9999 else min_voltage
+        try:
+            min_voltage = min(c.voltage for c in self.cells if c.voltage is not None)
+        except ValueError:
+            pass
+        return min_voltage
 
     def get_max_cell_voltage(self):
-        max_voltage = 0
+        max_voltage = None
         if len(self.cells) == 0 and hasattr(self, 'cell_max_voltage'):
             return self.cell_max_voltage
 
-        for c in range(min(len(self.cells), self.cell_count)):
-            if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
-                max_voltage = self.cells[c].voltage
-        return None if max_voltage == 0 else max_voltage
+        try:
+            min_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
+        except ValueError:
+            pass
+        return min_voltage
 
     def get_midvoltage(self):
         if self.cell_count is None or self.cell_count == 0 or self.cell_count < 4 or len(self.cells) != self.cell_count:
