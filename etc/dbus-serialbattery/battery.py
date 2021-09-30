@@ -234,11 +234,13 @@ class Battery(object):
             return None
 
     def log_cell_data(self):
-        if logger.getEffectiveLevel() > logging.INFO:
+        if logger.getEffectiveLevel() > logging.INFO and len(self.cells) == 0:
             return False
 
         cell_res = ""
-        for c in range(self.cell_count):
-            cell_res += "[{0}]{1}V ".format(c+1, self.cells[c].voltage)
+        cell_counter = 1
+        for c in self.cells:
+            cell_res += "[{0}]{1}V ".format(cell_counter, c.voltage)
+            cell_counter = cell_counter + 1
         logger.info("Cells:" + cell_res)
         return True
