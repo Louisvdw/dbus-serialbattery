@@ -54,6 +54,8 @@ class Sinowealth(Battery):
         self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
         
+        self.read_capacity()
+        
         for c in range(self.cell_count):
           self.cells.append(Cell(False))
         return True
@@ -157,9 +159,8 @@ class Sinowealth(Battery):
         self.capacity_remain = remaining_capacity[0]/1000
         logger.info(">>> INFO: remaining battery capacity: %f Ah", self.capacity_remain)
         
-        if self.capacity is None:
-          self.read_capacity()
-        self.total_ah_drawn = self.capacity - self.capacity_remain
+        if self.capacity is not None and self.capacity_remain is not None:
+            self.total_ah_drawn = self.capacity - self.capacity_remain
         return True
  
     def read_capacity(self):
@@ -205,7 +206,8 @@ class Sinowealth(Battery):
 
     def read_temperature_data(self):
         if self.temp_sensors is None:
-            self.read_pack_config_data()
+            return False
+
         temp_ext1_data = self.read_serial_data_sinowealth(self.command_temp_ext1)
         if temp_ext1_data is False:
             return False

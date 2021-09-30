@@ -6,6 +6,7 @@ from time import sleep
 from struct import *
 
 # Logging
+logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.WARNING)
 
