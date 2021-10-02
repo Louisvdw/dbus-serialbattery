@@ -99,11 +99,11 @@ class Ant(Battery):
         data = read_serial_data(command, self.port, self.baud_rate,
                                 self.LENGTH_POS, self.LENGTH_CHECK, self.LENGTH_FIXED)
         if data is False:
-            logger.info(">>> ERROR: Incorrect Data")
+            logger.error(">>> ERROR: Incorrect Data")
             return False
 
         if len(data) == self.LENGTH_FIXED:
             return data
         else:
-            logger.info(">>> ERROR: Incorrect Reply")
+            logger.error(">>> ERROR: Incorrect Reply")
             return False

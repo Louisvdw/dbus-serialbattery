@@ -6,12 +6,13 @@ from time import sleep
 from struct import *
 
 # Logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logging.basicConfig()
+logger = logging.getLogger("SerialBattery")
+logger.setLevel(logging.WARNING)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.8
-DRIVER_SUBVERSION = 'beta1'
+DRIVER_VERSION = 0.9
+DRIVER_SUBVERSION = 'beta2'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -39,24 +40,35 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
             ser.flushInput()
             ser.write(command)
 
+            length_byte_size = 1
+            if length_size is not None: 
+                if length_size.upper() == 'H':
+                    length_byte_size = 2
+                elif length_size.upper() == 'I' or length_size.upper() == 'L':
+                    length_byte_size = 4
+
             count = 0
             toread = ser.inWaiting()
 
-            while toread < (length_pos+1):
+            while toread < (length_pos+length_byte_size):
                 sleep(0.005)
                 toread = ser.inWaiting()
                 count += 1
                 if count > 50:
                     logger.error(">>> ERROR: No reply - returning")
                     return False
-                    # raise Exception("No reply from {}".format(port))
+                    
             #logger.info('serial data toread ' + str(toread))
             res = ser.read(toread)
-            if len(res) < length_pos and length_fixed is None:
-                logger.error(">>> ERROR: No reply - returning")
-                return False
-            length_size = length_size if length_size is not None else 'B'
-            length = length_fixed if length_fixed is not None else unpack_from(length_size, res,length_pos)[0]
+            if length_fixed is not None:
+                length = length_fixed
+            else:
+                if len(res) < (length_pos+length_byte_size):
+                    logger.error(">>> ERROR: No reply - returning")
+                    return False
+                length_size = length_size if length_size is not None else 'B'
+                length = unpack_from('>'+length_size, res,length_pos)[0]
+                
             #logger.info('serial data length ' + str(length))
 
             count = 0
