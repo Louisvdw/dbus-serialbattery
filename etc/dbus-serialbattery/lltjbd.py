@@ -120,14 +120,12 @@ class LltJbd(Battery):
             return False
 
         voltage, current, capacity_remain, capacity, self.cycles, self.production, balance, \
-            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_sensors, temp1, temp2 \
-            = unpack_from('>HhHHHHhHHBBBBBHH', gen_data)
+            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_sensors \
+            = unpack_from('>HhHHHHhHHBBBBB', gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
-        self.to_temp(1, kelvin_to_celsius(temp1 / 10))
-        self.to_temp(2, kelvin_to_celsius(temp2 / 10))
         self.to_cell_bits(balance, balance2)
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
@@ -135,6 +133,10 @@ class LltJbd(Battery):
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
 
+        for t in range(self.temp_sensors):
+            temp1 = unpack_from('>H', gen_data, 23 + (2*t))[0]
+            self.to_temp(t + 1, kelvin_to_celsius(temp1 / 10))
+        
         return True
 
     def read_cell_data(self):
