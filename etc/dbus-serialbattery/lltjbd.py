@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Protection, Battery, Cell
-import logging
 from utils import *
 from struct import *
-
-# Logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class LltJbdProtection(Protection):
 
@@ -125,14 +120,12 @@ class LltJbd(Battery):
             return False
 
         voltage, current, capacity_remain, capacity, self.cycles, self.production, balance, \
-            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_sensors, temp1, temp2 \
-            = unpack_from('>HhHHHHhHHBBBBBHH', gen_data)
+            balance2, protection, version, self.soc, fet, self.cell_count, self.temp_sensors \
+            = unpack_from('>HhHHHHhHHBBBBB', gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
-        self.to_temp(1, kelvin_to_celsius(temp1 / 10))
-        self.to_temp(2, kelvin_to_celsius(temp2 / 10))
         self.to_cell_bits(balance, balance2)
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
@@ -140,6 +133,10 @@ class LltJbd(Battery):
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
 
+        for t in range(self.temp_sensors):
+            temp1 = unpack_from('>H', gen_data, 23 + (2*t))[0]
+            self.to_temp(t + 1, kelvin_to_celsius(temp1 / 10))
+        
         return True
 
     def read_cell_data(self):
@@ -164,7 +161,7 @@ class LltJbd(Battery):
             return False
 
         self.hardware_version = unpack_from('>' + str(len(hardware_data)) + 's', hardware_data)[0]
-        logger.info(self.hardware_version)
+        logger.debug(self.hardware_version)
         return True
 
     def read_serial_data_llt(self, command):

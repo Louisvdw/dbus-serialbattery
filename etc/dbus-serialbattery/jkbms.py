@@ -14,7 +14,7 @@ class Jkbms(Battery):
     BATTERYTYPE = "Jkbms"
     LENGTH_CHECK = 1
     LENGTH_POS = 2
-    LENGTH_SIZE = '>H'
+    LENGTH_SIZE = 'H'
     CURRENT_ZERO_CONSTANT = 32768
     command_status = b"\x4E\x57\x00\x13\x00\x00\x00\x00\x06\x03\x00\x00\x00\x00\x00\x00\x68\x00\x00\x01\x29"
 
@@ -49,8 +49,8 @@ class Jkbms(Battery):
         return result
 
     def get_data(self, bytes, idcode, start, length):
-        # logger.info("start "+str(start) + " length " + str(length))
-        # logger.info(binascii.hexlify(bytearray(bytes[start:start + 1 + length])).decode('ascii'))
+        # logger.debug("start "+str(start) + " length " + str(length))
+        # logger.debug(binascii.hexlify(bytearray(bytes[start:start + 1 + length])).decode('ascii'))
         start = bytes.find(idcode, start, start + 1 + length)
         if start < 0: return False
         return bytes[start+1:start+length+1]
@@ -123,7 +123,7 @@ class Jkbms(Battery):
     def to_protection_bits(self, byte_data):
         pos=13
         tmp = bin(byte_data)[15-pos:].rjust(pos + 1, zero_char)
-        # logger.info(tmp)
+        # logger.debug(tmp)
         self.protection.soc_low = 2 if is_bit_set(tmp[pos-0]) else 0
         self.protection.set_IC_inspection = 2 if is_bit_set(tmp[pos-1]) else 0 # BMS over temp
         self.protection.voltage_high = 2 if is_bit_set(tmp[pos-2]) else 0
@@ -146,10 +146,22 @@ class Jkbms(Battery):
             return False
 
         start, length = unpack_from('>HH', data)
-        end, crc = unpack_from('>BI', data[-5:])
-        
-        if start == 0x4E57 and end == 0x68:
+        terminal = unpack_from('>L', data[4:])[0]
+        cmd, src, tt = unpack_from('>bbb', data[8:])
+        frame = unpack_from('>H', data[-9:])[0]
+        end, crc_hi, crc_lo = unpack_from('>BHH', data[-5:])
+
+        s = sum(data[0:-4])
+        logger.debug('S%d C%d C%d' % (s, crc_lo, crc_hi))
+        logger.debug('T%d C%d S%d F%d TT%d' % (terminal, cmd, src, frame, tt))
+
+        if start == 0x4E57 and end == 0x68 and s == crc_lo:
             return data[10:length-19]
+        elif s != crc_lo:
+            logger.error('CRC checksum mismatch: Expected 0x%04x, Got 0x%04x' % (crc_lo, s))
+            return False
         else:
             logger.error(">>> ERROR: Incorrect Reply ")
             return False
+
+            

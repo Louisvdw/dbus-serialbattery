@@ -10,12 +10,6 @@ class Sinowealth(Battery):
         super(Sinowealth, self).__init__(port,baud)
         self.charger_connected = None
         self.load_connected = None
-        self.cell_min_voltage = None
-        self.cell_max_voltage = None
-        self.cell_min_no = None
-        self.cell_max_no = None
-        self.cell_count = None
-        self.cell_voltages = {}
         self.poll_interval = 2000
         self.type = self.BATTERYTYPE
     # command bytes [StartFlag=0A][Command byte][response dataLength=2 to 20 bytes][checksum]
@@ -59,6 +53,8 @@ class Sinowealth(Battery):
         
         self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
+        
+        self.read_capacity()
         
         for c in range(self.cell_count):
           self.cells.append(Cell(False))
@@ -140,8 +136,9 @@ class Sinowealth(Battery):
         if pack_voltage_data is False:
             return False
         pack_voltage = unpack_from('>H', pack_voltage_data[:-1])
-        logger.info(">>> INFO: current pack voltage: %f", pack_voltage[0]/1000)
-        self.voltage = pack_voltage[0]/1000
+        pack_voltage = pack_voltage[0]/1000
+        logger.info(">>> INFO: current pack voltage: %f", pack_voltage)
+        self.voltage = pack_voltage
         return True
 
     def read_pack_current(self):
@@ -149,8 +146,9 @@ class Sinowealth(Battery):
         if current_data is False:
             return False
         current = unpack_from('>i', current_data[:-1])
-        logger.info(">>> INFO: current pack current: %f", current[0]/1000)
-        self.current = current[0]/1000
+        current = current[0]/1000
+        logger.info(">>> INFO: current pack current: %f", current)
+        self.current = current
         return True
         
     def read_remaining_capacity(self):
@@ -158,11 +156,11 @@ class Sinowealth(Battery):
         if remaining_capacity_data is False:
             return False
         remaining_capacity = unpack_from('>i', remaining_capacity_data[:-1])
-        logger.info(">>> INFO: remaining battery capacity: %f Ah", remaining_capacity[0]/1000)
         self.capacity_remain = remaining_capacity[0]/1000
-        if self.capacity is None:
-          self.read_capacity()
-        self.total_ah_drawn = self.capacity - self.capacity_remain
+        logger.info(">>> INFO: remaining battery capacity: %f Ah", self.capacity_remain)
+        
+        if self.capacity is not None and self.capacity_remain is not None:
+            self.total_ah_drawn = self.capacity - self.capacity_remain
         return True
  
     def read_capacity(self):
@@ -191,34 +189,31 @@ class Sinowealth(Battery):
     def read_cell_data(self):
         if self.cell_count is None:
           self.read_pack_config_data()
-          
-        cell_index = 1
-        while cell_index <= self.cell_count:
-          self.cells[cell_index - 1].voltage = self.read_cell_voltage(cell_index)
-          if self.cells[cell_index - 1].voltage is None:
-            return False
-          cell_index += 1
-        
+
+        for c in range(self.cell_count):
+            self.cells[c].voltage = self.read_cell_voltage(c + 1)
         return True
         
     def read_cell_voltage(self, cell_index):
         cell_data = self.read_serial_data_sinowealth(str(chr(cell_index)))
         if cell_data is False:
-            return False
+            return None
         cell_voltage = unpack_from('>H', cell_data[:-1])
-        logger.info(">>> INFO: Cell %u voltage: %f V", cell_index, cell_voltage[0]/1000 )
+        cell_voltage = cell_voltage[0]/1000
         
-        return cell_voltage[0]/1000
+        logger.info(">>> INFO: Cell %u voltage: %f V", cell_index, cell_voltage )
+        return cell_voltage
 
     def read_temperature_data(self):
         if self.temp_sensors is None:
-            self.read_pack_config_data()
+            return False
+
         temp_ext1_data = self.read_serial_data_sinowealth(self.command_temp_ext1)
         if temp_ext1_data is False:
             return False
             
         temp_ext1 = unpack_from('>H', temp_ext1_data[:-1])
-        self.temp1 = kelvin_to_celsius(temp_ext1[0]/10)
+        self.to_temp(1, kelvin_to_celsius(temp_ext1[0]/10))
         logger.info(">>> INFO: BMS external temperature 1: %f C", self.temp1 )
 
         if self.temp_sensors == 2:
@@ -227,7 +222,7 @@ class Sinowealth(Battery):
                 return False
             
             temp_ext2 = unpack_from('>H', temp_ext2_data[:-1])
-            self.temp2 = kelvin_to_celsius(temp_ext2[0]/10)
+            self.to_temp(2, kelvin_to_celsius(temp_ext2[0]/10))
             logger.info(">>> INFO: BMS external temperature 2: %f C", self.temp2 )
         
         # Internal temperature 1 seems to give a logical value 

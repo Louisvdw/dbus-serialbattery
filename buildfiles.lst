@@ -5,6 +5,9 @@ etc/dbus-serialbattery/service/log/run
 etc/dbus-serialbattery/LICENSE
 etc/dbus-serialbattery/README.md
 etc/dbus-serialbattery/start-serialbattery.sh
+etc/dbus-serialbattery/disabledriver.sh
+etc/dbus-serialbattery/installlocal.sh
+etc/dbus-serialbattery/installrelease.sh
 etc/dbus-serialbattery/dbus-serialbattery.py
 etc/dbus-serialbattery/dbushelper.py
 etc/dbus-serialbattery/battery.py
@@ -14,3 +17,5 @@ etc/dbus-serialbattery/daly.py
 etc/dbus-serialbattery/ant.py
 etc/dbus-serialbattery/util_max17853.py
 etc/dbus-serialbattery/mnb.py
+etc/dbus-serialbattery/jkbms.py
+etc/dbus-serialbattery/sinowealth.py
