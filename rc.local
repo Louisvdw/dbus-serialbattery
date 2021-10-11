@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ln -s /data/etc/dbus-serialbattery /opt/victronenergy/dbus-serialbattery
 ln -s /data/etc/dbus-serialbattery/service /opt/victronenergy/service/dbus-serialbattery
 ln -s /data/etc/dbus-serialbattery/service /opt/victronenergy/service-templates/dbus-serialbattery
