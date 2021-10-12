@@ -87,6 +87,8 @@ class DbusHelper:
                                    gettextcallback=lambda p, v: "{:0.2f}Ah".format(v))
         self._dbusservice.add_path('/InstalledCapacity', self.battery.capacity, writeable=True,
                                    gettextcallback=lambda p, v: "{:0.0f}Ah".format(v))
+        self._dbusservice.add_path('/ConsumedAmphours', None, writeable=True,
+                                   gettextcallback=lambda p, v: "{:0.0f}Ah".format(v))
         # Not used at this stage
         # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
         # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
@@ -151,6 +153,9 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
         self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
         self._dbusservice['/Capacity'] = self.battery.capacity_remain
+        self._dbusservice['/ConsumedAmphours'] = 0 if self.battery.capacity is None or \
+                                self.battery.capacity_remain is None else \
+                                self.battery.capacity - self.battery.capacity_remain
         
         midpoint, deviation = self.battery.get_midvoltage()
         if (midpoint is not None):

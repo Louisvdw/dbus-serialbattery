@@ -8,8 +8,6 @@ class Sinowealth(Battery):
 
     def __init__(self, port,baud):
         super(Sinowealth, self).__init__(port,baud)
-        self.charger_connected = None
-        self.load_connected = None
         self.poll_interval = 2000
         self.type = self.BATTERYTYPE
     # command bytes [StartFlag=0A][Command byte][response dataLength=2 to 20 bytes][checksum]
@@ -84,14 +82,9 @@ class Sinowealth(Battery):
         self.discharge_fet = bool(status_data[1]>>1 & int(1)) # DSGMOS
         self.charge_fet = bool(status_data[1] & int(1)) # CHGMOS
         logger.info(">>> INFO: Discharge fet: %s, charge fet: %s", self.discharge_fet, self.charge_fet)
-        self.charger_connected = bool(status_data[0] & int(1)) # FC
-        logger.info(">>> INFO: Pack charging: %s", self.charger_connected)
-        self.load_connected = bool(status_data[0]>>1 & int(1)) # FD
-        logger.info(">>> INFO: Load connected: %s", self.load_connected)
         
         if self.cell_count is None:
           self.read_pack_config_data()
-        
         return True
         
     def read_battery_status(self):
@@ -158,9 +151,6 @@ class Sinowealth(Battery):
         remaining_capacity = unpack_from('>i', remaining_capacity_data[:-1])
         self.capacity_remain = remaining_capacity[0]/1000
         logger.info(">>> INFO: remaining battery capacity: %f Ah", self.capacity_remain)
-        
-        if self.capacity is not None and self.capacity_remain is not None:
-            self.total_ah_drawn = self.capacity - self.capacity_remain
         return True
  
     def read_capacity(self):
@@ -195,7 +185,7 @@ class Sinowealth(Battery):
         return True
         
     def read_cell_voltage(self, cell_index):
-        cell_data = self.read_serial_data_sinowealth(str(chr(cell_index)))
+        cell_data = self.read_serial_data_sinowealth(cell_index.to_bytes(1,byteorder='little'))
         if cell_data is False:
             return None
         cell_voltage = unpack_from('>H', cell_data[:-1])
@@ -244,7 +234,7 @@ class Sinowealth(Battery):
 
     def generate_command(self, command):
         buffer = bytearray(self.command_base)
-        buffer[1] = command
+        buffer[1] = command[0]
         return buffer
 
     def read_serial_data_sinowealth(self, command):
