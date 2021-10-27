@@ -21,6 +21,8 @@ MAX_CELL_VOLTAGE = 3.45
 # battery Current limits
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+# Invert Battery Current
+INVERT_DALY_CURRENT = -1
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
