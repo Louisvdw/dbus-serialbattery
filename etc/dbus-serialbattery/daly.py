@@ -74,7 +74,7 @@ class Daly(Battery):
 
         voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
         self.voltage = voltage / 10
-        self.current = (current - self.CURRENT_ZERO_CONSTANT) / -10
+        self.current = (current - self.CURRENT_ZERO_CONSTANT) / -10 * INVERT_CURRENT_MEASUREMENT
         self.soc = soc / 10
         return True
 

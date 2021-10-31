@@ -21,6 +21,8 @@ MAX_CELL_VOLTAGE = 3.45
 # battery Current limits
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+# Invert Battery Current. Default non-inverted. Set to -1 to invert
+INVERT_CURRENT_MEASUREMENT = 1
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
