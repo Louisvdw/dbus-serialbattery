@@ -43,13 +43,13 @@ class DbusHelper:
     def handle_changed_setting(self, setting, oldvalue, newvalue):
         if setting == 'instance':
             self.battery.role, self.instance = self.get_role_instance()
-            self._dbusservice['/DeviceInstance'] = self.instance
             logger.debug("DeviceInstance = %d", self.instance)
             return
 
     def setup_vedbus(self):
         # Set up dbus service and device instance
         # and notify of all the attributes we intend to update
+        # This is only called once when a battery is initiated
         self.setup_instance()
         logger.debug("%s" % ("com.victronenergy.battery." + self.battery.port[self.battery.port.rfind('/') + 1:]))
 
@@ -135,11 +135,29 @@ class DbusHelper:
         return True
 
     def publish_battery(self, loop):
+        # This is called every battery.poll_interval milli second as set up per battery type to read and update the data
         try:
-            self.battery.refresh_data()
+            error_count = 0
+            # Call the battery's refresh_data function
+            success = self.battery.refresh_data()
+            if success:
+                error_count = 0
+                self.battery.online = True
+            else:
+                error_count += 1
+                # If the battery is offline for more than 10 polls (polled every second for most batteries)
+                if error_count >= 10: 
+                    self.battery.online = False
+
+            
+
+
+            # This is to mannage CCCL
             self.battery.manage_charge_current()
-            # self.battery.manage_control_charging(max_voltage, min_voltage, total_voltage, balance)
+            
+            # publish all the data fro the battery object to dbus
             self.publish_dbus()
+
         except:
             traceback.print_exc()
             loop.quit()
@@ -172,6 +190,8 @@ class DbusHelper:
                                 (self.battery.charge_fet and self.battery.control_allow_charge) else 1
         self._dbusservice['/System/NrOfModulesBlockingDischarge'] = 0 if self.battery.discharge_fet is None \
                                 or self.battery.discharge_fet else 1
+        self._dbusservice['/System/NrOfModulesOnline'] = 1 if self.battery.online else 0
+        self._dbusservice['/System/NrOfModulesOffline'] = 0 if self.battery.online else 1
         self._dbusservice['/System/MinCellTemperature'] = self.battery.get_min_temp()
         self._dbusservice['/System/MaxCellTemperature'] = self.battery.get_max_temp()
 
