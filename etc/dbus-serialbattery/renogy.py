@@ -68,7 +68,7 @@ class Renogy(Battery):
 
         #self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
         #    state, self.cycles = unpack_from('>bb??bhx', status_data)
-
+        self.cell_count = 4
         serial_num = unpack_from('16s',status_data)[0]
         
         self.hardware_version = "Renogy " + str(serial_num)
@@ -122,8 +122,3 @@ class Renogy(Battery):
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
-
-test = Renogy(port='COM3',baud=9600)
-if (test.test_connection() == True):
-    print('good')
-print('here')
