@@ -98,14 +98,14 @@ class Renogy(Battery):
                     crc ^= 0xA001
                 else:
                     crc >>= 1
-        return crc
+        return struct.pack('<H',crc)
     
     def generate_command(self, command):
         buffer = bytearray(self.command_address)
         buffer += self.command_read
         buffer += command
-        buffer += self.calc_crc(buffer).to_bytes(2,'little')
-        print(buffer.hex())
+        buffer += self.calc_crc(buffer)
+
         return buffer
 
     def read_serial_data_renogy(self, command):
