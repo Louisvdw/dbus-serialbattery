@@ -12,7 +12,7 @@ class Renogy(Battery):
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "Renogy"
-    LENGTH_CHECK = 5
+    LENGTH_CHECK = 4
     LENGTH_POS = 2
 
     # command bytes [Address field][Function code (03 = Read register)][Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
@@ -69,8 +69,8 @@ class Renogy(Battery):
         #self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
         #    state, self.cycles = unpack_from('>bb??bhx', status_data)
 
-        serial_num = str(unpack_from('16s',status_data)[0],'ascii')
-
+        serial_num = unpack_from('16s',status_data)[0]
+        
         self.hardware_version = "Renogy " + str(serial_num)
         logger.info(self.hardware_version)
         return True
@@ -122,3 +122,8 @@ class Renogy(Battery):
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
+
+test = Renogy(port='COM3',baud=9600)
+if (test.test_connection() == True):
+    print('good')
+print('here')
