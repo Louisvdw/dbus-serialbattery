@@ -69,9 +69,9 @@ class Renogy(Battery):
         #self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
         #    state, self.cycles = unpack_from('>bb??bhx', status_data)
 
-        serial = unpack_from('8s',status_data)
+        serial_num = str(unpack_from('16s',status_data)[0],'ascii')
 
-        self.hardware_version = "Renogy " + str(serial)
+        self.hardware_version = "Renogy " + str(serial_num)
         logger.info(self.hardware_version)
         return True
 
