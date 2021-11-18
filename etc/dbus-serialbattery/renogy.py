@@ -98,13 +98,13 @@ class Renogy(Battery):
                     crc ^= 0xA001
                 else:
                     crc >>= 1
-        return struct.unpack(">H",struct.pack("<H",crc))
+        return crc
     
     def generate_command(self, command):
         buffer = bytearray(self.command_address)
         buffer += self.command_read
         buffer += command
-        buffer.extend(self.calc_crc(buffer)[0].to_bytes(2,'big'))
+        buffer += self.calc_crc(buffer).to_bytes(2,'little')
         print(buffer.hex())
         return buffer
 
