@@ -88,7 +88,7 @@ class Renogy(Battery):
 
         return True
 
-    def calc_crc(data):
+    def calc_crc(self, data):
         crc = 0xFFFF
         for pos in data:
             crc ^= pos 
