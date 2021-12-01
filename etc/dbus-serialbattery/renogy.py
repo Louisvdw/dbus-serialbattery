@@ -19,8 +19,8 @@ class Renogy(Battery):
     LENGTH_POS = 2
 
     # command bytes [Address field][Function code (03 = Read register)][Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
-    # Battery addresses start at 48 decimal, 30 hex
-    command_address = b"\x30"
+    # Battery addresses start at 0 ascii, 30 hex
+    command_address = b"0"
     command_read = b"\x03"
     # Core data = voltage, temp, current, soc
     command_cell_count = b"\x13\x88\x00\x01"         #Register  5000
@@ -97,11 +97,10 @@ class Renogy(Battery):
         if soc_data is False:
             return False
 
-        current, voltage, remain_capacity = unpack_from('>hhL', soc_data)
+        current, voltage, self.capacity_remain = unpack_from('>hhL', soc_data)
         self.current = current / 100
         self.voltage = voltage / 10
-        self.capacity_remain = remain_capacity
-        self.soc = remain_capacity / self.capacity * 100
+        self.soc = self.capacity_remain / self.capacity * 100
         return True
 
     def read_cell_data(self):
