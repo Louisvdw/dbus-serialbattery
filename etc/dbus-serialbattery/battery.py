@@ -36,6 +36,7 @@ class Battery(object):
         self.role = 'battery'
         self.type = 'Generic'
         self.poll_interval = 1000
+        self.online = True
 
         self.hardware_version = None
         self.voltage = None

@@ -82,7 +82,7 @@ def main():
     # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
-        return
+        sys.exit(1)
 
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
@@ -94,7 +94,7 @@ def main():
     helper = DbusHelper(battery)
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
-        return
+        sys.exit(1)
     logger.warning('Battery connected to dbus from ' + port)
 
 
