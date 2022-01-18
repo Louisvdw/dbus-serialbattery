@@ -55,9 +55,9 @@ def main():
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in battery_types:
-                logger.warning('Testing ' + test.__class__.__name__)
+                logger.info('Testing ' + test.__class__.__name__)
                 if test.test_connection() is True:
-                    logger.warning('Connection established to ' + test.__class__.__name__)
+                    logger.info('Connection established to ' + test.__class__.__name__)
                     return test
 
             count -= 1
@@ -74,7 +74,7 @@ def main():
             logger.info('No Port needed')
             return '/dev/tty/USB9'
 
-    logger.warning('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+    logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
     port = get_port()
     battery = get_battery_type(port)
@@ -95,7 +95,7 @@ def main():
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
-    logger.warning('Battery connected to dbus from ' + port)
+    logger.info('Battery connected to dbus from ' + port)
 
 
     # Poll the battery at INTERVAL and run the main loop

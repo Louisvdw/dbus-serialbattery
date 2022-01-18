@@ -241,5 +241,5 @@ class Battery(object):
         for c in self.cells:
             cell_res += "[{0}]{1}V ".format(cell_counter, c.voltage)
             cell_counter = cell_counter + 1
-        logger.info("Cells:" + cell_res)
+        logger.debug("Cells:" + cell_res)
         return True

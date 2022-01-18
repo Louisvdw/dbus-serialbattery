@@ -38,12 +38,13 @@ class DbusHelper:
 
     def get_role_instance(self):
         val = self.settings['instance'].split(':')
+        logger.info("DeviceInstance = %d", int(val[1]))
         return val[0], int(val[1])
 
     def handle_changed_setting(self, setting, oldvalue, newvalue):
         if setting == 'instance':
             self.battery.role, self.instance = self.get_role_instance()
-            logger.debug("DeviceInstance = %d", self.instance)
+            logger.info("Changed DeviceInstance = %d", self.instance)
             return
 
     def setup_vedbus(self):
@@ -51,7 +52,7 @@ class DbusHelper:
         # and notify of all the attributes we intend to update
         # This is only called once when a battery is initiated
         self.setup_instance()
-        logger.debug("%s" % ("com.victronenergy.battery." + self.battery.port[self.battery.port.rfind('/') + 1:]))
+        logger.info("%s" % ("com.victronenergy.battery." + self.battery.port[self.battery.port.rfind('/') + 1:]))
 
         # Get the settings for the battery
         if not self.battery.get_settings():
@@ -220,7 +221,8 @@ class DbusHelper:
         self._dbusservice['/Alarms/HighTemperature'] = self.battery.protection.temp_high_discharge
         self._dbusservice['/Alarms/LowTemperature'] = self.battery.protection.temp_low_discharge
 
-        logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
-                      round(self.battery.current / 100, 2),
-                      round(self.battery.soc, 2))
+        logger.debug("logged to dbus " + 
+                    "{:0.2f}V".format(round(self.battery.voltage / 100, 2)) +
+                    "{:0.2f}A".format(round(self.battery.current / 100, 2)) +
+                    "{:0.2f}%".format(round(self.battery.soc, 2)))
         self.battery.log_cell_data()

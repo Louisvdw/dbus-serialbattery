@@ -8,7 +8,7 @@ from struct import *
 # Logging
 logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.10
