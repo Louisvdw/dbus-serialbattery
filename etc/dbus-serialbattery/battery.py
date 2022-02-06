@@ -99,6 +99,10 @@ class Battery(object):
         # Start with the current values
 
         # Change depending on the SOC values
+        if self.soc is None:
+            # Prevent serialbattery from terminating on error
+            return False
+            
         if self.soc > 99:
             self.control_allow_charge = False
         else:
