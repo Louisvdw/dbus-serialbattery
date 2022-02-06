@@ -2,5 +2,4 @@
 venv
 venus-data.tar.gz
 BMS-trials
-etc/.DS_Store
-etc/dbus-serialbattery/.DS_Store
+.DS_Store
