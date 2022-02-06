@@ -132,6 +132,16 @@ class DbusHelper:
         self._dbusservice.add_path('/Alarms/HighTemperature', None, writeable=True)
         self._dbusservice.add_path('/Alarms/LowTemperature', None, writeable=True)
 
+        #cell voltages - begining
+
+        for i in range(24):
+            self._dbusservice.add_path('/Voltages/Cell%s'%(str(i+1)), None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
+            self._dbusservice.add_path('/Balances/Cell%s'%(str(i+1)), None, writeable=True)
+        self._dbusservice.add_path('/Voltages/Sum', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
+        self._dbusservice.add_path('/Voltages/Diff', None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
+
+        # - end
+
         return True
 
     def publish_battery(self, loop):
@@ -219,6 +229,21 @@ class DbusHelper:
         self._dbusservice['/Alarms/LowChargeTemperature'] = self.battery.protection.temp_low_charge
         self._dbusservice['/Alarms/HighTemperature'] = self.battery.protection.temp_high_discharge
         self._dbusservice['/Alarms/LowTemperature'] = self.battery.protection.temp_low_discharge
+
+        #cell voltages - begining
+
+        voltageSum = 0
+        for i in range(24):
+            voltage = self.battery.get_cell_voltage(i)
+            self._dbusservice['/Voltages/Cell%s'%(str(i+1))] = voltage
+            self._dbusservice['/Balances/Cell%s'%(str(i+1))] = self.battery.get_cell_balancing(i)
+            if voltage:
+                voltageSum+=voltage
+        self._dbusservice['/Voltages/Sum'] = voltageSum
+        self._dbusservice['/Voltages/Diff'] = self.battery.get_max_cell_voltage() - self.battery.get_min_cell_voltage()
+
+        # - end
+
 
         logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
