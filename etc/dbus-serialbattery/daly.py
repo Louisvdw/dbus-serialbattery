@@ -74,9 +74,8 @@ class Daly(Battery):
         # Ensure data received is valid
         crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
         crntMaxValid = (MAX_BATTERY_CURRENT * 1.3)
-        validData = False
         triesValid = 3
-        while validData is False and triesValid > 0:
+        while triesValid > 0:
             soc_data = False
             # Try up to 3 times to get data. This greatly increases soc_data collection with Daly
             triesData = 3
@@ -89,18 +88,16 @@ class Daly(Battery):
                 return False
 
             voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
-            soc /= 10
-            voltage /= 10
             current = ((current - self.CURRENT_ZERO_CONSTANT) / -10 * INVERT_CURRENT_MEASUREMENT)
             if crntMinValid < current < crntMaxValid:
-                validData = True
+                self.voltage = (voltage / 10)
+                self.current = current
+                self.soc = (soc / 10)
+                return True
+                
             triesValid -= 1
 
-        if validData is True:
-            self.voltage = voltage
-            self.current = current
-            self.soc = soc
-        return True
+        return False
 
     def read_alarm_data(self):
         alarm_data = self.read_serial_data_daly(self.command_alarm)
