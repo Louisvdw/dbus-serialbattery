@@ -95,11 +95,11 @@ class DbusHelper:
         # Create Cell voltage items
         for num in range(self.battery.cell_count):
             num += 1
-            self._dbusservice.add_path('/Cell/' + num + '/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}".format(v))
+            self._dbusservice.add_path('/Cell/' + str(num) + '/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}".format(v))
 
         # Create TimeToSoC items
         for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
-            self._dbusservice.add_path('/TimeToSoC/' + num, None, writeable=True)
+            self._dbusservice.add_path('/TimeToSoC/' + str(num), None, writeable=True)
 
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
