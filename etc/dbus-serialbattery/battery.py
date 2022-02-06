@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from utils import *
 import math
+from datetime import timedelta
 
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
@@ -171,8 +172,26 @@ class Battery(object):
         if self.cells[idx].balance is not None and self.cells[idx].balance:
           return 1
         return 0
-# - end
 
+    def get_timetosoc(self, socnum):
+        # Update TimeToSoC items
+        if self.battery.capacity is None or not self.battery.current:
+            return None
+ 
+        # check if we are past socNum when charging 
+        # or discharging
+        # or on the same SOC (using 0.5% tolerance)
+        if (self.battery.current > 0 and self.battery.soc > socnum) or \
+            (self.battery.current < 0 and self.battery.soc < socnum) or \
+            (self.battery.soc - socnum < 0.5):
+            return "00:00:00"
+
+        # Get Seconds to reach goal Soc using current flow
+        crntPrctPerSec = (abs(self.battery.current / (self.battery.capacity / 100)) / 3600)
+        secondstogo = int(abs(socnum - self.battery.soc) / crntPrctPerSec)
+
+        return str(timedelta(seconds=secondstogo))
+    
     def get_min_cell_voltage(self):
         min_voltage = None
         if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):

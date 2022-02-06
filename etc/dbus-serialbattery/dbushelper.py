@@ -70,6 +70,7 @@ class DbusHelper:
         self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
+
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeVoltage', self.battery.max_battery_voltage, writeable=True,
@@ -92,14 +93,6 @@ class DbusHelper:
         # Not used at this stage
         # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
         # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
-        # Create Cell voltage items
-        for num in range(self.battery.cell_count):
-            num += 1
-            self._dbusservice.add_path('/Cell/' + str(num) + '/Voltage', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}".format(v))
-
-        # Create TimeToSoC items
-        for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
-            self._dbusservice.add_path('/TimeToSoC/' + str(num), None, writeable=True)
 
         # Create SOC, DC and System items
         self._dbusservice.add_path('/Soc', None, writeable=True)
@@ -111,6 +104,7 @@ class DbusHelper:
                                    gettextcallback=lambda p, v: "{:0.2f}V".format(v))
         self._dbusservice.add_path('/Dc/0/MidVoltageDeviation', None, writeable=True,
                                    gettextcallback=lambda p, v: "{:0.1f}%".format(v))
+
         # Create battery extras
         self._dbusservice.add_path('/System/MinCellTemperature', None, writeable=True)
         self._dbusservice.add_path('/System/MaxCellTemperature', None, writeable=True)
@@ -126,6 +120,7 @@ class DbusHelper:
         self._dbusservice.add_path('/Io/AllowToCharge', 0, writeable=True)
         self._dbusservice.add_path('/Io/AllowToDischarge', 0, writeable=True)
         # self._dbusservice.add_path('/SystemSwitch',1,writeable=True)
+
         # Create the alarms
         self._dbusservice.add_path('/Alarms/LowVoltage', None, writeable=True)
         self._dbusservice.add_path('/Alarms/HighVoltage', None, writeable=True)
@@ -142,14 +137,15 @@ class DbusHelper:
         self._dbusservice.add_path('/Alarms/LowTemperature', None, writeable=True)
 
         #cell voltages - begining
-
-        for i in range(24):
+        for i in range(self.battery.cell_count):
             self._dbusservice.add_path('/Voltages/Cell%s'%(str(i+1)), None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
             self._dbusservice.add_path('/Balances/Cell%s'%(str(i+1)), None, writeable=True)
         self._dbusservice.add_path('/Voltages/Sum', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
         self._dbusservice.add_path('/Voltages/Diff', None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
 
-        # - end
+        # Create TimeToSoC items
+        for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
+            self._dbusservice.add_path('/TimeToSoC/' + str(num), None, writeable=True)
 
         return True
 
@@ -182,65 +178,6 @@ class DbusHelper:
             loop.quit()
 
     def publish_dbus(self):
-        # Update Cell voltage items
-        for num in range(self.battery.cell_count):
-            cellVolts = None if num >= len(self.battery.cells) or self.battery.cells[num] is None else self.battery.cells[num].voltage
-            num += 1
-            self._dbusservice['/Cell/' + str(num) + '/Voltage'] = cellVolts
-
-        # Update TimeToSoC items
-        if self.battery.capacity is not None and self.battery.current:
-            onePrctAmps = (self.battery.capacity / 100)
-            # Charging of Discharging
-            if self.battery.current > 0:
-                crntPrctPerHr = (self.battery.current / onePrctAmps)
-            else:
-                crntPrctPerHr = -(self.battery.current / onePrctAmps)
-            crntPrctPerSec = (crntPrctPerHr / 3600)
-
-            for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
-                # Charging of Discharging
-                if self.battery.current > 0:
-                    diffSoc = (num - self.battery.soc)
-                else:
-                    diffSoc = (self.battery.soc - num) 
-                ttgStr = None
-                if self.battery.soc != num and diffSoc > 0:
-                    ttg = 0
-                    ttgD = 0
-                    ttgH = 0
-                    ttgM = 0
-                    ttgS = 0
-                    ttgStr = ""
-                    ttg = int(diffSoc / crntPrctPerSec)
-                    ttgS = ttg
-                    if ttgS >= 86400:
-                        ttgD = int(ttgS / 86400)
-                        ttgS -= (ttgD * 86400)
-                    if ttgS >= 3600:
-                        ttgH = int(ttgS / 3600)
-                        ttgS -= (ttgH * 3600)
-                    if ttgS >= 60:
-                        ttgM = int(ttgS / 60)
-                        ttgS -= (ttgM * 60)
-                    ttgS = round(ttgS, 1)
-                    if ttg >= 86400:
-                        ttgStr += str(ttgD) + "d "
-                        if ttgH < 10:
-                            ttgStr += "0"
-                    if ttg >= 3600:
-                        ttgStr += str(ttgH) + ":"
-                        if ttgM < 10:
-                            ttgStr += "0"
-                    if ttg >= 60:
-                        ttgStr += str(ttgM) + ":"
-                        if ttgS < 10:
-                            ttgStr += "0"
-                    ttgStr += str(ttgS)
-                self._dbusservice['/TimeToSoC/' + str(num)] = ttgStr
-        else:
-            for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
-                self._dbusservice['/TimeToSoC/' + str(num)] = None
 
         # Update SOC, DC and System items
         self._dbusservice['/System/NrOfCellsPerBattery'] = self.battery.cell_count
@@ -300,9 +237,8 @@ class DbusHelper:
         self._dbusservice['/Alarms/LowTemperature'] = self.battery.protection.temp_low_discharge
 
         #cell voltages - begining
-
         voltageSum = 0
-        for i in range(24):
+        for i in range(self.battery.cell_count):
             voltage = self.battery.get_cell_voltage(i)
             self._dbusservice['/Voltages/Cell%s'%(str(i+1))] = voltage
             self._dbusservice['/Balances/Cell%s'%(str(i+1))] = self.battery.get_cell_balancing(i)
@@ -311,9 +247,10 @@ class DbusHelper:
         self._dbusservice['/Voltages/Sum'] = voltageSum
         self._dbusservice['/Voltages/Diff'] = self.battery.get_max_cell_voltage() - self.battery.get_min_cell_voltage()
 
-        # - end
-
-
+        # Update TimeToSoC
+        for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
+            self._dbusservice['/TimeToSoC/' + str(num)] = self.battery.get_timetosoc(num)
+        
         logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
                       round(self.battery.soc, 2))
