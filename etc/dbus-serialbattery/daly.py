@@ -39,7 +39,7 @@ class Daly(Battery):
         return self.read_status_data()
 
     def get_settings(self):
-        self.capacity = BATTERY_CAPACITY_AMPS
+        self.capacity = BATTERY_CAPACITY
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
