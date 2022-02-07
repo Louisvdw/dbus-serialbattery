@@ -176,10 +176,10 @@ class Battery(object):
             return self.cell_max_voltage
 
         try:
-            min_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
+            max_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
         except ValueError:
             pass
-        return min_voltage
+        return max_voltage
 
     def get_midvoltage(self):
         if self.cell_count is None or self.cell_count == 0 or self.cell_count < 4 or len(self.cells) != self.cell_count:

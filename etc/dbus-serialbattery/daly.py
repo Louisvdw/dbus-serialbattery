@@ -73,6 +73,8 @@ class Daly(Battery):
 
     def read_soc_data(self):
         # Ensure data received is valid
+        voltMinValid = (self.min_battery_voltage / 2)
+        voltMaxValid = (self.max_battery_voltage * 2)
         crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
         crntMaxValid = (MAX_BATTERY_CURRENT * 1.3)
         triesValid = 3
@@ -89,9 +91,10 @@ class Daly(Battery):
                 return False
 
             voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
+            voltage /= 10
             current = ((current - self.CURRENT_ZERO_CONSTANT) / -10 * INVERT_CURRENT_MEASUREMENT)
-            if crntMinValid < current < crntMaxValid:
-                self.voltage = (voltage / 10)
+            if crntMinValid < current < crntMaxValid and voltMinValid < voltage < voltMaxValid:
+                self.voltage = voltage
                 self.current = current
                 self.soc = (soc / 10)
                 return True
@@ -223,7 +226,7 @@ class Daly(Battery):
             frame = 0
             while frame >= 0 and frame < maxFrame and cellnum < self.cell_count:
                 startPos = ((frame * 12) + 4)
-                logger.warning('cell: ' + str(cellnum) + ', startPos: ' + str(startPos) + ', frame: ' + str(frame))
+                #logger.warning('cell: ' + str(cellnum) + ', startPos: ' + str(startPos) + ', frame: ' + str(frame))
                 if frame > 0 and frame < 16:
                     startPos += 1
                 frame, frameCell[0], frameCell[1], frameCell[2], reserved = unpack_from('>bhhhb', cells_volts_data, startPos)
@@ -259,8 +262,11 @@ class Daly(Battery):
             return False
 
         max_temp,max_no,min_temp, min_no = unpack_from('>bbbb', minmax_data)
-        self.temp1 = min_temp - self.TEMP_ZERO_CONSTANT
-        self.temp2 = max_temp - self.TEMP_ZERO_CONSTANT
+        min_temp -= self.TEMP_ZERO_CONSTANT
+        max_temp -= self.TEMP_ZERO_CONSTANT
+        if (self.temp1 is None or self.temp1 is None) or ((self.temp1 - 10) < min_temp < (self.temp2 + 10) and (self.temp1 - 10) < max_temp < (self.temp2 + 10)):
+            self.temp1 = min_temp
+            self.temp2 = max_temp
         return True
 
     def read_fed_data(self):
