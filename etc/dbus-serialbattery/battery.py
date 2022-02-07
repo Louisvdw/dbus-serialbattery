@@ -67,6 +67,8 @@ class Battery(object):
         # max battery charge/discharge current
         self.max_battery_current = None
         self.max_battery_discharge_current = None
+        
+        self.time_to_soc_update = TIME_TO_SOC_LOOP_CYCLES
 
     def test_connection(self):
         # Each driver must override this function to test if a connection can be made

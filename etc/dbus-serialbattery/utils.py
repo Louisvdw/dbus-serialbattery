@@ -25,6 +25,16 @@ MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 BATTERY_CAPACITY = 50
 # Invert Battery Current. Default non-inverted. Set to -1 to invert
 INVERT_CURRENT_MEASUREMENT = 1
+# Set of SoC percentages to report on dbus. The more you specify the more it will impact system performance.
+#TIME_TO_SOC_POINTS = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]		# Every 5% SoC
+#TIME_TO_SOC_POINTS = []	                # No data set
+TIME_TO_SOC_POINTS = [100, 90, 75, 50, 25, 20, 10, 0]
+# Specify how many loop cycles between each TimeToSoc updates
+TIME_TO_SOC_LOOP_CYCLES = 5
+# Include TimeToSoC points when moving away from the SoC point.  These will be as negative time. Disabling this improves performance slightly.
+TIME_TO_SOC_INC_FROM = False
+#TIME_TO_SOC_INC_FROM = True
+
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
