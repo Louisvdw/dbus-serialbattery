@@ -16,6 +16,7 @@ class Daly(Battery):
         self.cell_min_no = None
         self.cell_max_no = None
         self.poll_interval = 2000
+        self.poll_step = 0
         self.type = self.BATTERYTYPE
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -46,11 +47,19 @@ class Daly(Battery):
 
     def refresh_data(self):
         result = self.read_soc_data()
-        result = result and self.read_alarm_data()
-        result = result and self.read_cells_volts()
         result = result and self.read_cell_voltage_range_data()
-        result = result and self.read_temperature_range_data()
         result = result and self.read_fed_data()
+        if self.poll_step == 0:
+            result = result and self.read_alarm_data()
+        elif self.poll_step == 1:
+            result = result and self.read_cells_volts()
+        elif self.poll_step == 2:
+            result = result and self.read_temperature_range_data()
+            
+            # This is last step so reset poll_step
+            self.poll_step = -1
+
+        self.poll_step += 1
 
         return result
 
