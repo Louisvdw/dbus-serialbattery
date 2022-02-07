@@ -159,6 +159,20 @@ class Battery(object):
         cell_no = self.get_max_cell()
         return cell_no if cell_no is None else 'C' + str(cell_no + 1)
 
+#cell voltages - begining
+    def get_cell_voltage(self, idx):
+        if idx>=min(len(self.cells), self.cell_count):
+          return None
+        return self.cells[idx].voltage
+ 
+    def get_cell_balancing(self, idx):
+        if idx>=min(len(self.cells), self.cell_count):
+          return None
+        if self.cells[idx].balance is not None and self.cells[idx].balance:
+          return 1
+        return 0
+# - end
+
     def get_min_cell_voltage(self):
         min_voltage = None
         if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
