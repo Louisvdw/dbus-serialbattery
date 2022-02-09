@@ -29,11 +29,17 @@ INVERT_CURRENT_MEASUREMENT = 1
 #TIME_TO_SOC_POINTS = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]		# Every 5% SoC
 #TIME_TO_SOC_POINTS = []	                # No data set
 TIME_TO_SOC_POINTS = [100, 90, 75, 50, 25, 20, 10, 0]
+# Specify TimeToSoc value type: 1 = as seconds; 2 = as string (days, HR:MN:SC)
+TIME_TO_SOC_VALUE_TYPE = 1
 # Specify how many loop cycles between each TimeToSoc updates
 TIME_TO_SOC_LOOP_CYCLES = 5
 # Include TimeToSoC points when moving away from the SoC point.  These will be as negative time. Disabling this improves performance slightly.
 TIME_TO_SOC_INC_FROM = False
 #TIME_TO_SOC_INC_FROM = True
+# Select the format of cell data presented on dbus.
+BATTERY_CELL_DATA_FORMAT = 1                   # Format: /Voltages/Cell# (also available for display on Remote Console)
+#BATTERY_CELL_DATA_FORMAT = 2                   # Format: /Cell/#/Volts
+#BATTERY_CELL_DATA_FORMAT = 3                   # Both formats 1 and 2
 
 
 def is_bit_set(tmp):
@@ -63,7 +69,7 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
             count = 0
             toread = ser.inWaiting()
 
-             while toread < (length_pos+length_byte_size):
+            while toread < (length_pos+length_byte_size):
                 sleep(0.005)
                 toread = ser.inWaiting()
                 count += 1
