@@ -248,8 +248,8 @@ class DbusHelper:
         self._dbusservice['/Voltages/Diff'] = self.battery.get_max_cell_voltage() - self.battery.get_min_cell_voltage()
 
         # Update TimeToSoC
-        for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
-            self._dbusservice['/TimeToSoC/' + str(num)] = self.battery.get_timetosoc(num)
+        # for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
+        #    self._dbusservice['/TimeToSoC/' + str(num)] = self.battery.get_timetosoc(num)
         
         logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
