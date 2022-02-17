@@ -11,7 +11,6 @@ from vedbus import VeDbusService
 from settingsdevice import SettingsDevice
 import battery
 from utils import *
-from datetime import timedelta
 
 def get_bus():
     return dbus.SessionBus() if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else dbus.SystemBus()
