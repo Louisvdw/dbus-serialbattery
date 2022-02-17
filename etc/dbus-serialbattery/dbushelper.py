@@ -11,6 +11,7 @@ from vedbus import VeDbusService
 from settingsdevice import SettingsDevice
 import battery
 from utils import *
+from datetime import timedelta
 
 def get_bus():
     return dbus.SessionBus() if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else dbus.SystemBus()
@@ -137,14 +138,23 @@ class DbusHelper:
         self._dbusservice.add_path('/Alarms/LowTemperature', None, writeable=True)
 
         #cell voltages - begining
-        for i in range(self.battery.cell_count):
-            self._dbusservice.add_path('/Voltages/Cell%s'%(str(i+1)), None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
-            self._dbusservice.add_path('/Balances/Cell%s'%(str(i+1)), None, writeable=True)
-        self._dbusservice.add_path('/Voltages/Sum', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
-        self._dbusservice.add_path('/Voltages/Diff', None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
+        if (BATTERY_CELL_DATA_FORMAT & 1):
+            for i in range(self.battery.cell_count):
+                self._dbusservice.add_path('/Voltages/Cell%s'%(str(i+1)), None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
+                self._dbusservice.add_path('/Balances/Cell%s'%(str(i+1)), None, writeable=True)
+            self._dbusservice.add_path('/Voltages/Sum', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
+            self._dbusservice.add_path('/Voltages/Diff', None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
+
+        # Create Cell voltage items
+        if (BATTERY_CELL_DATA_FORMAT & 2):
+            for num in range(self.battery.cell_count):
+                num += 1
+                self._dbusservice.add_path('/Cell/' + str(num) + '/Volts', None, writeable=True, gettextcallback=lambda p, v: "{:0.2f}".format(v))
+            self._dbusservice.add_path('/Cell/Sum', None, writeable=True, gettextcallback=lambda p, v: "{:2.2f}V".format(v))
+            self._dbusservice.add_path('/Cell/Diff', None, writeable=True, gettextcallback=lambda p, v: "{:0.3f}V".format(v))
 
         # Create TimeToSoC items
-        for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
+        for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path('/TimeToSoC/' + str(num), None, writeable=True)
 
         return True
@@ -237,20 +247,43 @@ class DbusHelper:
         self._dbusservice['/Alarms/LowTemperature'] = self.battery.protection.temp_low_discharge
 
         #cell voltages - begining
-        voltageSum = 0
-        for i in range(self.battery.cell_count):
-            voltage = self.battery.get_cell_voltage(i)
-            self._dbusservice['/Voltages/Cell%s'%(str(i+1))] = voltage
-            self._dbusservice['/Balances/Cell%s'%(str(i+1))] = self.battery.get_cell_balancing(i)
-            if voltage:
-                voltageSum+=voltage
-        self._dbusservice['/Voltages/Sum'] = voltageSum
-        self._dbusservice['/Voltages/Diff'] = self.battery.get_max_cell_voltage() - self.battery.get_min_cell_voltage()
+        if (BATTERY_CELL_DATA_FORMAT & 1):
+            voltageSum = 0
+            for i in range(self.battery.cell_count):
+                voltage = self.battery.get_cell_voltage(i)
+                self._dbusservice['/Voltages/Cell%s'%(str(i+1))] = voltage
+                self._dbusservice['/Balances/Cell%s'%(str(i+1))] = self.battery.get_cell_balancing(i)
+                if voltage:
+                    voltageSum+=voltage
+            self._dbusservice['/Voltages/Sum'] = voltageSum
+            self._dbusservice['/Voltages/Diff'] = self.battery.get_max_cell_voltage() - self.battery.get_min_cell_voltage()
+
+        if (BATTERY_CELL_DATA_FORMAT & 2):
+            # Update Cell voltage items
+            cellVoltsSum = 0
+            for num in range(self.battery.cell_count):
+                cellVolts = None if num >= len(self.battery.cells) or self.battery.cells[num] is None else self.battery.cells[num].voltage
+                if cellVolts:
+                    cellVoltsSum += cellVolts
+                num += 1
+                self._dbusservice['/Cell/' + str(num) + '/Volts'] = cellVolts
+            self._dbusservice['/Cell/Sum'] = cellVoltsSum
+            self._dbusservice['/Cell/Diff'] = self.battery.get_max_cell_voltage() - self.battery.get_min_cell_voltage()
 
         # Update TimeToSoC
-        for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
-            self._dbusservice['/TimeToSoC/' + str(num)] = self.battery.get_timetosoc(num)
-        
+        if self.battery.capacity is not None and len(TIME_TO_SOC_POINTS) > 0 and self.battery.time_to_soc_update == 0:
+            self.battery.time_to_soc_update = TIME_TO_SOC_LOOP_CYCLES
+            if self.battery.current:
+                crntPrctPerSec = (abs(self.battery.current / (self.battery.capacity / 100)) / 3600)
+
+                for num in TIME_TO_SOC_POINTS:
+                    self._dbusservice['/TimeToSoC/' + str(num)] = self.battery.get_timetosoc(num, crntPrctPerSec)
+            else:
+                for num in TIME_TO_SOC_POINTS:
+                    self._dbusservice['/TimeToSoC/' + str(num)] = None
+        else:
+            self.battery.time_to_soc_update -= 1
+
         logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
                       round(self.battery.current / 100, 2),
                       round(self.battery.soc, 2))
