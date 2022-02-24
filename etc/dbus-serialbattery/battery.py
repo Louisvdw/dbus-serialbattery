@@ -68,6 +68,8 @@ class Battery(object):
         # max battery charge/discharge current
         self.max_battery_current = None
         self.max_battery_discharge_current = None
+        
+        self.time_to_soc_update = TIME_TO_SOC_LOOP_CYCLES
 
     def test_connection(self):
         # Each driver must override this function to test if a connection can be made
@@ -173,24 +175,46 @@ class Battery(object):
           return 1
         return 0
 
-    def get_timetosoc(self, socnum):
+#    def get_timetosoc(self, socnum):
         # Update TimeToSoC items
-        if self.battery.capacity is None or not self.battery.current:
-            return None
+#        if self.battery.capacity is None or not self.battery.current:
+#            return None
  
         # check if we are past socNum when charging 
         # or discharging
         # or on the same SOC (using 0.5% tolerance)
-        if (self.battery.current > 0 and self.battery.soc > socnum) or \
-            (self.battery.current < 0 and self.battery.soc < socnum) or \
-            (self.battery.soc - socnum < 0.5):
-            return "00:00:00"
+#        if (self.battery.current > 0 and self.battery.soc > socnum) or \
+#            (self.battery.current < 0 and self.battery.soc < socnum) or \
+#            (self.battery.soc - socnum < 0.5):
+#            return "00:00:00"
 
         # Get Seconds to reach goal Soc using current flow
-        crntPrctPerSec = (abs(self.battery.current / (self.battery.capacity / 100)) / 3600)
-        secondstogo = int(abs(socnum - self.battery.soc) / crntPrctPerSec)
+#        crntPrctPerSec = (abs(self.battery.current / (self.battery.capacity / 100)) / 3600)
+#        secondstogo = int(abs(socnum - self.battery.soc) / crntPrctPerSec)
 
-        return str(timedelta(seconds=secondstogo))
+#        return str(timedelta(seconds=secondstogo))
+    def get_timetosoc(self, socnum, crntPrctPerSec):
+        if self.current > 0:
+            diffSoc = (socnum - self.soc)
+        else:
+            diffSoc = (self.soc - socnum)
+
+        ttgStr = None
+        if self.soc != socnum and (diffSoc > 0 or TIME_TO_SOC_INC_FROM is True):
+            secondstogo = int(diffSoc / crntPrctPerSec)
+            ttgStr = ""
+
+            if (TIME_TO_SOC_VALUE_TYPE & 1):
+                ttgStr += str(secondstogo)
+                if (TIME_TO_SOC_VALUE_TYPE & 2):
+                    ttgStr += " ["
+            if (TIME_TO_SOC_VALUE_TYPE & 2):
+                ttgStr += str(timedelta(seconds=secondstogo))
+                if (TIME_TO_SOC_VALUE_TYPE & 1):
+                    ttgStr += "]"
+                    
+        return ttgStr
+
     
     def get_min_cell_voltage(self):
         min_voltage = None
