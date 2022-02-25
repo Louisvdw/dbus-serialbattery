@@ -251,7 +251,5 @@ class DbusHelper:
         # for num in [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]:
         #    self._dbusservice['/TimeToSoC/' + str(num)] = self.battery.get_timetosoc(num)
         
-        logger.debug("logged to dbus ", round(self.battery.voltage / 100, 2),
-                      round(self.battery.current / 100, 2),
-                      round(self.battery.soc, 2))
+        logger.debug("logged to dbus [%s]"%str(round(self.battery.soc, 2)))
         self.battery.log_cell_data()

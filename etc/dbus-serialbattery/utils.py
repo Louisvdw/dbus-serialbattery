@@ -11,8 +11,8 @@ logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.WARNING)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.10
-DRIVER_SUBVERSION = ''
+DRIVER_VERSION = 0.11
+DRIVER_SUBVERSION = 'beta1'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -21,7 +21,9 @@ MAX_CELL_VOLTAGE = 3.45
 # battery Current limits
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
-# Battery capacity (amps)
+
+# Daly settings
+# Battery capacity (amps) if the BMS does not support reading it 
 BATTERY_CAPACITY = 50
 # Invert Battery Current. Default non-inverted. Set to -1 to invert
 INVERT_CURRENT_MEASUREMENT = 1

@@ -12,6 +12,8 @@ if sys.version_info.major == 2:
 else:
     from gi.repository import GLib as gobject
 import sys
+# Victron packages
+# from ve_utils import exit_on_error
 
 from dbushelper import DbusHelper
 from utils import DRIVER_VERSION, DRIVER_SUBVERSION, logger
