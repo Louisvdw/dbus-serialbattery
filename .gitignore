@@ -3,3 +3,6 @@ venv
 venus-data.tar.gz
 BMS-trials
 .DS_Store
+.project
+.pydevproject
+*.prefs
