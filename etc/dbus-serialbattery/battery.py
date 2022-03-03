@@ -175,24 +175,7 @@ class Battery(object):
           return 1
         return 0
 
-#    def get_timetosoc(self, socnum):
-        # Update TimeToSoC items
-#        if self.battery.capacity is None or not self.battery.current:
-#            return None
- 
-        # check if we are past socNum when charging 
-        # or discharging
-        # or on the same SOC (using 0.5% tolerance)
-#        if (self.battery.current > 0 and self.battery.soc > socnum) or \
-#            (self.battery.current < 0 and self.battery.soc < socnum) or \
-#            (self.battery.soc - socnum < 0.5):
-#            return "00:00:00"
 
-        # Get Seconds to reach goal Soc using current flow
-#        crntPrctPerSec = (abs(self.battery.current / (self.battery.capacity / 100)) / 3600)
-#        secondstogo = int(abs(socnum - self.battery.soc) / crntPrctPerSec)
-
-#        return str(timedelta(seconds=secondstogo))
     def get_timetosoc(self, socnum, crntPrctPerSec):
         if self.current > 0:
             diffSoc = (socnum - self.soc)

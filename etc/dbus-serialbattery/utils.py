@@ -26,24 +26,28 @@ BATTERY_CAPACITY = 50
 # Invert Battery Current. Default non-inverted. Set to -1 to invert
 INVERT_CURRENT_MEASUREMENT = 1
 
-# TIME TO SOC settings
+# TIME TO SOC settings [Valid values 0-100, but I don't recommend more that 20 intervals]
 # Set of SoC percentages to report on dbus. The more you specify the more it will impact system performance.
 # TIME_TO_SOC_POINTS = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]		# Every 5% SoC
 # TIME_TO_SOC_POINTS = [100, 95, 90, 85, 75, 50, 25, 20, 10, 0]
 TIME_TO_SOC_POINTS = []	# No data set to disable
-# Specify TimeToSoc value type:
+# Specify TimeToSoc value type: [Valid values 1,2,3]
 # TIME_TO_SOC_VALUE_TYPE = 1      # Seconds
 # TIME_TO_SOC_VALUE_TYPE = 2      # Time string HH:MN:SC
 TIME_TO_SOC_VALUE_TYPE = 3        # Both Seconds and time str "<seconds> [days, HR:MN:SC]"
 # Specify how many loop cycles between each TimeToSoc updates
 TIME_TO_SOC_LOOP_CYCLES = 5
-# Include TimeToSoC points when moving away from the SoC point.  These will be as negative time. Disabling this improves performance slightly.
+# Include TimeToSoC points when moving away from the SoC point. [Valid values True,False] 
+# These will be as negative time. Disabling this improves performance slightly.
 TIME_TO_SOC_INC_FROM = False
-# TIME_TO_SOC_INC_FROM = True
-# Select the format of cell data presented on dbus.
-BATTERY_CELL_DATA_FORMAT = 1                   # Format: /Voltages/Cell# (also available for display on Remote Console)
-# BATTERY_CELL_DATA_FORMAT = 2                 # Format: /Cell/#/Volts
-# BATTERY_CELL_DATA_FORMAT = 3                 # Both formats 1 and 2
+
+
+# Select the format of cell data presented on dbus. [Valid values 0,1,2,3]
+# 0 Do not publish all the cells (only the min/max cell data as used by the default GX)
+# 1 Format: /Voltages/Cell# (also available for display on Remote Console)
+# 2 Format: /Cell/#/Volts
+# 3 Both formats 1 and 2
+BATTERY_CELL_DATA_FORMAT = 1
 
 
 def is_bit_set(tmp):
