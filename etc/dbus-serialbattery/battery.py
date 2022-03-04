@@ -104,29 +104,32 @@ class Battery(object):
             # Prevent serialbattery from terminating on error
             return False
             
-        if self.soc > 99:
-            self.control_allow_charge = False
-        else:
-            self.control_allow_charge = True
-        # Change depending on the SOC values
-        if 98 < self.soc <= 100:
-            self.control_charge_current = 5
-        elif 95 < self.soc <= 98:
-            self.control_charge_current = self.max_battery_current/4
-        elif 91 < self.soc <= 95:
-            self.control_charge_current = self.max_battery_current/2
-        else:
-            self.control_charge_current = self.max_battery_current
+        # if self.soc > 99:
+            # self.control_allow_charge = False
+        # else:
+            # self.control_allow_charge = True
+        # # Change depending on the SOC values
+        # if 98 < self.soc <= 100:
+            # self.control_charge_current = 5
+        # elif 95 < self.soc <= 98:
+            # self.control_charge_current = self.max_battery_current/4
+        # elif 91 < self.soc <= 95:
+            # self.control_charge_current = self.max_battery_current/2
+        # else:
+            # self.control_charge_current = self.max_battery_current
+        self.control_allow_charge = True
+        self.control_charge_current = self.max_battery_current
 
         # Change depending on the SOC values
-        if self.soc <= 10:
-            self.control_discharge_current = 5
-        elif 10 < self.soc <= 20:
-            self.control_discharge_current = self.max_battery_discharge_current/4
-        elif 20 < self.soc <= 30:
-            self.control_discharge_current = self.max_battery_discharge_current/2
-        else:
-            self.control_discharge_current = self.max_battery_discharge_current
+        # if self.soc <= 10:
+            # self.control_discharge_current = 5
+        # elif 10 < self.soc <= 20:
+            # self.control_discharge_current = self.max_battery_discharge_current/4
+        # elif 20 < self.soc <= 30:
+            # self.control_discharge_current = self.max_battery_discharge_current/2
+        # else:
+            # self.control_discharge_current = self.max_battery_discharge_current
+        self.control_discharge_current = self.max_battery_discharge_current
 
     def get_min_cell(self):
         min_voltage = 9999
