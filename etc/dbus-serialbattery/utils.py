@@ -118,4 +118,76 @@ def read_serial_data(command, port, baud, length_pos, length_check, length_fixed
     except serial.SerialException as e:
         logger.error(e)
         return False
+
+
+# Open the serial port
+# Return variable for the openned port 
+def open_serial_port(port, baud):
+    ser = None
+    tries = 3
+    while tries > 0:
+        try:
+            ser = serial.Serial(port, baudrate=baud, timeout=0.1)
+            tries = 0
+        except serial.SerialException as e:
+            logger.error(e)
+            tries -= 1
+            
+    return ser
+
+# Read data from previously openned serial port
+def read_serialport_data(ser, command, length_pos, length_check, length_fixed=None, length_size=None):
+    try:
+        ser.flushOutput()
+        ser.flushInput()
+        ser.write(command)
+
+        length_byte_size = 1
+        if length_size is not None: 
+            if length_size.upper() == 'H':
+                length_byte_size = 2
+            elif length_size.upper() == 'I' or length_size.upper() == 'L':
+                length_byte_size = 4
+
+        count = 0
+        toread = ser.inWaiting()
+
+        while toread < (length_pos+length_byte_size):
+            sleep(0.005)
+            toread = ser.inWaiting()
+            count += 1
+            if count > 50:
+                #logger.error(">>> ERROR: No reply - returning")
+                return False
+                
+        #logger.info('serial data toread ' + str(toread))
+        res = ser.read(toread)
+        if length_fixed is not None:
+            length = length_fixed
+        else:
+            if len(res) < (length_pos+length_byte_size):
+                logger.error(">>> ERROR: No reply - returning [len:" + str(len(res)) + "]")
+                return False
+            length_size = length_size if length_size is not None else 'B'
+            length = unpack_from('>'+length_size, res,length_pos)[0]
+            
+        #logger.info('serial data length ' + str(length))
+
+        count = 0
+        data = bytearray(res)
+        while len(data) <= length + length_check:
+            res = ser.read(length + length_check)
+            data.extend(res)
+            #logger.info('serial data length ' + str(len(data)))
+            sleep(0.005)
+            count += 1
+            if count > 150:
+                logger.error(">>> ERROR: No reply - returning [len:" + str(len(data)) + "/" + str(length + length_check) + "]")
+                return False
+
+        return data
+
+    except serial.SerialException as e:
+        logger.error(e)
+        return False
         
