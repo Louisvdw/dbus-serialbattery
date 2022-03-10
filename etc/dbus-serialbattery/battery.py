@@ -120,7 +120,7 @@ class Battery(object):
         else:
             self.control_charge_current = self.max_battery_current
 
-        # Change depending on the SOC values
+        # Dischange depending on the SOC values
         if self.soc <= 10:
             self.control_discharge_current = 5
         elif 10 < self.soc <= 20:

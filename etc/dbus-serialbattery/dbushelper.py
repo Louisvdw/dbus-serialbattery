@@ -168,8 +168,9 @@ class DbusHelper:
                 if error_count >= 10: 
                     self.battery.online = False
 
-            # This is to mannage CCCL
-            self.battery.manage_charge_current()
+            # This is to mannage CCL\DCL
+            if (CCCM_ENABLE):
+                self.battery.manage_charge_current()
             
             # publish all the data fro the battery object to dbus
             self.publish_dbus()
