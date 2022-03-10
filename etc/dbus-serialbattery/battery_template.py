@@ -25,6 +25,9 @@ class BatteryTemplate(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
+        
+        # Uncomment if BMS does not supply capacity
+        # self.capacity = BATTERY_CAPACITY
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
