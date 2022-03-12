@@ -99,6 +99,12 @@ class Battery(object):
             self.temp2 = min(max(value, -20), 100)
 
     def manage_charge_current(self):
+        # If disabled make sure the default values are set and then exit
+        if (not CCCM_ENABLE):
+            self.control_charge_current = self.max_battery_current
+            self.control_discharge_current = self.max_battery_discharge_current
+            return
+
         # Start with the current values
 
         # Change depending on the SOC values

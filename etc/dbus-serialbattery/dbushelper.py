@@ -170,8 +170,7 @@ class DbusHelper:
                     self.battery.online = False
 
             # This is to mannage CCL\DCL
-            if (CCCM_ENABLE):
-                self.battery.manage_charge_current()
+            self.battery.manage_charge_current()
             
             # publish all the data fro the battery object to dbus
             self.publish_dbus()
