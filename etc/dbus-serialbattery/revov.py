@@ -5,20 +5,18 @@ from utils import *
 from struct import *
 import struct
 
-/*
-    Author: L Sheed 
-    Date: 3 May 2022
-    Version 0.1.3
 
-     Cell Voltage Implemented 
-     Hardware Name Implemented
-     Hardware Revision Implemented 
-     Battery Voltage added (but not correct!)
-     Added additional binary logging so I can try spot what bits are used for RED errors
+#    Author: L Sheed 
+#    Date: 3 May 2022
+#    Version 0.1.3
+#     Cell Voltage Implemented 
+#     Hardware Name Implemented
+#     Hardware Revision Implemented 
+#     Battery Voltage added (but not correct!)
+#     Added additional binary logging so I can try spot what bits are used for RED errors
+#     To do:
+#     SOC, Error Codes, Other variables
 
-     To do:
-     SOC, Error Codes, Other variables
-*/
 
 class RevovCell(Cell):
     temp = None
