@@ -11,13 +11,13 @@ logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.WARNING)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.12
+DRIVER_VERSION = 0.13
 DRIVER_SUBVERSION = ''
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
 MIN_CELL_VOLTAGE = 2.90
-MAX_CELL_VOLTAGE = 3.55
+MAX_CELL_VOLTAGE = 3.45
 # battery Current limits
 MAX_BATTERY_CURRENT = 180.0
 MAX_BATTERY_DISCHARGE_CURRENT = 180.0
