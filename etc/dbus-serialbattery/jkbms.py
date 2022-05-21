@@ -152,8 +152,8 @@ class Jkbms(Battery):
         end, crc_hi, crc_lo = unpack_from('>BHH', data[-5:])
 
         s = sum(data[0:-4])
-        logger.debug('S%d C%d C%d' % (s, crc_lo, crc_hi))
-        logger.debug('T%d C%d S%d F%d TT%d' % (terminal, cmd, src, frame, tt))
+        # logger.debug('S%d C%d C%d' % (s, crc_lo, crc_hi))
+        # logger.debug('T%d C%d S%d F%d TT%d' % (terminal, cmd, src, frame, tt))
 
         if start == 0x4E57 and end == 0x68 and s == crc_lo:
             return data[10:length-19]
