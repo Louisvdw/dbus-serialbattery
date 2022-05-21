@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from utils import *
 import math
 from datetime import timedelta
+from time import time, sleep
 
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
@@ -59,6 +60,8 @@ class Battery(object):
         self.cells = []
         self.control_charging = None
         self.control_voltage = None
+        self.allow_max_voltage = True
+        self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
         self.control_previous_max = None
@@ -96,6 +99,30 @@ class Battery(object):
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
 
+    def manage_charge_voltage(self):
+        voltageSum = 0
+        for i in range(self.battery.cell_count):
+            voltage = self.cells[i].voltage
+            if voltage:
+                voltageSum+=voltage
+
+        if None == self.max_voltage_start_time:
+            if MAX_CELL_VOLTAGE * self.cell_count <= voltageSum and True == self.allow_max_voltage:
+                self.max_voltage_start_time = time()
+            else:
+                if SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc and not self.allow_max_voltage:
+                    self.allow_max_voltage = True
+        else:
+            tDiff = time() - self.max_voltage_start_time
+            if MAX_VOLTAGE_TIME_SEC < tDiff:
+                self.max_voltage_start_time = None
+                self.allow_max_voltage = False
+
+        if self.allow_max_voltage:
+            self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
+        else:
+            self.control_voltage = FLOAT_CELL_VOLTAGE * self.cell_count
+        
     def manage_charge_current(self):
         # Start with the current values
 
