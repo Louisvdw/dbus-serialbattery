@@ -103,7 +103,7 @@ class Battery(object):
 
     def manage_charge_voltage(self):
         voltageSum = 0
-        for i in range(self.battery.cell_count):
+        for i in range(self.cell_count):
             voltage = self.cells[i].voltage
             if voltage:
                 voltageSum+=voltage
@@ -130,6 +130,7 @@ class Battery(object):
         if (not CCCM_ENABLE):
             self.control_charge_current = self.max_battery_current
             self.control_discharge_current = self.max_battery_discharge_current
+            self.control_allow_charge = True
             return
 
         # Start with the current values

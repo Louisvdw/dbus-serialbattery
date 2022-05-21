@@ -11,7 +11,7 @@ logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.WARNING)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.15
+DRIVER_VERSION = 0.16
 DRIVER_SUBVERSION = ''
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
