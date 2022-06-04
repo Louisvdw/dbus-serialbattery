@@ -24,6 +24,7 @@ from ant import Ant
 from jkbms import Jkbms
 from sinowealth import Sinowealth
 from renogy import Renogy
+from revov import Revov
 #from mnb import MNB
 
 
@@ -48,7 +49,8 @@ def main():
             Daly(port=_port, baud=9600, address=b"\x80"),
             Jkbms(port=_port, baud=115200),
             Sinowealth(port=_port, baud=9600),
-            Renogy(port=_port, baud=9600)
+            Renogy(port=_port, baud=9600),
+            Revov (port=_port, baud=9600)
             # MNB(port=_port, baud=9600),
         ]
 
