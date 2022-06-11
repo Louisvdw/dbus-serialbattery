@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.11
-DRIVER_SUBVERSION = 'beta1'
+DRIVER_SUBVERSION = 'b3'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -68,54 +68,7 @@ def format_value(value, prefix, suffix):
 def read_serial_data(command, port, baud, length_pos, length_check, length_fixed=None, length_size=None):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.1) as ser:
-            ser.flushOutput()
-            ser.flushInput()
-            ser.write(command)
-
-            length_byte_size = 1
-            if length_size is not None: 
-                if length_size.upper() == 'H':
-                    length_byte_size = 2
-                elif length_size.upper() == 'I' or length_size.upper() == 'L':
-                    length_byte_size = 4
-
-            count = 0
-            toread = ser.inWaiting()
-
-            while toread < (length_pos+length_byte_size):
-                sleep(0.005)
-                toread = ser.inWaiting()
-                count += 1
-                if count > 50:
-                    logger.error(">>> ERROR: No reply - returning")
-                    return False
-                    
-            #logger.info('serial data toread ' + str(toread))
-            res = ser.read(toread)
-            if length_fixed is not None:
-                length = length_fixed
-            else:
-                if len(res) < (length_pos+length_byte_size):
-                    logger.error(">>> ERROR: No reply - returning")
-                    return False
-                length_size = length_size if length_size is not None else 'B'
-                length = unpack_from('>'+length_size, res,length_pos)[0]
-                
-            #logger.info('serial data length ' + str(length))
-
-            count = 0
-            data = bytearray(res)
-            while len(data) <= length + length_check:
-                res = ser.read(length + length_check)
-                data.extend(res)
-                #logger.info('serial data length ' + str(len(data)))
-                sleep(0.005)
-                count += 1
-                if count > 150:
-                    logger.error(">>> ERROR: No reply - returning")
-                    return False
-
-            return data
+            return read_serialport_data(ser, command, length_pos, length_check, length_fixed, length_size)
 
     except serial.SerialException as e:
         logger.error(e)
@@ -159,7 +112,7 @@ def read_serialport_data(ser, command, length_pos, length_check, length_fixed=No
             toread = ser.inWaiting()
             count += 1
             if count > 50:
-                #logger.error(">>> ERROR: No reply - returning")
+                logger.error(">>> ERROR: No reply - returning")
                 return False
                 
         #logger.info('serial data toread ' + str(toread))
