@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.11
-DRIVER_SUBVERSION = 'b2'
+DRIVER_SUBVERSION = 'b3'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
