@@ -1,3 +1,3 @@
 #!/bin/sh
 exec 2>&1
-exec multilog t s25000 n4 /var/log/dbus-serialbattery
+exec multilog t s25000 n4 /var/log/dbus-serialbattery.TTY
