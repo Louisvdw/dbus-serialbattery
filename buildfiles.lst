@@ -8,6 +8,7 @@ etc/dbus-serialbattery/start-serialbattery.sh
 etc/dbus-serialbattery/disabledriver.sh
 etc/dbus-serialbattery/installlocal.sh
 etc/dbus-serialbattery/installrelease.sh
+etc/dbus-serialbattery/reinstalllocal.sh
 etc/dbus-serialbattery/dbus-serialbattery.py
 etc/dbus-serialbattery/dbushelper.py
 etc/dbus-serialbattery/battery.py

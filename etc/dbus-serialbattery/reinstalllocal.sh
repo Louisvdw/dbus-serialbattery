@@ -1,8 +1,9 @@
 #!/bin/sh
 
-$DRIVER = "/opt/victronenergy/dbus-serialbattery"
-$RUN = "/opt/victronenergy/service-templates/dbus-serialbattery"
-if [ -d "$DRIVER" ]; then 
+DRIVER=/opt/victronenergy/dbus-serialbattery
+RUN=/opt/victronenergy/service-templates/dbus-serialbattery
+OLD=/opt/victronenergy/service/dbus-serialbattery
+if [ -d "$DRIVER" ]; then
   if [ -L "$DRIVER" ]; then
     # Remove old SymLink.
     rm "$DRIVER"
@@ -13,7 +14,7 @@ else
   # Create folder
   mkdir "$DRIVER"
 fi
-if [ -d "$RUN" ]; then 
+if [ -d "$RUN" ]; then
   if [ -L "$RUN" ]; then
     # Remove old SymLink.
     rm "$RUN"
@@ -23,6 +24,12 @@ if [ -d "$RUN" ]; then
 else
   # Create folder
   mkdir "$RUN"
+fi
+if [ -d "$OLD" ]; then
+  if [ -L "$OLD" ]; then
+    # Remove old SymLink.
+    rm "$RUN"
+  fi
 fi
 
 cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery
