@@ -183,7 +183,7 @@ MbPage {
 		MbSubMenu {
 			description: qsTr("Details")
 			show: details.anyItemValid
-
+			title: qsTr("Details")
 			property BatteryDetails details: BatteryDetails { id: details; bindPrefix: service.path("") }
 
 			subpage: Component {
