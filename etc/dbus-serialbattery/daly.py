@@ -37,7 +37,6 @@ class Daly(Battery):
     TEMP_ZERO_CONSTANT = 40
 
     def test_connection(self):
-#        return self.read_status_data()
         result = False
         ser = open_serial_port(self.port, self.baud_rate)
         if ser is not None:
@@ -53,44 +52,20 @@ class Daly(Battery):
         return True
 
     def refresh_data(self):
-#        result = self.read_soc_data()
-#        result = result and self.read_fed_data()
-#        if self.poll_step == 0:
-            # This must be listed in step 0 as get_min_cell_voltage and get_max_cell_voltage in battery.py needs it at first cycle for publish_dbus in dbushelper.py
-#            result = result and self.read_cell_voltage_range_data()
-#        elif self.poll_step == 1:
-#            result = result and self.read_alarm_data()
-#        elif self.poll_step == 2:
-#            result = result and self.read_cells_volts()
-#        elif self.poll_step == 3:
-#            result = result and self.read_temperature_range_data()
-        #else:          # A placeholder to remind this is the last step. Add any additional steps before here
-            # This is last step so reset poll_step
-#            self.poll_step = -1
-
-#        self.poll_step += 1
-
         result = False
         # Open serial port to be used for all data reads instead of openning multiple times 
         ser = open_serial_port(self.port, self.baud_rate)
         if ser is not None:
-            #logger.warning("read_soc_data")
             result = self.read_soc_data(ser)
-            #logger.warning("read_fed_data")
             result = result and self.read_fed_data(ser)
-            #logger.warning("poll_step: " + str(self.poll_step))
             if self.poll_step == 0:
                 # This must be listed in step 0 as get_min_cell_voltage and get_max_cell_voltage in battery.py needs it at first cycle for publish_dbus in dbushelper.py
-                #logger.warning("read_cell_voltage_range_data")
                 result = result and self.read_cell_voltage_range_data(ser)
             elif self.poll_step == 1:
-                #logger.warning("read_alarm_data")
                 result = result and self.read_alarm_data(ser)
             elif self.poll_step == 2:
-                #logger.warning("read_cells_volts")
-                result = result and self.read_cells_volts(ser)
-            elif self.poll_step == 3:
-                #logger.warning("read_temperature_range_data")
+            #     result = result and self.read_cells_volts(ser)
+            # elif self.poll_step == 3:
                 result = result and self.read_temperature_range_data(ser)
             #else:          # A placeholder to remind this is the last step. Add any additional steps before here
                 # This is last step so reset poll_step
@@ -102,13 +77,11 @@ class Daly(Battery):
 
         return result
 
-#    def read_status_data(self):
     def read_status_data(self, ser):
-#        status_data = self.read_serial_data_daly(self.command_status)
         status_data = self.read_serial_data_daly(ser, self.command_status)
         # check if connection success
         if status_data is False:
-            logger.warning("read_status_data")
+            logger.debug("read_status_data")
             return False
 
         self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
@@ -121,22 +94,13 @@ class Daly(Battery):
         logger.info(self.hardware_version)
         return True
 
-#    def read_soc_data(self):
     def read_soc_data(self, ser):
         # Ensure data received is valid
         crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
         crntMaxValid = (MAX_BATTERY_CURRENT * 1.3)
-        triesValid = 3
+        triesValid = 2
         while triesValid > 0:
-            soc_data = False
-            # Try up to 3 times to get data. This greatly increases soc_data collection with Daly
-            triesData = 3
-            while soc_data is False and triesData > 0:
-#                soc_data = self.read_serial_data_daly(self.command_soc)
-                soc_data = self.read_serial_data_daly(ser, self.command_soc)
-                #if soc_data is False:
-                #    logger.warning("read_soc_data - triesData " + str(triesData))
-                triesData -= 1
+            soc_data = self.read_serial_data_daly(ser, self.command_soc)
             # check if connection success
             if soc_data is False:
                 return False
@@ -154,9 +118,7 @@ class Daly(Battery):
 
         return False
 
-#    def read_alarm_data(self):
     def read_alarm_data(self, ser):
-#        alarm_data = self.read_serial_data_daly(self.command_alarm)
         alarm_data = self.read_serial_data_daly(ser, self.command_alarm)
         # check if connection success
         if alarm_data is False:
@@ -259,7 +221,6 @@ class Daly(Battery):
         
         return True
 
-#    def read_cells_volts(self):
     def read_cells_volts(self, ser):
         if self.cell_count is not None:
             buffer = bytearray(self.cellvolt_buffer)
@@ -269,7 +230,6 @@ class Daly(Battery):
             maxFrame = (int(self.cell_count / 3) + 1)
             lenFixed = (maxFrame * 12)
 
-#            cells_volts_data = read_serial_data(buffer, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed)
             cells_volts_data = read_serialport_data(ser, buffer, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed)
             if cells_volts_data is False:
                 logger.warning("read_cells_volts")
@@ -281,7 +241,7 @@ class Daly(Battery):
             frame = 0
             while frame >= 0 and frame < maxFrame and cellnum < self.cell_count:
                 startPos = ((frame * 12) + 4)
-                #logger.warning('cell: ' + str(cellnum) + ', startPos: ' + str(startPos) + ', frame: ' + str(frame))
+                #logger.debug('cell: ' + str(cellnum) + ', startPos: ' + str(startPos) + ', frame: ' + str(frame))
                 if frame > 0 and frame < 16:
                     startPos += 1
                 frame, frameCell[0], frameCell[1], frameCell[2], reserved = unpack_from('>bhhhb', cells_volts_data, startPos)
@@ -293,9 +253,7 @@ class Daly(Battery):
 
         return True
 
-#    def read_cell_voltage_range_data(self):
     def read_cell_voltage_range_data(self, ser):
-#        minmax_data = self.read_serial_data_daly(self.command_minmax_cell_volts)
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_cell_volts)
         # check if connection success
         if minmax_data is False:
@@ -311,13 +269,11 @@ class Daly(Battery):
         self.cell_min_voltage = cell_min_voltage / 1000
         return True
 
-#    def read_temperature_range_data(self):
     def read_temperature_range_data(self, ser):
-#        minmax_data = self.read_serial_data_daly(self.command_minmax_temp)
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
         # check if connection success
         if minmax_data is False:
-            logger.warning("read_temperature_range_data")
+            logger.debug("read_temperature_range_data")
             return False
 
         max_temp,max_no,min_temp, min_no = unpack_from('>bbbb', minmax_data)
@@ -325,13 +281,11 @@ class Daly(Battery):
         self.temp2 = max_temp - self.TEMP_ZERO_CONSTANT
         return True
 
-#    def read_fed_data(self):
     def read_fed_data(self, ser):
-#        fed_data = self.read_serial_data_daly(self.command_fet)
         fed_data = self.read_serial_data_daly(ser, self.command_fet)
         # check if connection success
         if fed_data is False:
-            logger.warning("read_fed_data")
+            logger.debug("read_fed_data")
             return False
 
         status, self.charge_fet, self.discharge_fet, bms_cycles, capacity_remain = unpack_from('>b??BL', fed_data)
@@ -345,9 +299,7 @@ class Daly(Battery):
         buffer[12] = sum(buffer[:12]) & 0xFF   #checksum calc
         return buffer
 
-#    def read_serial_data_daly(self, command):
     def read_serial_data_daly(self, ser, command):
-#        data = read_serial_data(self.generate_command(command), self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK)
         data = read_serialport_data(ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK)
         if data is False:
             return False
