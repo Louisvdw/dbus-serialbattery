@@ -6,7 +6,6 @@ from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from threading import Thread
 import dbus
-import os
 import sys
 if sys.version_info.major == 2:
     import gobject
@@ -87,7 +86,7 @@ def main():
     # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
-        os.exit(1)
+        sys.exit(1)
 
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
@@ -99,7 +98,7 @@ def main():
     helper = DbusHelper(battery)
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
-        os.exit(1)
+        sys.exit(1)
     logger.info('Battery connected to dbus from ' + port)
 
 
