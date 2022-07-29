@@ -243,8 +243,11 @@ class Battery(object):
         # handle uneven cells by giving half the voltage of the last cell to half1 and half2
         extra = 0 if (2*halfcount == self.cell_count) else self.cells[self.cell_count-1].voltage/2
         # get the midpoint of the battery
-        midpoint = (half1voltage + half2voltage)/2 + extra   
-        return midpoint, abs(1 - half1voltage/half2voltage)*100
+        midpoint = (half1voltage + half2voltage)/2 + extra 
+        try:  
+            return midpoint, abs(1 - half1voltage/half2voltage)*100
+        except ValueError:
+            return None, None
 
     def get_balancing(self):
         for c in range(min(len(self.cells), self.cell_count)):
