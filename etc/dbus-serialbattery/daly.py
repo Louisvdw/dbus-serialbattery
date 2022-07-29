@@ -64,8 +64,8 @@ class Daly(Battery):
             elif self.poll_step == 1:
                 result = result and self.read_alarm_data(ser)
             elif self.poll_step == 2:
-            #     result = result and self.read_cells_volts(ser)
-            # elif self.poll_step == 3:
+                result = result and self.read_cells_volts(ser)
+            elif self.poll_step == 3:
                 result = result and self.read_temperature_range_data(ser)
             #else:          # A placeholder to remind this is the last step. Add any additional steps before here
                 # This is last step so reset poll_step
@@ -239,17 +239,19 @@ class Daly(Battery):
             lowMin = (MIN_CELL_VOLTAGE / 2)
             cellnum = 0
             frame = 0
-            while frame >= 0 and frame < maxFrame and cellnum < self.cell_count:
-                startPos = ((frame * 12) + 4)
-                #logger.debug('cell: ' + str(cellnum) + ', startPos: ' + str(startPos) + ', frame: ' + str(frame))
-                if frame > 0 and frame < 16:
-                    startPos += 1
-                frame, frameCell[0], frameCell[1], frameCell[2], reserved = unpack_from('>bhhhb', cells_volts_data, startPos)
-                for idx in range(3):
+
+            bufIdx = 0
+            while bufIdx < len(cells_volts_data) - 4: # we at least need 4 bytes to extract the identifiers
+                b1, b2, b3, b4 = unpack_from('>BBBB', cells_volts_data, bufIdx)
+                if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
+                  frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from('>Bhhh', cells_volts_data, bufIdx + 4)
+                  for idx in range(3):
                     if len(self.cells) == cellnum:
                         self.cells.append(Cell(True))
                     self.cells[cellnum].voltage = None if frameCell[idx] < lowMin else (frameCell[idx] / 1000)
                     cellnum += 1
+                  bufIdx += 10 # BBBBBhhh -> 11 byte
+                bufIdx += 1
 
         return True
 
