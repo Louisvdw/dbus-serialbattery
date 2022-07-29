@@ -64,8 +64,8 @@ class Daly(Battery):
             elif self.poll_step == 1:
                 result = result and self.read_alarm_data(ser)
             elif self.poll_step == 2:
-            #     result = result and self.read_cells_volts(ser)
-            # elif self.poll_step == 3:
+                result = result and self.read_cells_volts(ser)
+            elif self.poll_step == 3:
                 result = result and self.read_temperature_range_data(ser)
             #else:          # A placeholder to remind this is the last step. Add any additional steps before here
                 # This is last step so reset poll_step
