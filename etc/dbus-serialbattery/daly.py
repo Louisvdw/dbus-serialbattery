@@ -92,13 +92,6 @@ class Daly(Battery):
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
-
-        # init the numbers of cells at start
-        self.cells = []
-        if self.cell_count is not None:
-            for idx in range(self.cell_count):
-                self.cells.append(Cell(True))
-
         logger.info(self.hardware_version)
         return True
 
@@ -238,7 +231,6 @@ class Daly(Battery):
             maxFrame = math.ceil(self.cell_count / 3)
             lenFixed = (maxFrame * 13) # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 8 byte data
 
-
             cells_volts_data = read_serialport_data(ser, buffer, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed)
             if cells_volts_data is False:
                 logger.warning("read_cells_volts")
@@ -249,12 +241,20 @@ class Daly(Battery):
             frame = 0
             bufIdx = 0
 
+            if len(self.cells) != self.cell_count:
+                # init the numbers of cells
+                self.cells = []
+                for idx in range(self.cell_count):
+                    self.cells.append(Cell(True))
+
             while bufIdx < len(cells_volts_data) - 4: # we at least need 4 bytes to extract the identifiers
                 b1, b2, b3, b4 = unpack_from('>BBBB', cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
                   frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from('>Bhhh', cells_volts_data, bufIdx + 4)
                   for idx in range(3):
-                    cellnum = idx * frame
+                    cellnum = (idx + 1) * frame
+                    if cellnum >= self.cell_count:
+                        break
                     cellVoltage = frameCell[idx] / 1000
                     self.cells[cellnum].voltage = None if cellVoltage < lowMin else cellVoltage
                     cellnum += 1
