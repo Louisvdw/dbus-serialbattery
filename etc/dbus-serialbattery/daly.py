@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
+import math
 
 class Daly(Battery):
 
@@ -227,8 +228,8 @@ class Daly(Battery):
             buffer[1] = self.command_address[0]   # Always serial 40 or 80
             buffer[2] = self.command_cell_volts[0]
 
-            maxFrame = (int(self.cell_count / 3) + 1)
-            lenFixed = (maxFrame * 12)
+            maxFrame = math.ceil(self.cell_count / 3)
+            lenFixed = (maxFrame * 13) # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 8 byte data
 
             cells_volts_data = read_serialport_data(ser, buffer, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed)
             if cells_volts_data is False:
