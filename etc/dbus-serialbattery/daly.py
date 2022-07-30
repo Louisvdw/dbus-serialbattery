@@ -248,7 +248,9 @@ class Daly(Battery):
                   for idx in range(3):
                     if len(self.cells) == cellnum:
                         self.cells.append(Cell(True))
-                    self.cells[cellnum].voltage = None if frameCell[idx] < lowMin else (frameCell[idx] / 1000)
+                    cellVoltage = frameCell[idx] / 1000
+                    self.cells[cellnum].voltage = None if cellVoltage < lowMin else cellVoltage
+
                     cellnum += 1
                   bufIdx += 10 # BBBBBhhh -> 11 byte
                 bufIdx += 1
