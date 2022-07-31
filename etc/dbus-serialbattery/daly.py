@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
-import math
 
 class Daly(Battery):
 
