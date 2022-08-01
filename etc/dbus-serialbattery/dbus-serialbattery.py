@@ -52,7 +52,7 @@ def main():
             Sinowealth(port=_port, baud=9600),
             Renogy(port=_port, baud=9600),
             Revov (port=_port, baud=9600),
-            # DalyCAN(port=_port, baud=9600),
+            # DalyCAN(),
             # MNB(port=_port, baud=9600),
         ]
 
