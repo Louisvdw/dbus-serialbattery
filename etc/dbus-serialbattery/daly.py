@@ -64,8 +64,8 @@ class Daly(Battery):
             elif self.poll_step == 1:
                 result = result and self.read_alarm_data(ser)
             elif self.poll_step == 2:
-                result = result and self.read_cells_volts(ser)
-            elif self.poll_step == 3:
+                #result = result and self.read_cells_volts(ser)
+            #elif self.poll_step == 3:
                 result = result and self.read_temperature_range_data(ser)
             #else:          # A placeholder to remind this is the last step. Add any additional steps before here
                 # This is last step so reset poll_step
@@ -228,7 +228,7 @@ class Daly(Battery):
             buffer[2] = self.command_cell_volts[0]
 
             maxFrame = (int(self.cell_count / 3) + 1)
-            lenFixed = (maxFrame * 12)
+            lenFixed = (maxFrame * 12) # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved
 
             cells_volts_data = read_serialport_data(ser, buffer, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed)
             if cells_volts_data is False:
@@ -237,18 +237,25 @@ class Daly(Battery):
 
             frameCell = [0, 0, 0]
             lowMin = (MIN_CELL_VOLTAGE / 2)
-            cellnum = 0
             frame = 0
-
             bufIdx = 0
+
+            if len(self.cells) != self.cell_count:
+                # init the numbers of cells
+                self.cells = []
+                for idx in range(self.cell_count):
+                    self.cells.append(Cell(True))
+
             while bufIdx < len(cells_volts_data) - 4: # we at least need 4 bytes to extract the identifiers
                 b1, b2, b3, b4 = unpack_from('>BBBB', cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
                   frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from('>Bhhh', cells_volts_data, bufIdx + 4)
                   for idx in range(3):
-                    if len(self.cells) == cellnum:
-                        self.cells.append(Cell(True))
-                    self.cells[cellnum].voltage = None if frameCell[idx] < lowMin else (frameCell[idx] / 1000)
+                    cellnum = (idx + 1) * frame
+                    if cellnum >= self.cell_count:
+                        break
+                    cellVoltage = frameCell[idx] / 1000
+                    self.cells[cellnum].voltage = None if cellVoltage < lowMin else cellVoltage
                     cellnum += 1
                   bufIdx += 10 # BBBBBhhh -> 11 byte
                 bufIdx += 1
