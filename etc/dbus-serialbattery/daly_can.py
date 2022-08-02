@@ -7,8 +7,8 @@ import can
 
 class DalyCAN(Battery):
 
-    def __init__(self):
-        super(DalyCAN, self).__init__(None,None)
+    def __init__(self,port,baud):
+        super(DalyCAN, self).__init__(port,baud)
         self.charger_connected = None
         self.load_connected = None
         self.cell_min_voltage = None
@@ -30,6 +30,18 @@ class DalyCAN(Battery):
     command_temp = 0x18960140
     command_cell_balance = 0x18970140
     command_alarm = 0x18980140
+
+    response_base = 0x18944001
+    response_soc = 0x18904001
+    response_minmax_cell_volts = 0x18914001
+    response_minmax_temp = 0x18924001
+    response_fet = 0x18934001
+    response_status = 0x18944001
+    response_cell_volts = 0x18954001
+    response_temp = 0x18964001
+    response_cell_balance = 0x18974001
+    response_alarm = 0x18984001
+    
     BATTERYTYPE = "Daly_CAN"
     LENGTH_CHECK = 4
     LENGTH_POS = 3
@@ -40,9 +52,21 @@ class DalyCAN(Battery):
         result = False
 
         # TODO handle errors?
+        can_filters = [{"can_id":self.response_base, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_soc, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_minmax_cell_volts, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_minmax_temp, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_fet, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_status, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_cell_volts, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_temp, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_cell_balance, "can_mask": 0xFFFFFFF},
+               {"can_id":self.response_alarm, "can_mask": 0xFFFFFFF}]
         self.bus = can.Bus(interface='socketcan',
               channel='can0',
-              receive_own_messages=False)
+              receive_own_messages=False,
+              can_filters=can_filters)
+
         result = self.read_status_data(self.bus)
 
         return result
@@ -300,7 +324,7 @@ class DalyCAN(Battery):
         count = 0
         for msg in bus:
             #print(f"{msg.arbitration_id:X}: {msg.data}")
-            #logger.info('Frame: ' + ", ".join(hex(b) for b in msg.data))
+            logger.info('Frame: ' + ", ".join(hex(b) for b in msg.data))
             response.extend(msg.data)
             count += 1
             if count == expectedMessageCount:
