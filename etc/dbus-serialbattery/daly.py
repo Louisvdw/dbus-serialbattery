@@ -251,12 +251,11 @@ class Daly(Battery):
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
                   frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from('>Bhhh', cells_volts_data, bufIdx + 4)
                   for idx in range(3):
-                    cellnum = (idx + 1) * frame
+                    cellnum = ((frame - 1) * 3) + idx  # daly is 1 based, driver 0 based
                     if cellnum >= self.cell_count:
                         break
                     cellVoltage = frameCell[idx] / 1000
                     self.cells[cellnum].voltage = None if cellVoltage < lowMin else cellVoltage
-                    cellnum += 1
                   bufIdx += 10 # BBBBBhhh -> 11 byte
                 bufIdx += 1
 
