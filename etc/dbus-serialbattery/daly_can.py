@@ -323,8 +323,8 @@ class DalyCAN(Battery):
         # this could end up in a deadlock if a package is not received 
         count = 0
         for msg in bus:
-            #print(f"{msg.arbitration_id:X}: {msg.data}")
-            logger.info('Frame: ' + ", ".join(hex(b) for b in msg.data))
+            # print(f"{msg.arbitration_id:X}: {msg.data}")
+            # logger.info('Frame: ' + ", ".join(hex(b) for b in msg.data))
             response.extend(msg.data)
             count += 1
             if count == expectedMessageCount:
