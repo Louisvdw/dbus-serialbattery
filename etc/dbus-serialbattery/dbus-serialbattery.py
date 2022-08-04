@@ -99,7 +99,7 @@ def main():
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
-    logger.info('Battery connected to dbus from ' + port)
+    battery.log_settings()
 
 
     # Poll the battery at INTERVAL and run the main loop

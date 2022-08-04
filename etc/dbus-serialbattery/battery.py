@@ -303,11 +303,8 @@ class Battery(object):
         
         logger.info('Battery connected to dbus from {self.port}')
         logger.info('Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
-        logger.info('capacity {self.capacity}Ah | cycles {self.cycles}')
-        logger.info('capacity {self.capacity}Ah | cycles {self.cycles}')
-        self.cell_count = None
-        self.cells = []
-        self.max_battery_current = None
-        self.max_battery_discharge_current = None
-
-        return True
+        cell_counter = len(self.cells)
+        logger.info('Cell count {self.cell_count}Ah | cells populated {cell_counter}')
+        logger.info('Charge {self.max_battery_current}A | Discharge {self.max_battery_discharge_current}A')
+  
+        return
