@@ -301,12 +301,12 @@ class Battery(object):
 
     def log_settings(self):
         
-        logger.info('Battery connected to dbus from {self.port}')
-        logger.info('=== Settings ===')
+        logger.info(f'Battery connected to dbus from {self.port}')
+        logger.info(f'=== Settings ===')
         cell_counter = len(self.cells)
-        logger.info('> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
-        logger.info('> Cell count {self.cell_count}Ah | cells populated {cell_counter}')
-        logger.info('> Charge {self.max_battery_current}A | Discharge {self.max_battery_discharge_current}A')
-        logger.info('> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V')
+        logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
+        logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
+        logger.info(f'> CCL Charge {self.max_battery_current}A | DCL Discharge {self.max_battery_discharge_current}A')
+        logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
   
         return
