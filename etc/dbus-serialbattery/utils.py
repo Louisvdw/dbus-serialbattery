@@ -23,6 +23,8 @@ MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 # Charge current control management enable (True/False). 
 CCCM_ENABLE = True
+# Simulate Midpoint graph (True/False). 
+MIDPOINT_ENABLE = False
 
 # Daly settings
 # Battery capacity (amps) if the BMS does not support reading it 
