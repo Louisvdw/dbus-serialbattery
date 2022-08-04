@@ -207,24 +207,26 @@ class Battery(object):
     
     def get_min_cell_voltage(self):
         min_voltage = None
-        if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
-            return self.cell_min_voltage
+        if hasattr(self, 'cell_min_voltage'):
+            min_voltage = self.cell_min_voltage
 
-        try:
-            min_voltage = min(c.voltage for c in self.cells if c.voltage is not None)
-        except ValueError:
-            pass
+        if min_voltage is None:
+            try:
+                min_voltage = min(c.voltage for c in self.cells if c.voltage is not None)
+            except ValueError:
+                pass
         return min_voltage
 
     def get_max_cell_voltage(self):
         max_voltage = None
-        if len(self.cells) == 0 and hasattr(self, 'cell_max_voltage'):
-            return self.cell_max_voltage
+        if hasattr(self, 'cell_max_voltage'):
+            max_voltage = self.cell_max_voltage
 
-        try:
-            max_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
-        except ValueError:
-            pass
+        if max_voltage is None:
+            try:
+                max_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
+            except ValueError:
+                pass
         return max_voltage
 
     def get_midvoltage(self):
@@ -295,4 +297,17 @@ class Battery(object):
             cell_res += "[{0}]{1}V ".format(cell_counter, c.voltage)
             cell_counter = cell_counter + 1
         logger.debug("Cells:" + cell_res)
+        return True
+
+    def log_settings(self):
+        
+        logger.info('Battery connected to dbus from {self.port}')
+        logger.info('Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
+        logger.info('capacity {self.capacity}Ah | cycles {self.cycles}')
+        logger.info('capacity {self.capacity}Ah | cycles {self.cycles}')
+        self.cell_count = None
+        self.cells = []
+        self.max_battery_current = None
+        self.max_battery_discharge_current = None
+
         return True
