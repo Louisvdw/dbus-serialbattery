@@ -168,7 +168,6 @@ class Battery(object):
         cell_no = self.get_max_cell()
         return cell_no if cell_no is None else 'C' + str(cell_no + 1)
 
-#cell voltages - begining
     def get_cell_voltage(self, idx):
         if idx>=min(len(self.cells), self.cell_count):
           return None
@@ -207,28 +206,30 @@ class Battery(object):
     
     def get_min_cell_voltage(self):
         min_voltage = None
-        if len(self.cells) == 0 and hasattr(self, 'cell_min_voltage'):
-            return self.cell_min_voltage
+        if hasattr(self, 'cell_min_voltage'):
+            min_voltage = self.cell_min_voltage
 
-        try:
-            min_voltage = min(c.voltage for c in self.cells if c.voltage is not None)
-        except ValueError:
-            pass
+        if min_voltage is None:
+            try:
+                min_voltage = min(c.voltage for c in self.cells if c.voltage is not None)
+            except ValueError:
+                pass
         return min_voltage
 
     def get_max_cell_voltage(self):
         max_voltage = None
-        if len(self.cells) == 0 and hasattr(self, 'cell_max_voltage'):
-            return self.cell_max_voltage
+        if hasattr(self, 'cell_max_voltage'):
+            max_voltage = self.cell_max_voltage
 
-        try:
-            max_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
-        except ValueError:
-            pass
+        if max_voltage is None:
+            try:
+                max_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
+            except ValueError:
+                pass
         return max_voltage
 
     def get_midvoltage(self):
-        if self.cell_count is None or self.cell_count == 0 or self.cell_count < 4 or len(self.cells) != self.cell_count:
+        if not MIDPOINT_ENABLE or self.cell_count is None or self.cell_count == 0 or self.cell_count < 4 or len(self.cells) != self.cell_count:
             return None, None
 
         halfcount = int(math.floor(self.cell_count/2))
@@ -240,12 +241,13 @@ class Battery(object):
             half2voltage = sum(c.voltage for c in self.cells[halfcount:halfcount*2] if c.voltage is not None)
         except ValueError:
             pass
-        # handle uneven cells by giving half the voltage of the last cell to half1 and half2
-        extra = 0 if (2*halfcount == self.cell_count) else self.cells[self.cell_count-1].voltage/2
-        # get the midpoint of the battery
-        midpoint = (half1voltage + half2voltage)/2 + extra 
-        try:  
-            return midpoint, abs(1 - half1voltage/half2voltage)*100
+        
+        try:
+            # handle uneven cells by giving half the voltage of the last cell to half1 and half2
+            extra = 0 if (2*halfcount == self.cell_count) else self.cells[self.cell_count-1].voltage/2
+            # get the midpoint of the battery
+            midpoint = (half1voltage + half2voltage)/2 + extra 
+            return midpoint, (half2voltage-half1voltage)/(half2voltage+half1voltage)*100
         except ValueError:
             return None, None
 
@@ -296,3 +298,15 @@ class Battery(object):
             cell_counter = cell_counter + 1
         logger.debug("Cells:" + cell_res)
         return True
+
+    def log_settings(self):
+        
+        logger.info(f'Battery connected to dbus from {self.port}')
+        logger.info(f'=== Settings ===')
+        cell_counter = len(self.cells)
+        logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
+        logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
+        logger.info(f'> CCL Charge {self.max_battery_current}A | DCL Discharge {self.max_battery_discharge_current}A')
+        logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
+  
+        return
