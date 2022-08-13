@@ -60,16 +60,6 @@ class Daly(Battery):
             result = result and self.read_fed_data(ser)
             result = result and self.read_cell_voltage_range_data(ser)
 
-            # if self.poll_step == 0:
-            #     # This must be listed in step 0 as get_min_cell_voltage and get_max_cell_voltage in battery.py needs it at first cycle for publish_dbus in dbushelper.py
-            #     result = result and self.read_cell_voltage_range_data(ser)
-            # elif self.poll_step == 1:
-            #     result = result and self.read_alarm_data(ser)
-            # elif self.poll_step == 2:
-            #     result = result and self.read_cells_volts(ser)
-            # elif self.poll_step == 3:
-            #     result = result and self.read_temperature_range_data(ser)
-
             if self.poll_step == 0:
                 result = result and self.read_alarm_data(ser)
                 result = result and self.read_temperature_range_data(ser)
