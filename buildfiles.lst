@@ -8,6 +8,10 @@ etc/dbus-serialbattery/start-serialbattery.sh
 etc/dbus-serialbattery/disabledriver.sh
 etc/dbus-serialbattery/installlocal.sh
 etc/dbus-serialbattery/installrelease.sh
+etc/dbus-serialbattery/reinstalllocal.sh
+etc/dbus-serialbattery/installqml.sh
+etc/dbus-serialbattery/qml/PageBattery.qml
+etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml
 etc/dbus-serialbattery/dbus-serialbattery.py
 etc/dbus-serialbattery/dbushelper.py
 etc/dbus-serialbattery/battery.py
@@ -20,3 +24,4 @@ etc/dbus-serialbattery/mnb.py
 etc/dbus-serialbattery/jkbms.py
 etc/dbus-serialbattery/sinowealth.py
 etc/dbus-serialbattery/renogy.py
+etc/dbus-serialbattery/revov.py

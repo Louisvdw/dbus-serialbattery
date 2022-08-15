@@ -1,4 +1,2 @@
 #!/bin/bash
-ln -sf /data/etc/dbus-serialbattery /opt/victronenergy/dbus-serialbattery
-ln -sf /data/etc/dbus-serialbattery/service /opt/victronenergy/service/dbus-serialbattery
-ln -sf /data/etc/dbus-serialbattery/service /opt/victronenergy/service-templates/dbus-serialbattery
+sh /data/etc/dbus-serialbattery/reinstalllocal.sh
