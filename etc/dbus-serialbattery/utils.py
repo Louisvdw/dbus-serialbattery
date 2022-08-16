@@ -8,10 +8,10 @@ from struct import *
 # Logging
 logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.17
+DRIVER_VERSION = 0.12
 DRIVER_SUBVERSION = 'b2'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
