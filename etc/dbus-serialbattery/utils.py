@@ -16,23 +16,23 @@ DRIVER_SUBVERSION = 'b2'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
-MIN_CELL_VOLTAGE = 2.99
-MAX_CELL_VOLTAGE = 3.47 # 3.45 previously
+MIN_CELL_VOLTAGE = 2.9
+MAX_CELL_VOLTAGE = 3.45
 FLOAT_CELL_VOLTAGE = 3.35
 MAX_VOLTAGE_TIME_SEC = 15*60
 SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
 
 # battery Current limits
-MAX_BATTERY_CURRENT = 160.0 # 180 previously
-MAX_BATTERY_DISCHARGE_CURRENT = 160.0
+MAX_BATTERY_CURRENT = 50.0
+MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 # Charge current control management enable (True/False). 
-CCCM_ENABLE = False
+CCCM_ENABLE = True
 # Simulate Midpoint graph (True/False). 
 MIDPOINT_ENABLE = False
 
 # Daly settings
 # Battery capacity (amps) if the BMS does not support reading it 
-BATTERY_CAPACITY = 280
+BATTERY_CAPACITY = 50
 # Invert Battery Current. Default non-inverted. Set to -1 to invert
 INVERT_CURRENT_MEASUREMENT = 1
 

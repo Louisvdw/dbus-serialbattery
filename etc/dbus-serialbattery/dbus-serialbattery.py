@@ -43,14 +43,14 @@ def main():
     def get_battery_type(_port):
         # all the different batteries the driver support and need to test for
         battery_types = [
-            # LltJbd(port=_port, baud=9600),
-            # Ant(port=_port, baud=19200),
-            # Daly(port=_port, baud=9600, address=b"\x40"),
-            # Daly(port=_port, baud=9600, address=b"\x80"),
+            LltJbd(port=_port, baud=9600),
+            Ant(port=_port, baud=19200),
+            Daly(port=_port, baud=9600, address=b"\x40"),
+            Daly(port=_port, baud=9600, address=b"\x80"),
             Jkbms(port=_port, baud=115200),
-            # Sinowealth(port=_port, baud=9600),
-            # Renogy(port=_port, baud=9600),
-            # Revov (port=_port, baud=9600)
+            Sinowealth(port=_port, baud=9600),
+            Renogy(port=_port, baud=9600),
+            Revov (port=_port, baud=9600)
             # MNB(port=_port, baud=9600),
         ]
 
@@ -102,8 +102,6 @@ def main():
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
-
-    # logger.info('Battery connected to dbus from ' + port)
 
     # Poll the battery at INTERVAL and run the main loop
     gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
