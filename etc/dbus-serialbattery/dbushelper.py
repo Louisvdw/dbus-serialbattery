@@ -52,7 +52,8 @@ class DbusHelper:
         # and notify of all the attributes we intend to update
         # This is only called once when a battery is initiated
         self.setup_instance()
-        logger.info("%s" % ("com.victronenergy.battery." + self.battery.port[self.battery.port.rfind('/') + 1:]))
+        short_port = self.battery.port[self.battery.port.rfind('/') + 1:]
+        logger.info("%s" % ("com.victronenergy.battery." + short_port))
 
         # Get the settings for the battery
         if not self.battery.get_settings():
@@ -66,7 +67,7 @@ class DbusHelper:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery (' + self.battery.type + ') v' +
+        self._dbusservice.add_path('/ProductName', 'SB(' + self.battery.type + ') v' +
                                    str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)

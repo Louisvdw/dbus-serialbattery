@@ -69,8 +69,8 @@ class Ecs(Battery):
             self.capacity = mbdev.read_long(46)/1000
             self.production = mbdev.read_long(2)
 
-            for c in range(self.LIPRO_END_ADDRESS-self.LIPRO_START_ADDRESS+1):
-                self.cells.append(Cell(False))
+            # for c in range(self.LIPRO_END_ADDRESS-self.LIPRO_START_ADDRESS+1):
+            #     self.cells.append(Cell(False))
 
             self.hardware_version = "Greenmeter " + str(self.cell_count) + " cells"
             logger.info(self.hardware_version)
@@ -84,11 +84,11 @@ class Ecs(Battery):
             mbdev = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
-            self.voltage = mbdev.read_register(108, 0, 3, True) / 1000
+            self.voltage = mbdev.read_register(108, 0, 3, False) / 1000
             self.current = mbdev.read_register(114, 0, 3, True) / 1000
-            self.soc = mbdev.read_register(128, 0, 3, True) / 1000
+            self.soc = mbdev.read_register(128, 0, 3, False) / 1000
 
-            self.capacity_remain = mbdev.read_float(124, 3, 4) * 3.6 #mAs to Ah
+            # self.capacity_remain = mbdev.read_float(124, 3, 4) * 3.6 #mAs to Ah
             
             # self.cycles = None
             self.total_ah_drawn = None
@@ -98,8 +98,8 @@ class Ecs(Battery):
             self.charge_fet = None #OVP
             self.discharge_fet = None #LVP
 
-            self.temp1 = mbdev.read_register(102, 0, 3, True) / 10
-            self.temp2 = mbdev.read_register(103, 0, 3, True) / 10
+            self.temp1 = mbdev.read_register(102, 0, 3, True) / 100
+            self.temp2 = mbdev.read_register(103, 0, 3, True) / 100
             
             return True
         except IOError:
