@@ -16,6 +16,7 @@ class Ecs(Battery):
     GREENMETER_ID_500A = 500
     GREENMETER_ID_250A = 501
     GREENMETER_ID_125A = 502
+    METER_SIZE = ""
     LIPRO_START_ADDRESS = 2
     LIPRO_END_ADDRESS = 4
     LIPRO_CELL_COUNT = 15
@@ -31,6 +32,12 @@ class Ecs(Battery):
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
             tmpId = mbdev.read_register(0, 0)
             if tmpId in range(self.GREENMETER_ID_500A,self.GREENMETER_ID_125A+1):
+                if tmpId == self.GREENMETER_ID_500A:
+                    self.METER_SIZE = "500A"
+                if tmpId == self.GREENMETER_ID_250A:
+                    self.METER_SIZE = "250A"
+                if tmpId == self.GREENMETER_ID_125A:
+                    self.METER_SIZE = "125A"
                 return self.get_settings()
         except IOError:
             return False
@@ -72,7 +79,7 @@ class Ecs(Battery):
             # for c in range(self.LIPRO_END_ADDRESS-self.LIPRO_START_ADDRESS+1):
             #     self.cells.append(Cell(False))
 
-            self.hardware_version = "Greenmeter " + str(self.cell_count) + " cells"
+            self.hardware_version = "Greenmeter-" + self.METER_SIZE + " " + str(self.cell_count) + " cells"
             logger.info(self.hardware_version)
 
             return True
