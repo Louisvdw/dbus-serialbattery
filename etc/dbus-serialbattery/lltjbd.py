@@ -166,7 +166,7 @@ class LltJbd(Battery):
         if hardware_data is False:
             return False
 
-        self.hardware_version = unpack_from('>' + str(len(hardware_data)) + 's', hardware_data)[0]
+        self.hardware_version = unpack_from('>' + str(len(hardware_data)) + 's', hardware_data)[0].decode()
         logger.debug(self.hardware_version)
         return True
 

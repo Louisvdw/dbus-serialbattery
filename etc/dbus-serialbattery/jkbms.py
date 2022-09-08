@@ -114,9 +114,9 @@ class Jkbms(Battery):
         self.to_fet_bits(unpack_from('>H', self.get_data(status_data, b'\x8C', offset, 2))[0] )
 
         offset = cellbyte_count + 155
-        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', offset, 8))[0]
+        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', offset, 8))[0].decode()
         offset = cellbyte_count + 174
-        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', offset, 15))[0]
+        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', offset, 15))[0].decode()
 
         # logger.info(self.hardware_version)
         return True
