@@ -59,8 +59,14 @@ class LltJbd(Battery):
     LENGTH_POS = 3
 
     def test_connection(self):
-        return self.read_hardware_data()
+        result = False
+        try:
+            result = self.read_hardware_data()
+        except:
+            pass
 
+        return result
+        
     def get_settings(self):
         self.read_gen_data()
         self.max_battery_current = MAX_BATTERY_CURRENT
