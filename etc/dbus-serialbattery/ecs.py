@@ -48,7 +48,7 @@ class Ecs(Battery):
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
         self.temp_sensors = 2
 
-        return True
+        return self.read_status_data()
 
     def refresh_data(self):
         # call all functions that will refresh the battery data.
@@ -64,9 +64,9 @@ class Ecs(Battery):
             mbdev = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
             
-            self.max_battery_discharge_current = mbdev.read_register(30, 0, 3, True)
+            self.max_battery_discharge_current = abs(mbdev.read_register(30, 0, 3, True))
             self.max_battery_current = mbdev.read_register(31, 0, 3, True)
-            self.capacity = mbdev.read_long(46)/1000
+            self.capacity = mbdev.read_long(46)/1000000
             self.production = mbdev.read_long(2)
 
             # for c in range(self.LIPRO_END_ADDRESS-self.LIPRO_START_ADDRESS+1):
