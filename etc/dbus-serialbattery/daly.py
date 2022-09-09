@@ -38,10 +38,13 @@ class Daly(Battery):
 
     def test_connection(self):
         result = False
-        ser = open_serial_port(self.port, self.baud_rate)
-        if ser is not None:
-            result = self.read_status_data(ser)
-            ser.close()
+        try:
+            ser = open_serial_port(self.port, self.baud_rate)
+            if ser is not None:
+                result = self.read_status_data(ser)
+                ser.close()
+        except:
+            pass
 
         return result
 

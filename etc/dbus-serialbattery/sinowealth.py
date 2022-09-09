@@ -33,10 +33,14 @@ class Sinowealth(Battery):
     LENGTH_POS = 0
 
     def test_connection(self):
-       result = self.read_status_data()
-       result = result and self.read_remaining_capacity()
-       result = result and self.read_pack_config_data()
-       return result
+        result = False
+        try:
+            result = self.read_status_data()
+            result = result and self.read_remaining_capacity()
+            result = result and self.read_pack_config_data()
+        except:
+            pass
+        return result
 
     def get_settings(self):
         # hardcoded parameters, to be requested from the BMS in the future

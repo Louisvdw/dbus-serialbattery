@@ -25,3 +25,4 @@ etc/dbus-serialbattery/jkbms.py
 etc/dbus-serialbattery/sinowealth.py
 etc/dbus-serialbattery/renogy.py
 etc/dbus-serialbattery/revov.py
+etc/dbus-serialbattery/ecs.py

@@ -22,7 +22,13 @@ class Jkbms(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        return self.read_status_data()
+        result = False
+        try:
+            result = self.read_status_data()
+        except:
+            pass
+
+        return result
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -108,9 +114,9 @@ class Jkbms(Battery):
         self.to_fet_bits(unpack_from('>H', self.get_data(status_data, b'\x8C', offset, 2))[0] )
 
         offset = cellbyte_count + 155
-        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', offset, 8))[0]
+        self.production = unpack_from('>8s', self.get_data(status_data, b'\xB4', offset, 8))[0].decode()
         offset = cellbyte_count + 174
-        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', offset, 15))[0]
+        self.version = unpack_from('>15s', self.get_data(status_data, b'\xB7', offset, 15))[0].decode()
 
         # logger.info(self.hardware_version)
         return True

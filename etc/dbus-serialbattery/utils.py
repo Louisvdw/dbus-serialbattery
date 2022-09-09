@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.12
-DRIVER_SUBVERSION = 'b2'
+DRIVER_SUBVERSION = 'b3'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -55,6 +55,11 @@ TIME_TO_SOC_INC_FROM = False
 # 3 Both formats 1 and 2
 BATTERY_CELL_DATA_FORMAT = 1
 
+# Settings for ESC GreenMeter and Lipro devices
+GREENMETER_ADDRESS = 1
+# LIPRO_START_ADDRESS = 2
+# LIPRO_END_ADDRESS = 4
+LIPRO_CELL_COUNT = 15
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
