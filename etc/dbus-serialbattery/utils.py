@@ -55,6 +55,11 @@ TIME_TO_SOC_INC_FROM = False
 # 3 Both formats 1 and 2
 BATTERY_CELL_DATA_FORMAT = 1
 
+# Settings for ESC GreenMeter and Lipro devices
+GREENMETER_ADDRESS = 1
+# LIPRO_START_ADDRESS = 2
+# LIPRO_END_ADDRESS = 4
+LIPRO_CELL_COUNT = 15
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True

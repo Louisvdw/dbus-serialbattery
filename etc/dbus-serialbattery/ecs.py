@@ -12,15 +12,11 @@ class Ecs(Battery):
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "ECS_LiPro"
-    GREENMETER_ADDRESS = 1
     GREENMETER_ID_500A = 500
     GREENMETER_ID_250A = 501
     GREENMETER_ID_125A = 502
     METER_SIZE = ""
-    LIPRO_START_ADDRESS = 2
-    LIPRO_END_ADDRESS = 4
-    LIPRO_CELL_COUNT = 15
-
+    
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
@@ -28,7 +24,7 @@ class Ecs(Battery):
         
         # Trying to find Green Meter ID
         try:
-            mbdev = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
+            mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
             tmpId = mbdev.read_register(0, 0)
             if tmpId in range(self.GREENMETER_ID_500A,self.GREENMETER_ID_125A+1):
@@ -50,7 +46,7 @@ class Ecs(Battery):
         # Uncomment if BMS does not supply capacity
         self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.cell_count = self.LIPRO_CELL_COUNT
+        self.cell_count = LIPRO_CELL_COUNT
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
         self.temp_sensors = 2
@@ -68,7 +64,7 @@ class Ecs(Battery):
 
     def read_status_data(self):
         try:
-            mbdev = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
+            mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
             
             self.max_battery_discharge_current = abs(mbdev.read_register(30, 0, 3, True))
@@ -88,7 +84,7 @@ class Ecs(Battery):
 
     def read_soc_data(self):
         try:
-            mbdev = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
+            mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
             self.voltage = mbdev.read_long(108, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
@@ -123,7 +119,7 @@ class Ecs(Battery):
 
     # def read_cell_data(self):
     #     try:
-    #         mbdevice = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
+    #         mbdevice = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)  
     #         mbdevice.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
     #         self.cells = []
