@@ -180,6 +180,12 @@ class Battery(object):
           return 1
         return 0
 
+    def get_capacity_remain(self):
+        if self.capacity_remain is not None:
+            return self.capacity_remain
+        if self.capacity is not None and self.soc is not None:
+            return self.capacity * self.soc / 100
+        return None
 
     def get_timetosoc(self, socnum, crntPrctPerSec):
         if self.current > 0:

@@ -86,7 +86,7 @@ class DbusHelper:
         self._dbusservice.add_path('/System/NrOfModulesOffline', 0, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingCharge', None, writeable=True)
         self._dbusservice.add_path('/System/NrOfModulesBlockingDischarge', None, writeable=True)
-        self._dbusservice.add_path('/Capacity', self.battery.capacity_remain, writeable=True,
+        self._dbusservice.add_path('/Capacity', self.battery.get_capacity_remain(), writeable=True,
                                    gettextcallback=lambda p, v: "{:0.2f}Ah".format(v))
         self._dbusservice.add_path('/InstalledCapacity', self.battery.capacity, writeable=True,
                                    gettextcallback=lambda p, v: "{:0.0f}Ah".format(v))
@@ -189,10 +189,10 @@ class DbusHelper:
         self._dbusservice['/Dc/0/Current'] = round(self.battery.current, 2)
         self._dbusservice['/Dc/0/Power'] = round(self.battery.voltage * self.battery.current, 2)
         self._dbusservice['/Dc/0/Temperature'] = self.battery.get_temp()
-        self._dbusservice['/Capacity'] = self.battery.capacity_remain
+        self._dbusservice['/Capacity'] = self.battery.get_capacity_remain()
         self._dbusservice['/ConsumedAmphours'] = 0 if self.battery.capacity is None or \
-                                self.battery.capacity_remain is None else \
-                                self.battery.capacity - self.battery.capacity_remain
+                                self.battery.get_capacity_remain() is None else \
+                                self.battery.capacity - self.battery.get_capacity_remain()
         
         midpoint, deviation = self.battery.get_midvoltage()
         if (midpoint is not None):
