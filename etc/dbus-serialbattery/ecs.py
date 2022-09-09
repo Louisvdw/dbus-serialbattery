@@ -73,8 +73,8 @@ class Ecs(Battery):
             
             self.max_battery_discharge_current = abs(mbdev.read_register(30, 0, 3, True))
             self.max_battery_current = mbdev.read_register(31, 0, 3, True)
-            self.capacity = mbdev.read_long(46)/1000000
-            self.production = mbdev.read_long(2)
+            self.capacity = mbdev.read_long(46, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP)/1000
+            self.production = mbdev.read_long(2, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP)
 
             # for c in range(self.LIPRO_END_ADDRESS-self.LIPRO_START_ADDRESS+1):
             #     self.cells.append(Cell(False))
@@ -91,12 +91,10 @@ class Ecs(Battery):
             mbdev = minimalmodbus.Instrument(self.port, self.GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
-            self.voltage = mbdev.read_register(108, 0, 3, False) / 1000
-            self.current = mbdev.read_register(114, 0, 3, True) / 1000
-            self.soc = mbdev.read_register(128, 0, 3, False) / 1000
+            self.voltage = mbdev.read_long(108, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
+            self.current = mbdev.read_long(114, 3, True, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
+            self.soc = mbdev.read_long(128, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
 
-            # self.capacity_remain = mbdev.read_float(124, 3, 4) * 3.6 #mAs to Ah
-            
             # self.cycles = None
             self.total_ah_drawn = None
             
