@@ -67,7 +67,7 @@ class DbusHelper:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SB(' + self.battery.type + ') v' +
+        self._dbusservice.add_path('/ProductName', 'SerialBattery(' + self.battery.type + ') v' +
                                    str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
