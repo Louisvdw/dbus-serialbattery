@@ -100,8 +100,19 @@ class Ecs(Battery):
             
             self.protection = Protection()
             
-            self.charge_fet = None #OVP
-            self.discharge_fet = None #LVP
+            over_voltage = mbdev.read_register(130, 0, 3, True)
+            under_voltage = mbdev.read_register(131, 0, 3, True)
+            self.charge_fet = True if over_voltage == 0 else False
+            self.discharge_fet = True if under_voltage == 0 else False
+            self.protection.voltage_high = 2 if over_voltage == 1 else 0
+            self.protection.voltage_low = 2 if under_voltage == 1 else 0
+            self.protection.temp_high_charge = 1 if over_voltage in range(3,5) else 0
+            self.protection.temp_low_charge = 1 if over_voltage in range(5,7) else 0
+            self.protection.temp_high_discharge = 1 if under_voltage in range(3,5) else 0
+            self.protection.temp_low_discharge = 1 if under_voltage in range(5,7) else 0
+            self.protection.current_over = 1 if over_voltage == 2 else 0
+            self.protection.current_under = 1 if under_voltage == 2 else 0
+
 
             self.temp1 = mbdev.read_register(102, 0, 3, True) / 100
             self.temp2 = mbdev.read_register(103, 0, 3, True) / 100
