@@ -103,22 +103,23 @@ class Battery(object):
 
     def manage_charge_voltage(self):
         voltageSum = 0
-        for i in range(self.cell_count):
-            voltage = self.cells[i].voltage
-            if voltage:
-                voltageSum+=voltage
+        if (CVCM_ENABLE):
+            for i in range(self.cell_count):
+                voltage = self.cells[i].voltage
+                if voltage:
+                    voltageSum+=voltage
 
-        if None == self.max_voltage_start_time:
-            if MAX_CELL_VOLTAGE * self.cell_count <= voltageSum and True == self.allow_max_voltage:
-                self.max_voltage_start_time = time()
+            if None == self.max_voltage_start_time:
+                if MAX_CELL_VOLTAGE * self.cell_count <= voltageSum and True == self.allow_max_voltage:
+                    self.max_voltage_start_time = time()
+                else:
+                    if SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc and not self.allow_max_voltage:
+                        self.allow_max_voltage = True
             else:
-                if SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc and not self.allow_max_voltage:
-                    self.allow_max_voltage = True
-        else:
-            tDiff = time() - self.max_voltage_start_time
-            if MAX_VOLTAGE_TIME_SEC < tDiff:
-                self.max_voltage_start_time = None
-                self.allow_max_voltage = False
+                tDiff = time() - self.max_voltage_start_time
+                if MAX_VOLTAGE_TIME_SEC < tDiff:
+                    self.max_voltage_start_time = None
+                    self.allow_max_voltage = False
 
         if self.allow_max_voltage:
             self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
