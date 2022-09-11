@@ -173,6 +173,9 @@ class DbusHelper:
             # This is to mannage CCL\DCL
             self.battery.manage_charge_current()
             
+            # This is to mannage CVCL
+            self.battery.manage_charge_voltage()            
+            
             # publish all the data fro the battery object to dbus
             self.publish_dbus()
 
@@ -218,6 +221,9 @@ class DbusHelper:
         self._dbusservice['/Info/MaxChargeCurrent'] = self.battery.control_charge_current
         self._dbusservice['/Info/MaxDischargeCurrent'] = self.battery.control_discharge_current
 
+        # Voltage control
+        self._dbusservice['/Info/MaxChargeVoltage'] = self.battery.control_voltage
+        
         # Updates from cells
         self._dbusservice['/System/MinVoltageCellId'] = self.battery.get_min_cell_desc()
         self._dbusservice['/System/MaxVoltageCellId'] = self.battery.get_max_cell_desc()

@@ -18,6 +18,10 @@ degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
 MIN_CELL_VOLTAGE = 2.9
 MAX_CELL_VOLTAGE = 3.45
+FLOAT_CELL_VOLTAGE = 3.35
+MAX_VOLTAGE_TIME_SEC = 15*60
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
+
 # battery Current limits
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
@@ -152,4 +156,3 @@ def read_serialport_data(ser, command, length_pos, length_check, length_fixed=No
     except serial.SerialException as e:
         logger.error(e)
         return False
-        
