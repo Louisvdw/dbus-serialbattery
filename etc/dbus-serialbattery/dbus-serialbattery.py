@@ -26,6 +26,7 @@ from sinowealth import Sinowealth
 from renogy import Renogy
 from revov import Revov
 from ecs import Ecs
+from lifepower import Lifepower
 #from mnb import MNB
 
 
@@ -51,6 +52,7 @@ def main():
             Jkbms(port=_port, baud=115200),
             Sinowealth(port=_port, baud=9600),
             Renogy(port=_port, baud=9600),
+            Lifepower(port=_port, baud=9600),
             Revov (port=_port, baud=9600),
             Ecs (port=_port, baud=19200),
             # MNB(port=_port, baud=9600),
