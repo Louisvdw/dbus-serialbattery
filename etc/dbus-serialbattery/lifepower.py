@@ -50,14 +50,14 @@ class Lifepower(Battery):
 
         groups = []
         i = 4
-        for j in range(0,10):
+        for j in range(0, 10):
             # groups are formatted like:
             # {group number} {length} ...length shorts...
             # So the first group might be:
             # 01 02 0a 0b 0c 0d
-            group_len = status_data[i+1]
-            end = i + 2 + (group_len*2)
-            group_payload = status_data[i+2:end]
+            group_len = status_data[i + 1]
+            end = i + 2 + (group_len * 2)
+            group_payload = status_data[i + 2:end]
             groups.append([unpack_from('>H', group_payload, i)[0] for i in range(0, len(group_payload), 2)])
 
             i = end
@@ -70,7 +70,7 @@ class Lifepower(Battery):
         self.cells = [Cell(True) for _ in range(0, self.cell_count)]
         for i, cell in enumerate(self.cells):
             cell.voltage = groups[0][i] / 1000
-        
+
         # Current
         self.current = groups[1][0] / 100
 
@@ -84,7 +84,7 @@ class Lifepower(Battery):
         self.temp1 = groups[4][0]
 
         # TODO Alarms
-        
+
         # Cycle counter
         self.cycles = groups[6][0]
 
@@ -94,14 +94,15 @@ class Lifepower(Battery):
         # TODO State of health
 
         self.hardware_version = "EG4 Lifepower " + str(self.cell_count) + " cells"
-        
+
         return True
-        
-    def get_balancing(self): 
+
+    def get_balancing(self):
         return 1 if self.balancing or self.balancing == 2 else 0
 
     def read_serial_data_eg4(self, command):
-        # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
+        # use the read_serial_data() function to read the data and then do BMS
+        # specific checks (crc, start bytes, etc)
         data = read_serial_data(command, self.port, self.baud_rate,
                                 self.LENGTH_POS, self.LENGTH_CHECK, self.LENGTH_FIXED)
         if data is False:
