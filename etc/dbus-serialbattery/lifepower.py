@@ -72,7 +72,7 @@ class Lifepower(Battery):
             cell.voltage = groups[0][i] / 1000
 
         # Current
-        self.current = groups[1][0] / 100
+        self.current = (30000 - groups[1][0]) / 100
 
         # State of charge
         self.soc = groups[2][0] / 100
