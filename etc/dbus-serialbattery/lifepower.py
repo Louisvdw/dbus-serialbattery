@@ -81,7 +81,9 @@ class Lifepower(Battery):
         self.capacity = groups[3][0] / 100
 
         # Temperature
-        self.temp1 = groups[4][0]
+        # TODO There is a significant amount of temperature information being ignored here
+        # see https://github.com/slim-bean/powermon#group-5
+        self.temp1 = groups[4][0] - 50
 
         # TODO Alarms
 
