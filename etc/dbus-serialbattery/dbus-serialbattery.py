@@ -54,7 +54,7 @@ def main():
             Lifepower(port=_port, baud=9600),
             Renogy(port=_port, baud=9600, address=b"\x30"),
             Renogy(port=_port, baud=9600, address=b"\xF7"),
-            Revov (port=_port, baud=9600),
+            # Revov (port=_port, baud=9600),
             Ecs (port=_port, baud=19200),
             # MNB(port=_port, baud=9600),
         ]
