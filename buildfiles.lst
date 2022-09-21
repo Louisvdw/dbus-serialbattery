@@ -27,3 +27,4 @@ etc/dbus-serialbattery/sinowealth.py
 etc/dbus-serialbattery/renogy.py
 etc/dbus-serialbattery/revov.py
 etc/dbus-serialbattery/ecs.py
+etc/dbus-serialbattery/lifepower.py
