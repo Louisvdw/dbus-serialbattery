@@ -26,6 +26,7 @@ from sinowealth import Sinowealth
 from renogy import Renogy
 from revov import Revov
 from ecs import Ecs
+from lifepower import Lifepower
 #from mnb import MNB
 
 
@@ -51,6 +52,7 @@ def main():
             Jkbms(port=_port, baud=115200),
             Sinowealth(port=_port, baud=9600),
             Renogy(port=_port, baud=9600),
+            Lifepower(port=_port, baud=9600),
             Revov (port=_port, baud=9600),
             Ecs (port=_port, baud=19200),
             # MNB(port=_port, baud=9600),
@@ -104,7 +106,7 @@ def main():
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
-    
+
     # Poll the battery at INTERVAL and run the main loop
     gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
     try:

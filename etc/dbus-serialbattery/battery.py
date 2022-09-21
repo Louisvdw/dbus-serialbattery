@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from utils import *
 import math
 from datetime import timedelta
+from time import time
 
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
@@ -59,6 +60,8 @@ class Battery(object):
         self.cells = []
         self.control_charging = None
         self.control_voltage = None
+        self.allow_max_voltage = True
+        self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
         self.control_previous_max = None
@@ -98,11 +101,37 @@ class Battery(object):
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
 
+    def manage_charge_voltage(self):
+        voltageSum = 0
+        if (CVCM_ENABLE):
+            for i in range(self.cell_count):
+                voltage = self.cells[i].voltage
+                if voltage:
+                    voltageSum+=voltage
+
+            if None == self.max_voltage_start_time:
+                if MAX_CELL_VOLTAGE * self.cell_count <= voltageSum and True == self.allow_max_voltage:
+                    self.max_voltage_start_time = time()
+                else:
+                    if SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc and not self.allow_max_voltage:
+                        self.allow_max_voltage = True
+            else:
+                tDiff = time() - self.max_voltage_start_time
+                if MAX_VOLTAGE_TIME_SEC < tDiff:
+                    self.max_voltage_start_time = None
+                    self.allow_max_voltage = False
+
+        if self.allow_max_voltage:
+            self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
+        else:
+            self.control_voltage = FLOAT_CELL_VOLTAGE * self.cell_count
+        
     def manage_charge_current(self):
         # If disabled make sure the default values are set and then exit
         if (not CCCM_ENABLE):
             self.control_charge_current = self.max_battery_current
             self.control_discharge_current = self.max_battery_discharge_current
+            self.control_allow_charge = True
             return
 
         # Start with the current values
