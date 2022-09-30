@@ -4,8 +4,8 @@ DRIVER=/opt/victronenergy/dbus-serialbattery
 RUN=/opt/victronenergy/service-templates/dbus-serialbattery
 OLD=/opt/victronenergy/service/dbus-serialbattery
 
-#/dev/mmcblk1p3 mountpoint / was made read only in 2.91 release
-mount -o remount,rw /dev/mmcblk1p3 /
+#handle read only mounts
+sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 if [ -d "$DRIVER" ]; then
   if [ -L "$DRIVER" ]; then
