@@ -8,17 +8,18 @@ class RenogyCell(Cell):
 
 class Renogy(Battery):
 
-    def __init__(self, port,baud):
+    def __init__(self, port, baud, address):
         super(Renogy, self).__init__(port,baud)
         self.type = self.BATTERYTYPE
+
+        # The RBT100LFP12SH-G1 uses 0xF7, another battery uses 0x30
+        self.command_address = address
 
     BATTERYTYPE = "Renogy"
     LENGTH_CHECK = 4
     LENGTH_POS = 2
 
     # command bytes [Address field][Function code (03 = Read register)][Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
-    # Battery addresses start at 0 ascii, 30 hex
-    command_address = b"0"
     command_read = b"\x03"
     # Core data = voltage, temp, current, soc
     command_cell_count = b"\x13\x88\x00\x01"         #Register  5000
@@ -41,7 +42,14 @@ class Renogy(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        return self.read_gen_data()
+        result = False
+        try:
+            result = self.read_gen_data()
+        except:
+            logger.exception("Unexpected exception encountered")
+            pass
+
+        return result
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -69,24 +77,38 @@ class Renogy(Battery):
         # check if connection success
         if model is False:
             return False
-        model_num = unpack('16s',model)[0]
-        self.hardware_version = "Renogy " + str(model_num)
+        # may contain null bytes that we don't want
+        model_num, _, _ = unpack('16s', model)[0].decode('utf-8').partition('\0')
+
+        manufacturer = self.read_serial_data_renogy(self.command_manufacturer)
+        if manufacturer is False:
+            self.hardware_version = model_num
+        else:
+            # may contain null bytes that we don't want
+            manufacturer, _, _ = unpack('16s', manufacturer)[0].decode('utf-8').partition('\0')
+            self.hardware_version = f'{manufacturer} {model_num}'
+
         logger.info(self.hardware_version)
 
+        # TODO: This isn't really accurate I think.
         self.temp_sensors = 2
 
         if self.cell_count is None:
             cc = self.read_serial_data_renogy(self.command_cell_count)
             self.cell_count = struct.unpack('>H',cc)[0]
-            
+
             for c in range(self.cell_count):
                 self.cells.append(RenogyCell(False))
 
         firmware = self.read_serial_data_renogy(self.command_firmware_version)
         firmware_major, firmware_minor = unpack_from('2s2s', firmware)
-        self.version = float(str(firmware_major) + "." + str(firmware_minor))
+        firmware_major = firmware_major.decode('utf-8')
+        firmware_minor = firmware_minor.decode('utf-8')
+        self.version = float(f"{firmware_major}.{firmware_minor}")
+
         capacity = self.read_serial_data_renogy(self.command_capacity)
-        self.capacity = unpack('>L',capacity)[0]
+        self.capacity = unpack('>L',capacity)[0] / 1000.0
+
         return True
 
     def read_soc_data(self):
@@ -95,10 +117,11 @@ class Renogy(Battery):
         if soc_data is False:
             return False
 
-        current, voltage, self.capacity_remain = unpack_from('>hhL', soc_data)
-        self.current = current / 100
-        self.voltage = voltage / 10
-        self.soc = self.capacity_remain / self.capacity * 100
+        current, voltage, capacity_remain = unpack_from('>hhL', soc_data)
+        self.capacity_remain = capacity_remain / 1000.0
+        self.current = current / 100.0
+        self.voltage = voltage / 10.0
+        self.soc = (self.capacity_remain / self.capacity) * 100
         return True
 
     def read_cell_data(self):
@@ -122,7 +145,7 @@ class Renogy(Battery):
             return False
         self.temp1 = unpack('>H',temp1)[0] / 10
         self.temp2 = unpack('>H',temp2)[0] / 10
-        
+
         return True
 
     def read_bms_config(self):
@@ -131,7 +154,7 @@ class Renogy(Battery):
     def calc_crc(self, data):
         crc = 0xFFFF
         for pos in data:
-            crc ^= pos 
+            crc ^= pos
             for i in range(8):
                 if ((crc & 1) != 0):
                     crc >>= 1
@@ -139,7 +162,7 @@ class Renogy(Battery):
                 else:
                     crc >>= 1
         return struct.pack('<H',crc)
-    
+
     def generate_command(self, command):
         buffer = bytearray(self.command_address)
         buffer += self.command_read

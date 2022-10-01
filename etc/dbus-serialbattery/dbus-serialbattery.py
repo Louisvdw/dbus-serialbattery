@@ -4,7 +4,6 @@ from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from threading import Thread
 import dbus
-import os
 import sys
 if sys.version_info.major == 2:
     import gobject
@@ -24,6 +23,8 @@ from jkbms import Jkbms
 from sinowealth import Sinowealth
 from renogy import Renogy
 from revov import Revov
+from ecs import Ecs
+from lifepower import Lifepower
 #from mnb import MNB
 
 
@@ -48,8 +49,11 @@ def main():
             Daly(port=_port, baud=9600, address=b"\x80"),
             Jkbms(port=_port, baud=115200),
             Sinowealth(port=_port, baud=9600),
-            Renogy(port=_port, baud=9600),
-            Revov (port=_port, baud=9600)
+            Lifepower(port=_port, baud=9600),
+            Renogy(port=_port, baud=9600, address=b"\x30"),
+            Renogy(port=_port, baud=9600, address=b"\xF7"),
+            # Revov (port=_port, baud=9600),
+            Ecs (port=_port, baud=19200),
             # MNB(port=_port, baud=9600),
         ]
 
@@ -85,8 +89,10 @@ def main():
     # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
-        os.exit(1)
-
+        sys.exit(1)
+    
+    battery.log_settings()
+    
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
     if sys.version_info.major == 2:
@@ -95,11 +101,10 @@ def main():
 
     # Get the initial values for the battery used by setup_vedbus
     helper = DbusHelper(battery)
+    
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
-        os.exit(1)
-    logger.info('Battery connected to dbus from ' + port)
-
+        sys.exit(1)
 
     # Poll the battery at INTERVAL and run the main loop
     gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))

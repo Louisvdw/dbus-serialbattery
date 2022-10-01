@@ -10,18 +10,26 @@ logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.12
-DRIVER_SUBVERSION = 'b1'
+DRIVER_VERSION = 0.13
+DRIVER_SUBVERSION = ''
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
 MIN_CELL_VOLTAGE = 2.9
 MAX_CELL_VOLTAGE = 3.45
+FLOAT_CELL_VOLTAGE = 3.35
+MAX_VOLTAGE_TIME_SEC = 15*60
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
+
 # battery Current limits
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 # Charge current control management enable (True/False). 
 CCCM_ENABLE = True
+# Charge voltage control management enable (True/False). 
+CVCM_ENABLE = False
+# Simulate Midpoint graph (True/False). 
+MIDPOINT_ENABLE = False
 
 # Daly settings
 # Battery capacity (amps) if the BMS does not support reading it 
@@ -52,6 +60,11 @@ TIME_TO_SOC_INC_FROM = False
 # 3 Both formats 1 and 2
 BATTERY_CELL_DATA_FORMAT = 1
 
+# Settings for ESC GreenMeter and Lipro devices
+GREENMETER_ADDRESS = 1
+# LIPRO_START_ADDRESS = 2
+# LIPRO_END_ADDRESS = 4
+LIPRO_CELL_COUNT = 15
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
@@ -144,4 +157,3 @@ def read_serialport_data(ser, command, length_pos, length_check, length_fixed=No
     except serial.SerialException as e:
         logger.error(e)
         return False
-        

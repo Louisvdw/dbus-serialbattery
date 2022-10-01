@@ -53,7 +53,13 @@ class Revov(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        return self.read_gen_data()
+        result = False
+        try:
+            result = self.read_gen_data()
+        except:
+            pass
+
+        return result
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
