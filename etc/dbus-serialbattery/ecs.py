@@ -87,14 +87,14 @@ class Ecs(Battery):
             mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)  
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
-            self.voltage = mbdev.read_long(108, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
+            self.voltage = mbdev.read_long(108, 3, True, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
             self.current = mbdev.read_long(114, 3, True, minimalmodbus.BYTEORDER_LITTLE_SWAP) / 1000
             # if (mbdev.read_register(129, 0, 3, False) != 65535):
-            temp_soc = mbdev.read_long(128, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP) 
+            temp_soc = mbdev.read_long(128, 3, True, minimalmodbus.BYTEORDER_LITTLE_SWAP) 
             # Fix for Greenmeter that seems to not correctly define/set the high bytes 
             # if the SOC value is less than 65535 (65.535%). So 50% comes through as #C350 FFFF instead of #C350 0000
             self.soc = (temp_soc if temp_soc < 4294901760 else temp_soc-4294901760) / 1000
-
+                        
             # self.cycles = None
             self.total_ah_drawn = None
             
