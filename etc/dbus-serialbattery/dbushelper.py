@@ -33,7 +33,7 @@ class DbusHelper:
         settings = {'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], }
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
-        self.battery.role, self.battery.instance = self.get_role_instance()
+        self.battery.role, self.instance = self.get_role_instance()
 
     def get_role_instance(self):
         val = self.settings['instance'].split(':')
