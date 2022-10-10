@@ -66,11 +66,11 @@ class DbusHelper:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery(' + self.battery.type + ') v' +
-                                   str(DRIVER_VERSION) + DRIVER_SUBVERSION)
-        self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
+        self._dbusservice.add_path('/ProductName', 'SerialBattery(' + self.battery.type + ')')
+        self._dbusservice.add_path('/FirmwareVersion', self.battery.version if self.battery.version is not None else str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
+        self._dbusservice.add_path('/CustomName', None, writeable=True)
 
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
@@ -168,6 +168,9 @@ class DbusHelper:
                 # If the battery is offline for more than 10 polls (polled every second for most batteries)
                 if error_count >= 10: 
                     self.battery.online = False
+                # Has it completely failed
+                if error_count >= 60: 
+                    loop.quit()
 
             # This is to mannage CCL\DCL
             self.battery.manage_charge_current()
