@@ -67,6 +67,7 @@ class Battery(object):
         self.control_discharge_current = None
         self.control_charge_current = None
         self.control_allow_charge = None
+        self.control_allow_discharge = None
         # max battery charge/discharge current
         self.max_battery_current = None
         self.max_battery_discharge_current = None
@@ -129,40 +130,43 @@ class Battery(object):
         # If disabled make sure the default values are set and then exit
         if (not CCCM_ENABLE):
             self.control_charge_current = self.max_battery_current
-            self.control_discharge_current = self.max_battery_discharge_current
             self.control_allow_charge = True
-            return
-
-        # Start with the current values
-
-        # Change depending on the SOC values
-        if self.soc is None:
-            # Prevent serialbattery from terminating on error
-            return False
-            
-        if self.soc > 99:
-            self.control_allow_charge = False
         else:
-            self.control_allow_charge = True
-        # Change depending on the SOC values
-        if 98 < self.soc <= 100:
-            self.control_charge_current = 5
-        elif 95 < self.soc <= 98:
-            self.control_charge_current = self.max_battery_current/4
-        elif 91 < self.soc <= 95:
-            self.control_charge_current = self.max_battery_current/2
-        else:
-            self.control_charge_current = self.max_battery_current
+            # Start with the current values
+            # Charge depending on the SOC values
+            if not (self.soc is None):
+                if self.soc > 99:
+                    self.control_allow_charge = False
+                else:
+                    self.control_allow_charge = True
+                # Charge depending on the SOC values
+                if CC_SOC_LIMIT1 < self.soc <= 100:  # CC_SOC_LIMIT1 = 98
+                    self.control_charge_current = CC_CURRENT_LIMIT1  # CC_CURRENT_LIMIT1 = 5
+                elif CC_SOC_LIMIT2 < self.soc <= CC_SOC_LIMIT1:  # CC_SOC_LIMIT2 = 95
+                    self.control_charge_current = CC_CURRENT_LIMIT2 # CC_CURRENT_LIMIT2 = MAX_BATTERY_CURRENT/4
+                elif CC_SOC_LIMIT3 < self.soc <= CC_SOC_LIMIT2:  # CC_SOC_LIMIT3 = 91
+                    self.control_charge_current = CC_CURRENT_LIMIT3  # CC_CURRENT_LIMIT3 = MAX_BATTERY_CURRENT/2
+                else:
+                    self.control_charge_current = self.max_battery_current
 
-        # Dischange depending on the SOC values
-        if self.soc <= 10:
-            self.control_discharge_current = 5
-        elif 10 < self.soc <= 20:
-            self.control_discharge_current = self.max_battery_discharge_current/4
-        elif 20 < self.soc <= 30:
-            self.control_discharge_current = self.max_battery_discharge_current/2
-        else:
+        if (not DCCM_ENABLE):
             self.control_discharge_current = self.max_battery_discharge_current
+            self.control_allow_discharge = True
+        else:
+            if not (self.soc is None):
+                if self.soc < 1:
+                    self.control_allow_discharge = False
+                else:
+                    self.control_allow_discharge = True
+                # Discharge depending on the SOC values
+                if self.soc <= DC_SOC_LIMIT1: #DC_SOC_LIMIT1 = 10
+                    self.control_discharge_current = DC_CURRENT_LIMIT1  #DC_CURRENT_LIMIT1 = 5
+                elif DC_SOC_LIMIT1 < self.soc <= DC_SOC_LIMIT2:  #DC_SOC_LIMIT2 = 20
+                    self.control_discharge_current = DC_CURRENT_LIMIT2 #DC_CURRENT_LIMIT2 = max_discharge/4
+                elif DC_SOC_LIMIT2 < self.soc <= DC_SOC_LIMIT3: #DC_SOC_LIMIT3 = 30
+                    self.control_discharge_current = DC_CURRENT_LIMIT3 #DC_CURRENT_LIMIT3 = max_discharge/2
+                else:
+                    self.control_discharge_current = self.max_battery_discharge_current
 
     def get_min_cell(self):
         min_voltage = 9999
