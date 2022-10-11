@@ -3,9 +3,6 @@ from battery import Protection, Battery, Cell
 from utils import *
 import struct
 
-class RenogyCell(Cell):
-    temp = None
-
 class Renogy(Battery):
 
     def __init__(self, port, baud, address):
@@ -98,7 +95,7 @@ class Renogy(Battery):
             self.cell_count = struct.unpack('>H',cc)[0]
 
             for c in range(self.cell_count):
-                self.cells.append(RenogyCell(False))
+                self.cells.append(Cell(False))
 
         firmware = self.read_serial_data_renogy(self.command_firmware_version)
         firmware_major, firmware_minor = unpack_from('2s2s', firmware)

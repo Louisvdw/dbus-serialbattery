@@ -24,6 +24,7 @@ class Protection(object):
 class Cell:
     voltage = None
     balance = None
+    temp = None
 
     def __init__(self, balance):
         self.balance = balance
