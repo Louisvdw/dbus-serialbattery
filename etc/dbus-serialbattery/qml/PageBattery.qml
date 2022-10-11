@@ -227,14 +227,14 @@ MbPage {
 			}
 		}
 
-		MbSubMenu {
+		/*MbSubMenu {
 			description: qsTr("Setup")
 			subpage: Component {
 				PageBatterySetup {
 					bindPrefix: service.path("")
 				}				
 			}
-		}
+		}*/
 
 		MbSubMenu {
 			description: qsTr("Alarms")
