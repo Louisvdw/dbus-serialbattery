@@ -16,6 +16,15 @@ class Ecs(Battery):
     GREENMETER_ID_250A = 501
     GREENMETER_ID_125A = 502
     METER_SIZE = ""
+    # LiPro 100, 101 is untested but should work if they have updated firmware 
+    # that match the registers of the newer models 
+    LIPRO1X_ID_V1 = 100
+    LIPRO1X_ID_ACTIVE = 101
+    # ---
+    LIPRO1X_ID_V2 = 102
+    LIPRO1X_ID_ACTIVE_V2 = 103
+    LIPRO1X_ID_V3 = 104
+    LiProCells = []
     
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -34,9 +43,30 @@ class Ecs(Battery):
                     self.METER_SIZE = "250A"
                 if tmpId == self.GREENMETER_ID_125A:
                     self.METER_SIZE = "125A"
+                
+                self.find_LiPro_cells()
+
                 return self.get_settings()
         except IOError:
             return False
+
+    def find_LiPro_cells(self):
+        #test for LiPro cell devices
+        for cell_address in range(LIPRO_START_ADDRESS, LIPRO_END_ADDRESS+1):
+            try:
+                mbdev = minimalmodbus.Instrument(self.port, cell_address)  
+                mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
+
+                tmpId = mbdev.read_register(0, 0)
+                if tmpId in range(self.LIPRO1X_ID_V1,self.LIPRO1X_ID_V3+1):
+                    self.LiProCells.append(cell_address)
+                    logger.info("Found LiPro at " + str(cell_address))
+                    self.cells.append(Cell(False))
+
+            except IOError:
+                pass
+        
+        return True if len(self.LiProCells) > 0 else False
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -58,7 +88,7 @@ class Ecs(Battery):
         # This will be called for every iteration (1 second)
         # Return True if success, False for failure
         result = self.read_soc_data()
-        # result = result and self.read_cell_data()
+        result = result and self.read_cell_data()
 
         return result
 
@@ -71,9 +101,6 @@ class Ecs(Battery):
             self.max_battery_current = mbdev.read_register(31, 0, 3, True)
             self.capacity = mbdev.read_long(46, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP)/1000
             self.production = mbdev.read_long(2, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP)
-
-            # for c in range(self.LIPRO_END_ADDRESS-self.LIPRO_START_ADDRESS+1):
-            #     self.cells.append(Cell(False))
 
             self.hardware_version = "Greenmeter-" + self.METER_SIZE + " " + str(self.cell_count) + " cells"
             logger.info(self.hardware_version)
@@ -121,16 +148,16 @@ class Ecs(Battery):
         except IOError:
             return False
 
-    # def read_cell_data(self):
-    #     try:
-    #         mbdevice = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)  
-    #         mbdevice.serial.parity = minimalmodbus.serial.PARITY_EVEN
+    def read_cell_data(self):
+        for cell in range(len(self.LiProCells)):
+            try:
+                mbdev = minimalmodbus.Instrument(self.port, self.LiProCells[cell])  
+                mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
-    #         self.cells = []
-    #             voltage = None
-    #             temp = None
-    #             balance = None
+                self.cells[cell].voltage = mbdev.read_register(100, 0, 3, False) / 1000
+                self.cells[cell].balance = True if mbdev.read_register(102, 0, 3, False) > 50 else False 
+                self.cells[cell].temp = mbdev.read_register(101, 0, 3, True) / 100
 
-    #         return True
-    #     except IOError:
-    #         return False
+                return True
+            except IOError:
+                pass
