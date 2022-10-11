@@ -11,8 +11,8 @@ logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.12
-DRIVER_SUBVERSION = 'b3'
+DRIVER_VERSION = 0.13
+DRIVER_SUBVERSION = ''
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -25,9 +25,33 @@ SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
 # battery Current limits
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+
 # Charge current control management enable (True/False). 
 CCCM_ENABLE = True
-# Charge voltage control management enable (True/False). 
+# Discharge current control management enable (True/False).
+DCCM_ENABLE = True
+
+#charge current soc limits
+CC_SOC_LIMIT1 = 98
+CC_SOC_LIMIT2 = 95
+CC_SOC_LIMIT3 = 91
+
+#charge current limits
+CC_CURRENT_LIMIT1 = 5
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CURRENT/4
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CURRENT/2
+
+#discharge current soc limits
+DC_SOC_LIMIT1 = 10
+DC_SOC_LIMIT2 = 20
+DC_SOC_LIMIT3 = 30
+
+#discharge current limits
+DC_CURRENT_LIMIT1 = 5
+DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT/4
+DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT/2
+
+# Charge voltage control management enable (True/False).
 CVCM_ENABLE = False
 # Simulate Midpoint graph (True/False). 
 MIDPOINT_ENABLE = False
