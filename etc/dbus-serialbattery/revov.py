@@ -18,9 +18,6 @@ import struct
 #     SOC, Error Codes, Other variables
 
 
-class RevovCell(Cell):
-    temp = None
-
 class Revov(Battery):
 
     def __init__(self, port,baud):
