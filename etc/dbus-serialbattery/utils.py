@@ -56,6 +56,10 @@ CVCM_ENABLE = False
 # Simulate Midpoint graph (True/False). 
 MIDPOINT_ENABLE = False
 
+#soc low levels
+SOC_LOW_WARNING = 20
+SOC_LOW_ALARM = 10
+
 # Daly settings
 # Battery capacity (amps) if the BMS does not support reading it 
 BATTERY_CAPACITY = 50
