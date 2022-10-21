@@ -10,7 +10,7 @@ logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
-#battery types
+# battery types
 # if not specified: baud = 9600
 battery_types = [
     {'bms' : "LltJbd"},

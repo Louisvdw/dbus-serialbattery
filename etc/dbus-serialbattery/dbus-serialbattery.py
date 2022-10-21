@@ -62,7 +62,6 @@ def main():
                 if testbms.test_connection() is True:
                     logger.info('Connection established to ' + testbms.__class__.__name__)
                     return testbms
-
             count -= 1
             sleep(0.5)
 
