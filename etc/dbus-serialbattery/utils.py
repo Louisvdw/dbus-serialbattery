@@ -10,6 +10,23 @@ logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
+# battery types
+# if not specified: baud = 9600
+battery_types = [
+    {'bms' : "LltJbd"},
+    {'bms' : "Ant", "baud" : 19200},
+    {"bms" : "Daly", "address" : b"\x40"},
+    {"bms" : "Daly", "address" : b"\x80"},
+    {"bms" : "Jkbms", "baud" : 115200},
+    {"bms" : "Sinowealth"},
+    {"bms" : "Lifepower"},
+    {"bms" : "Renogy", "address": b"\x30"},
+    {"bms" : "Renogy", "address": b"\xF7"},
+#    {"bms" : "Revov"},
+    {"bms" : "Ecs", "baud" : 19200},
+#    {"bms" : "MNB"},
+]
+
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.13
 DRIVER_SUBVERSION = ''
