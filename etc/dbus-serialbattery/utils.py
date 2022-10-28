@@ -9,6 +9,23 @@ logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
+# battery types
+# if not specified: baud = 9600
+battery_types = [
+    {'bms' : "LltJbd"},
+    {'bms' : "Ant", "baud" : 19200},
+    {"bms" : "Daly", "address" : b"\x40"},
+    {"bms" : "Daly", "address" : b"\x80"},
+    {"bms" : "Jkbms", "baud" : 115200},
+    {"bms" : "Sinowealth"},
+    {"bms" : "Lifepower"},
+    {"bms" : "Renogy", "address": b"\x30"},
+    {"bms" : "Renogy", "address": b"\xF7"},
+#    {"bms" : "Revov"},
+    {"bms" : "Ecs", "baud" : 19200},
+#    {"bms" : "MNB"},
+]
+
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
 DRIVER_SUBVERSION = '~1' 
@@ -54,6 +71,10 @@ DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT/2
 CVCM_ENABLE = False
 # Simulate Midpoint graph (True/False). 
 MIDPOINT_ENABLE = False
+
+#soc low levels
+SOC_LOW_WARNING = 20
+SOC_LOW_ALARM = 10
 
 # Daly settings
 # Battery capacity (amps) if the BMS does not support reading it 
