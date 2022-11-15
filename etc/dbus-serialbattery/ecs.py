@@ -74,7 +74,7 @@ class Ecs(Battery):
         # Return True if success, False for failure
         
         # Uncomment if BMS does not supply capacity
-        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         self.cell_count = LIPRO_CELL_COUNT
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
@@ -98,7 +98,7 @@ class Ecs(Battery):
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
             
             self.max_battery_discharge_current = abs(mbdev.read_register(30, 0, 3, True))
-            self.max_battery_current = mbdev.read_register(31, 0, 3, True)
+            self.max_battery_charge_current = mbdev.read_register(31, 0, 3, True)
             self.capacity = mbdev.read_long(46, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP)/1000
             self.production = mbdev.read_long(2, 3, False, minimalmodbus.BYTEORDER_LITTLE_SWAP)
 

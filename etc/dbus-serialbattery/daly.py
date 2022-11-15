@@ -50,7 +50,7 @@ class Daly(Battery):
 
     def get_settings(self):
         self.capacity = BATTERY_CAPACITY
-        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
@@ -99,7 +99,7 @@ class Daly(Battery):
     def read_soc_data(self, ser):
         # Ensure data received is valid
         crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
-        crntMaxValid = (MAX_BATTERY_CURRENT * 1.3)
+        crntMaxValid = (MAX_BATTERY_CHARGE_CURRENT * 1.3)
         triesValid = 2
         while triesValid > 0:
             soc_data = self.read_serial_data_daly(ser, self.command_soc)
