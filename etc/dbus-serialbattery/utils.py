@@ -29,7 +29,7 @@ battery_types = [
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = 'beta1_WFech'
+DRIVER_SUBVERSION = 'beta2_WFech'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
@@ -39,29 +39,41 @@ LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending o
 
 ######### WaldemarFech MODE #########
 # Description:
-# Maximal charge / discharge current will be increased / decreased depending on min- and max-cell-voltages
+# Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages and temperature
 # Example: 18cells * 3.55V/cell = 63.9V max charge voltage. 18 * 2.7V = 48,6V min discharge voltage
 #          ... but the (dis)charge current will be (in-/)decreased, if even ONE SINGLE BATTERY CELL reaches the limits
+#          Also the temperature limit will be monitored to control the currents. If there are two temperature senors,
+#          then the worst case will be calculated and the more secure lower current will be set. 
 if LIMITATION_MODE == "WaldemarFech":
-    # Charge current control management enable (True/False).
-    CCCM_ENABLE = True
-    # Discharge current control management enable (True/False).
-    DCCM_ENABLE = True
+    # Charge current control management referring to cell-voltage enable (True/False).
+    CCCM_CV_ENABLE = True
+    # Discharge current control management referring to cell-voltage enable (True/False).
+    DCCM_CV_ENABLE = True
+    # Charge current control management referring to temperature enable (True/False).
+    CCCM_T_ENABLE = True
+    # Charge current control management referring to temperature enable (True/False).
+    DCCM_T_ENABLE = True
 
-    # Set Steps to reduce charging current. The current will be changed linear between those steps
-    CELL_VOLTAGES_WHILE_CHARGING    = [3.55, 3.50, 3.45, 3.30]  # first value must be the highest
-    MAX_CHARGE_CURRENT              = [   0,    2,  100,  200]
+    # Set Steps to reduce battery current. The current will be changed linear between those steps
+    CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.30]     # first value must be the highest
+    MAX_CHARGE_CURRENT_CV                = [   0,    2,  100,  200]
 
-    CELL_VOLTAGES_WHILE_DISCHARGING = [2.70, 2.80, 2.90, 3.10]  # first value must be the lowest
-    MAX_DISCHARGE_CURRENT           = [   0,    5,  100,  200]
+    CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]     # first value must be the lowest
+    MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  100,  200]
+
+    TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]    # first value must be the highest
+    MAX_CHARGE_CURRENT_T                 = [ 0, 28, 200, 200, 28, 0]
+
+    TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]  # first value must be the highest
+    MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 200, 200, 28,   0]
 
     ### better don't change the following lines, when you don't know what you're doing
     # Cell min/max voltages - used with the cell count to get the min/max battery voltage
     MIN_CELL_VOLTAGE = CELL_VOLTAGES_WHILE_DISCHARGING[0]   # to calculate absolute minimum battery voltage
     MAX_CELL_VOLTAGE = CELL_VOLTAGES_WHILE_CHARGING[0]      # to calculate absolute maximum battery voltage
     # the following lines are for old-code compatibility - just let them unchanged
-    MAX_BATTERY_CHARGE_CURRENT = MAX_CHARGE_CURRENT[0]
-    MAX_BATTERY_DISCHARGE_CURRENT = MAX_DISCHARGE_CURRENT[0]
+    MAX_BATTERY_CHARGE_CURRENT = max(MAX_CHARGE_CURRENT_CV)
+    MAX_BATTERY_DISCHARGE_CURRENT = max(MAX_DISCHARGE_CURRENT_CV)
 
 
 
