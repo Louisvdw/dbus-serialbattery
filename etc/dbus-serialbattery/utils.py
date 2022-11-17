@@ -43,7 +43,7 @@ LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending o
 # Example: 18cells * 3.55V/cell = 63.9V max charge voltage. 18 * 2.7V = 48,6V min discharge voltage
 #          ... but the (dis)charge current will be (in-/)decreased, if even ONE SINGLE BATTERY CELL reaches the limits
 #          Also the temperature limit will be monitored to control the currents. If there are two temperature senors,
-#          then the worst case will be calculated and the more secure lower current will be set. 
+#          then the worst case will be calculated and the more secure lower current will be set.
 if LIMITATION_MODE == "WaldemarFech":
     # Charge current control management referring to cell-voltage enable (True/False).
     CCCM_CV_ENABLE = True

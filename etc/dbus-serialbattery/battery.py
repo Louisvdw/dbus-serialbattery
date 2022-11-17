@@ -146,7 +146,7 @@ class Battery(object):
         else:
             currentLimit_T = self.max_battery_charge_current
 
-        self.control_charge_current = min(currentLimit_CV, currentLimit_T) # fehler in TEMP CALC
+        self.control_charge_current = min(currentLimit_CV, currentLimit_T)
 
         if self.control_charge_current == 0:
             self.control_allow_charge = False
