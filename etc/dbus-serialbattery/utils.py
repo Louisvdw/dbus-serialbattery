@@ -55,16 +55,16 @@ if LIMITATION_MODE == "WaldemarFech":
 
     # Set Steps to reduce battery current. The current will be changed linear between those steps
     CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.30]     # first value must be the highest
-    MAX_CHARGE_CURRENT_CV                = [   0,    2,  100,  200]
+    MAX_CHARGE_CURRENT_CV                = [   0,    2,  30,  60]
 
     CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]     # first value must be the lowest
-    MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  100,  200]
+    MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  30,  60]
 
     TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]    # first value must be the highest
-    MAX_CHARGE_CURRENT_T                 = [ 0, 28, 200, 200, 28, 0]
+    MAX_CHARGE_CURRENT_T                 = [ 0, 28, 60, 60, 28, 0]
 
     TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]  # first value must be the highest
-    MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 200, 200, 28,   0]
+    MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 60, 60, 28,   0]
 
     ### better don't change the following lines, when you don't know what you're doing
     # Cell min/max voltages - used with the cell count to get the min/max battery voltage
