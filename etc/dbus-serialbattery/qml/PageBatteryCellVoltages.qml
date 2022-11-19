@@ -96,61 +96,67 @@ MbPage {
 		}
 		MbItemRow {
 			description: qsTr("Cells (1/2/3/4)")
+			height: 22
 			values: [
-				MbTextBlock { item: volt1; width: 70; height: 25; color: c1 },
-				MbTextBlock { item: volt2; width: 70; height: 25; color: c2 },
-				MbTextBlock { item: volt3; width: 70; height: 25; color: c3 },
-				MbTextBlock { item: volt4; width: 70; height: 25; color: c4 }
+				MbTextBlock { item: volt1; width: 70; height: 20; color: c1 },
+				MbTextBlock { item: volt2; width: 70; height: 20; color: c2 },
+				MbTextBlock { item: volt3; width: 70; height: 20; color: c3 },
+				MbTextBlock { item: volt4; width: 70; height: 20; color: c4 }
 			]
 		}
 		MbItemRow {
 			description: qsTr("Cells (5/6/7/8)")
+			height: 22
 			show: volt5.valid
 			values: [
-				MbTextBlock { item: volt5; width: 70; height: 25; color: c5 },
-				MbTextBlock { item: volt6; width: 70; height: 25; color: c6 },
-				MbTextBlock { item: volt7; width: 70; height: 25; color: c7 },
-				MbTextBlock { item: volt8; width: 70; height: 25; color: c8 }
+				MbTextBlock { item: volt5; width: 70; height: 20; color: c5 },
+				MbTextBlock { item: volt6; width: 70; height: 20; color: c6 },
+				MbTextBlock { item: volt7; width: 70; height: 20; color: c7 },
+				MbTextBlock { item: volt8; width: 70; height: 20; color: c8 }
 			]
 		}
 		MbItemRow {
 			description: qsTr("Cells (9/10/11/12)")
+			height: 22
 			show: volt9.valid
 			values: [
-				MbTextBlock { item: volt9; width: 70; height: 25; color: c9 },
-				MbTextBlock { item: volt10; width: 70; height: 25; color: c10 },
-				MbTextBlock { item: volt11; width: 70; height: 25; color: c11 },
-				MbTextBlock { item: volt12; width: 70; height: 25; color: c12 }
+				MbTextBlock { item: volt9; width: 70; height: 20; color: c9 },
+				MbTextBlock { item: volt10; width: 70; height: 20; color: c10 },
+				MbTextBlock { item: volt11; width: 70; height: 20; color: c11 },
+				MbTextBlock { item: volt12; width: 70; height: 20; color: c12 }
 			]
 		}
 		MbItemRow {
 			description: qsTr("Cells (13/14/15/16)")
+			height: 22
 			show: volt13.valid
 			values: [
-				MbTextBlock { item: volt13; width: 70; height: 25; color: c13 },
-				MbTextBlock { item: volt14; width: 70; height: 25; color: c14 },
-				MbTextBlock { item: volt15; width: 70; height: 25; color: c15 },
-				MbTextBlock { item: volt16; width: 70; height: 25; color: c16 }				
+				MbTextBlock { item: volt13; width: 70; height: 20; color: c13 },
+				MbTextBlock { item: volt14; width: 70; height: 20; color: c14 },
+				MbTextBlock { item: volt15; width: 70; height: 20; color: c15 },
+				MbTextBlock { item: volt16; width: 70; height: 20; color: c16 }				
 			]
 		}
 		MbItemRow {
 			description: qsTr("Cells (17/18/19/20)")
+			height: 22
 			show: volt17.valid
 			values: [
-				MbTextBlock { item: volt17; width: 70; height: 25; color: c13 },
-				MbTextBlock { item: volt18; width: 70; height: 25; color: c14 },
-				MbTextBlock { item: volt19; width: 70; height: 25; color: c15 },
-				MbTextBlock { item: volt20; width: 70; height: 25; color: c16 }
+				MbTextBlock { item: volt17; width: 70; height: 20; color: c13 },
+				MbTextBlock { item: volt18; width: 70; height: 20; color: c14 },
+				MbTextBlock { item: volt19; width: 70; height: 20; color: c15 },
+				MbTextBlock { item: volt20; width: 70; height: 20; color: c16 }
 			]
 		}
 		MbItemRow {
 			description: qsTr("Cells (21/22/23/24)")
+			height: 22
 			show: volt21.valid
 			values: [
-				MbTextBlock { item: volt21; width: 70; height: 25; color: c13 },
-				MbTextBlock { item: volt22; width: 70; height: 25; color: c14 },
-				MbTextBlock { item: volt23; width: 70; height: 25; color: c15 },
-				MbTextBlock { item: volt24; width: 70; height: 25; color: c16 }
+				MbTextBlock { item: volt21; width: 70; height: 20; color: c13 },
+				MbTextBlock { item: volt22; width: 70; height: 20; color: c14 },
+				MbTextBlock { item: volt23; width: 70; height: 20; color: c15 },
+				MbTextBlock { item: volt24; width: 70; height: 20; color: c16 }
 			]
 		}
 	}
