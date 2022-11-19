@@ -101,7 +101,7 @@ class DbusHelper:
         self._dbusservice.add_path('/FirmwareVersion', str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
-        self._dbusservice.add_path('/CustomName', None, writeable=True)
+        self._dbusservice.add_path('/CustomName', ' ', writeable=True)
 
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
