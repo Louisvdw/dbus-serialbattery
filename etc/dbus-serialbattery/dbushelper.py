@@ -98,7 +98,7 @@ class DbusHelper:
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
         self._dbusservice.add_path('/ProductName', 'SerialBattery(' + self.battery.type + ')')
-        self._dbusservice.add_path('/FirmwareVersion', self.battery.version if self.battery.version is not None else str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+        self._dbusservice.add_path('/FirmwareVersion', str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/CustomName', None, writeable=True)
