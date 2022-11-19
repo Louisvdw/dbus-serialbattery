@@ -68,7 +68,7 @@ class LltJbd(Battery):
         
     def get_settings(self):
         self.read_gen_data()
-        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
 

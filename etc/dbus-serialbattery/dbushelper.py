@@ -107,7 +107,7 @@ class DbusHelper:
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
         self._dbusservice.add_path('/Info/MaxChargeVoltage', self.battery.max_battery_voltage, writeable=True,
                                    gettextcallback=lambda p, v: "{:0.2f}V".format(v))
-        self._dbusservice.add_path('/Info/MaxChargeCurrent', self.battery.max_battery_current, writeable=True,
+        self._dbusservice.add_path('/Info/MaxChargeCurrent', self.battery.max_battery_charge_current, writeable=True,
                                    gettextcallback=lambda p, v: "{:0.2f}A".format(v))
         self._dbusservice.add_path('/Info/MaxDischargeCurrent', self.battery.max_battery_discharge_current,
                                    writeable=True, gettextcallback=lambda p, v: "{:0.2f}A".format(v))

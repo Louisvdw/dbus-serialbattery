@@ -43,7 +43,7 @@ class Sinowealth(Battery):
 
     def get_settings(self):
         # hardcoded parameters, to be requested from the BMS in the future
-        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         
         if self.cell_count is None:

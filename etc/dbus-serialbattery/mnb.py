@@ -66,7 +66,7 @@ class MNB(Battery):
         self.poll_interval = None
         self.type = self.BATTERYTYPE
         self.inst_capacity = None
-        self.max_battery_current = None
+        self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
         self.V_C_min = None
         self.V_C_max = None
@@ -101,7 +101,7 @@ class MNB(Battery):
         #*****************************************************************
         self.inst_capacity = 36*3.6 # Equivalent cell capacity Ah
         self.C_rating = 1      # Max current/Ah eg 1, 0.5 or 0.25
-        self.max_battery_current = self.inst_capacity*self.C_rating #MAX_BATTERY_CURRENT = Crating * Capacity
+        self.max_battery_charge_current = self.inst_capacity*self.C_rating #MAX_BATTERY_CHARGE_CURRENT = Crating * Capacity
         self.max_battery_discharge_current = self.inst_capacity*self.C_rating #MAX_BATTERY_DISCHARGE_CURRENT
         self.V_C_min = 2.55     # Min cell voltage permitted
         self.V_C_max = 3.65     # Max cell voltage permitted
@@ -149,10 +149,10 @@ class MNB(Battery):
                 b=1 
             if b <0:
                 b = 0
-            self.control_charge_current = self.max_battery_current *b
+            self.control_charge_current = self.max_battery_charge_current *b
         
         else:
-            self.control_charge_current = self.max_battery_current
+            self.control_charge_current = self.max_battery_charge_current
 
         # Change depending on the cell_min_voltage values
         if self.cell_min_voltage < self.V_C_min+0.05:
