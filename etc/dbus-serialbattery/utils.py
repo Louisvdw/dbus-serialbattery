@@ -33,8 +33,8 @@ zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
 # Choose the mode for voltage / current limitations
-#LIMITATION_MODE = "Classic"        # Classic Mode, limitations depending on State of Charge (SoC)
-LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending on min / max cell-voltage
+LIMITATION_MODE = "Classic"        # Classic Mode, limitations depending on State of Charge (SoC)
+# LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending on min / max cell-voltage
 
 ######### WaldemarFech MODE #########
 # Description:
