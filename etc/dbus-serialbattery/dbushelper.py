@@ -28,17 +28,17 @@ class DbusHelper:
         # bms_id = self.battery.production if self.battery.production is not None else \
         #     self.battery.port[self.battery.port.rfind('/') + 1:]
         bms_id = self.battery.port[self.battery.port.rfind('/') + 1:]
-        path = '/Settings/Devices/serialbattery_' + str(bms_id).replace(" ", "_")
+        path = '/Settings/Devices/serialbattery'
         default_instance = 'battery:1'
         settings = {
-            'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], 
+            'instance': [path + '_' + str(bms_id).replace(" ", "_")+ '/ClassAndVrmInstance', default_instance, 0, 0], 
             'CellVoltageMin': [path + '/CellVoltageMin', 2.8, 0.0, 5.0], 
             'CellVoltageMax': [path + '/CellVoltageMax', 3.45, 0.0, 5.0], 
             'CellVoltageFloat': [path + '/CellVoltageFloat', 3.35, 0.0, 5.0], 
             'VoltageMaxTime': [path + '/VoltageMaxTime', 900, 0, 0], 
             'VoltageResetSocLimit': [path + '/VoltageResetSocLimit', 90, 0, 100], 
-            'MaxChargeCurrent': [path + '/MaxCurrentCharge', 5.5, 0.0, 500], 
-            'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', 7.5, 0.0, 500], 
+            'MaxChargeCurrent': [path + '/MaxCurrentCharge', 5, 0.0, 500], 
+            'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', 7, 0.0, 500], 
             'AllowDynamicChargeCurrent': [path + '/AllowDynamicChargeCurrent', 1, 0, 1], 
             'AllowDynamicDischargeCurrent': [path + '/AllowDynamicDischargeCurrent', 1, 0, 1], 
             'AllowDynamicChargeVoltage': [path + '/AllowDynamicChargeVoltage', 0, 0, 1], 
@@ -101,7 +101,7 @@ class DbusHelper:
         self._dbusservice.add_path('/FirmwareVersion', str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
-        self._dbusservice.add_path('/CustomName', ' ', writeable=True)
+        self._dbusservice.add_path('/CustomName', 'SerialBattery(' + self.battery.type + ')', writeable=True)
 
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
