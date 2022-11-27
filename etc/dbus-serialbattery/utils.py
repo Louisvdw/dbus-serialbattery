@@ -29,7 +29,7 @@ battery_types = [
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = 'beta2_WFech'
+DRIVER_SUBVERSION = 'beta3_WFech'
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
@@ -53,19 +53,28 @@ if LIMITATION_MODE == "WaldemarFech":
     CCCM_T_ENABLE = True
     # Charge current control management referring to temperature enable (True/False).
     DCCM_T_ENABLE = True
+    # Charge voltage control management enable (True/False). Lower Charge-Voltage if Battery-Cell goes too high
+    CVCM_ENABLE = True
 
     # Set Steps to reduce battery current. The current will be changed linear between those steps
-    CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.30]     # first value must be the highest
+    # It's not important weather the max is left or right in the array, but it should be ascending or descending
+    CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.40]
     MAX_CHARGE_CURRENT_CV                = [   0,    2,  100,  200]
 
-    CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]     # first value must be the lowest
+    CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]
     MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  100,  200]
 
-    TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]    # first value must be the highest
+    TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]
     MAX_CHARGE_CURRENT_T                 = [ 0, 28, 200, 200, 28, 0]
 
-    TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]  # first value must be the highest
+    TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]
     MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 200, 200, 28,   0]
+
+    # if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
+    # if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
+    # there will be a sum of all penalties for each cell, which exceeds the limits
+    PENALTY_AT_CELL_VOLTAGE  = [3.55, 3.6]
+    PENALTY_BATTERY_VOLTAGE  = [0.01, 2.0]  # this voltage will be subtracted
 
     ### better don't change the following lines, when you don't know what you're doing
     # Cell min/max voltages - used with the cell count to get the min/max battery voltage
@@ -120,8 +129,9 @@ if LIMITATION_MODE == "Classic":
     DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT/4
     DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT/2
 
-# Charge voltage control management enable (True/False).
-CVCM_ENABLE = False
+    # Charge voltage control management enable (True/False).
+    CVCM_ENABLE = False
+
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = False
 
@@ -174,6 +184,31 @@ def mapRange(inValue, inMin, inMax, outMin, outMax):
 
 def mapRangeConstrain(inValue, inMin, inMax, outMin, outMax):
     return constrain(mapRange(inValue, inMin, inMax, outMin, outMax), outMin, outMax)
+
+def calcLinearRelationship(inValue, inArray, outArray):
+    if inArray[0] < inArray[-1]:    # change compare-direction in array
+        return calcLinearRelationship(inValue, inArray[::-1], outArray[::-1])
+    else:
+        upperIN  = inArray[0]
+        upperOUT = outArray[0]
+        lowerIN  = inArray[-1]  # last element in array
+        lowerOUT = outArray[-1]
+        outValue = 0
+
+        if inValue >= upperIN:
+            outValue = upperOUT
+        elif inValue <= lowerIN:
+            outValue = lowerOUT
+        else:  # else calculate linear current between the setpoints
+            for pos in range(1, len(inArray)):
+                upperIN  = inArray[pos - 1]  # begin with pos 0 as max value
+                upperOUT = outArray[pos - 1]
+                lowerIN  = inArray[pos]
+                lowerOUT = outArray[pos]
+                if upperIN >= inValue >= lowerIN:
+                    outValue = mapRangeConstrain(inValue, lowerIN, upperIN, lowerOUT, upperOUT)
+
+    return outValue
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
