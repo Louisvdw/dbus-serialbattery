@@ -103,6 +103,33 @@ class Battery(object):
             self.temp2 = min(max(value, -20), 100)
 
     def manage_charge_voltage(self):
+        if LIMITATION_MODE == "WaldemarFech":
+            return self.manage_charge_voltage_waldemar_fech()
+        elif LIMITATION_MODE == "Classic":
+            return self.manage_charge_voltage_classic()
+
+    def manage_charge_voltage_waldemar_fech(self):
+        if CVCM_ENABLE:
+            foundHighCellVoltage = False
+            currentBatteryVoltage = 0
+            penaltySum = 0
+            for i in range(self.cell_count):
+                cv = self.cells[i].voltage
+                if cv:
+                    currentBatteryVoltage += cv
+
+                    if cv >= PENALTY_AT_CELL_VOLTAGE[0]:
+                        foundHighCellVoltage = True
+                        penaltySum += calcLinearRelationship(cv, PENALTY_AT_CELL_VOLTAGE, PENALTY_BATTERY_VOLTAGE)
+
+            self.voltage = currentBatteryVoltage    # for testing
+            if foundHighCellVoltage:
+                self.control_voltage = currentBatteryVoltage - penaltySum
+            else:
+                self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
+            return penaltySum
+
+    def manage_charge_voltage_classic(self):
         voltageSum = 0
         if (CVCM_ENABLE):
             for i in range(self.cell_count):
@@ -172,110 +199,35 @@ class Battery(object):
         else:
             self.control_allow_discharge = True
 
-
     def calcMaxChargeCurrentReferringToCellVoltage(self):
-        currentMaxCellVoltage = self.get_max_cell_voltage()
-        currentLimit = self.max_battery_charge_current
-
-        try:
-            upperVoltageLimit = CELL_VOLTAGES_WHILE_CHARGING[0]
-            lowestCurrent = MAX_CHARGE_CURRENT_CV[0]
-            lowestVoltageLimit = CELL_VOLTAGES_WHILE_CHARGING[-1]  # last element in array
-            highestCurrent = MAX_CHARGE_CURRENT_CV[-1]
-            if currentMaxCellVoltage >= upperVoltageLimit:
-                currentLimit = lowestCurrent
-            elif currentMaxCellVoltage <= lowestVoltageLimit:
-                currentLimit = highestCurrent
-            else:  # else calculate linear current between the setpoints
-                for pos in range(1, len(CELL_VOLTAGES_WHILE_CHARGING)):
-                    upperV = CELL_VOLTAGES_WHILE_CHARGING[pos - 1]  # begin with pos 0 as max value
-                    upperA = MAX_CHARGE_CURRENT_CV[pos - 1]
-                    lowerV = CELL_VOLTAGES_WHILE_CHARGING[pos]
-                    lowerA = MAX_CHARGE_CURRENT_CV[pos]
-                    if upperV >= currentMaxCellVoltage >= lowerV:
-                        currentLimit = mapRangeConstrain(currentMaxCellVoltage, lowerV, upperV, lowerA, upperA)
-        finally:
-            return currentLimit
+        return calcLinearRelationship(self.get_max_cell_voltage(),
+                                      CELL_VOLTAGES_WHILE_CHARGING, MAX_CHARGE_CURRENT_CV)
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self):
-        currentMinCellVoltage = self.get_min_cell_voltage()
-        currentLimit = self.max_battery_charge_current
-
-        try:
-            lowestVoltageLimit = CELL_VOLTAGES_WHILE_DISCHARGING[0]
-            lowestCurrent = MAX_DISCHARGE_CURRENT_CV[0]
-            upperVoltageLimit = CELL_VOLTAGES_WHILE_DISCHARGING[-1]  # last element in array
-            highestCurrent = MAX_DISCHARGE_CURRENT_CV[-1]
-            if currentMinCellVoltage <= lowestVoltageLimit:
-                currentLimit = lowestCurrent
-            elif currentMinCellVoltage >= upperVoltageLimit:
-                currentLimit = highestCurrent
-            else:  # else calculate linear current between the setpoints
-                for pos in range(1, len(CELL_VOLTAGES_WHILE_DISCHARGING)):
-                    lowerV = CELL_VOLTAGES_WHILE_DISCHARGING[pos - 1]  # begin with pos 0 as max value
-                    lowerA = MAX_DISCHARGE_CURRENT_CV[pos - 1]
-                    upperV = CELL_VOLTAGES_WHILE_DISCHARGING[pos]
-                    upperA = MAX_DISCHARGE_CURRENT_CV[pos]
-                    if upperV >= currentMinCellVoltage >= lowerV:
-                        currentLimit = mapRangeConstrain(currentMinCellVoltage, lowerV, upperV, lowerA, upperA)
-        finally:
-            return currentLimit
+        return calcLinearRelationship(self.get_min_cell_voltage(),
+                                      CELL_VOLTAGES_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_CV)
 
     def calcMaxChargeCurrentReferringToTemperature(self):
-        currentLimit = self.max_battery_charge_current
-
         if self.get_max_temp() is None:
-            return currentLimit
+            return self.max_battery_charge_current
 
         temps = {0: self.get_max_temp(), 1: self.get_min_temp()}
 
         for key, currentMaxTemperature in temps.items():
-            highestTemperatureLimit = TEMPERATURE_LIMITS_WHILE_CHARGING[0]
-            highestTempCurrentLimit = MAX_CHARGE_CURRENT_T[0]
-            lowestTemperatureLimit  = TEMPERATURE_LIMITS_WHILE_CHARGING[-1]  # last element in array
-            lowestTempCurrentLimit  = MAX_CHARGE_CURRENT_T[-1]
-            if currentMaxTemperature >= highestTemperatureLimit:
-                currentLimit = highestTempCurrentLimit
-            elif currentMaxTemperature <= lowestTemperatureLimit:
-                currentLimit = lowestTempCurrentLimit
-            else:  # else calculate linear current between the setpoints
-                for pos in range(1, len(TEMPERATURE_LIMITS_WHILE_CHARGING)):
-                    upperT = TEMPERATURE_LIMITS_WHILE_CHARGING[pos - 1]  # begin with pos 0 as max value
-                    upperA = MAX_CHARGE_CURRENT_T[pos - 1]
-                    lowerT = TEMPERATURE_LIMITS_WHILE_CHARGING[pos]
-                    lowerA = MAX_CHARGE_CURRENT_T[pos]
-                    if upperT >= currentMaxTemperature >= lowerT:
-                        currentLimit = mapRangeConstrain(currentMaxTemperature, lowerT, upperT, lowerA, upperA)
-            temps[key] = currentLimit
+            temps[key] = calcLinearRelationship(currentMaxTemperature,
+                                                TEMPERATURE_LIMITS_WHILE_CHARGING, MAX_CHARGE_CURRENT_T)
 
         return min(temps[0], temps[1])
 
     def calcMaxDischargeCurrentReferringToTemperature(self):
-        currentLimit = self.max_battery_discharge_current
-
         if self.get_max_temp() is None:
-            return currentLimit
+            return self.max_battery_discharge_current
 
         temps = {0: self.get_max_temp(), 1: self.get_min_temp()}
 
         for key, currentMaxTemperature in temps.items():
-            highestTemperatureLimit = TEMPERATURE_LIMITS_WHILE_DISCHARGING[0]
-            highestTempCurrentLimit = MAX_DISCHARGE_CURRENT_T[0]
-            lowestTemperatureLimit  = TEMPERATURE_LIMITS_WHILE_DISCHARGING[-1]  # last element in array
-            lowestTempCurrentLimit  = MAX_DISCHARGE_CURRENT_T[-1]
-            if currentMaxTemperature >= highestTemperatureLimit:
-                currentLimit = highestTempCurrentLimit
-            elif currentMaxTemperature <= lowestTemperatureLimit:
-                currentLimit = lowestTempCurrentLimit
-            else:  # else calculate linear current between the setpoints
-                for pos in range(1, len(TEMPERATURE_LIMITS_WHILE_DISCHARGING)):
-                    upperT = TEMPERATURE_LIMITS_WHILE_DISCHARGING[pos - 1]  # begin with pos 0 as max value
-                    upperA = MAX_DISCHARGE_CURRENT_T[pos - 1]
-                    lowerT = TEMPERATURE_LIMITS_WHILE_DISCHARGING[pos]
-                    lowerA = MAX_DISCHARGE_CURRENT_T[pos]
-                    if upperT >= currentMaxTemperature >= lowerT:
-                        currentLimit = mapRangeConstrain(currentMaxTemperature, lowerT, upperT, lowerA, upperA)
-            temps[key] = currentLimit
+            temps[key] = calcLinearRelationship(currentMaxTemperature,
+                                                TEMPERATURE_LIMITS_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_T)
 
         return min(temps[0], temps[1])
 
