@@ -3,6 +3,7 @@ import logging
 import serial
 from time import sleep
 from struct import *
+import bisect
 
 # Logging
 logging.basicConfig()
@@ -33,102 +34,94 @@ zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
 # Choose the mode for voltage / current limitations
-LIMITATION_MODE = "Classic"        # Classic Mode, limitations depending on State of Charge (SoC)
-# LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending on min / max cell-voltage
+LIMITATION_MODE = "Step"        # Classic Mode, limitations on hard boundaries
+# LIMITATION_MODE = "Linear"    # New linear limitations by WaldemarFech for smoother values
 
-######### WaldemarFech MODE #########
+######### Cell Voltage limitation #########
 # Description:
-# Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages and temperature
+# Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages
 # Example: 18cells * 3.55V/cell = 63.9V max charge voltage. 18 * 2.7V = 48,6V min discharge voltage
 #          ... but the (dis)charge current will be (in-/)decreased, if even ONE SINGLE BATTERY CELL reaches the limits
-#          Also the temperature limit will be monitored to control the currents. If there are two temperature senors,
+
+# Charge current control management referring to cell-voltage enable (True/False).
+CCCM_CV_ENABLE = True
+# Discharge current control management referring to cell-voltage enable (True/False).
+DCCM_CV_ENABLE = True
+
+# Set Steps to reduce battery current. The current will be changed linear between those steps
+CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.30]
+MAX_CHARGE_CURRENT_CV                = [   0,    2,  30,  60]
+
+CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]
+MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  30,  60]
+
+######### Temperature limitation #########
+# Description:
+# Maximal charge / discharge current will be in-/decreased depending on temperature
+# Example: The temperature limit will be monitored to control the currents. If there are two temperature senors,
 #          then the worst case will be calculated and the more secure lower current will be set.
-if LIMITATION_MODE == "WaldemarFech":
-    # Charge current control management referring to cell-voltage enable (True/False).
-    CCCM_CV_ENABLE = True
-    # Discharge current control management referring to cell-voltage enable (True/False).
-    DCCM_CV_ENABLE = True
-    # Charge current control management referring to temperature enable (True/False).
-    CCCM_T_ENABLE = True
-    # Charge current control management referring to temperature enable (True/False).
-    DCCM_T_ENABLE = True
-    # Charge voltage control management enable (True/False). Lower Charge-Voltage if Battery-Cell goes too high
-    CVCM_ENABLE = True
+# Charge current control management referring to temperature enable (True/False).
+CCCM_T_ENABLE = True
+# Charge current control management referring to temperature enable (True/False).
+DCCM_T_ENABLE = True
 
-    # Set Steps to reduce battery current. The current will be changed linear between those steps
-    CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.30]
-    MAX_CHARGE_CURRENT_CV                = [   0,    2,  30,  60]
+# Set Steps to reduce battery current. The current will be changed linear between those steps
+TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]
+MAX_CHARGE_CURRENT_T                 = [ 0, 28, 60, 60, 28, 0]
 
-    CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]
-    MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  30,  60]
+TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]
+MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 60, 60, 28,   0]
 
-    TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]
-    MAX_CHARGE_CURRENT_T                 = [ 0, 28, 60, 60, 28, 0]
-
-    TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]
-    MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 60, 60, 28,   0]
-
-    # if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
-    # if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
-    # there will be a sum of all penalties for each cell, which exceeds the limits
-    PENALTY_AT_CELL_VOLTAGE  = [3.55, 3.6]
-    PENALTY_BATTERY_VOLTAGE  = [0.01, 2.0]  # this voltage will be subtracted
-
-    ### better don't change the following lines, when you don't know what you're doing
-    # Cell min/max voltages - used with the cell count to get the min/max battery voltage
-    MIN_CELL_VOLTAGE = CELL_VOLTAGES_WHILE_DISCHARGING[0]   # to calculate absolute minimum battery voltage
-    MAX_CELL_VOLTAGE = CELL_VOLTAGES_WHILE_CHARGING[0]      # to calculate absolute maximum battery voltage
-    # the following lines are for old-code compatibility - just let them unchanged
-    MAX_BATTERY_CHARGE_CURRENT = max(MAX_CHARGE_CURRENT_CV)
-    MAX_BATTERY_DISCHARGE_CURRENT = max(MAX_DISCHARGE_CURRENT_CV)
+# if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
+# if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
+# there will be a sum of all penalties for each cell, which exceeds the limits
+PENALTY_AT_CELL_VOLTAGE  = [3.55, 3.6]
+PENALTY_BATTERY_VOLTAGE  = [0.01, 2.0]  # this voltage will be subtracted
 
 
-
-
-######### CLASSIC MODE #########
+######### SOC limitation #########
 # Description:
 # Maximal charge / discharge current will be increased / decreased depending on State of Charge, see CC_SOC_LIMIT1 etc.
-# The State of Charge (SoC) will be calculated as the product of the cell-count and min/max-cell-voltages - these are the lower and upper voltage limits.
+# The State of Charge (SoC) charge / discharge current will be in-/decreased depending on SOC.
 # Example: 16cells * 3.45V/cell = 55,2V max charge voltage. 16*2.9V = 46,4V min discharge voltage
-if LIMITATION_MODE == "Classic":
-    # Cell min/max voltages - used with the cell count to get the min/max battery voltage
-    MIN_CELL_VOLTAGE = 2.9
-    MAX_CELL_VOLTAGE = 3.45
-    FLOAT_CELL_VOLTAGE = 3.35
-    MAX_VOLTAGE_TIME_SEC = 15*60
-    SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
+# Cell min/max voltages - used with the cell count to get the min/max battery voltage
+MIN_CELL_VOLTAGE = 2.9
+MAX_CELL_VOLTAGE = 3.45
+FLOAT_CELL_VOLTAGE = 3.35
+MAX_VOLTAGE_TIME_SEC = 15*60
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
 
-    # battery Current limits
-    MAX_BATTERY_CHARGE_CURRENT = 50.0
-    MAX_BATTERY_DISCHARGE_CURRENT = 60.0
+# battery Current limits
+MAX_BATTERY_CHARGE_CURRENT = 50.0
+MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
-    # Charge current control management enable (True/False).
-    CCCM_ENABLE = True
-    # Discharge current control management enable (True/False).
-    DCCM_ENABLE = True
+# Charge current control management enable (True/False).
+CCCM_ENABLE = True
+# Discharge current control management enable (True/False).
+DCCM_ENABLE = True
 
-    #charge current soc limits
-    CC_SOC_LIMIT1 = 98
-    CC_SOC_LIMIT2 = 95
-    CC_SOC_LIMIT3 = 91
+#charge current soc limits
+CC_SOC_LIMIT1 = 98
+CC_SOC_LIMIT2 = 95
+CC_SOC_LIMIT3 = 91
 
-    #charge current limits
-    CC_CURRENT_LIMIT1 = 5
-    CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT/4
-    CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT/2
+#charge current limits
+CC_CURRENT_LIMIT1 = 5
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT/4
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT/2
 
-    #discharge current soc limits
-    DC_SOC_LIMIT1 = 10
-    DC_SOC_LIMIT2 = 20
-    DC_SOC_LIMIT3 = 30
+#discharge current soc limits
+DC_SOC_LIMIT1 = 10
+DC_SOC_LIMIT2 = 20
+DC_SOC_LIMIT3 = 30
 
-    #discharge current limits
-    DC_CURRENT_LIMIT1 = 5
-    DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT/4
-    DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT/2
+#discharge current limits
+DC_CURRENT_LIMIT1 = 5
+DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT/4
+DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT/2
 
-    # Charge voltage control management enable (True/False).
-    CVCM_ENABLE = False
+# Charge voltage control management enable (True/False).
+CVCM_ENABLE = False
 
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = False
@@ -184,29 +177,38 @@ def mapRangeConstrain(inValue, inMin, inMax, outMin, outMax):
     return constrain(mapRange(inValue, inMin, inMax, outMin, outMax), outMin, outMax)
 
 def calcLinearRelationship(inValue, inArray, outArray):
-    if inArray[0] < inArray[-1]:    # change compare-direction in array
+    if inArray[0] > inArray[-1]:    # change compare-direction in array
         return calcLinearRelationship(inValue, inArray[::-1], outArray[::-1])
     else:
-        upperIN  = inArray[0]
-        upperOUT = outArray[0]
-        lowerIN  = inArray[-1]  # last element in array
-        lowerOUT = outArray[-1]
-        outValue = 0
+ 
+        # Handle out of bounds
+        if inValue <= inArray[0]:
+            return outArray[0]
+        if inValue >= inArray[-1]:
+            return outArray[-1]
+        
+        # else calculate linear current between the setpoints
+        idx = bisect.bisect(inArray, inValue)
+        upperIN  = inArray[idx - 1]  # begin with idx 0 as max value
+        upperOUT = outArray[idx - 1]
+        lowerIN  = inArray[idx]
+        lowerOUT = outArray[idx]            
+        return  mapRangeConstrain(inValue, lowerIN, upperIN, lowerOUT, upperOUT)
 
-        if inValue >= upperIN:
-            outValue = upperOUT
-        elif inValue <= lowerIN:
-            outValue = lowerOUT
-        else:  # else calculate linear current between the setpoints
-            for pos in range(1, len(inArray)):
-                upperIN  = inArray[pos - 1]  # begin with pos 0 as max value
-                upperOUT = outArray[pos - 1]
-                lowerIN  = inArray[pos]
-                lowerOUT = outArray[pos]
-                if upperIN >= inValue >= lowerIN:
-                    outValue = mapRangeConstrain(inValue, lowerIN, upperIN, lowerOUT, upperOUT)
-
-    return outValue
+def calcStepRelationship(inValue, inArray, outArray, returnLower):
+    if inArray[0] > inArray[-1]:    # change compare-direction in array
+        return calcStepRelationship(inValue, inArray[::-1], outArray[::-1], returnLower)
+    
+    # Handle out of bounds
+    if inValue <= inArray[0]:
+        return outArray[0]
+    if inValue >= inArray[-1]:
+        return outArray[-1]
+    
+    # else get index between the setpoints
+    idx = bisect.bisect(inArray, inValue)
+        
+    return outArray[idx] if returnLower else outArray[idx-1]
 
 def is_bit_set(tmp):
     return False if tmp == zero_char else True
