@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
 from utils import *
 import math
 from datetime import timedelta
@@ -115,7 +114,7 @@ class Battery(object):
             currentBatteryVoltage = 0
             penaltySum = 0
             for i in range(self.cell_count):
-                cv = self.cells[i].voltage
+                cv = self.get_cell_voltage(i)
                 if cv:
                     currentBatteryVoltage += cv
 
@@ -134,7 +133,7 @@ class Battery(object):
         voltageSum = 0
         if (CVCM_ENABLE):
             for i in range(self.cell_count):
-                voltage = self.cells[i].voltage
+                voltage = self.get_cell_voltage(i)
                 if voltage:
                     voltageSum+=voltage
 
@@ -201,12 +200,18 @@ class Battery(object):
             self.control_allow_discharge = True
 
     def calcMaxChargeCurrentReferringToCellVoltage(self):
-        return calcLinearRelationship(self.get_max_cell_voltage(),
+        try:
+            return calcLinearRelationship(self.get_max_cell_voltage(),
                                       CELL_VOLTAGES_WHILE_CHARGING, MAX_CHARGE_CURRENT_CV)
+        except:
+            return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self):
-        return calcLinearRelationship(self.get_min_cell_voltage(),
+        try:
+            return calcLinearRelationship(self.get_min_cell_voltage(),
                                       CELL_VOLTAGES_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_CV)
+        except:
+            return self.max_battery_charge_current
 
     def calcMaxChargeCurrentReferringToTemperature(self):
         if self.get_max_temp() is None:

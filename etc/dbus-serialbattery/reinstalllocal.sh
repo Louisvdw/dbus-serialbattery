@@ -36,5 +36,7 @@ if [ -d "$OLD" ]; then
   fi
 fi
 
-cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery
+cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery &>/dev/null
 cp -rf /data/etc/dbus-serialbattery/service/* /opt/victronenergy/service-templates/dbus-serialbattery
+
+sh /data/etc/dbus-serialbattery/installqml.sh

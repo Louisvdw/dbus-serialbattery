@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import serial
 from time import sleep
@@ -29,13 +28,13 @@ battery_types = [
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = 'beta3_WFech'
+DRIVER_SUBVERSION = '~3' 
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
 # Choose the mode for voltage / current limitations
-#LIMITATION_MODE = "Classic"        # Classic Mode, limitations depending on State of Charge (SoC)
-LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending on min / max cell-voltage
+LIMITATION_MODE = "Classic"        # Classic Mode, limitations depending on State of Charge (SoC)
+# LIMITATION_MODE = "WaldemarFech"    # WaldemarFech-Mode, limitations depending on min / max cell-voltage
 
 ######### WaldemarFech MODE #########
 # Description:
@@ -57,18 +56,17 @@ if LIMITATION_MODE == "WaldemarFech":
     CVCM_ENABLE = True
 
     # Set Steps to reduce battery current. The current will be changed linear between those steps
-    # It's not important weather the max is left or right in the array, but it should be ascending or descending
-    CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.40]
-    MAX_CHARGE_CURRENT_CV                = [   0,    2,  100,  200]
+    CELL_VOLTAGES_WHILE_CHARGING         = [3.55, 3.50, 3.45, 3.30]
+    MAX_CHARGE_CURRENT_CV                = [   0,    2,  30,  60]
 
     CELL_VOLTAGES_WHILE_DISCHARGING      = [2.70, 2.80, 2.90, 3.10]
-    MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  100,  200]
+    MAX_DISCHARGE_CURRENT_CV             = [   0,    5,  30,  60]
 
     TEMPERATURE_LIMITS_WHILE_CHARGING    = [55, 40,  35,   5,  2, 0]
-    MAX_CHARGE_CURRENT_T                 = [ 0, 28, 200, 200, 28, 0]
+    MAX_CHARGE_CURRENT_T                 = [ 0, 28, 60, 60, 28, 0]
 
     TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40,  35,   5,  0, -20]
-    MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 200, 200, 28,   0]
+    MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 60, 60, 28,   0]
 
     # if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
     # if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import os
 import platform
@@ -29,12 +28,41 @@ class DbusHelper:
         # bms_id = self.battery.production if self.battery.production is not None else \
         #     self.battery.port[self.battery.port.rfind('/') + 1:]
         bms_id = self.battery.port[self.battery.port.rfind('/') + 1:]
-        path = '/Settings/Devices/serialbattery_' + str(bms_id).replace(" ", "_")
+        path = '/Settings/Devices/serialbattery'
         default_instance = 'battery:1'
-        settings = {'instance': [path + '/ClassAndVrmInstance', default_instance, 0, 0], }
+        settings = {
+            'instance': [path + '_' + str(bms_id).replace(" ", "_")+ '/ClassAndVrmInstance', default_instance, 0, 0], 
+            'CellVoltageMin': [path + '/CellVoltageMin', 2.8, 0.0, 5.0], 
+            'CellVoltageMax': [path + '/CellVoltageMax', 3.45, 0.0, 5.0], 
+            'CellVoltageFloat': [path + '/CellVoltageFloat', 3.35, 0.0, 5.0], 
+            'VoltageMaxTime': [path + '/VoltageMaxTime', 900, 0, 0], 
+            'VoltageResetSocLimit': [path + '/VoltageResetSocLimit', 90, 0, 100], 
+            'MaxChargeCurrent': [path + '/MaxCurrentCharge', 5, 0.0, 500], 
+            'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', 7, 0.0, 500], 
+            'AllowDynamicChargeCurrent': [path + '/AllowDynamicChargeCurrent', 1, 0, 1], 
+            'AllowDynamicDischargeCurrent': [path + '/AllowDynamicDischargeCurrent', 1, 0, 1], 
+            'AllowDynamicChargeVoltage': [path + '/AllowDynamicChargeVoltage', 0, 0, 1], 
+            'SocLowWarning': [path + '/SocLowWarning', 20, 0, 100], 
+            'SocLowAlarm': [path + '/SocLowAlarm', 10, 0, 100], 
+            'Capacity': [path + '/Capacity', '', 0, 500], 
+            'EnableInvertedCurrent': [path + '/EnableInvertedCurrent', 0, 0, 1], 
+            
+            'CCMSocLimitCharge1': [path + '/CCMSocLimitCharge1', 98, 0, 100],
+            'CCMSocLimitCharge2': [path + '/CCMSocLimitCharge2', 95, 0, 100],
+            'CCMSocLimitCharge3': [path + '/CCMSocLimitCharge3', 91, 0, 100], 
+            'CCMSocLimitDischarge1': [path + '/CCMSocLimitDischarge1', 10, 0, 100],
+            'CCMSocLimitDischarge2': [path + '/CCMSocLimitDischarge2', 20, 0, 100],
+            'CCMSocLimitDischarge3': [path + '/CCMSocLimitDischarge3', 30, 0, 100],
+            'CCMCurrentLimitCharge1': [path + '/CCMCurrentLimitCharge1', 5, 0, 100],
+            'CCMCurrentLimitCharge2': [path + '/CCMCurrentLimitCharge2', '', 0, 100],
+            'CCMCurrentLimitCharge3': [path + '/CCMCurrentLimitCharge3', '', 0, 100], 
+            'CCMCurrentLimitDischarge1': [path + '/CCMCurrentLimitDischarge1', 5, 0, 100],
+            'CCMCurrentLimitDischarge2': [path + '/CCMCurrentLimitDischarge2', '', 0, 100],
+            'CCMCurrentLimitDischarge3': [path + '/CCMCurrentLimitDischarge3', '', 0, 100], 
+            }
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
-        self.battery.role, self.battery.instance = self.get_role_instance()
+        self.battery.role, self.instance = self.get_role_instance()
 
     def get_role_instance(self):
         val = self.settings['instance'].split(':')
@@ -46,6 +74,8 @@ class DbusHelper:
             self.battery.role, self.instance = self.get_role_instance()
             logger.info("Changed DeviceInstance = %d", self.instance)
             return
+        logger.info("Changed DeviceInstance = %d", float(self.settings['CellVoltageMin']))
+        #self._dbusservice['/History/ChargeCycles']
 
     def setup_vedbus(self):
         # Set up dbus service and device instance
@@ -67,11 +97,11 @@ class DbusHelper:
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', self.instance)
         self._dbusservice.add_path('/ProductId', 0x0)
-        self._dbusservice.add_path('/ProductName', 'SerialBattery(' + self.battery.type + ') v' +
-                                   str(DRIVER_VERSION) + DRIVER_SUBVERSION)
-        self._dbusservice.add_path('/FirmwareVersion', self.battery.version)
+        self._dbusservice.add_path('/ProductName', 'SerialBattery(' + self.battery.type + ')')
+        self._dbusservice.add_path('/FirmwareVersion', str(DRIVER_VERSION) + DRIVER_SUBVERSION)
         self._dbusservice.add_path('/HardwareVersion', self.battery.hardware_version)
         self._dbusservice.add_path('/Connected', 1)
+        self._dbusservice.add_path('/CustomName', 'SerialBattery(' + self.battery.type + ')', writeable=True)
 
         # Create static battery info
         self._dbusservice.add_path('/Info/BatteryLowVoltage', self.battery.min_battery_voltage, writeable=True)
@@ -169,6 +199,9 @@ class DbusHelper:
                 # If the battery is offline for more than 10 polls (polled every second for most batteries)
                 if error_count >= 10: 
                     self.battery.online = False
+                # Has it completely failed
+                if error_count >= 60: 
+                    loop.quit()
 
             # This is to mannage CCL\DCL
             self.battery.manage_charge_current()
