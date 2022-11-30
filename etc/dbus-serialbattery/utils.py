@@ -96,9 +96,9 @@ MAX_BATTERY_CHARGE_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
 # Charge current control management enable (True/False).
-CCCM_ENABLE = True
+CCCM_SOC_ENABLE = True
 # Discharge current control management enable (True/False).
-DCCM_ENABLE = True
+DCCM_SOC_ENABLE = True
 
 #charge current soc limits
 CC_SOC_LIMIT1 = 98
