@@ -173,6 +173,9 @@ class Sinowealth(Battery):
             return False
         cell_cnt_mask = int(7)
         self.cell_count = (pack_config_data[1] & cell_cnt_mask) + 3
+        if self.cell_count < 1 or self.cell_count > 32:
+            logger.error(">>> ERROR: No valid cell count returnd: %u", self.cell_count)    
+            return False
         logger.info(">>> INFO: Number of cells: %u", self.cell_count)
         temp_sens_mask = int(~(1 << 6))
         self.temp_sensors = 1 if (pack_config_data[1] & temp_sens_mask) else 2 # one means two

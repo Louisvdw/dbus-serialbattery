@@ -18,7 +18,7 @@ battery_types = [
     {"bms" : "Daly", "address" : b"\x40"},
     {"bms" : "Daly", "address" : b"\x80"},
     {"bms" : "Jkbms", "baud" : 115200},
-    {"bms" : "Sinowealth"},
+#    {"bms" : "Sinowealth"},
     {"bms" : "Lifepower"},
     {"bms" : "Renogy", "address": b"\x30"},
     {"bms" : "Renogy", "address": b"\xF7"},
@@ -29,7 +29,7 @@ battery_types = [
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = '~3' 
+DRIVER_SUBVERSION = '' 
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
