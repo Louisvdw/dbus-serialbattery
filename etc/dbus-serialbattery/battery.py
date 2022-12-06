@@ -246,7 +246,7 @@ class Battery(object):
             MAX_CHARGE_CURRENT_SOC = [CC_CURRENT_LIMIT1,CC_CURRENT_LIMIT2,CC_CURRENT_LIMIT3,MAX_BATTERY_CHARGE_CURRENT]
             if LIMITATION_MODE == "Linear":
                 return calcLinearRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC)
-            return calcStepRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, False)
+            return calcStepRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True)
         except:
             return self.max_battery_charge_current
 
