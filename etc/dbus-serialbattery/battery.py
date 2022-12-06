@@ -174,7 +174,7 @@ class Battery(object):
         # Manage Discharge Current Limitations
         discharge_limits = [self.max_battery_discharge_current]
         if DCCM_SOC_ENABLE:
-            discharge_limits.append(self.calcMaxChargeCurrentReferringToSoc())
+            discharge_limits.append(self.calcMaxDischargeCurrentReferringToSoc())
         if DCCM_CV_ENABLE:
             discharge_limits.append(self.calcMaxDischargeCurrentReferringToCellVoltage())
         if DCCM_T_ENABLE:
