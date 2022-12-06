@@ -436,7 +436,9 @@ class Battery(object):
         cell_counter = len(self.cells)
         logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
         logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
-        logger.info(f'> CCL Charge {self.max_battery_charge_current}A | DCL Discharge {self.max_battery_discharge_current}A')
+        logger.info(f'> CCCM SOC {CCCM_SOC_ENABLE} | DCCM SOC {DCCM_SOC_ENABLE}')
+        logger.info(f'> CCCM CV {CCCM_CV_ENABLE} | DCCM CV {DCCM_CV_ENABLE}')
+        logger.info(f'> CCCM T {CCCM_T_ENABLE} | DCCM T {DCCM_T_ENABLE}')
         logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
 
         return
