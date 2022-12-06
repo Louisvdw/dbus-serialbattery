@@ -103,10 +103,9 @@ class Battery(object):
             self.temp2 = min(max(value, -20), 100)
 
     def manage_charge_voltage(self):
-        if LIMITATION_MODE == "Linear":
+        if LINEAR_LIMITATION_ENABLE:
             return self.manage_charge_voltage_linear()
-        elif LIMITATION_MODE == "Step":
-            return self.manage_charge_voltage_step()
+        return self.manage_charge_voltage_step()
 
     def manage_charge_voltage_linear(self):
         if CVCM_ENABLE:
@@ -174,7 +173,7 @@ class Battery(object):
         # Manage Discharge Current Limitations
         discharge_limits = [self.max_battery_discharge_current]
         if DCCM_SOC_ENABLE:
-            discharge_limits.append(self.calcMaxChargeCurrentReferringToSoc())
+            discharge_limits.append(self.calcMaxDischargeCurrentReferringToSoc())
         if DCCM_CV_ENABLE:
             discharge_limits.append(self.calcMaxDischargeCurrentReferringToCellVoltage())
         if DCCM_T_ENABLE:
@@ -189,7 +188,7 @@ class Battery(object):
 
     def calcMaxChargeCurrentReferringToCellVoltage(self):
         try:
-            if LIMITATION_MODE == "Linear":
+            if LINEAR_LIMITATION_ENABLE:
                 return calcLinearRelationship(self.get_max_cell_voltage(),
                                       CELL_VOLTAGES_WHILE_CHARGING, MAX_CHARGE_CURRENT_CV)
             return calcStepRelationship(self.get_max_cell_voltage(),
@@ -199,7 +198,7 @@ class Battery(object):
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self):
         try:
-            if LIMITATION_MODE == "Linear":
+            if LINEAR_LIMITATION_ENABLE:
                 return calcLinearRelationship(self.get_min_cell_voltage(),
                                       CELL_VOLTAGES_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_CV)
             return calcStepRelationship(self.get_min_cell_voltage(),
@@ -214,7 +213,7 @@ class Battery(object):
         temps = {0: self.get_max_temp(), 1: self.get_min_temp()}
 
         for key, currentMaxTemperature in temps.items():
-            if LIMITATION_MODE == "Linear":
+            if LINEAR_LIMITATION_ENABLE:
                 temps[key] = calcLinearRelationship(currentMaxTemperature,
                                                 TEMPERATURE_LIMITS_WHILE_CHARGING, MAX_CHARGE_CURRENT_T)
             else:                                    
@@ -230,7 +229,7 @@ class Battery(object):
         temps = {0: self.get_max_temp(), 1: self.get_min_temp()}
 
         for key, currentMaxTemperature in temps.items():
-            if LIMITATION_MODE == "Linear":
+            if LINEAR_LIMITATION_ENABLE:
                 temps[key] = calcLinearRelationship(currentMaxTemperature,
                                                 TEMPERATURE_LIMITS_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_T)
             else:                                    
@@ -244,9 +243,9 @@ class Battery(object):
             # Create value list. Will more this to the settings object
             SOC_WHILE_CHARGING = [100, CC_SOC_LIMIT1, CC_SOC_LIMIT2, CC_SOC_LIMIT3]
             MAX_CHARGE_CURRENT_SOC = [CC_CURRENT_LIMIT1,CC_CURRENT_LIMIT2,CC_CURRENT_LIMIT3,MAX_BATTERY_CHARGE_CURRENT]
-            if LIMITATION_MODE == "Linear":
+            if LINEAR_LIMITATION_ENABLE:
                 return calcLinearRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC)
-            return calcStepRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, False)
+            return calcStepRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True)
         except:
             return self.max_battery_charge_current
 
@@ -255,7 +254,7 @@ class Battery(object):
             # Create value list. Will more this to the settings object
             SOC_WHILE_DISCHARGING = [DC_SOC_LIMIT3, DC_SOC_LIMIT2, DC_SOC_LIMIT1]
             MAX_DISCHARGE_CURRENT_SOC = [MAX_BATTERY_DISCHARGE_CURRENT,DC_CURRENT_LIMIT3,DC_CURRENT_LIMIT2,DC_CURRENT_LIMIT1]
-            if LIMITATION_MODE == "Linear":
+            if LINEAR_LIMITATION_ENABLE:
                 return calcLinearRelationship(self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC)
             return calcStepRelationship(self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True)
         except:
@@ -437,7 +436,9 @@ class Battery(object):
         cell_counter = len(self.cells)
         logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
         logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
-        logger.info(f'> CCL Charge {self.max_battery_charge_current}A | DCL Discharge {self.max_battery_discharge_current}A')
+        logger.info(f'> CCCM SOC {CCCM_SOC_ENABLE} | DCCM SOC {DCCM_SOC_ENABLE}')
+        logger.info(f'> CCCM CV {CCCM_CV_ENABLE} | DCCM CV {DCCM_CV_ENABLE}')
+        logger.info(f'> CCCM T {CCCM_T_ENABLE} | DCCM T {DCCM_T_ENABLE}')
         logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
 
         return

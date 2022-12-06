@@ -29,13 +29,14 @@ battery_types = [
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = '' 
+DRIVER_SUBVERSION = '1' 
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
-# Choose the mode for voltage / current limitations
-LIMITATION_MODE = "Step"        # Classic Mode, limitations on hard boundaries
-# LIMITATION_MODE = "Linear"    # New linear limitations by WaldemarFech for smoother values
+# Choose the mode for voltage / current limitations (True / False)
+# False is a Step mode. This is the default with limitations on hard boundary steps
+# True "Linear"    # New linear limitations by WaldemarFech for smoother values
+LINEAR_LIMITATION_ENABLE = False
 
 ######### Cell Voltage limitation #########
 # Description:
