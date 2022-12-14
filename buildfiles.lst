@@ -9,6 +9,7 @@ etc/dbus-serialbattery/disabledriver.sh
 etc/dbus-serialbattery/installlocal.sh
 etc/dbus-serialbattery/installrelease.sh
 etc/dbus-serialbattery/reinstalllocal.sh
+etc/dbus-serialbattery/restoregui.sh
 etc/dbus-serialbattery/installqml.sh
 etc/dbus-serialbattery/qml/PageBattery.qml
 etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml
