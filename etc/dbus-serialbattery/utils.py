@@ -22,7 +22,6 @@ battery_types = [
     {"bms" : "Lifepower"},
     {"bms" : "Renogy", "address": b"\x30"},
     {"bms" : "Renogy", "address": b"\xF7"},
-#    {"bms" : "Revov"},
     {"bms" : "Ecs", "baud" : 19200},
 #    {"bms" : "MNB"},
 ]
