@@ -104,12 +104,13 @@ class Battery(object):
 
     def manage_charge_voltage(self):
         if LINEAR_LIMITATION_ENABLE:
-            return self.manage_charge_voltage_linear()
-        return self.manage_charge_voltage_step()
+            self.manage_charge_voltage_linear()
+        else:
+            self.manage_charge_voltage_step()
 
     def manage_charge_voltage_linear(self):
+        foundHighCellVoltage = False
         if CVCM_ENABLE:
-            foundHighCellVoltage = False
             currentBatteryVoltage = 0
             penaltySum = 0
             for i in range(self.cell_count):
@@ -120,13 +121,12 @@ class Battery(object):
                     if cv >= PENALTY_AT_CELL_VOLTAGE[0]:
                         foundHighCellVoltage = True
                         penaltySum += calcLinearRelationship(cv, PENALTY_AT_CELL_VOLTAGE, PENALTY_BATTERY_VOLTAGE)
-
             self.voltage = currentBatteryVoltage    # for testing
-            if foundHighCellVoltage:
-                self.control_voltage = currentBatteryVoltage - penaltySum
-            else:
-                self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
-            return penaltySum
+        
+        if foundHighCellVoltage:
+            self.control_voltage = currentBatteryVoltage - penaltySum
+        else:
+            self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_step(self):
         voltageSum = 0
