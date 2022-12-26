@@ -20,6 +20,7 @@ from lltjbd import LltJbd
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
+from jkbms_ble import Jkbms_Ble
 from sinowealth import Sinowealth
 from renogy import Renogy
 from revov import Revov
