@@ -61,14 +61,14 @@ class Jkbms_Ble(Battery):
         st=self.jk.get_status()["settings"]
         self.cell_count=st["cell_count"]
         self.max_battery_charge_current = st["max_charge_current"]
-        self.max_battery_discharge_current = status["max_discharge_current"]
+        self.max_battery_discharge_current = st["max_discharge_current"]
         self.max_battery_voltage = st["cell_ovp"] * self.cell_count
         self.min_battery_voltage = st["cell_uvp"] * self.cell_count
 
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
 
-        self.hardware_version = "JKBMS "+ jk.get_status()["device_info"]["hw_rev"]+" " + str(self.cell_count) + " cells" 
+        self.hardware_version = "JKBMS "+ self.jk.get_status()["device_info"]["hw_rev"]+" " + str(self.cell_count) + " cells" 
         logger.info("BAT: "+self.hardware_version)
         return True
 
@@ -80,7 +80,7 @@ class Jkbms_Ble(Battery):
         #result = self.read_soc_data()
         #TODO: check for errors
         st=self.jk.get_status()
-        if status == None:
+        if st == None:
             return False
         if time.time() - st["last_update"] > 30:
             #if data not updated for more than 30s, sth is wrong, then fail
@@ -92,11 +92,11 @@ class Jkbms_Ble(Battery):
         self.to_temp(1, st["cell_info"]["temperature_sensor_1"])
         self.to_temp(2, st["cell_info"]["temperature_sensor_2"])
         self.current=st["cell_info"]["current"]
-        self.voltage=st["cell_info"]["voltage"]
+        self.voltage=st["cell_info"]["total_voltage"]
 
         self.soc=st["cell_info"]["battery_soc"]
         self.cycles=st["cell_info"]["cycle_count"]
-        self.capacity=st["cell_info"]["nominal_capacity"]
+        self.capacity=st["cell_info"]["capacity_nominal"]
 
         #protection bits
         #self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
@@ -107,7 +107,7 @@ class Jkbms_Ble(Battery):
         
         self.protection.current_over = 2 if (st["warnings"]["charge_overcurrent"] or st["warnings"]["discharge_overcurrent"]) else 0
         
-        self.protection.set_IC_inspection = 2 if st["warnings"]["temperature_mos"] else 0
+        self.protection.set_IC_inspection = 2 if st["cell_info"]["temperature_mos"] > 80 else 0
         self.protection.temp_high_charge = 2 if st["warnings"]["charge_overtemp"] else 0
         self.protection.temp_low_charge = 2 if st["warnings"]["charge_undertemp"] else 0
         self.protection.temp_high_discharge = 2 if st["warnings"]["discharge_overtemp"] else 0
