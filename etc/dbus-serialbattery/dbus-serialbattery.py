@@ -22,7 +22,6 @@ from ant import Ant
 from jkbms import Jkbms
 from sinowealth import Sinowealth
 from renogy import Renogy
-from revov import Revov
 from ecs import Ecs
 from lifepower import Lifepower
 #from mnb import MNB
