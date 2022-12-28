@@ -10,7 +10,7 @@ import time
 class Jkbms_Ble(Battery):
     BATTERYTYPE = "Jkbms BLE"
     def __init__(self, port,baud, address):
-        super(Jkbms_Ble, self).__init__(port,baud)
+        super(Jkbms_Ble, self).__init__("zero",baud)
         self.type = self.BATTERYTYPE
         self.jk = JkBmsBle(address)
 
