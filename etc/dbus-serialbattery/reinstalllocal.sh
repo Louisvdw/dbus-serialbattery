@@ -1,42 +1,27 @@
 #!/bin/sh
 
-DRIVER=/opt/victronenergy/dbus-serialbattery
-RUN=/opt/victronenergy/service-templates/dbus-serialbattery
-OLD=/opt/victronenergy/service/dbus-serialbattery
+DRIVERNAME=dbus-serialbattery
 
 #handle read only mounts
 sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
-if [ -d "$DRIVER" ]; then
-  if [ -L "$DRIVER" ]; then
-    # Remove old SymLink.
-    rm "$DRIVER"
-    # Create as folder
-    mkdir "$DRIVER"
-  fi
-else
-  # Create folder
-  mkdir "$DRIVER"
-fi
-if [ -d "$RUN" ]; then
-  if [ -L "$RUN" ]; then
-    # Remove old SymLink.
-    rm "$RUN"
-    # Create as folder
-    mkdir "$RUN"
-  fi
-else
-  # Create folder
-  mkdir "$RUN"
-fi
-if [ -d "$OLD" ]; then
-  if [ -L "$OLD" ]; then
-    # Remove old SymLink.
-    rm "$RUN"
-  fi
-fi
+#install
+rm -rf /opt/victronenergy/service/$DRIVERNAME
+rm -rf /opt/victronenergy/service-templates/$DRIVERNAME
+rm -rf /opt/victronenergy/$DRIVERNAME
+mkdir /opt/victronenergy/$DRIVERNAME
+cp -f /data/etc/$DRIVERNAME/* /opt/victronenergy/$DRIVERNAME &>/dev/null
+cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVERNAME
+sh /data/etc/$DRIVERNAME/installqml.sh
 
-cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery &>/dev/null
-cp -rf /data/etc/dbus-serialbattery/service/* /opt/victronenergy/service-templates/dbus-serialbattery
+#restart if running
+pkill -f "python .*/$DRIVERNAME.py"
 
-sh /data/etc/dbus-serialbattery/installqml.sh
+# add install-script to rc.local to be ready for firmware update
+filename=/data/rc.local
+if [ ! -f $filename ]; then
+    echo "#!/bin/bash" >> $filename
+    chmod 755 $filename
+fi
+grep -qxF "sh /data/etc/$DRIVERNAME/reinstalllocal.sh" $filename || echo "sh /data/etc/$DRIVERNAME/reinstalllocal.sh" >> $filename
+
