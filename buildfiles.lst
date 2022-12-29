@@ -1,4 +1,3 @@
-rc.local
 conf/serial-starter.d
 etc/dbus-serialbattery/service/run
 etc/dbus-serialbattery/service/log/run

@@ -124,9 +124,10 @@ class Battery(object):
             self.voltage = currentBatteryVoltage    # for testing
         
         if foundHighCellVoltage:
-            self.control_voltage = currentBatteryVoltage - penaltySum
+            # Keep penalty above min battery voltage
+            self.control_voltage = max(currentBatteryVoltage - penaltySum, MIN_CELL_VOLTAGE * self.cell_count)
         else:
-            self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
+            self.control_voltage = FLOAT_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_step(self):
         voltageSum = 0
@@ -149,7 +150,8 @@ class Battery(object):
                     self.allow_max_voltage = False
 
         if self.allow_max_voltage:
-            self.control_voltage = MAX_CELL_VOLTAGE * self.cell_count
+            # Keep penalty above min battery voltage
+            self.control_voltage = max(MAX_CELL_VOLTAGE * self.cell_count, MIN_CELL_VOLTAGE * self.cell_count)
         else:
             self.control_voltage = FLOAT_CELL_VOLTAGE * self.cell_count
 
@@ -431,7 +433,7 @@ class Battery(object):
 
     def log_settings(self):
 
-        logger.info(f'Battery connected to dbus from {self.port}')
+        logger.info(f'Battery {self.type} connected to dbus from {self.port}')
         logger.info(f'=== Settings ===')
         cell_counter = len(self.cells)
         logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
