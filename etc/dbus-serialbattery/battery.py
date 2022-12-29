@@ -433,7 +433,7 @@ class Battery(object):
 
     def log_settings(self):
 
-        logger.info(f'Battery connected to dbus from {self.port}')
+        logger.info(f'Battery {self.type} connected to dbus from {self.port}')
         logger.info(f'=== Settings ===')
         cell_counter = len(self.cells)
         logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
