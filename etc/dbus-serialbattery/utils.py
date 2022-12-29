@@ -28,7 +28,7 @@ battery_types = [
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = '2' 
+DRIVER_SUBVERSION = '3' 
 zero_char = chr(48)
 degree_sign = u'\N{DEGREE SIGN}'
 
@@ -75,8 +75,8 @@ MAX_DISCHARGE_CURRENT_T              = [ 0, 28, 60, 60, 28,   0]
 # if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
 # if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
 # there will be a sum of all penalties for each cell, which exceeds the limits
-PENALTY_AT_CELL_VOLTAGE  = [3.55, 3.6]
-PENALTY_BATTERY_VOLTAGE  = [0.01, 2.0]  # this voltage will be subtracted
+PENALTY_AT_CELL_VOLTAGE  = [3.45, 3.55, 3.6]
+PENALTY_BATTERY_VOLTAGE  = [0.01, 1.0, 2.0]  # this voltage will be subtracted
 
 
 ######### SOC limitation #########
