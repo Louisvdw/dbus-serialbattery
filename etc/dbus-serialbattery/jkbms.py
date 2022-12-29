@@ -85,8 +85,8 @@ class Jkbms(Battery):
         temp1 =  unpack_from('>H', self.get_data(status_data, b'\x81', offset, 2))[0] 
         offset = cellbyte_count + 9
         temp2 =  unpack_from('>H', self.get_data(status_data, b'\x82', offset, 2))[0] 
-        self.to_temp(1, temp1 if temp1 <= 100 else -(temp1 - 100))
-        self.to_temp(2, temp1 if temp2 <= 100 else -(temp2 - 100))
+        self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
+        self.to_temp(2, temp2 if temp2 < 99 else (100 - temp2))
         
         offset = cellbyte_count + 12
         voltage = unpack_from('>H', self.get_data(status_data, b'\x83', offset, 2))[0]
