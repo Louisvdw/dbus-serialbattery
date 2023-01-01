@@ -20,6 +20,7 @@ class DbusHelper:
         self.battery = battery
         self.instance = 1
         self.settings = None
+        self.error_count = 0
         self._dbusservice = VeDbusService("com.victronenergy.battery." +
                                           self.battery.port[self.battery.port.rfind('/') + 1:],
                                           get_bus())
@@ -188,7 +189,6 @@ class DbusHelper:
     def publish_battery(self, loop):
         # This is called every battery.poll_interval milli second as set up per battery type to read and update the data
         try:
-            self.error_count = 0
             # Call the battery's refresh_data function
             success = self.battery.refresh_data()
             if success:
