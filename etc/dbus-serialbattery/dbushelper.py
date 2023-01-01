@@ -188,19 +188,19 @@ class DbusHelper:
     def publish_battery(self, loop):
         # This is called every battery.poll_interval milli second as set up per battery type to read and update the data
         try:
-            error_count = 0
+            self.error_count = 0
             # Call the battery's refresh_data function
             success = self.battery.refresh_data()
             if success:
-                error_count = 0
+                self.error_count = 0
                 self.battery.online = True
             else:
-                error_count += 1
+                self.error_count += 1
                 # If the battery is offline for more than 10 polls (polled every second for most batteries)
-                if error_count >= 10: 
+                if self.error_count >= 10: 
                     self.battery.online = False
                 # Has it completely failed
-                if error_count >= 60: 
+                if self.error_count >= 60: 
                     loop.quit()
 
             # This is to mannage CCL\DCL
