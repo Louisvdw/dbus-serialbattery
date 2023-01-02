@@ -2093,7 +2093,7 @@ def _num_to_twobyte_string(
     _check_bool(lsb_first, description="lsb_first")
     _check_bool(signed, description="signed parameter")
 
-    multiplier = 10 ** number_of_decimals
+    multiplier = 10**number_of_decimals
     integer = int(float(value) * multiplier)
 
     if lsb_first:
@@ -2161,7 +2161,7 @@ def _twobyte_string_to_num(
 
     if number_of_decimals == 0:
         return fullregister
-    divisor = 10 ** number_of_decimals
+    divisor = 10**number_of_decimals
     return fullregister / float(divisor)
 
 
@@ -2886,7 +2886,7 @@ def _twos_complement(x: int, bits: int = 16) -> int:
     # Calculate two'2 complement
     if x >= 0:
         return x
-    return int(x + 2 ** bits)
+    return int(x + 2**bits)
 
 
 def _from_twos_complement(x: int, bits: int = 16) -> int:
@@ -2930,7 +2930,7 @@ def _from_twos_complement(x: int, bits: int = 16) -> int:
     limit = 2 ** (bits - 1) - 1
     if x <= limit:
         return x
-    return int(x - 2 ** bits)
+    return int(x - 2**bits)
 
 
 # ################ #

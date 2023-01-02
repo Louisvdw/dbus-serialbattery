@@ -3,16 +3,15 @@ from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
 
-class BatteryTemplate(Battery):
 
-    def __init__(self, port,baud):
-        super(BatteryTemplate, self).__init__(port,baud)
+class BatteryTemplate(Battery):
+    def __init__(self, port, baud):
+        super(BatteryTemplate, self).__init__(port, baud)
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "Template"
     LENGTH_CHECK = 4
     LENGTH_POS = 3
-
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -30,7 +29,7 @@ class BatteryTemplate(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        
+
         # Uncomment if BMS does not supply capacity
         # self.capacity = BATTERY_CAPACITY
         self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
@@ -53,8 +52,14 @@ class BatteryTemplate(Battery):
         if status_data is False:
             return False
 
-        self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
-            state, self.cycles = unpack_from('>bb??bhx', status_data)
+        (
+            self.cell_count,
+            self.temp_sensors,
+            self.charger_connected,
+            self.load_connected,
+            state,
+            self.cycles,
+        ) = unpack_from(">bb??bhx", status_data)
 
         self.hardware_version = "TemplateBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
@@ -66,7 +71,7 @@ class BatteryTemplate(Battery):
         if soc_data is False:
             return False
 
-        voltage, current, soc = unpack_from('>hxxhh', soc_data)
+        voltage, current, soc = unpack_from(">hxxhh", soc_data)
         self.voltage = voltage / 10
         self.current = current / -10
         self.soc = soc / 10
@@ -74,15 +79,17 @@ class BatteryTemplate(Battery):
 
     def read_serial_data_template(self, command):
         # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
-        data = read_serial_data(command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK)
+        data = read_serial_data(
+            command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK
+        )
         if data is False:
             return False
 
-        start, flag, command_ret, length = unpack_from('BBBB', data)
+        start, flag, command_ret, length = unpack_from("BBBB", data)
         checksum = sum(data[:-1]) & 0xFF
 
         if start == 165 and length == 8 and checksum == data[12]:
-            return data[4:length+4]
+            return data[4 : length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
