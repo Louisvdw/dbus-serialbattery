@@ -2,7 +2,7 @@
 import logging
 import serial
 from time import sleep
-from struct import *
+from struct import unpack_from
 import bisect
 
 # Logging
@@ -24,12 +24,25 @@ battery_types = [
     {"bms": "Renogy", "address": b"\xF7"},
     {"bms": "Ecs", "baud": 19200},
     #    {"bms" : "MNB"},
+    {"bms": "LltJbd"},
+    {"bms": "Ant", "baud": 19200},
+    {"bms": "Daly", "address": b"\x40"},
+    {"bms": "Daly", "address": b"\x80"},
+    {"bms": "Jkbms", "baud": 115200},
+    #    {"bms" : "Sinowealth"},
+    {"bms": "Lifepower"},
+    {"bms": "Renogy", "address": b"\x30"},
+    {"bms": "Renogy", "address": b"\xF7"},
+    {"bms": "Ecs", "baud": 19200},
+    #    {"bms" : "MNB"},
 ]
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
 DRIVER_SUBVERSION = ".3"
+DRIVER_SUBVERSION = ".3"
 zero_char = chr(48)
+degree_sign = "\N{DEGREE SIGN}"
 degree_sign = "\N{DEGREE SIGN}"
 
 # Choose the mode for voltage / current limitations (True / False)
@@ -41,7 +54,7 @@ LINEAR_LIMITATION_ENABLE = False
 MAX_BATTERY_CHARGE_CURRENT = 70.0
 MAX_BATTERY_DISCHARGE_CURRENT = 90.0
 
-######### Cell Voltage limitation #########
+# -------- Cell Voltage limitation ---------
 # Description:
 # Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages
 # Example: 18cells * 3.55V/cell = 63.9V max charge voltage. 18 * 2.7V = 48,6V min discharge voltage
@@ -69,7 +82,7 @@ MAX_DISCHARGE_CURRENT_CV = [
     MAX_BATTERY_DISCHARGE_CURRENT,
 ]
 
-######### Temperature limitation #########
+# -------- Temperature limitation ---------
 # Description:
 # Maximal charge / discharge current will be in-/decreased depending on temperature
 # Example: The temperature limit will be monitored to control the currents. If there are two temperature senors,
@@ -111,7 +124,7 @@ PENALTY_AT_CELL_VOLTAGE = [3.45, 3.55, 3.6]
 PENALTY_BATTERY_VOLTAGE = [0.01, 1.0, 2.0]  # this voltage will be subtracted
 
 
-######### SOC limitation #########
+# -------- SOC limitation ---------
 # Description:
 # Maximal charge / discharge current will be increased / decreased depending on State of Charge, see CC_SOC_LIMIT1 etc.
 # The State of Charge (SoC) charge / discharge current will be in-/decreased depending on SOC.
@@ -135,10 +148,11 @@ CC_SOC_LIMIT2 = 95
 CC_SOC_LIMIT3 = 91
 
 # charge current limits
-CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * 0.1
-CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * 0.3
-CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * 0.5
+CC_CURRENT_LIMIT1 = 5
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT / 4
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT / 2
 
+# discharge current soc limits
 # discharge current soc limits
 DC_SOC_LIMIT1 = 10
 DC_SOC_LIMIT2 = 20
@@ -167,7 +181,8 @@ INVERT_CURRENT_MEASUREMENT = 1
 
 # TIME TO SOC settings [Valid values 0-100, but I don't recommend more that 20 intervals]
 # Set of SoC percentages to report on dbus. The more you specify the more it will impact system performance.
-# TIME_TO_SOC_POINTS = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]		# Every 5% SoC
+# TIME_TO_SOC_POINTS = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]
+# Every 5% SoC
 # TIME_TO_SOC_POINTS = [100, 95, 90, 85, 75, 50, 25, 20, 10, 0]
 TIME_TO_SOC_POINTS = []  # No data set to disable
 # Specify TimeToSoc value type: [Valid values 1,2,3]

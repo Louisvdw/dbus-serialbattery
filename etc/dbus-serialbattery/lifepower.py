@@ -6,7 +6,6 @@ from struct import *
 
 
 class Lifepower(Battery):
-
     def __init__(self, port, baud):
         super(Lifepower, self).__init__(port, baud)
         self.type = self.BATTERYTYPE
@@ -57,8 +56,13 @@ class Lifepower(Battery):
             # 01 02 0a 0b 0c 0d
             group_len = status_data[i + 1]
             end = i + 2 + (group_len * 2)
-            group_payload = status_data[i + 2:end]
-            groups.append([unpack_from('>H', group_payload, i)[0] for i in range(0, len(group_payload), 2)])
+            group_payload = status_data[i + 2 : end]
+            groups.append(
+                [
+                    unpack_from(">H", group_payload, i)[0]
+                    for i in range(0, len(group_payload), 2)
+                ]
+            )
 
             i = end
 
@@ -115,8 +119,14 @@ class Lifepower(Battery):
     def read_serial_data_eg4(self, command):
         # use the read_serial_data() function to read the data and then do BMS
         # specific checks (crc, start bytes, etc)
-        data = read_serial_data(command, self.port, self.baud_rate,
-                                self.LENGTH_POS, self.LENGTH_CHECK, self.LENGTH_FIXED)
+        data = read_serial_data(
+            command,
+            self.port,
+            self.baud_rate,
+            self.LENGTH_POS,
+            self.LENGTH_CHECK,
+            self.LENGTH_FIXED,
+        )
         if data is False:
             logger.error(">>> ERROR: Incorrect Data")
             return False
