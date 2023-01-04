@@ -24,25 +24,12 @@ battery_types = [
     {"bms": "Renogy", "address": b"\xF7"},
     {"bms": "Ecs", "baud": 19200},
     #    {"bms" : "MNB"},
-    {"bms": "LltJbd"},
-    {"bms": "Ant", "baud": 19200},
-    {"bms": "Daly", "address": b"\x40"},
-    {"bms": "Daly", "address": b"\x80"},
-    {"bms": "Jkbms", "baud": 115200},
-    #    {"bms" : "Sinowealth"},
-    {"bms": "Lifepower"},
-    {"bms": "Renogy", "address": b"\x30"},
-    {"bms": "Renogy", "address": b"\xF7"},
-    {"bms": "Ecs", "baud": 19200},
-    #    {"bms" : "MNB"},
 ]
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
 DRIVER_SUBVERSION = ".3"
-DRIVER_SUBVERSION = ".3"
 zero_char = chr(48)
-degree_sign = "\N{DEGREE SIGN}"
 degree_sign = "\N{DEGREE SIGN}"
 
 # Choose the mode for voltage / current limitations (True / False)
@@ -109,11 +96,11 @@ MAX_CHARGE_CURRENT_T = [
 TEMPERATURE_LIMITS_WHILE_DISCHARGING = [-20, 0, 5, 10, 15, 45, 55]
 MAX_DISCHARGE_CURRENT_T = [
     0,  # -20
-    MAX_BATTERY_CHARGE_CURRENT * 0.2,  # 0
-    MAX_BATTERY_CHARGE_CURRENT * 0.3,  # 5
-    MAX_BATTERY_CHARGE_CURRENT * 0.4,  # 10
-    MAX_BATTERY_CHARGE_CURRENT,  # 15
-    MAX_BATTERY_CHARGE_CURRENT,  # 45
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.2,  # 0
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.3,  # 5
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.4,  # 10
+    MAX_BATTERY_DISCHARGE_CURRENT,  # 15
+    MAX_BATTERY_DISCHARGE_CURRENT,  # 45
     0,  # 55
 ]
 
@@ -148,9 +135,9 @@ CC_SOC_LIMIT2 = 95
 CC_SOC_LIMIT3 = 91
 
 # charge current limits
-CC_CURRENT_LIMIT1 = 5
-CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT / 4
-CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT / 2
+CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * 0.1
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * 0.3
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * 0.5
 
 # discharge current soc limits
 # discharge current soc limits
