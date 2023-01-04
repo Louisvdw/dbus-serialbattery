@@ -5,6 +5,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 from threading import Thread
 import dbus
 import sys
+
 if sys.version_info.major == 2:
     import gobject
 else:
@@ -24,13 +25,14 @@ from sinowealth import Sinowealth
 from renogy import Renogy
 from ecs import Ecs
 from lifepower import Lifepower
-#from mnb import MNB
+
+# from mnb import MNB
 
 
-logger.info('Starting dbus-serialbattery')
+logger.info("Starting dbus-serialbattery")
+
 
 def main():
-
     def poll_battery(loop):
         # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
         poller = Thread(target=lambda: helper.publish_battery(loop))
@@ -46,7 +48,7 @@ def main():
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in battery_types:
-                logger.info('Testing ' + test["bms"])
+                logger.info("Testing " + test["bms"])
                 class_ = eval(test["bms"])
                 if "baud" in test.keys():
                     baud = test["baud"]
@@ -57,7 +59,9 @@ def main():
                 else:
                     testbms = class_(_port, baud)
                 if testbms.test_connection() is True:
-                    logger.info('Connection established to ' + testbms.__class__.__name__)
+                    logger.info(
+                        "Connection established to " + testbms.__class__.__name__
+                    )
                     return testbms
             count -= 1
             sleep(0.5)
@@ -70,10 +74,10 @@ def main():
             return sys.argv[1]
         else:
             # just for MNB-SPI
-            logger.info('No Port needed')
-            return '/dev/tty/USB9'
+            logger.info("No Port needed")
+            return "/dev/tty/USB9"
 
-    logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+    logger.info("dbus-serialbattery v" + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
     port = get_port()
     battery = get_battery_type(port)
@@ -82,9 +86,9 @@ def main():
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)
-    
+
     battery.log_settings()
-    
+
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
     if sys.version_info.major == 2:
@@ -93,7 +97,7 @@ def main():
 
     # Get the initial values for the battery used by setup_vedbus
     helper = DbusHelper(battery)
-    
+
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
