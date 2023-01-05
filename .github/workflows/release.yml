@@ -12,7 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: build release archive
-        run: ./create_build.sh
+        run: |
+          find . -type f -name "*.sh" -exec chmod +x {} \;
+          ./create_build.sh
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
