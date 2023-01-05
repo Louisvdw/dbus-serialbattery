@@ -1,0 +1,19 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: build release archive
+        run: ./create_build.sh
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: venus-data.tar.gz
