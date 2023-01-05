@@ -502,7 +502,6 @@ class Battery(ABC):
         of the cells and adding 1/2 of the "middle cell" voltage (if it exists)
         :return: a tuple of the voltage in the middle, as well as a percentage deviation (total_voltage / 2)
         """
-        logger.info("get_midvoltage start")
         if (
             not utils.MIDPOINT_ENABLE
             or self.cell_count is None
@@ -510,7 +509,6 @@ class Battery(ABC):
             or self.cell_count < 4
             or len(self.cells) != self.cell_count
         ):
-            logger.info("midvoltage none")
             return None, None
 
         halfcount = int(math.floor(self.cell_count / 2))
@@ -531,7 +529,6 @@ class Battery(ABC):
             )
         except ValueError:
             pass
-            logger.info(f"midvoltage {half1voltage}, ´{half2voltage}")
 
         try:
             extra = 0 if self.cell_count % 2 else self.cells[halfcount + 1].voltage / 2
@@ -606,9 +603,6 @@ class Battery(ABC):
         logger.info(f"> CCCM T {utils.CCCM_T_ENABLE} | DCCM T {utils.DCCM_T_ENABLE}")
         logger.info(
             f"> MIN_CELL_VOLTAGE {utils.MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {utils.MAX_CELL_VOLTAGE}V"
-        )
-        logger.info(
-            f"> midvoltage {utils.MIDPOINT_ENABLE}V"
         )
 
         return
