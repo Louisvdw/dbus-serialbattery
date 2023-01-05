@@ -327,7 +327,7 @@ class DbusHelper:
             # This is to mannage CVCL
             self.battery.manage_charge_voltage()
 
-            # publish all the data fro the battery object to dbus
+            # publish all the data from the battery object to dbus
             self.publish_dbus()
 
         except:
