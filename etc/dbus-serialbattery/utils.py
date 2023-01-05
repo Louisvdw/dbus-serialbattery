@@ -200,6 +200,7 @@ LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
 
+
 def constrain(val, min_val, max_val):
     if min_val > max_val:
         min_val, max_val = max_val, min_val
@@ -371,9 +372,16 @@ def read_serialport_data(
 
 
 locals_copy = locals().copy()
+
+
 def publish_config_variables(dbusservice):
     for variable, value in locals_copy.items():
         if variable.startswith("__"):
             continue
-        if isinstance(value, float) or isinstance(value, int) or isinstance(value, str) or isinstance(value, List):
+        if (
+            isinstance(value, float)
+            or isinstance(value, int)
+            or isinstance(value, str)
+            or isinstance(value, List)
+        ):
             dbusservice.add_path(f"/Info/Config/{variable}", value)

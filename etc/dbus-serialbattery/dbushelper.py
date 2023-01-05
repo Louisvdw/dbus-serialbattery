@@ -437,8 +437,6 @@ class DbusHelper:
             "/Alarms/LowTemperature"
         ] = self.battery.protection.temp_low_discharge
 
-
-
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
             try:
