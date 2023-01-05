@@ -5,7 +5,6 @@ from utils import *
 from struct import *
 import re
 
-
 class Lifepower(Battery):
 
     def __init__(self, port, baud):
@@ -14,8 +13,8 @@ class Lifepower(Battery):
 
     command_general = b"\x7E\x01\x01\x00\xFE\x0D"
     command_hardware_version = b"\x7E\x01\x42\x00\xFC\x0D"
-    command_firmware_version =  b"\x7E\x01\x33\x00\xFE\x0D"
-    balancing = 0       
+    command_firmware_version = b"\x7E\x01\x33\x00\xFE\x0D"
+    balancing = 0
     BATTERYTYPE = "EG4 Lifepower"
     LENGTH_CHECK = 5
     LENGTH_POS = 3
@@ -37,14 +36,22 @@ class Lifepower(Battery):
         if hardware_version:
             # I get some characters that I'm not able to figure out the encoding, probably chinese so I discard it
             # Also remove any special character that is not printable or make no sense.
-            self.hardware_version = re.sub(r"[^a-zA-Z0-9-._ ]", '', str(hardware_version, encoding='utf-8', errors='ignore'))
+            self.hardware_version = re.sub(
+                r"[^a-zA-Z0-9-._ ]",
+                "",
+                str(hardware_version, encoding='utf-8', errors='ignore'),
+            )
             logger.info("Hardware Version:" + self.hardware_version)
 
         version = self.read_serial_data_eg4(self.command_firmware_version)
         if version:
-            self.version = re.sub(r"[^a-zA-Z0-9-._ ]", '', str(version, encoding='utf-8', errors='ignore'))
+            self.version = re.sub(
+                r"[^a-zA-Z0-9-._ ]",
+                "",
+                str(version, encoding='utf-8', errors='ignore')
+            )
             logger.info("Firmware Version:" + self.version)
-        
+
         # polling every second seems to create some error messages
         # change to 2 seconds
         self.poll_interval = 2000
@@ -73,8 +80,13 @@ class Lifepower(Battery):
             # 01 02 0a 0b 0c 0d
             group_len = status_data[i + 1]
             end = i + 2 + (group_len * 2)
-            group_payload = status_data[i + 2:end]
-            groups.append([unpack_from('>H', group_payload, i)[0] for i in range(0, len(group_payload), 2)])
+            group_payload = status_data[i + 2 : end]
+            groups.append(
+                [
+                    unpack_from('>H', group_payload, i)[0]
+                    for i in range(0, len(group_payload), 2)
+                ]
+            )
             i = end
 
         # Cells
@@ -94,18 +106,18 @@ class Lifepower(Battery):
 
         # State of charge
         self.soc = groups[2][0] / 100
-     
+
         # Full battery capacity
         self.capacity = groups[3][0] / 100
-      
+     
         # Temperature
         self.temp_sensors = 6
-        self.temp1 = ( groups[4][0] & 0xFF) - 50
-        self.temp2 = ( groups[4][1] & 0xFF) - 50
-        self.temp3 = ( groups[4][2] & 0xFF) - 50
-        self.temp4 = ( groups[4][3] & 0xFF) - 50
-        self.temp5 = ( groups[4][4] & 0xFF) - 50
-        self.temp6 = ( groups[4][5] & 0xFF) - 50
+        self.temp1 = (groups[4][0] & 0xFF) - 50
+        self.temp2 = (groups[4][1] & 0xFF) - 50
+        self.temp3 = (groups[4][2] & 0xFF) - 50
+        self.temp4 = (groups[4][3] & 0xFF) - 50
+        self.temp5 = (groups[4][4] & 0xFF) - 50
+        self.temp6 = (groups[4][5] & 0xFF) - 50
 
 
         # Alarms
@@ -133,8 +145,14 @@ class Lifepower(Battery):
     def read_serial_data_eg4(self, command):
         # use the read_serial_data() function to read the data and then do BMS
         # specific checks (crc, start bytes, etc)
-        data = read_serial_data(command, self.port, self.baud_rate,
-                                self.LENGTH_POS, self.LENGTH_CHECK, self.LENGTH_FIXED)
+        data = read_serial_data(
+            command,
+            self.port,
+            self.baud_rate,
+            self.LENGTH_POS,
+            self.LENGTH_CHECK,
+            self.LENGTH_FIXED
+        )
         if data is False:
             logger.error(">>> ERROR: Incorrect Data")
             return False
