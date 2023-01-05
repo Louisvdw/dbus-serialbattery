@@ -531,8 +531,7 @@ class Battery(ABC):
             pass
 
         try:
-            extra = 0 if self.cell_count % 2 else self.cells[halfcount + 1].voltage / 2
-            logger.info(f"extra {extra}")
+            extra = 0 if self.cell_count % 2 == 0 else self.cells[halfcount].voltage / 2
             # get the midpoint of the battery
             midpoint = half1voltage + extra
             return (

@@ -64,7 +64,9 @@ def main():
                 logger.info("Testing " + test["bms"].__name__)
                 batteryClass = test["bms"]
                 baud = test["baud"]
-                battery: Battery = batteryClass(port=_port,baud=baud, address=test.get("address"))
+                battery: Battery = batteryClass(
+                    port=_port, baud=baud, address=test.get("address")
+                )
                 if battery.test_connection():
                     logger.info(
                         "Connection established to " + battery.__class__.__name__
