@@ -10,7 +10,6 @@ from time import sleep
 from struct import unpack_from
 import bisect
 
-
 # Logging
 logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
@@ -199,6 +198,7 @@ LIPRO_START_ADDRESS = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
 LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
+PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
 
 def constrain(val, min_val, max_val):
     if min_val > max_val:
@@ -368,3 +368,12 @@ def read_serialport_data(
     except serial.SerialException as e:
         logger.error(e)
         return False
+
+
+locals_copy = locals().copy()
+def publish_config_variables(dbusservice):
+    for variable, value in locals_copy.items():
+        if variable.startswith("__"):
+            continue
+        if isinstance(value, float) or isinstance(value, int) or isinstance(value, str) or isinstance(value, List):
+            dbusservice.add_path(f"/Info/Config/{variable}", value)

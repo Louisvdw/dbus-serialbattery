@@ -298,6 +298,10 @@ class DbusHelper:
         for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
 
+        logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
+        if PUBLISH_CONFIG_VALUES == 1:
+            publish_config_variables(self._dbusservice)
+
         return True
 
     def publish_battery(self, loop):
@@ -432,6 +436,8 @@ class DbusHelper:
         self._dbusservice[
             "/Alarms/LowTemperature"
         ] = self.battery.protection.temp_low_discharge
+
+
 
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
