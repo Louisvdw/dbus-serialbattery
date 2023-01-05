@@ -5,8 +5,8 @@ from utils import *
 from struct import *
 import re
 
-class Lifepower(Battery):
 
+class Lifepower(Battery):
     def __init__(self, port, baud):
         super(Lifepower, self).__init__(port, baud)
         self.type = self.BATTERYTYPE
@@ -39,16 +39,14 @@ class Lifepower(Battery):
             self.hardware_version = re.sub(
                 r"[^a-zA-Z0-9-._ ]",
                 "",
-                str(hardware_version, encoding='utf-8', errors='ignore'),
+                str(hardware_version, encoding="utf-8", errors="ignore"),
             )
             logger.info("Hardware Version:" + self.hardware_version)
 
         version = self.read_serial_data_eg4(self.command_firmware_version)
         if version:
             self.version = re.sub(
-                r"[^a-zA-Z0-9-._ ]",
-                "",
-                str(version, encoding='utf-8', errors='ignore')
+                r"[^a-zA-Z0-9-._ ]", "", str(version, encoding="utf-8", errors="ignore")
             )
             logger.info("Firmware Version:" + self.version)
 
@@ -83,7 +81,7 @@ class Lifepower(Battery):
             group_payload = status_data[i + 2 : end]
             groups.append(
                 [
-                    unpack_from('>H', group_payload, i)[0]
+                    unpack_from(">H", group_payload, i)[0]
                     for i in range(0, len(group_payload), 2)
                 ]
             )
@@ -109,7 +107,7 @@ class Lifepower(Battery):
 
         # Full battery capacity
         self.capacity = groups[3][0] / 100
-     
+
         # Temperature
         self.temp_sensors = 6
         self.temp1 = (groups[4][0] & 0xFF) - 50
@@ -118,7 +116,6 @@ class Lifepower(Battery):
         self.temp4 = (groups[4][3] & 0xFF) - 50
         self.temp5 = (groups[4][4] & 0xFF) - 50
         self.temp6 = (groups[4][5] & 0xFF) - 50
-
 
         # Alarms
         # 4th bit: Over Current Protection
@@ -151,7 +148,7 @@ class Lifepower(Battery):
             self.baud_rate,
             self.LENGTH_POS,
             self.LENGTH_CHECK,
-            self.LENGTH_FIXED
+            self.LENGTH_FIXED,
         )
         if data is False:
             logger.error(">>> ERROR: Incorrect Data")
