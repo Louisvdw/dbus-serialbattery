@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from typing import Union
+
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from threading import Thread
-import dbus
 import sys
 
 if sys.version_info.major == 2:
@@ -15,18 +16,30 @@ else:
 # from ve_utils import exit_on_error
 
 from dbushelper import DbusHelper
-from utils import DRIVER_VERSION, DRIVER_SUBVERSION, logger, battery_types
-import logging
+from utils import DRIVER_VERSION, DRIVER_SUBVERSION, logger
+from battery import Battery
 from lltjbd import LltJbd
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
-from sinowealth import Sinowealth
+
+# from sinowealth import Sinowealth
 from renogy import Renogy
 from ecs import Ecs
 from lifepower import Lifepower
 
-# from mnb import MNB
+battery_types = [
+    {"bms": LltJbd, "baud": 9600},
+    {"bms": Ant, "baud": 19200},
+    {"bms": Daly, "baud": 9600, "address": b"\x40"},
+    {"bms": Daly, "baud": 9600, "address": b"\x80"},
+    {"bms": Jkbms, "baud": 115200},
+    #    {"bms" : Sinowealth},
+    {"bms": Lifepower, "baud": 9600},
+    {"bms": Renogy, "baud": 9600, "address": b"\x30"},
+    {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
+    {"bms": Ecs, "baud": 19200},
+]
 
 
 logger.info("Starting dbus-serialbattery")
@@ -41,34 +54,28 @@ def main():
         poller.start()
         return True
 
-    def get_battery_type(_port):
+    def get_battery(_port) -> Union[Battery, None]:
         # all the different batteries the driver support and need to test for
         # try to establish communications with the battery 3 times, else exit
         count = 3
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in battery_types:
-                logger.info("Testing " + test["bms"])
-                class_ = eval(test["bms"])
-                if "baud" in test.keys():
-                    baud = test["baud"]
-                else:
-                    baud = 9600
-                if "address" in test.keys():
-                    testbms = class_(_port, baud, test["address"])
-                else:
-                    testbms = class_(_port, baud)
-                if testbms.test_connection() is True:
+                logger.info("Testing " + test["bms"].__name__)
+                batteryClass = test["bms"]
+                baud = test["baud"]
+                battery: Battery = batteryClass(port=_port,baud=baud, address=test.get("address"))
+                if battery.test_connection():
                     logger.info(
-                        "Connection established to " + testbms.__class__.__name__
+                        "Connection established to " + battery.__class__.__name__
                     )
-                    return testbms
+                    return battery
             count -= 1
             sleep(0.5)
 
         return None
 
-    def get_port():
+    def get_port() -> str:
         # Get the port we need to use from the argument
         if len(sys.argv) > 1:
             return sys.argv[1]
@@ -80,9 +87,8 @@ def main():
     logger.info("dbus-serialbattery v" + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
     port = get_port()
-    battery = get_battery_type(port)
+    battery: Battery = get_battery(port)
 
-    # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)

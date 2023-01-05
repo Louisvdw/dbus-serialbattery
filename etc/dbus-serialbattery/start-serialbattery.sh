@@ -1,5 +1,5 @@
 #!/bin/bash
-#
+set -x
 
 . /opt/victronenergy/serial-starter/run-service.sh
 

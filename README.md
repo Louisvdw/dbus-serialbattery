@@ -13,3 +13,9 @@ The driver will communicate with a Battery Management System (BMS) that support 
 If you find this driver helpful please considder supporting this project. You can buy me a Ko-Fi or get in contact if you would like to donate hardware.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
+
+### Developer Remarks
+To develop this project, install the requirements. This project makes use of velib_python which is pre-installed on 
+Venus-OS Devices under `/opt/victronenergy/dbus-systemcalc-py/ext/velib_python`. To use the python files locally, 
+`git clone` the [velib_python](https://github.com/victronenergy/velib_python) project to velib_python and add 
+velib_python to the `PYTHONPATH` environment variable.

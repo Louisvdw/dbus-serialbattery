@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -x
 #backup old PageBattery.qml once. New firmware upgrade will remove the backup
 if [ ! -f /opt/victronenergy/gui/qml/PageBattery.qml.backup ]; then
     cp /opt/victronenergy/gui/qml/PageBattery.qml /opt/victronenergy/gui/qml/PageBattery.qml.backup

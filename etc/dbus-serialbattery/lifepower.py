@@ -6,8 +6,8 @@ from struct import *
 
 
 class Lifepower(Battery):
-    def __init__(self, port, baud):
-        super(Lifepower, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Lifepower, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     command_general = b"\x7E\x01\x01\x00\xFE\x0D"
