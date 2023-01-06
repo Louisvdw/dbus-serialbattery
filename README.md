@@ -19,3 +19,18 @@ To develop this project, install the requirements. This project makes use of vel
 Venus-OS Devices under `/opt/victronenergy/dbus-systemcalc-py/ext/velib_python`. To use the python files locally, 
 `git clone` the [velib_python](https://github.com/victronenergy/velib_python) project to velib_python and add 
 velib_python to the `PYTHONPATH` environment variable.
+
+#### How it works
+* Each supported BMS needs to implement the abstract base class `Battery` from `battery.py`. 
+* `dbus-serialbattery.py` tries to figure out the correct connected BMS by looping through all known implementations of 
+`Battery` and executing its `test_connection()`. If this returns true, `dbus-serialbattery.py` sticks with this battery
+and then periodically executes `dbushelpert.publish_battery()`. `publish_battery()` executes `Battery.refresh_data()` which 
+updates the fields of Battery. It then publishes those fields to dbus using `dbushelper.publish_dbus()`
+* The Victron Device will be "controlled" by the values published on `/Info/` - namely:
+  * `/Info/MaxChargeCurrent `
+  * `/Info/MaxDischargeCurrent`
+  * `/Info/MaxChargeVoltage`
+  * `/Info/BatteryLowVoltage`
+  * `/Info/ChargeRequest` (not implemented in dbus-serialbattery)
+
+For more details on the victron dbus interface see [the official victron dbus documentation](https://github.com/victronenergy/venus/wiki/dbus)
