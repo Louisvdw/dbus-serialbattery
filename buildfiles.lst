@@ -25,6 +25,7 @@ etc/dbus-serialbattery/util_max17853.py
 etc/dbus-serialbattery/mnb.py
 etc/dbus-serialbattery/jkbms.py
 etc/dbus-serialbattery/jkbms_ble.py
+etc/dbus-serialbattery/jkbms_brn.py
 etc/dbus-serialbattery/sinowealth.py
 etc/dbus-serialbattery/renogy.py
 etc/dbus-serialbattery/ecs.py
