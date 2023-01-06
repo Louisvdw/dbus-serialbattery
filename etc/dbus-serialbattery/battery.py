@@ -4,6 +4,7 @@ import math
 from datetime import timedelta
 from time import time
 
+
 class Protection(object):
     # 2 = Alarm, 1 = Warning, 0 = Normal
     def __init__(self):
@@ -31,12 +32,11 @@ class Cell:
 
 
 class Battery(object):
-
     def __init__(self, port, baud):
         self.port = port
         self.baud_rate = baud
-        self.role = 'battery'
-        self.type = 'Generic'
+        self.role = "battery"
+        self.type = "Generic"
         self.poll_interval = 1000
         self.online = True
 
@@ -120,28 +120,38 @@ class Battery(object):
 
                     if cv >= PENALTY_AT_CELL_VOLTAGE[0]:
                         foundHighCellVoltage = True
-                        penaltySum += calcLinearRelationship(cv, PENALTY_AT_CELL_VOLTAGE, PENALTY_BATTERY_VOLTAGE)
-            self.voltage = currentBatteryVoltage    # for testing
-        
+                        penaltySum += calcLinearRelationship(
+                            cv, PENALTY_AT_CELL_VOLTAGE, PENALTY_BATTERY_VOLTAGE
+                        )
+            self.voltage = currentBatteryVoltage  # for testing
+
         if foundHighCellVoltage:
             # Keep penalty above min battery voltage
-            self.control_voltage = max(currentBatteryVoltage - penaltySum, MIN_CELL_VOLTAGE * self.cell_count)
+            self.control_voltage = max(
+                currentBatteryVoltage - penaltySum, MIN_CELL_VOLTAGE * self.cell_count
+            )
         else:
             self.control_voltage = FLOAT_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_step(self):
         voltageSum = 0
-        if (CVCM_ENABLE):
+        if CVCM_ENABLE:
             for i in range(self.cell_count):
                 voltage = self.get_cell_voltage(i)
                 if voltage:
-                    voltageSum+=voltage
+                    voltageSum += voltage
 
             if None == self.max_voltage_start_time:
-                if MAX_CELL_VOLTAGE * self.cell_count <= voltageSum and True == self.allow_max_voltage:
+                if (
+                    MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                    and True == self.allow_max_voltage
+                ):
                     self.max_voltage_start_time = time()
                 else:
-                    if SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc and not self.allow_max_voltage:
+                    if (
+                        SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                        and not self.allow_max_voltage
+                    ):
                         self.allow_max_voltage = True
             else:
                 tDiff = time() - self.max_voltage_start_time
@@ -151,7 +161,9 @@ class Battery(object):
 
         if self.allow_max_voltage:
             # Keep penalty above min battery voltage
-            self.control_voltage = max(MAX_CELL_VOLTAGE * self.cell_count, MIN_CELL_VOLTAGE * self.cell_count)
+            self.control_voltage = max(
+                MAX_CELL_VOLTAGE * self.cell_count, MIN_CELL_VOLTAGE * self.cell_count
+            )
         else:
             self.control_voltage = FLOAT_CELL_VOLTAGE * self.cell_count
 
@@ -164,7 +176,7 @@ class Battery(object):
             charge_limits.append(self.calcMaxChargeCurrentReferringToCellVoltage())
         if CCCM_T_ENABLE:
             charge_limits.append(self.calcMaxChargeCurrentReferringToTemperature())
-        
+
         self.control_charge_current = min(charge_limits)
 
         if self.control_charge_current == 0:
@@ -177,10 +189,14 @@ class Battery(object):
         if DCCM_SOC_ENABLE:
             discharge_limits.append(self.calcMaxDischargeCurrentReferringToSoc())
         if DCCM_CV_ENABLE:
-            discharge_limits.append(self.calcMaxDischargeCurrentReferringToCellVoltage())
+            discharge_limits.append(
+                self.calcMaxDischargeCurrentReferringToCellVoltage()
+            )
         if DCCM_T_ENABLE:
-            discharge_limits.append(self.calcMaxDischargeCurrentReferringToTemperature())
-        
+            discharge_limits.append(
+                self.calcMaxDischargeCurrentReferringToTemperature()
+            )
+
         self.control_discharge_current = min(discharge_limits)
 
         if self.control_discharge_current == 0:
@@ -191,20 +207,34 @@ class Battery(object):
     def calcMaxChargeCurrentReferringToCellVoltage(self):
         try:
             if LINEAR_LIMITATION_ENABLE:
-                return calcLinearRelationship(self.get_max_cell_voltage(),
-                                      CELL_VOLTAGES_WHILE_CHARGING, MAX_CHARGE_CURRENT_CV)
-            return calcStepRelationship(self.get_max_cell_voltage(),
-                                      CELL_VOLTAGES_WHILE_CHARGING, MAX_CHARGE_CURRENT_CV, False)
+                return calcLinearRelationship(
+                    self.get_max_cell_voltage(),
+                    CELL_VOLTAGES_WHILE_CHARGING,
+                    MAX_CHARGE_CURRENT_CV,
+                )
+            return calcStepRelationship(
+                self.get_max_cell_voltage(),
+                CELL_VOLTAGES_WHILE_CHARGING,
+                MAX_CHARGE_CURRENT_CV,
+                False,
+            )
         except:
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self):
         try:
             if LINEAR_LIMITATION_ENABLE:
-                return calcLinearRelationship(self.get_min_cell_voltage(),
-                                      CELL_VOLTAGES_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_CV)
-            return calcStepRelationship(self.get_min_cell_voltage(),
-                                      CELL_VOLTAGES_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_CV, True)
+                return calcLinearRelationship(
+                    self.get_min_cell_voltage(),
+                    CELL_VOLTAGES_WHILE_DISCHARGING,
+                    MAX_DISCHARGE_CURRENT_CV,
+                )
+            return calcStepRelationship(
+                self.get_min_cell_voltage(),
+                CELL_VOLTAGES_WHILE_DISCHARGING,
+                MAX_DISCHARGE_CURRENT_CV,
+                True,
+            )
         except:
             return self.max_battery_charge_current
 
@@ -216,11 +246,18 @@ class Battery(object):
 
         for key, currentMaxTemperature in temps.items():
             if LINEAR_LIMITATION_ENABLE:
-                temps[key] = calcLinearRelationship(currentMaxTemperature,
-                                                TEMPERATURE_LIMITS_WHILE_CHARGING, MAX_CHARGE_CURRENT_T)
-            else:                                    
-                temps[key] = calcStepRelationship(currentMaxTemperature,
-                                                TEMPERATURE_LIMITS_WHILE_CHARGING, MAX_CHARGE_CURRENT_T, False)
+                temps[key] = calcLinearRelationship(
+                    currentMaxTemperature,
+                    TEMPERATURE_LIMITS_WHILE_CHARGING,
+                    MAX_CHARGE_CURRENT_T,
+                )
+            else:
+                temps[key] = calcStepRelationship(
+                    currentMaxTemperature,
+                    TEMPERATURE_LIMITS_WHILE_CHARGING,
+                    MAX_CHARGE_CURRENT_T,
+                    False,
+                )
 
         return min(temps[0], temps[1])
 
@@ -232,11 +269,18 @@ class Battery(object):
 
         for key, currentMaxTemperature in temps.items():
             if LINEAR_LIMITATION_ENABLE:
-                temps[key] = calcLinearRelationship(currentMaxTemperature,
-                                                TEMPERATURE_LIMITS_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_T)
-            else:                                    
-                temps[key] = calcStepRelationship(currentMaxTemperature,
-                                                TEMPERATURE_LIMITS_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_T, True)
+                temps[key] = calcLinearRelationship(
+                    currentMaxTemperature,
+                    TEMPERATURE_LIMITS_WHILE_DISCHARGING,
+                    MAX_DISCHARGE_CURRENT_T,
+                )
+            else:
+                temps[key] = calcStepRelationship(
+                    currentMaxTemperature,
+                    TEMPERATURE_LIMITS_WHILE_DISCHARGING,
+                    MAX_DISCHARGE_CURRENT_T,
+                    True,
+                )
 
         return min(temps[0], temps[1])
 
@@ -244,10 +288,19 @@ class Battery(object):
         try:
             # Create value list. Will more this to the settings object
             SOC_WHILE_CHARGING = [100, CC_SOC_LIMIT1, CC_SOC_LIMIT2, CC_SOC_LIMIT3]
-            MAX_CHARGE_CURRENT_SOC = [CC_CURRENT_LIMIT1,CC_CURRENT_LIMIT2,CC_CURRENT_LIMIT3,MAX_BATTERY_CHARGE_CURRENT]
+            MAX_CHARGE_CURRENT_SOC = [
+                CC_CURRENT_LIMIT1,
+                CC_CURRENT_LIMIT2,
+                CC_CURRENT_LIMIT3,
+                MAX_BATTERY_CHARGE_CURRENT,
+            ]
             if LINEAR_LIMITATION_ENABLE:
-                return calcLinearRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC)
-            return calcStepRelationship(self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True)
+                return calcLinearRelationship(
+                    self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC
+                )
+            return calcStepRelationship(
+                self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True
+            )
         except:
             return self.max_battery_charge_current
 
@@ -255,21 +308,33 @@ class Battery(object):
         try:
             # Create value list. Will more this to the settings object
             SOC_WHILE_DISCHARGING = [DC_SOC_LIMIT3, DC_SOC_LIMIT2, DC_SOC_LIMIT1]
-            MAX_DISCHARGE_CURRENT_SOC = [MAX_BATTERY_DISCHARGE_CURRENT,DC_CURRENT_LIMIT3,DC_CURRENT_LIMIT2,DC_CURRENT_LIMIT1]
+            MAX_DISCHARGE_CURRENT_SOC = [
+                MAX_BATTERY_DISCHARGE_CURRENT,
+                DC_CURRENT_LIMIT3,
+                DC_CURRENT_LIMIT2,
+                DC_CURRENT_LIMIT1,
+            ]
             if LINEAR_LIMITATION_ENABLE:
-                return calcLinearRelationship(self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC)
-            return calcStepRelationship(self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True)
+                return calcLinearRelationship(
+                    self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC
+                )
+            return calcStepRelationship(
+                self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True
+            )
         except:
             return self.max_battery_charge_current
 
     def get_min_cell(self):
         min_voltage = 9999
         min_cell = None
-        if len(self.cells) == 0 and hasattr(self, 'cell_min_no'):
+        if len(self.cells) == 0 and hasattr(self, "cell_min_no"):
             return self.cell_min_no
 
         for c in range(min(len(self.cells), self.cell_count)):
-            if self.cells[c].voltage is not None and min_voltage > self.cells[c].voltage:
+            if (
+                self.cells[c].voltage is not None
+                and min_voltage > self.cells[c].voltage
+            ):
                 min_voltage = self.cells[c].voltage
                 min_cell = c
         return min_cell
@@ -277,33 +342,36 @@ class Battery(object):
     def get_max_cell(self):
         max_voltage = 0
         max_cell = None
-        if len(self.cells) == 0 and hasattr(self, 'cell_max_no'):
+        if len(self.cells) == 0 and hasattr(self, "cell_max_no"):
             return self.cell_max_no
 
         for c in range(min(len(self.cells), self.cell_count)):
-            if self.cells[c].voltage is not None and max_voltage < self.cells[c].voltage:
+            if (
+                self.cells[c].voltage is not None
+                and max_voltage < self.cells[c].voltage
+            ):
                 max_voltage = self.cells[c].voltage
                 max_cell = c
         return max_cell
 
     def get_min_cell_desc(self):
         cell_no = self.get_min_cell()
-        return cell_no if cell_no is None else 'C' + str(cell_no + 1)
+        return cell_no if cell_no is None else "C" + str(cell_no + 1)
 
     def get_max_cell_desc(self):
         cell_no = self.get_max_cell()
-        return cell_no if cell_no is None else 'C' + str(cell_no + 1)
+        return cell_no if cell_no is None else "C" + str(cell_no + 1)
 
     def get_cell_voltage(self, idx):
-        if idx>=min(len(self.cells), self.cell_count):
-          return None
+        if idx >= min(len(self.cells), self.cell_count):
+            return None
         return self.cells[idx].voltage
 
     def get_cell_balancing(self, idx):
-        if idx>=min(len(self.cells), self.cell_count):
-          return None
+        if idx >= min(len(self.cells), self.cell_count):
+            return None
         if self.cells[idx].balance is not None and self.cells[idx].balance:
-          return 1
+            return 1
         return 0
 
     def get_capacity_remain(self):
@@ -315,71 +383,93 @@ class Battery(object):
 
     def get_timetosoc(self, socnum, crntPrctPerSec):
         if self.current > 0:
-            diffSoc = (socnum - self.soc)
+            diffSoc = socnum - self.soc
         else:
-            diffSoc = (self.soc - socnum)
+            diffSoc = self.soc - socnum
 
         ttgStr = None
         if self.soc != socnum and (diffSoc > 0 or TIME_TO_SOC_INC_FROM is True):
             secondstogo = int(diffSoc / crntPrctPerSec)
             ttgStr = ""
 
-            if (TIME_TO_SOC_VALUE_TYPE & 1):
+            if TIME_TO_SOC_VALUE_TYPE & 1:
                 ttgStr += str(secondstogo)
-                if (TIME_TO_SOC_VALUE_TYPE & 2):
+                if TIME_TO_SOC_VALUE_TYPE & 2:
                     ttgStr += " ["
-            if (TIME_TO_SOC_VALUE_TYPE & 2):
+            if TIME_TO_SOC_VALUE_TYPE & 2:
                 ttgStr += str(timedelta(seconds=secondstogo))
-                if (TIME_TO_SOC_VALUE_TYPE & 1):
+                if TIME_TO_SOC_VALUE_TYPE & 1:
                     ttgStr += "]"
 
         return ttgStr
 
-
     def get_min_cell_voltage(self):
         min_voltage = None
-        if hasattr(self, 'cell_min_voltage'):
+        if hasattr(self, "cell_min_voltage"):
             min_voltage = self.cell_min_voltage
 
         if min_voltage is None:
             try:
-                min_voltage = min(c.voltage for c in self.cells if c.voltage is not None)
+                min_voltage = min(
+                    c.voltage for c in self.cells if c.voltage is not None
+                )
             except ValueError:
                 pass
         return min_voltage
 
     def get_max_cell_voltage(self):
         max_voltage = None
-        if hasattr(self, 'cell_max_voltage'):
+        if hasattr(self, "cell_max_voltage"):
             max_voltage = self.cell_max_voltage
 
         if max_voltage is None:
             try:
-                max_voltage = max(c.voltage for c in self.cells if c.voltage is not None)
+                max_voltage = max(
+                    c.voltage for c in self.cells if c.voltage is not None
+                )
             except ValueError:
                 pass
         return max_voltage
 
     def get_midvoltage(self):
-        if not MIDPOINT_ENABLE or self.cell_count is None or self.cell_count == 0 or self.cell_count < 4 or len(self.cells) != self.cell_count:
+        if (
+            not MIDPOINT_ENABLE
+            or self.cell_count is None
+            or self.cell_count == 0
+            or self.cell_count < 4
+            or len(self.cells) != self.cell_count
+        ):
             return None, None
 
-        halfcount = int(math.floor(self.cell_count/2))
+        halfcount = int(math.floor(self.cell_count / 2))
         half1voltage = 0
         half2voltage = 0
 
         try:
-            half1voltage = sum(c.voltage for c in self.cells[:halfcount] if c.voltage is not None)
-            half2voltage = sum(c.voltage for c in self.cells[halfcount:halfcount*2] if c.voltage is not None)
+            half1voltage = sum(
+                c.voltage for c in self.cells[:halfcount] if c.voltage is not None
+            )
+            half2voltage = sum(
+                c.voltage
+                for c in self.cells[halfcount : halfcount * 2]
+                if c.voltage is not None
+            )
         except ValueError:
             pass
 
         try:
             # handle uneven cells by giving half the voltage of the last cell to half1 and half2
-            extra = 0 if (2*halfcount == self.cell_count) else self.cells[self.cell_count-1].voltage/2
+            extra = (
+                0
+                if (2 * halfcount == self.cell_count)
+                else self.cells[self.cell_count - 1].voltage / 2
+            )
             # get the midpoint of the battery
-            midpoint = (half1voltage + half2voltage)/2 + extra
-            return midpoint, (half2voltage-half1voltage)/(half2voltage+half1voltage)*100
+            midpoint = (half1voltage + half2voltage) / 2 + extra
+            return (
+                midpoint,
+                (half2voltage - half1voltage) / (half2voltage + half1voltage) * 100,
+            )
         except ValueError:
             return None, None
 
@@ -393,9 +483,9 @@ class Battery(object):
         if self.temp1 is not None and self.temp2 is not None:
             return round((float(self.temp1) + float(self.temp2)) / 2, 2)
         if self.temp1 is not None and self.temp2 is None:
-            return round(float(self.temp1) , 2)
+            return round(float(self.temp1), 2)
         if self.temp1 is None and self.temp2 is not None:
-            return round(float(self.temp2) , 2)
+            return round(float(self.temp2), 2)
         else:
             return None
 
@@ -433,14 +523,18 @@ class Battery(object):
 
     def log_settings(self):
 
-        logger.info(f'Battery {self.type} connected to dbus from {self.port}')
-        logger.info(f'=== Settings ===')
+        logger.info(f"Battery {self.type} connected to dbus from {self.port}")
+        logger.info(f"=== Settings ===")
         cell_counter = len(self.cells)
-        logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
-        logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
-        logger.info(f'> CCCM SOC {CCCM_SOC_ENABLE} | DCCM SOC {DCCM_SOC_ENABLE}')
-        logger.info(f'> CCCM CV {CCCM_CV_ENABLE} | DCCM CV {DCCM_CV_ENABLE}')
-        logger.info(f'> CCCM T {CCCM_T_ENABLE} | DCCM T {DCCM_T_ENABLE}')
-        logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
+        logger.info(
+            f"> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%"
+        )
+        logger.info(f"> Cell count {self.cell_count} | cells populated {cell_counter}")
+        logger.info(f"> CCCM SOC {CCCM_SOC_ENABLE} | DCCM SOC {DCCM_SOC_ENABLE}")
+        logger.info(f"> CCCM CV {CCCM_CV_ENABLE} | DCCM CV {DCCM_CV_ENABLE}")
+        logger.info(f"> CCCM T {CCCM_T_ENABLE} | DCCM T {DCCM_T_ENABLE}")
+        logger.info(
+            f"> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V"
+        )
 
         return
