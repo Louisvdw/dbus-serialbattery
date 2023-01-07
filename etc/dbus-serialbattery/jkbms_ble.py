@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import logger
+# from struct import *
 from jkbms_brn import JkBmsBle
 from bleak import BleakScanner
 import asyncio
@@ -30,7 +30,7 @@ class Jkbms_Ble(Battery):
             loop = asyncio.get_event_loop()
             t = loop.create_task(BleakScanner.discover())
             devices = loop.run_until_complete(t)
-        except BleakErrori as e:
+        except BleakError as e:
             logger.error(str(e))
             return False
 
@@ -45,13 +45,13 @@ class Jkbms_Ble(Battery):
         self.jk.start_scraping()
         tries = 1
 
-        while self.jk.get_status() == None and tries < 20:
+        while self.jk.get_status() is None and tries < 20:
             time.sleep(0.5)
             tries += 1
 
         # load initial data, from here on get_status has valid values to be served to the dbus
         status = self.jk.get_status()
-        if status == None:
+        if status is None:
             return False
 
         if not status["device_info"]["vendor_id"].startswith("JK-"):
@@ -92,7 +92,7 @@ class Jkbms_Ble(Battery):
         # result = self.read_soc_data()
         # TODO: check for errors
         st = self.jk.get_status()
-        if st == None:
+        if st is None:
             return False
         if time.time() - st["last_update"] > 30:
             # if data not updated for more than 30s, sth is wrong, then fail
