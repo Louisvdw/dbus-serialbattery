@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
-DEVICE_INFO_REFRESH_S = 60*60*5  # every 5 Hours
+DEVICE_INFO_REFRESH_S = 60 * 60 * 5  # every 5 Hours
 CHAR_HANDLE = "0000ffe1-0000-1000-8000-00805f9b34fb"
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 
@@ -104,8 +104,8 @@ class JkBmsBle:
         if i == len(translation[0]) - 1:
             # keep things universal by using an n=1 list
             kees = (
-                range(0, translation[0][i]) 
-                if isinstance(translation[0][i], int) 
+                range(0, translation[0][i])
+                if isinstance(translation[0][i], int)
                 else [translation[0][i]]
             )
             i = 0
@@ -114,7 +114,7 @@ class JkBmsBle:
                     # handle raw bytes without unpack_from;
                     # 3. param gives no format but number of bytes
                     val = bytearray(
-                        fb[translation[1] + i:translation[1] + i + translation[2]]
+                        fb[translation[1] + i : translation[1] + i + translation[2]]
                     )
                     i += translation[2]
                 else:
@@ -130,8 +130,8 @@ class JkBmsBle:
                 o[j] = val
         else:
             if translation[0][i] not in o:
-                if len(translation[0]) == i+2 and isinstance(
-                    translation[0][i+1], int
+                if len(translation[0]) == i + 2 and isinstance(
+                    translation[0][i + 1], int
                 ):
                     o[translation[0][i]] = [None] * translation[0][i + 1]
                 else:
@@ -188,8 +188,8 @@ class JkBmsBle:
 
         elif info_type == 0x02:
             if (
-                CELL_INFO_REFRESH_S == 0 or
-                time.time() - self.last_cell_info > CELL_INFO_REFRESH_S
+                CELL_INFO_REFRESH_S == 0
+                or time.time() - self.last_cell_info > CELL_INFO_REFRESH_S
             ):
                 self.last_cell_info = time.time()
                 info("processing frame with battery cell info")
@@ -199,8 +199,8 @@ class JkBmsBle:
                 # power is calculated from voltage x current as
                 # register 122 contains unsigned power-value
                 self.bms_status["cell_info"]["power"] = (
-                        self.bms_status["cell_info"]["current"]
-                        * self.bms_status["cell_info"]["total_voltage"]
+                    self.bms_status["cell_info"]["current"]
+                    * self.bms_status["cell_info"]["total_voltage"]
                 )
                 if self.waiting_for_response == "cell_info":
                     self.waiting_for_response = ""
@@ -277,7 +277,7 @@ class JkBmsBle:
     async def request_bt(self, rtype: str, client):
         timeout = time.time()
 
-        while self.waiting_for_response != "" and time.time()-timeout < 10:
+        while self.waiting_for_response != "" and time.time() - timeout < 10:
             await asyncio.sleep(1)
             print(self.waiting_for_response)
 
@@ -337,7 +337,8 @@ class JkBmsBle:
         if self.is_running():
             return
         self.bt_thread.start()
-        info("scraping thread started -> main thread id: "
+        info(
+            "scraping thread started -> main thread id: "
              + str(self.main_thread.ident)
              + " scraping thread: "
              + str(self.bt_thread.ident)

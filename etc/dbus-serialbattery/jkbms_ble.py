@@ -10,6 +10,7 @@ import time
 
 class Jkbms_Ble(Battery):
     BATTERYTYPE = "Jkbms BLE"
+
     def __init__(self, port, baud, address):
         super(Jkbms_Ble, self).__init__("zero", baud)
         self.type = self.BATTERYTYPE
@@ -41,20 +42,20 @@ class Jkbms_Ble(Battery):
             return False
 
         # device was found, presumeably a jkbms so start scraping
-        self.jk.start_scraping()        
+        self.jk.start_scraping()
         tries = 1
-        
+
         while self.jk.get_status() == None and tries < 20:
             time.sleep(0.5)
             tries += 1
 
-        # load initial data, from here on get_status has valid values to be served to the dbus      
+        # load initial data, from here on get_status has valid values to be served to the dbus
         status = self.jk.get_status()
         if status == None:
             return False
 
         if not status["device_info"]["vendor_id"].startswith("JK-"):
-            return False        
+            return False
 
         logger.info("JK BMS found!")
         return True
@@ -87,7 +88,7 @@ class Jkbms_Ble(Battery):
         # call all functions that will refresh the battery data.
         # This will be called for every iteration (1 second)
         # Return True if success, False for failure
-        
+
         # result = self.read_soc_data()
         # TODO: check for errors
         st = self.jk.get_status()
@@ -96,7 +97,7 @@ class Jkbms_Ble(Battery):
         if time.time() - st["last_update"] > 30:
             # if data not updated for more than 30s, sth is wrong, then fail
             return False
-          
+
         for c in range(self.cell_count):
             self.cells[c].voltage = st["cell_info"]["voltages"][c]
 
@@ -109,19 +110,19 @@ class Jkbms_Ble(Battery):
         self.cycles = st["cell_info"]["cycle_count"]
         self.capacity = st["cell_info"]["capacity_nominal"]
 
-        #protection bits
-        #self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
-        #self.protection.cell_imbalance = 1 if status["warnings"]["cell_imbalance"] else 0
+        # protection bits
+        # self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
+        # self.protection.cell_imbalance = 1 if status["warnings"]["cell_imbalance"] else 0
         
         self.protection.voltage_high = 2 if st["warnings"]["cell_overvoltage"] else 0
         self.protection.voltage_low = 2 if st["warnings"]["cell_undervoltage"] else 0
         
-        self.protection.current_over = ( 
-            2 
+        self.protection.current_over = (
+            2
             if (
-                st["warnings"]["charge_overcurrent"] 
+                st["warnings"]["charge_overcurrent"]
                 or st["warnings"]["discharge_overcurrent"]
-            ) 
+            )
             else 0
         )
         self.protection.set_IC_inspection = (
