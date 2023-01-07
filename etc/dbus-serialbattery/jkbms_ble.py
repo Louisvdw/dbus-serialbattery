@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
 from utils import logger
-# from struct import *
 from jkbms_brn import JkBmsBle
 from bleak import BleakScanner
 import asyncio
