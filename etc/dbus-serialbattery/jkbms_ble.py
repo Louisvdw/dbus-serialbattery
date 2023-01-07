@@ -2,7 +2,7 @@
 from battery import Battery, Cell
 from utils import logger
 from jkbms_brn import JkBmsBle
-from bleak import BleakScanner
+from bleak import BleakScanner, BleakError
 import asyncio
 import time
 
