@@ -5,6 +5,7 @@ from logging import info, debug
 import logging
 from struct import unpack_from, calcsize
 import threading
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -30,12 +31,11 @@ MIN_RESPONSE_SIZE = 300
 MAX_RESPONSE_SIZE = 320
 
 TRANSLATE_DEVICE_INFO = [
-        [["device_info", "hw_rev"], 22, "8s"],
-        [["device_info", "sw_rev"], 30, "8s"],
-        [["device_info", "uptime"], 38, "<L"],
-
-        [["device_info", "vendor_id"], 6, "16s"],
-        [["device_info", "manufacturing_date"], 78, "8s"],
+    [["device_info", "hw_rev"], 22, "8s"],
+    [["device_info", "sw_rev"], 30, "8s"],
+    [["device_info", "uptime"], 38, "<L"],
+    [["device_info", "vendor_id"], 6, "16s"],
+    [["device_info", "manufacturing_date"], 78, "8s"],
 ]
 
 TRANSLATE_SETTINGS = [
@@ -101,42 +101,49 @@ class JkBmsBle:
 
     # iterative implementation maybe later due to referencing
     def translate(self, fb, translation, o, i=0):
-        if i == len(translation[0])-1:
+        if i == len(translation[0]) - 1:
             # keep things universal by using an n=1 list
-            kees = range(0, translation[0][i]) if isinstance(translation[0][i], int) else [translation[0][i]]
+            kees = (
+                range(0, translation[0][i]) 
+                if isinstance(translation[0][i], int) 
+                else [translation[0][i]]
+            )
             i = 0
             for j in kees:
                 if isinstance(translation[2], int):
                     # handle raw bytes without unpack_from;
                     # 3. param gives no format but number of bytes
-                    val = bytearray(fb[translation[1] + i:translation[1] +
-                                    i + translation[2]])
+                    val = bytearray(
+                        fb[translation[1] + i:translation[1] + i + translation[2]]
+                    )
                     i += translation[2]
                 else:
-                    val = unpack_from(translation[2], bytearray(fb),
-                                      translation[1]+i)[0]
+                    val = unpack_from(
+                        translation[2], bytearray(fb), translation[1] + i
+                    )[0]
                     # calculate stepping in case of array
-                    i = i+calcsize(translation[2])
+                    i = i + calcsize(translation[2])
                 if isinstance(val, bytes):
-                    val = val.decode("utf-8").rstrip(' \t\n\r\0')
+                    val = val.decode("utf-8").rstrip(" \t\n\r\0")
                 elif isinstance(val, int) and len(translation) == 4:
                     val = val * translation[3]
                 o[j] = val
         else:
             if translation[0][i] not in o:
-                if (len(translation[0]) == i+2
-                        and isinstance(translation[0][i+1], int)):
-                    o[translation[0][i]] = [None] * translation[0][i+1]
+                if len(translation[0]) == i+2 and isinstance(
+                    translation[0][i+1], int
+                ):
+                    o[translation[0][i]] = [None] * translation[0][i + 1]
                 else:
                     o[translation[0][i]] = {}
 
-            self.translate(fb, translation, o[translation[0][i]], i+1)
+            self.translate(fb, translation, o[translation[0][i]], i + 1)
 
     def decode_warnings(self, fb):
         val = unpack_from("<H", bytearray(fb), 136)[0]
 
         self.bms_status["cell_info"]["error_bitmask_16"] = hex(val)
-        self.bms_status["cell_info"]["error_bitmask_2"] = format(val, '016b')
+        self.bms_status["cell_info"]["error_bitmask_2"] = format(val, "016b")
 
         if "warnings" not in self.bms_status:
             self.bms_status["warnings"] = {}
@@ -180,8 +187,10 @@ class JkBmsBle:
                 self.bms_status["last_update"] = time.time()
 
         elif info_type == 0x02:
-            if (CELL_INFO_REFRESH_S == 0 or
-                    time.time() - self.last_cell_info > CELL_INFO_REFRESH_S):
+            if (
+                CELL_INFO_REFRESH_S == 0 or
+                time.time() - self.last_cell_info > CELL_INFO_REFRESH_S
+            ):
                 self.last_cell_info = time.time()
                 info("processing frame with battery cell info")
                 if protocol_version == PROTOCOL_VERSION_JK02:
@@ -190,8 +199,9 @@ class JkBmsBle:
                 # power is calculated from voltage x current as
                 # register 122 contains unsigned power-value
                 self.bms_status["cell_info"]["power"] = (
-                        self.bms_status["cell_info"]["current"] *
-                        self.bms_status["cell_info"]["total_voltage"])
+                        self.bms_status["cell_info"]["current"]
+                        * self.bms_status["cell_info"]["total_voltage"]
+                )
                 if self.waiting_for_response == "cell_info":
                     self.waiting_for_response = ""
 
@@ -210,8 +220,7 @@ class JkBmsBle:
             info("data dropped because it alone was longer than max frame length")
             self.frame_buffer = []
 
-        if (data[0] == 0x55 and data[1] == 0xAA and
-                data[2] == 0xEB and data[3] == 0x90):
+        if data[0] == 0x55 and data[1] == 0xAA and data[2] == 0xEB and data[3] == 0x90:
             # beginning of new frame, clear buffer
             self.frame_buffer = []
 
@@ -221,7 +230,7 @@ class JkBmsBle:
             # check crc; always at position 300, independent of
             # actual frame-lentgh, so crc up to 299
             ccrc = self.crc(self.frame_buffer, 300 - 1)
-            rcrc = self.frame_buffer[300-1]
+            rcrc = self.frame_buffer[300 - 1]
             debug(f"compair recvd. crc: {rcrc} vs calc. crc: {ccrc}")
             if ccrc == rcrc:
                 debug("great success! frame complete and sane, lets decode")
@@ -236,17 +245,18 @@ class JkBmsBle:
         crc = 0
         for a in arr[:length]:
             crc = crc + a
-        return crc.to_bytes(2, 'little')[0]
+        return crc.to_bytes(2, "little")[0]
 
-    async def write_register(self, address, vals: bytearray,
-                             length: int, bleakC: BleakClient):
+    async def write_register(
+        self, address, vals: bytearray, length: int, bleakC: BleakClient
+    ):
         frame = bytearray(20)
-        frame[0] = 0xAA      # start sequence
-        frame[1] = 0x55      # start sequence
-        frame[2] = 0x90      # start sequence
-        frame[3] = 0xEB      # start sequence
-        frame[4] = address   # holding register
-        frame[5] = length    # size of the value in byte
+        frame[0] = 0xAA  # start sequence
+        frame[1] = 0x55  # start sequence
+        frame[2] = 0x90  # start sequence
+        frame[3] = 0xEB  # start sequence
+        frame[4] = address  # holding register
+        frame[5] = length  # size of the value in byte
         frame[6] = vals[0]
         frame[7] = vals[1]
         frame[8] = vals[2]
@@ -260,7 +270,7 @@ class JkBmsBle:
         frame[16] = 0x00
         frame[17] = 0x00
         frame[18] = 0x00
-        frame[19] = self.crc(frame, len(frame)-1)
+        frame[19] = self.crc(frame, len(frame) - 1)
         debug("Write register: ", frame)
         await bleakC.write_gatt_char(CHAR_HANDLE, frame, False)
 
@@ -280,7 +290,7 @@ class JkBmsBle:
         else:
             return
 
-        await self.write_register(cmd, b'\0\0\0\0', 0x00, client)
+        await self.write_register(cmd, b"\0\0\0\0", 0x00, client)
 
     def get_status(self):
         if "settings" in self.bms_status and "cell_info" in self.bms_status:
@@ -300,7 +310,8 @@ class JkBmsBle:
             try:
                 await client.connect()
                 self.bms_status["model_nbr"] = (
-                    await client.read_gatt_char(MODEL_NBR_UUID)).decode("utf-8")
+                    await client.read_gatt_char(MODEL_NBR_UUID)
+                ).decode("utf-8")
 
                 await client.start_notify(CHAR_HANDLE, self.ncallback)
                 await self.request_bt("device_info", client)
@@ -308,8 +319,7 @@ class JkBmsBle:
                 await self.request_bt("cell_info", client)
                 # await self.enable_charging(client)
                 last_dev_info = time.time()
-                while (client.is_connected and
-                       self.run and self.main_thread.is_alive()):
+                while client.is_connected and self.run and self.main_thread.is_alive():
                     if time.time() - last_dev_info > DEVICE_INFO_REFRESH_S:
                         last_dev_info = time.time()
                         await self.request_bt("device_info", client)
@@ -327,10 +337,11 @@ class JkBmsBle:
         if self.is_running():
             return
         self.bt_thread.start()
-        info("scraping thread started -> main thread id: " +
-             str(self.main_thread.ident) +
-             " scraping thread: " +
-             str(self.bt_thread.ident))
+        info("scraping thread started -> main thread id: "
+             + str(self.main_thread.ident)
+             + " scraping thread: "
+             + str(self.bt_thread.ident)
+        )
 
     def stop_scraping(self):
         self.run = False
@@ -345,10 +356,10 @@ class JkBmsBle:
         # data is 01 00 00 00 for on  00 00 00 00 for off;
         # the following bytes up to 19 are unclear and changing
         # dynamically -> auth-mechanism?
-        await self.write_register(0x1d, b'\x01\x00\x00\x00', 4, c)
-        await self.write_register(0x1e, b'\x01\x00\x00\x00', 4, c)
-        await self.write_register(0x1f, b'\x01\x00\x00\x00', 4, c)
-        await self.write_register(0x40, b'\x01\x00\x00\x00', 4, c)
+        await self.write_register(0x1D, b"\x01\x00\x00\x00", 4, c)
+        await self.write_register(0x1E, b"\x01\x00\x00\x00", 4, c)
+        await self.write_register(0x1F, b"\x01\x00\x00\x00", 4, c)
+        await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
 
 
 if __name__ == "__main__":
