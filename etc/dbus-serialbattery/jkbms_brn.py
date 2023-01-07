@@ -339,9 +339,9 @@ class JkBmsBle:
         self.bt_thread.start()
         info(
             "scraping thread started -> main thread id: "
-             + str(self.main_thread.ident)
-             + " scraping thread: "
-             + str(self.bt_thread.ident)
+            + str(self.main_thread.ident)
+            + " scraping thread: "
+            + str(self.bt_thread.ident)
         )
 
     def stop_scraping(self):

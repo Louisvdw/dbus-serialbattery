@@ -113,10 +113,10 @@ class Jkbms_Ble(Battery):
         # protection bits
         # self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
         # self.protection.cell_imbalance = 1 if status["warnings"]["cell_imbalance"] else 0
-        
+
         self.protection.voltage_high = 2 if st["warnings"]["cell_overvoltage"] else 0
         self.protection.voltage_low = 2 if st["warnings"]["cell_undervoltage"] else 0
-        
+
         self.protection.current_over = (
             2
             if (
