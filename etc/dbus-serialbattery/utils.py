@@ -18,6 +18,7 @@ battery_types = [
     {"bms": "Daly", "address": b"\x40"},
     {"bms": "Daly", "address": b"\x80"},
     {"bms": "Jkbms", "baud": 115200},
+    {"bms": "Jkbms_Ble", "address": "C8:47:8C:E4:54:0E"},
     #    {"bms" : "Sinowealth"},
     {"bms": "Lifepower"},
     {"bms": "Renogy", "address": b"\x30"},
