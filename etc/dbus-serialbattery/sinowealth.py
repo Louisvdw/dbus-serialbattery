@@ -5,8 +5,8 @@ from struct import *
 
 
 class Sinowealth(Battery):
-    def __init__(self, port, baud):
-        super(Sinowealth, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Sinowealth, self).__init__(port, baud, address)
         self.poll_interval = 2000
         self.type = self.BATTERYTYPE
 

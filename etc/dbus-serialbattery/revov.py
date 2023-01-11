@@ -18,8 +18,8 @@ import struct
 
 
 class Revov(Battery):
-    def __init__(self, port, baud):
-        super(Revov, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Revov, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
         self.soc = 100
         self.voltage = None

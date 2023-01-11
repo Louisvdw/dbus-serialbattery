@@ -12,19 +12,6 @@ logger.setLevel(logging.INFO)
 
 # battery types
 # if not specified: baud = 9600
-battery_types = [
-    {"bms": "LltJbd"},
-    {"bms": "Ant", "baud": 19200},
-    {"bms": "Daly", "address": b"\x40"},
-    {"bms": "Daly", "address": b"\x80"},
-    {"bms": "Jkbms", "baud": 115200},
-    #    {"bms" : "Sinowealth"},
-    {"bms": "Lifepower"},
-    {"bms": "Renogy", "address": b"\x30"},
-    {"bms": "Renogy", "address": b"\xF7"},
-    {"bms": "Ecs", "baud": 19200},
-    #    {"bms" : "MNB"},
-]
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = 0.14
@@ -79,7 +66,8 @@ CCCM_T_ENABLE = True
 # Charge current control management referring to temperature enable (True/False).
 DCCM_T_ENABLE = True
 
-# Set Steps to reduce battery current. The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE = True is set above
+# Set Steps to reduce battery current.
+# The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE = True is set above
 TEMPERATURE_LIMITS_WHILE_CHARGING = [0, 2, 5, 10, 15, 20, 35, 40, 55]
 MAX_CHARGE_CURRENT_T = [
     0,  # 0
@@ -297,7 +285,12 @@ def open_serial_port(port, baud):
 
 # Read data from previously openned serial port
 def read_serialport_data(
-    ser, command, length_pos, length_check, length_fixed=None, length_size=None
+    ser: serial.Serial,
+    command,
+    length_pos,
+    length_check,
+    length_fixed=None,
+    length_size=None,
 ):
     try:
         ser.flushOutput()

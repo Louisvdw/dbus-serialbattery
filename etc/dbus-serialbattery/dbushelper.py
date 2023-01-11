@@ -298,6 +298,10 @@ class DbusHelper:
         for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
 
+        logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
+        if PUBLISH_CONFIG_VALUES == 1:
+            publish_config_variables(self._dbusservice)
+
         return True
 
     def publish_battery(self, loop):
@@ -323,7 +327,7 @@ class DbusHelper:
             # This is to mannage CVCL
             self.battery.manage_charge_voltage()
 
-            # publish all the data fro the battery object to dbus
+            # publish all the data from the battery object to dbus
             self.publish_dbus()
 
         except:

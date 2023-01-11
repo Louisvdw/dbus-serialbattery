@@ -2,7 +2,6 @@
 max-line-length = 120
 exclude =
           ./etc/dbus-serialbattery/ant.py,
-          ./etc/dbus-serialbattery/battery.py,
           ./etc/dbus-serialbattery/battery_template.py,
           ./etc/dbus-serialbattery/daly.py,
           ./etc/dbus-serialbattery/dbus-serialbattery.py,
@@ -17,6 +16,7 @@ exclude =
           ./etc/dbus-serialbattery/sinowealth.py,
           ./etc/dbus-serialbattery/test_max17853.py,
           ./etc/dbus-serialbattery/util_max17853.py,
+          ./velib_python
           venv
 extend-ignore:
  # E203 whitespace fefore ':' conflicts with black code formatting. Will be ignored in flake8
