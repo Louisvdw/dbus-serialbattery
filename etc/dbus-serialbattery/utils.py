@@ -37,6 +37,10 @@ degree_sign = "\N{DEGREE SIGN}"
 # True "Linear"    # New linear limitations by WaldemarFech for smoother values
 LINEAR_LIMITATION_ENABLE = False
 
+# battery Current limits
+MAX_BATTERY_CHARGE_CURRENT = 70.0
+MAX_BATTERY_DISCHARGE_CURRENT = 90.0
+
 # -------- Cell Voltage limitation ---------
 # Description:
 # Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages
@@ -50,10 +54,20 @@ DCCM_CV_ENABLE = True
 
 # Set Steps to reduce battery current. The current will be changed linear between those steps
 CELL_VOLTAGES_WHILE_CHARGING = [3.55, 3.50, 3.45, 3.30]
-MAX_CHARGE_CURRENT_CV = [0, 2, 30, 60]
+MAX_CHARGE_CURRENT_CV = [
+    0,
+    MAX_BATTERY_CHARGE_CURRENT * 0.05,
+    MAX_BATTERY_CHARGE_CURRENT * 0.5,
+    MAX_BATTERY_CHARGE_CURRENT,
+]
 
 CELL_VOLTAGES_WHILE_DISCHARGING = [2.70, 2.80, 2.90, 3.10]
-MAX_DISCHARGE_CURRENT_CV = [0, 5, 30, 60]
+MAX_DISCHARGE_CURRENT_CV = [
+    0,
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.1,
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.5,
+    MAX_BATTERY_DISCHARGE_CURRENT,
+]
 
 # -------- Temperature limitation ---------
 # Description:
@@ -65,12 +79,30 @@ CCCM_T_ENABLE = True
 # Charge current control management referring to temperature enable (True/False).
 DCCM_T_ENABLE = True
 
-# Set Steps to reduce battery current. The current will be changed linear between those steps
-TEMPERATURE_LIMITS_WHILE_CHARGING = [55, 40, 35, 5, 2, 0]
-MAX_CHARGE_CURRENT_T = [0, 28, 60, 60, 28, 0]
+# Set Steps to reduce battery current. The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE = True is set above
+TEMPERATURE_LIMITS_WHILE_CHARGING = [0, 2, 5, 10, 15, 20, 35, 40, 55]
+MAX_CHARGE_CURRENT_T = [
+    0,  # 0
+    MAX_BATTERY_CHARGE_CURRENT * 0.1,  # 2
+    MAX_BATTERY_CHARGE_CURRENT * 0.2,  # 5
+    MAX_BATTERY_CHARGE_CURRENT * 0.4,  # 10
+    MAX_BATTERY_CHARGE_CURRENT * 0.8,  # 15
+    MAX_BATTERY_CHARGE_CURRENT,  # 20
+    MAX_BATTERY_CHARGE_CURRENT,  # 35
+    MAX_BATTERY_CHARGE_CURRENT * 0.4,  # 40
+    0,  # 55
+]
 
-TEMPERATURE_LIMITS_WHILE_DISCHARGING = [55, 40, 35, 5, 0, -20]
-MAX_DISCHARGE_CURRENT_T = [0, 28, 60, 60, 28, 0]
+TEMPERATURE_LIMITS_WHILE_DISCHARGING = [-20, 0, 5, 10, 15, 45, 55]
+MAX_DISCHARGE_CURRENT_T = [
+    0,  # -20
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.2,  # 0
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.3,  # 5
+    MAX_BATTERY_DISCHARGE_CURRENT * 0.4,  # 10
+    MAX_BATTERY_DISCHARGE_CURRENT,  # 15
+    MAX_BATTERY_DISCHARGE_CURRENT,  # 45
+    0,  # 55
+]
 
 # if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
 # if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
@@ -91,9 +123,6 @@ FLOAT_CELL_VOLTAGE = 3.35
 MAX_VOLTAGE_TIME_SEC = 15 * 60
 SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = 90
 
-# battery Current limits
-MAX_BATTERY_CHARGE_CURRENT = 50.0
-MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
 # Charge current control management enable (True/False).
 CCCM_SOC_ENABLE = True
@@ -106,19 +135,20 @@ CC_SOC_LIMIT2 = 95
 CC_SOC_LIMIT3 = 91
 
 # charge current limits
-CC_CURRENT_LIMIT1 = 5
-CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT / 4
-CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT / 2
+CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * 0.1
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * 0.3
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * 0.5
 
+# discharge current soc limits
 # discharge current soc limits
 DC_SOC_LIMIT1 = 10
 DC_SOC_LIMIT2 = 20
 DC_SOC_LIMIT3 = 30
 
 # discharge current limits
-DC_CURRENT_LIMIT1 = 5
-DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT / 4
-DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT / 2
+DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * 0.1
+DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * 0.3
+DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * 0.5
 
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = False
