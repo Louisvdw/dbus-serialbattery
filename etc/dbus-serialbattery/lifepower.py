@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
+import re
 
 
 class Lifepower(Battery):
@@ -11,6 +12,8 @@ class Lifepower(Battery):
         self.type = self.BATTERYTYPE
 
     command_general = b"\x7E\x01\x01\x00\xFE\x0D"
+    command_hardware_version = b"\x7E\x01\x42\x00\xFC\x0D"
+    command_firmware_version = b"\x7E\x01\x33\x00\xFE\x0D"
     balancing = 0
     BATTERYTYPE = "EG4 Lifepower"
     LENGTH_CHECK = 5
@@ -27,10 +30,29 @@ class Lifepower(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_current = MAX_BATTERY_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.version = "EG4 BMS V1.0"
-        logger.info(self.hardware_version)
+        hardware_version = self.read_serial_data_eg4(self.command_hardware_version)
+        if hardware_version:
+            # I get some characters that I'm not able to figure out the encoding, probably chinese so I discard it
+            # Also remove any special character that is not printable or make no sense.
+            self.hardware_version = re.sub(
+                r"[^a-zA-Z0-9-._ ]",
+                "",
+                str(hardware_version, encoding="utf-8", errors="ignore"),
+            )
+            logger.info("Hardware Version:" + self.hardware_version)
+
+        version = self.read_serial_data_eg4(self.command_firmware_version)
+        if version:
+            self.version = re.sub(
+                r"[^a-zA-Z0-9-._ ]", "", str(version, encoding="utf-8", errors="ignore")
+            )
+            logger.info("Firmware Version:" + self.version)
+
+        # polling every second seems to create some error messages
+        # change to 2 seconds
+        self.poll_interval = 2000
         return True
 
     def refresh_data(self):
@@ -63,7 +85,6 @@ class Lifepower(Battery):
                     for i in range(0, len(group_payload), 2)
                 ]
             )
-
             i = end
 
         # Cells
@@ -73,7 +94,10 @@ class Lifepower(Battery):
 
         self.cells = [Cell(True) for _ in range(0, self.cell_count)]
         for i, cell in enumerate(self.cells):
-            cell.voltage = groups[0][i] / 1000
+            # there is a situation where the MSB bit of the high byte may come set
+            # I got that when I got a high voltage alarm from the unit.
+            # make sure that bit is 0, by doing an AND with 32767 (01111111 1111111)
+            cell.voltage = (groups[0][i] & 32767) / 1000
 
         # Current
         self.current = (30000 - groups[1][0]) / 100
@@ -85,9 +109,13 @@ class Lifepower(Battery):
         self.capacity = groups[3][0] / 100
 
         # Temperature
-        # TODO There is a significant amount of temperature information being ignored here
-        # see https://github.com/slim-bean/powermon#group-5
-        self.temp1 = groups[4][0] - 50
+        self.temp_sensors = 6
+        self.temp1 = (groups[4][0] & 0xFF) - 50
+        self.temp2 = (groups[4][1] & 0xFF) - 50
+        self.temp3 = (groups[4][2] & 0xFF) - 50
+        self.temp4 = (groups[4][3] & 0xFF) - 50
+        self.temp5 = (groups[4][4] & 0xFF) - 50
+        self.temp6 = (groups[4][5] & 0xFF) - 50
 
         # Alarms
         # 4th bit: Over Current Protection
@@ -106,11 +134,6 @@ class Lifepower(Battery):
 
         # Voltage
         self.voltage = groups[7][0] / 100
-
-        # TODO State of health
-
-        self.hardware_version = "EG4 Lifepower " + str(self.cell_count) + " cells"
-
         return True
 
     def get_balancing(self):
