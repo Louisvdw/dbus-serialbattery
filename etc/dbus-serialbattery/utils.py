@@ -66,7 +66,8 @@ CCCM_T_ENABLE = True
 # Charge current control management referring to temperature enable (True/False).
 DCCM_T_ENABLE = True
 
-# Set Steps to reduce battery current. The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE = True is set above
+# Set Steps to reduce battery current.
+# The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE = True is set above
 TEMPERATURE_LIMITS_WHILE_CHARGING = [0, 2, 5, 10, 15, 20, 35, 40, 55]
 MAX_CHARGE_CURRENT_T = [
     0,  # 0
