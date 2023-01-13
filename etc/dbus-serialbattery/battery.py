@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 from utils import logger
 import utils
@@ -76,7 +76,7 @@ class Battery(ABC):
         self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
-        self.cells = []
+        self.cells: List[Cell] = []
         self.control_charging = None
         self.control_voltage = None
         self.allow_max_voltage = True
