@@ -16,7 +16,8 @@ else:
 # from ve_utils import exit_on_error
 
 from dbushelper import DbusHelper
-from utils import DRIVER_VERSION, DRIVER_SUBVERSION, logger
+from utils import logger
+import utils
 from battery import Battery
 from lltjbd import LltJbd
 from daly import Daly
@@ -28,7 +29,7 @@ from renogy import Renogy
 from ecs import Ecs
 from lifepower import Lifepower
 
-battery_types = [
+supported_bms_types = [
     {"bms": LltJbd, "baud": 9600},
     {"bms": Ant, "baud": 19200},
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
@@ -40,7 +41,11 @@ battery_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Ecs, "baud": 19200},
 ]
-
+expected_bms_types = [
+    battery_type
+    for battery_type in supported_bms_types
+    if battery_type["bms"].__name__ == utils.BMS_TYPE or utils.BMS_TYPE == ""
+]
 
 logger.info("Starting dbus-serialbattery")
 
@@ -60,7 +65,7 @@ def main():
         count = 3
         while count > 0:
             # create a new battery object that can read the battery and run connection test
-            for test in battery_types:
+            for test in expected_bms_types:
                 logger.info("Testing " + test["bms"].__name__)
                 batteryClass = test["bms"]
                 baud = test["baud"]
@@ -86,7 +91,7 @@ def main():
             logger.info("No Port needed")
             return "/dev/tty/USB9"
 
-    logger.info("dbus-serialbattery v" + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+    logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION)
 
     port = get_port()
     battery: Battery = get_battery(port)
