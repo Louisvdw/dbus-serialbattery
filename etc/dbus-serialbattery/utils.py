@@ -77,7 +77,7 @@ CELL_VOLTAGES_WHILE_DISCHARGING = _get_list_from_config(
 )
 MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
-    "MAX_DISCHARGE_CURRENT_CV",
+    "MAX_DISCHARGE_CURRENT_CV_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
@@ -147,13 +147,13 @@ CC_SOC_LIMIT3 = float(config["DEFAULT"]["CC_SOC_LIMIT3"])
 
 # charge current limits
 CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT1"]
+    config["DEFAULT"]["CC_CURRENT_LIMIT1_FRACTION"]
 )
 CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT2"]
+    config["DEFAULT"]["CC_CURRENT_LIMIT2_FRACTION"]
 )
 CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT3"]
+    config["DEFAULT"]["CC_CURRENT_LIMIT3_FRACTION"]
 )
 
 # discharge current soc limits
@@ -163,13 +163,13 @@ DC_SOC_LIMIT3 = float(config["DEFAULT"]["DC_SOC_LIMIT3"])
 
 # discharge current limits
 DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT1"]
+    config["DEFAULT"]["DC_CURRENT_LIMIT1_FRACTION"]
 )
 DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT2"]
+    config["DEFAULT"]["DC_CURRENT_LIMIT2_FRACTION"]
 )
 DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT3"]
+    config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"]
 )
 
 # Charge voltage control management enable (True/False).
