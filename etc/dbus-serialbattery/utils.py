@@ -45,6 +45,12 @@ degree_sign = "\N{DEGREE SIGN}"
 # True "Linear"    # New linear limitations by WaldemarFech for smoother values
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
+# battery Current limits
+MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
+MAX_BATTERY_DISCHARGE_CURRENT = float(
+    config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
+)
+
 # -------- Cell Voltage limitation ---------
 # Description:
 # Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages
@@ -60,6 +66,7 @@ DCCM_CV_ENABLE = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
 CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
 )
+#TODO
 MAX_CHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT", "MAX_CHARGE_CURRENT_CV", lambda v: float(v)
 )
@@ -67,6 +74,7 @@ MAX_CHARGE_CURRENT_CV = _get_list_from_config(
 CELL_VOLTAGES_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_DISCHARGING", lambda v: float(v)
 )
+#TODO
 MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT", "MAX_DISCHARGE_CURRENT_CV", lambda v: float(v)
 )
@@ -85,6 +93,7 @@ DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
 TEMPERATURE_LIMITS_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "TEMPERATURE_LIMITS_WHILE_CHARGING", lambda v: float(v)
 )
+#TODO
 MAX_CHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT", "MAX_CHARGE_CURRENT_T", lambda v: float(v)
 )
@@ -92,6 +101,7 @@ MAX_CHARGE_CURRENT_T = _get_list_from_config(
 TEMPERATURE_LIMITS_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "TEMPERATURE_LIMITS_WHILE_DISCHARGING", lambda v: float(v)
 )
+#TODO
 MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT", "MAX_DISCHARGE_CURRENT_T", lambda v: float(v)
 )
@@ -121,12 +131,6 @@ SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
 
-# battery Current limits
-MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
-MAX_BATTERY_DISCHARGE_CURRENT = float(
-    config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
-)
-
 # Charge current control management enable (True/False).
 CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
 # Discharge current control management enable (True/False).
@@ -138,6 +142,7 @@ CC_SOC_LIMIT2 = float(config["DEFAULT"]["CC_SOC_LIMIT2"])
 CC_SOC_LIMIT3 = float(config["DEFAULT"]["CC_SOC_LIMIT3"])
 
 # charge current limits
+#TODO
 CC_CURRENT_LIMIT1 = float(config["DEFAULT"]["CC_CURRENT_LIMIT1"])
 CC_CURRENT_LIMIT2 = float(config["DEFAULT"]["CC_CURRENT_LIMIT2"])
 CC_CURRENT_LIMIT3 = float(config["DEFAULT"]["CC_CURRENT_LIMIT3"])
@@ -148,6 +153,7 @@ DC_SOC_LIMIT2 = float(config["DEFAULT"]["DC_SOC_LIMIT2"])
 DC_SOC_LIMIT3 = float(config["DEFAULT"]["DC_SOC_LIMIT3"])
 
 # discharge current limits
+#TODO
 DC_CURRENT_LIMIT1 = float(config["DEFAULT"]["DC_CURRENT_LIMIT1"])
 DC_CURRENT_LIMIT2 = float(config["DEFAULT"]["DC_CURRENT_LIMIT2"])
 DC_CURRENT_LIMIT3 = float(config["DEFAULT"]["DC_CURRENT_LIMIT3"])
