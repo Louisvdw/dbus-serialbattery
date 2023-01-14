@@ -297,6 +297,7 @@ class DbusHelper:
         # Create TimeToSoC items
         for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
+        self._dbusservice.add_path("/TimeToSoC/Low", None, writeable=True)
 
         logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
         if PUBLISH_CONFIG_VALUES == 1:
@@ -484,6 +485,12 @@ class DbusHelper:
                         if self.battery.current
                         else None
                     )
+                    
+                self._dbusservice["/TimeToSoC/Low"] = (
+                    self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
+                    if self.battery.current
+                    else None
+                )
 
             else:
                 self.battery.time_to_soc_update -= 1
