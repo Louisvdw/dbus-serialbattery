@@ -87,7 +87,7 @@ class JkBmsBle:
     frame_buffer = bytearray()
     bms_status = {}
 
-    waiting_for_responsei = ""
+    waiting_for_response = ""
     last_cell_info = 0
 
     def __init__(self, addr):
