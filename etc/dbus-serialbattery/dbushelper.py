@@ -486,7 +486,7 @@ class DbusHelper:
                         else None
                     )
                     
-                self._dbusservice["/TimeToSoC/Low"] = (
+                self._dbusservice["/TimeToGo"] = (
                     self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
                     if self.battery.current
                     else None
