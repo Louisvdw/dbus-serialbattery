@@ -7,6 +7,7 @@ import asyncio
 import time
 import os
 
+
 class Jkbms_Ble(Battery):
     BATTERYTYPE = "Jkbms BLE"
 
@@ -29,9 +30,11 @@ class Jkbms_Ble(Battery):
         while True:
             try:
                 loop = asyncio.get_event_loop()
-                t = loop.create_task(BleakScanner.find_device_by_address(self.jk.address))
+                t = loop.create_task(
+                    BleakScanner.find_device_by_address(self.jk.address)
+                )
                 device = loop.run_until_complete(t)
-                
+
                 if device is None:
                     if tries > 2:
                         return False
