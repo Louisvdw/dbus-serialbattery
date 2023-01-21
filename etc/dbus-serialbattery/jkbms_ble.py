@@ -150,6 +150,7 @@ class Jkbms_Ble(Battery):
         return True
 
     def reset_bluetooth(self):
+        logger.info("reset of bluetooth triggered")
         if self.jk.is_running():
             self.jk.stop_scraping()
         os.system("kill -9 $(pidof bluetoothd)")
