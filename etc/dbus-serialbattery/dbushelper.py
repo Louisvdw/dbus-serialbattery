@@ -224,6 +224,7 @@ class DbusHelper:
         # Create battery extras
         self._dbusservice.add_path("/System/MinCellTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -386,6 +387,7 @@ class DbusHelper:
         )
         self._dbusservice["/System/MinCellTemperature"] = self.battery.get_min_temp()
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
+        self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
 
         # Charge control
         self._dbusservice[
