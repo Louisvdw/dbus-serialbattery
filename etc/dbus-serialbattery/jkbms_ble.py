@@ -10,6 +10,7 @@ import os
 
 class Jkbms_Ble(Battery):
     BATTERYTYPE = "Jkbms BLE"
+    resetting = False
 
     def __init__(self, port, baud, address):
         super(Jkbms_Ble, self).__init__("zero", baud)
@@ -36,6 +37,7 @@ class Jkbms_Ble(Battery):
                 device = loop.run_until_complete(t)
 
                 if device is None:
+                    logger.info("jkbmsble not found")
                     if tries > 2:
                         return False
                 else:
@@ -104,13 +106,18 @@ class Jkbms_Ble(Battery):
             return False
         if time.time() - st["last_update"] > 30:
             # if data not updated for more than 30s, sth is wrong, then fail
-            if self.jk.is_running():
-                # if the thread is still alive but data too old there is sth
-                # wrong with the bt-connection; restart whole stack
-                self.reset_connection()
+            logger.info("jkbmsble: bluetooth died")
+
+            # if the thread is still alive but data too old there is sth
+            # wrong with the bt-connection; restart whole stack
+            if not self.resetting:
+                self.reset_bluetooth()
                 self.jk.start_scraping()
                 time.sleep(2)
+    
             return False
+        else:
+            self.resetting = False 
 
         for c in range(self.cell_count):
             self.cells[c].voltage = st["cell_info"]["voltages"][c]
@@ -151,10 +158,14 @@ class Jkbms_Ble(Battery):
 
     def reset_bluetooth(self):
         logger.info("reset of bluetooth triggered")
-        if self.jk.is_running():
-            self.jk.stop_scraping()
+        self.resetting = True
+        # if self.jk.is_running():
+            # self.jk.stop_scraping()
+        logger.info("scraping ended, issuing sys-commands")
         os.system("kill -9 $(pidof bluetoothd)")
-        time.sleep(1)
+        # os.system("/etc/init.d/bluetooth stop") is not enugh, kill -9 via pid is needed
+        time.sleep(2)
         os.system("rfkill block bluetooth")
         os.system("rfkill unblock bluetooth")
         os.system("/etc/init.d/bluetooth start")
+        logger.info("bluetooth should have been restarted")

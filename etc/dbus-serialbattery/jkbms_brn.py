@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
-DEVICE_INFO_REFRESH_S = 60 * 60 * 5  # every 5 Hours
+DEVICE_INFO_REFRESH_S = 60 * 60 * 10  # every 10 Hours
 CHAR_HANDLE = "0000ffe1-0000-1000-8000-00805f9b34fb"
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 
@@ -87,7 +87,7 @@ class JkBmsBle:
     frame_buffer = bytearray()
     bms_status = {}
 
-    waiting_for_responsei = ""
+    waiting_for_response = ""
     last_cell_info = 0
 
     def __init__(self, addr):
@@ -308,6 +308,7 @@ class JkBmsBle:
             client = BleakClient(self.address)
             print("btloop")
             try:
+                print("reconnect")
                 await client.connect()
                 self.bms_status["model_nbr"] = (
                     await client.read_gatt_char(MODEL_NBR_UUID)
@@ -321,14 +322,17 @@ class JkBmsBle:
                 last_dev_info = time.time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
                     if time.time() - last_dev_info > DEVICE_INFO_REFRESH_S:
-                        last_dev_info = time.time()
-                        await self.request_bt("device_info", client)
+                        await client.disconnect()
                     await asyncio.sleep(0.01)
             except Exception as e:
                 info("error while connecting to bt: " + str(e))
                 self.run = False
             finally:
-                await client.disconnect()
+                if client.is_connected:
+                    try:
+                        await client.disconnect()
+                    except Exception as e:
+                        info("error while disconnecting")
 
         print("Exiting bt-loop")
 
