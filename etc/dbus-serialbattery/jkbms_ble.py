@@ -113,7 +113,7 @@ class Jkbms_Ble(Battery):
 
         self.charge_fet = st["settings"]["charging_switch"]
         self.discharge_fet = st["settings"]["discharging_switch"]
-        self.balancing_fet = st["settings"]["balancing_switch"]
+        self.balance_fet = st["settings"]["balancing_switch"]
 
         self.balancing = False if st["cell_info"]["balancing_action"] == 0.000 else True
         self.balancing_current = st["cell_info"]["balancing_current"] if st["cell_info"]["balancing_current"] < 32768 else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
@@ -129,9 +129,9 @@ class Jkbms_Ble(Battery):
         # self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
 
         # trigger cell imbalance warning when delta is to great
-        if st["cell_info"]["delta_cell_voltage"] > 0.100:
+        if st["cell_info"]["delta_cell_voltage"] > min(st["settings"]["cell_ovp"] * 0.05, 0.200):
             self.protection.cell_imbalance = 2
-        elif st["cell_info"]["delta_cell_voltage"] > 0.050:
+        elif st["cell_info"]["delta_cell_voltage"] > min(st["settings"]["cell_ovp"] * 0.03, 0.120):
             self.protection.cell_imbalance = 1
         else:
             self.protection.cell_imbalance = 0
