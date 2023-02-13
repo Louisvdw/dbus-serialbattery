@@ -53,10 +53,12 @@ class Battery(object):
         self.soc = None
         self.charge_fet = None
         self.discharge_fet = None
+        self.balance_fet = None
         self.cell_count = None
         self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
+        self.temp_mos = None
         self.cells = []
         self.control_charging = None
         self.control_voltage = None
@@ -101,6 +103,8 @@ class Battery(object):
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
+        if sensor == 'mos':
+            self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self):
         if LINEAR_LIMITATION_ENABLE:
@@ -506,6 +510,12 @@ class Battery(object):
             return self.temp1
         if self.temp1 is None and self.temp2 is not None:
             return self.temp2
+        else:
+            return None
+
+    def get_mos_temp(self):
+        if self.temp_mos is not None:
+            return self.temp_mos
         else:
             return None
 

@@ -224,6 +224,7 @@ class DbusHelper:
         # Create battery extras
         self._dbusservice.add_path("/System/MinCellTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -243,7 +244,8 @@ class DbusHelper:
         self._dbusservice.add_path("/Balancing", None, writeable=True)
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
-        # self._dbusservice.add_path('/SystemSwitch',1,writeable=True)
+        self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
+        # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
         self._dbusservice.add_path("/Alarms/LowVoltage", None, writeable=True)
@@ -363,6 +365,9 @@ class DbusHelper:
         self._dbusservice["/Io/AllowToDischarge"] = (
             1 if self.battery.discharge_fet else 0
         )
+        self._dbusservice["/Io/AllowToBalance"] = (
+            1 if self.battery.balance_fet else 0
+        )
         self._dbusservice["/System/NrOfModulesBlockingCharge"] = (
             0
             if self.battery.charge_fet is None
@@ -378,6 +383,7 @@ class DbusHelper:
         )
         self._dbusservice["/System/MinCellTemperature"] = self.battery.get_min_temp()
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
+        self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
 
         # Charge control
         self._dbusservice[
