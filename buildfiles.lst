@@ -13,6 +13,7 @@ etc/dbus-serialbattery/installqml.sh
 etc/dbus-serialbattery/qml/PageBattery.qml
 etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml
 etc/dbus-serialbattery/qml/PageBatterySetup.qml
+etc/dbus-serialbattery/qml/PageLynxIonIo.qml
 etc/dbus-serialbattery/minimalmodbus.py
 etc/dbus-serialbattery/dbus-serialbattery.py
 etc/dbus-serialbattery/dbushelper.py

@@ -53,7 +53,7 @@ class Jkbms_Ble(Battery):
         if status is None:
             return False
 
-        if not status["device_info"]["vendor_id"].startswith("JK-"):
+        if not status["device_info"]["vendor_id"].startswith(("JK-", "JK_")):
             return False
 
         logger.info("JK BMS found!")
