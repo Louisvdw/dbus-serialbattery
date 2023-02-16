@@ -94,6 +94,11 @@ class Jkbms(Battery):
         self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
         self.to_temp(2, temp2 if temp2 < 99 else (100 - temp2))
 
+        # MOSFET temperature
+        offset = cellbyte_count + 3
+        temp_mos = unpack_from(">H", self.get_data(status_data, b"\x80", offset, 2))[0]
+        self.to_temp('mos', temp_mos if temp_mos < 99 else (100 - temp_mos))
+
         offset = cellbyte_count + 12
         voltage = unpack_from(">H", self.get_data(status_data, b"\x83", offset, 2))[0]
         self.voltage = voltage / 100

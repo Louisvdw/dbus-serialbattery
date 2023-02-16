@@ -108,14 +108,12 @@ class JkBmsBle:
                 if isinstance(translation[0][i], int)
                 else [translation[0][i]]
             )
-
             offset = 0
             if f32s:
                 if translation[1] >= 112:
                     offset = 32
                 elif translation[1] >= 54:
                     offset = 16
-            
             i = 0
             for j in kees:
                 if isinstance(translation[2], int):
@@ -335,8 +333,6 @@ class JkBmsBle:
                 # await self.enable_charging(client)
                 last_dev_info = time.time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
-                    if time.time() - last_dev_info > DEVICE_INFO_REFRESH_S:
-                        await client.disconnect()
                     await asyncio.sleep(0.01)
             except Exception as e:
                 info("error while connecting to bt: " + str(e))
@@ -361,7 +357,7 @@ class JkBmsBle:
             + " scraping thread: "
             + str(self.bt_thread.ident)
         )
-    
+
     def stop_scraping(self):
         self.run = False
         stop = time.time()

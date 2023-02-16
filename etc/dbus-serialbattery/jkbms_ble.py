@@ -84,6 +84,8 @@ class Jkbms_Ble(Battery):
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
 
+        self.capacity = self.jk.get_status()["cell_info"]["capacity_nominal"]
+
         self.hardware_version = (
             "JKBMS "
             + self.jk.get_status()["device_info"]["hw_rev"]
@@ -124,16 +126,37 @@ class Jkbms_Ble(Battery):
 
         self.to_temp(1, st["cell_info"]["temperature_sensor_1"])
         self.to_temp(2, st["cell_info"]["temperature_sensor_2"])
+        self.to_temp('mos', st["cell_info"]["temperature_mos"])
         self.current = st["cell_info"]["current"]
         self.voltage = st["cell_info"]["total_voltage"]
 
         self.soc = st["cell_info"]["battery_soc"]
         self.cycles = st["cell_info"]["cycle_count"]
-        self.capacity = st["cell_info"]["capacity_nominal"]
+        
+        self.charge_fet = st["settings"]["charging_switch"]
+        self.discharge_fet = st["settings"]["discharging_switch"]
+        self.balance_fet = st["settings"]["balancing_switch"]
+
+        self.balancing = False if st["cell_info"]["balancing_action"] == 0.000 else True
+        self.balancing_current = st["cell_info"]["balancing_current"] if st["cell_info"]["balancing_current"] < 32768 else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
+        self.balancing_action = st["cell_info"]["balancing_action"]
+
+        for c in range(self.cell_count):
+            if self.balancing and (st["cell_info"]["max_voltage_cell"] == c or st["cell_info"]["min_voltage_cell"] == c ):
+                self.cells[c].balance = True
+            else:
+                self.cells[c].balance = False
 
         # protection bits
         # self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
-        # self.protection.cell_imbalance = 1 if status["warnings"]["cell_imbalance"] else 0
+
+        # trigger cell imbalance warning when delta is to great
+        if st["cell_info"]["delta_cell_voltage"] > min(st["settings"]["cell_ovp"] * 0.05, 0.200):
+            self.protection.cell_imbalance = 2
+        elif st["cell_info"]["delta_cell_voltage"] > min(st["settings"]["cell_ovp"] * 0.03, 0.120):
+            self.protection.cell_imbalance = 1
+        else:
+            self.protection.cell_imbalance = 0
 
         self.protection.voltage_high = 2 if st["warnings"]["cell_overvoltage"] else 0
         self.protection.voltage_low = 2 if st["warnings"]["cell_undervoltage"] else 0
@@ -169,3 +192,6 @@ class Jkbms_Ble(Battery):
         os.system("rfkill unblock bluetooth")
         os.system("/etc/init.d/bluetooth start")
         logger.info("bluetooth should have been restarted")
+
+    def get_balancing(self):
+        return 1 if self.balancing else 0
