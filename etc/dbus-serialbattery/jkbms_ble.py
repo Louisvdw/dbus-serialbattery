@@ -62,9 +62,11 @@ class Jkbms_Ble(Battery):
         # load initial data, from here on get_status has valid values to be served to the dbus
         status = self.jk.get_status()
         if status is None:
+            self.jk.stop_scraping()
             return False
 
         if not status["device_info"]["vendor_id"].startswith("JK-"):
+            self.jk.stop_scraping()
             return False
 
         logger.info("JK BMS found!")
