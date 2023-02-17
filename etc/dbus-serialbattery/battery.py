@@ -72,6 +72,7 @@ class Battery(ABC):
         self.soc = None
         self.charge_fet = None
         self.discharge_fet = None
+        self.balance_fet = None
         self.cell_count = None
         self.temp_sensors = None
         self.temp1 = None

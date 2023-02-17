@@ -123,6 +123,10 @@ class Jkbms(Battery):
         self.to_fet_bits(
             unpack_from(">H", self.get_data(status_data, b"\x8C", offset, 2))[0]
         )
+        offset = cellbyte_count + 84
+        self.to_balance_bits(
+            unpack_from(">B", self.get_data(status_data, b"\x9D", offset, 1))[0]
+        )
 
         offset = cellbyte_count + 155
         self.production = unpack_from(
@@ -140,6 +144,10 @@ class Jkbms(Battery):
         tmp = bin(byte_data)[2:].rjust(2, utils.zero_char)
         self.charge_fet = is_bit_set(tmp[1])
         self.discharge_fet = is_bit_set(tmp[0])
+
+    def to_balance_bits(self, byte_data):
+        tmp = bin(byte_data)[2:]
+        self.balance_fet = is_bit_set(tmp)
 
     def to_protection_bits(self, byte_data):
         pos = 13

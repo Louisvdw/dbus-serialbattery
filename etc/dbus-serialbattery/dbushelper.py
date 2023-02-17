@@ -243,6 +243,7 @@ class DbusHelper:
         self._dbusservice.add_path("/Balancing", None, writeable=True)
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
+        self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
         # self._dbusservice.add_path('/SystemSwitch',1,writeable=True)
 
         # Create the alarms
@@ -297,7 +298,7 @@ class DbusHelper:
         # Create TimeToSoC items
         for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
-        #Create TimeToGO item
+        # Create TimeToGO item
         self._dbusservice.add_path("/TimeToGo", None, writeable=True)
 
         logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
@@ -371,6 +372,9 @@ class DbusHelper:
             if self.battery.discharge_fet and self.battery.control_allow_discharge
             else 0
         )
+        self._dbusservice["/Io/AllowToBalance"] = (
+            1 if self.battery.balance_fet else 0
+        )
         self._dbusservice["/System/NrOfModulesBlockingCharge"] = (
             0
             if self.battery.charge_fet is None
@@ -388,12 +392,8 @@ class DbusHelper:
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
 
         # Charge control
-        self._dbusservice[
-            "/Info/MaxChargeCurrent"
-        ] = self.battery.control_charge_current
-        self._dbusservice[
-            "/Info/MaxDischargeCurrent"
-        ] = self.battery.control_discharge_current
+        self._dbusservice["/Info/MaxChargeCurrent"] = self.battery.control_charge_current
+        self._dbusservice["/Info/MaxDischargeCurrent"] = self.battery.control_discharge_current
 
         # Voltage control
         self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
@@ -401,45 +401,23 @@ class DbusHelper:
         # Updates from cells
         self._dbusservice["/System/MinVoltageCellId"] = self.battery.get_min_cell_desc()
         self._dbusservice["/System/MaxVoltageCellId"] = self.battery.get_max_cell_desc()
-        self._dbusservice[
-            "/System/MinCellVoltage"
-        ] = self.battery.get_min_cell_voltage()
-        self._dbusservice[
-            "/System/MaxCellVoltage"
-        ] = self.battery.get_max_cell_voltage()
+        self._dbusservice["/System/MinCellVoltage"] = self.battery.get_min_cell_voltage()
+        self._dbusservice["/System/MaxCellVoltage"] = self.battery.get_max_cell_voltage()
         self._dbusservice["/Balancing"] = self.battery.get_balancing()
 
         # Update the alarms
         self._dbusservice["/Alarms/LowVoltage"] = self.battery.protection.voltage_low
-        self._dbusservice[
-            "/Alarms/LowCellVoltage"
-        ] = self.battery.protection.voltage_cell_low
+        self._dbusservice["/Alarms/LowCellVoltage"] = self.battery.protection.voltage_cell_low
         self._dbusservice["/Alarms/HighVoltage"] = self.battery.protection.voltage_high
         self._dbusservice["/Alarms/LowSoc"] = self.battery.protection.soc_low
-        self._dbusservice[
-            "/Alarms/HighChargeCurrent"
-        ] = self.battery.protection.current_over
-        self._dbusservice[
-            "/Alarms/HighDischargeCurrent"
-        ] = self.battery.protection.current_under
-        self._dbusservice[
-            "/Alarms/CellImbalance"
-        ] = self.battery.protection.cell_imbalance
-        self._dbusservice[
-            "/Alarms/InternalFailure"
-        ] = self.battery.protection.internal_failure
-        self._dbusservice[
-            "/Alarms/HighChargeTemperature"
-        ] = self.battery.protection.temp_high_charge
-        self._dbusservice[
-            "/Alarms/LowChargeTemperature"
-        ] = self.battery.protection.temp_low_charge
-        self._dbusservice[
-            "/Alarms/HighTemperature"
-        ] = self.battery.protection.temp_high_discharge
-        self._dbusservice[
-            "/Alarms/LowTemperature"
-        ] = self.battery.protection.temp_low_discharge
+        self._dbusservice["/Alarms/HighChargeCurrent"] = self.battery.protection.current_over
+        self._dbusservice["/Alarms/HighDischargeCurrent"] = self.battery.protection.current_under
+        self._dbusservice["/Alarms/CellImbalance"] = self.battery.protection.cell_imbalance
+        self._dbusservice["/Alarms/InternalFailure"] = self.battery.protection.internal_failure
+        self._dbusservice["/Alarms/HighChargeTemperature"] = self.battery.protection.temp_high_charge
+        self._dbusservice["/Alarms/LowChargeTemperature"] = self.battery.protection.temp_low_charge
+        self._dbusservice["/Alarms/HighTemperature"] = self.battery.protection.temp_high_discharge
+        self._dbusservice["/Alarms/LowTemperature"] = self.battery.protection.temp_low_discharge
 
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
@@ -486,7 +464,7 @@ class DbusHelper:
                         if self.battery.current
                         else None
                     )
-                
+
                 # Update TimeToGo
                 self._dbusservice["/TimeToGo"] = (
                     self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
