@@ -17,7 +17,7 @@ logger.setLevel(logging.INFO)
 
 config = configparser.ConfigParser()
 path = Path(__file__).parents[0]
-default_config_file_path = path.joinpath("default_config.ini").absolute().__str__()
+default_config_file_path = path.joinpath("config.default.ini").absolute().__str__()
 custom_config_file_path = path.joinpath("config.ini").absolute().__str__()
 config.read([default_config_file_path, custom_config_file_path])
 
