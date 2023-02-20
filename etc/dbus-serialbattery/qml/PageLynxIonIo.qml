@@ -5,7 +5,7 @@ MbPage {
 	id: root
 	property string bindPrefix
 
-	model: VisualItemModel {
+	model: VisibleItemModel {
 		MbItemOptions {
 			id: systemSwitch
 			description: qsTr("System Switch")

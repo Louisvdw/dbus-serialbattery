@@ -39,7 +39,7 @@ MbPage {
         }
     }
 
-    model: VisualItemModel {
+    model: VisibleItemModel {
         MbItemOptions {
             description: qsTr("Switch")
             bind: service.path("/Mode")
@@ -310,6 +310,7 @@ MbPage {
 
         MbSubMenu {
             property VBusItem allowToCharge: VBusItem { bind: service.path("/Io/AllowToCharge") }
+            property VBusItem allowToBalance: VBusItem { bind: service.path("/Io/AllowToBalance") }
 
             description: qsTr("IO")
             subpage: Component {
@@ -318,7 +319,7 @@ MbPage {
                     bindPrefix: service.path("")
                 }
             }
-            show: allowToCharge.valid
+            show: allowToCharge.valid || allowToBalance.valid
         }
 
         MbSubMenu {
