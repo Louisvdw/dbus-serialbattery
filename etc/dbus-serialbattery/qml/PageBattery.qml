@@ -39,7 +39,7 @@ MbPage {
         }
     }
 
-    model: VisualItemModel {
+    model: VisibleItemModel {
         MbItemOptions {
             description: qsTr("Switch")
             bind: service.path("/Mode")
