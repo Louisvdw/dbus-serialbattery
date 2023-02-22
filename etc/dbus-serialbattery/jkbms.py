@@ -137,17 +137,53 @@ class Jkbms(Battery):
             ">15s", self.get_data(status_data, b"\xB7", offset, 15)
         )[0].decode()
 
+        # show wich cells are balancing
+        if self.get_min_cell() is not None and self.get_max_cell() is not None:
+            for c in range(self.cell_count):
+                if self.balancing and ( self.get_min_cell() == c or self.get_max_cell() == c ):
+                    self.cells[c].balance = True
+                else:
+                    self.cells[c].balance = False
+
         # logger.info(self.hardware_version)
         return True
 
     def to_fet_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(2, utils.zero_char)
-        self.charge_fet = is_bit_set(tmp[1])
-        self.discharge_fet = is_bit_set(tmp[0])
+        tmp = bin(byte_data)[2:].rjust(3, utils.zero_char)
+        self.charge_fet = is_bit_set(tmp[2])
+        self.discharge_fet = is_bit_set(tmp[1])
+        self.balancing = is_bit_set(tmp[0])
 
     def to_balance_bits(self, byte_data):
         tmp = bin(byte_data)[2:]
         self.balance_fet = is_bit_set(tmp)
+
+    def get_min_cell(self):
+        min_voltage = 9999
+        min_cell = None
+        for c in range(min(len(self.cells), self.cell_count)):
+            if (
+                self.cells[c].voltage is not None
+                and min_voltage > self.cells[c].voltage
+            ):
+                min_voltage = self.cells[c].voltage
+                min_cell = c
+        return min_cell
+
+    def get_max_cell(self):
+        max_voltage = 0
+        max_cell = None
+        for c in range(min(len(self.cells), self.cell_count)):
+            if (
+                self.cells[c].voltage is not None
+                and max_voltage < self.cells[c].voltage
+            ):
+                max_voltage = self.cells[c].voltage
+                max_cell = c
+        return max_cell
+
+    def get_balancing(self):
+        return 1 if self.balancing else 0
 
     def to_protection_bits(self, byte_data):
         pos = 13
