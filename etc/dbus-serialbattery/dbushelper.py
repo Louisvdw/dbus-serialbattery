@@ -244,7 +244,7 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
-        # self._dbusservice.add_path('/SystemSwitch',1,writeable=True)
+        # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
         self._dbusservice.add_path("/Alarms/LowVoltage", None, writeable=True)
@@ -350,7 +350,7 @@ class DbusHelper:
         self._dbusservice["/Dc/0/Temperature"] = self.battery.get_temp()
         self._dbusservice["/Capacity"] = self.battery.get_capacity_remain()
         self._dbusservice["/ConsumedAmphours"] = (
-            0
+            None
             if self.battery.capacity is None
             or self.battery.get_capacity_remain() is None
             else self.battery.capacity - self.battery.get_capacity_remain()
