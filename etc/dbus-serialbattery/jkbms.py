@@ -158,6 +158,9 @@ class Jkbms(Battery):
         tmp = bin(byte_data)[2:]
         self.balance_fet = is_bit_set(tmp)
 
+    def get_balancing(self):
+        return 1 if self.balancing else 0
+
     def get_min_cell(self):
         min_voltage = 9999
         min_cell = None
@@ -181,9 +184,6 @@ class Jkbms(Battery):
                 max_voltage = self.cells[c].voltage
                 max_cell = c
         return max_cell
-
-    def get_balancing(self):
-        return 1 if self.balancing else 0
 
     def to_protection_bits(self, byte_data):
         pos = 13
