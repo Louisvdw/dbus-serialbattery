@@ -201,8 +201,9 @@ TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lamb
 # 2 Time string HH:MN:SC
 # 3 Both seconds and time string "<seconds> [days, HR:MN:SC]"
 TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
-# Specify how many loop cycles between each TimeToSoc updates
-TIME_TO_SOC_LOOP_CYCLES = int(config["DEFAULT"]["TIME_TO_SOC_LOOP_CYCLES"])
+# Specify how often, in seconds, the TimeToSoc should be recalculated
+# Limit to minimum 5 seconds to prevent CPU overload
+TIME_TO_SOC_RECALCULATE_EVERY = int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5 else 5
 # Include TimeToSoC points when moving away from the SoC point [Valid values True,False]
 # These will be as negative time. Disabling this improves performance slightly
 TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]

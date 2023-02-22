@@ -70,6 +70,7 @@ class Battery(ABC):
         self.protection = Protection()
         self.version = None
         self.soc = None
+        self.time_to_soc_update = 0
         self.charge_fet = None
         self.discharge_fet = None
         self.balance_fet = None
@@ -92,8 +93,6 @@ class Battery(ABC):
         # max battery charge/discharge current
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
-
-        self.time_to_soc_update = utils.TIME_TO_SOC_LOOP_CYCLES
 
     @abstractmethod
     def test_connection(self) -> bool:

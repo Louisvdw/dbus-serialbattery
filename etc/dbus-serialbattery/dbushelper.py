@@ -4,6 +4,7 @@ import os
 import platform
 import dbus
 import traceback
+from time import time
 
 # Victron packages
 sys.path.insert(
@@ -300,8 +301,10 @@ class DbusHelper:
             self.battery.capacity is not None
             and len(TIME_TO_SOC_POINTS) > 0
         ):
-            # Create TimeToGO item
+            # Create TimeToGo item
             self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+
+            # Create TimeToSoc items
             for num in TIME_TO_SOC_POINTS:
                 self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
 
@@ -454,14 +457,35 @@ class DbusHelper:
         try:
             if (
                 self.battery.capacity is not None
-                and len(TIME_TO_SOC_POINTS) > 0
-                and self.battery.time_to_soc_update == 0
+                and
+                len(TIME_TO_SOC_POINTS) > 0
+                and
+                (
+                    (
+                        # update only once in same second
+                        int(time()) != self.battery.time_to_soc_update
+                        and
+                        # update only every x seconds
+                        int(time()) % TIME_TO_SOC_RECALCULATE_EVERY == 0
+                    )
+                    or
+                    # update on first run
+                    self.battery.time_to_soc_update == 0
+                )
             ):
-                self.battery.time_to_soc_update = TIME_TO_SOC_LOOP_CYCLES
+                self.battery.time_to_soc_update = int(time())
                 crntPrctPerSec = (
                     abs(self.battery.current / (self.battery.capacity / 100)) / 3600
                 )
 
+                # Update TimeToGo item
+                self._dbusservice["/TimeToGo"] = (
+                    self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
+                    if self.battery.current
+                    else None
+                )
+
+                # Update TimeToSoc items
                 for num in TIME_TO_SOC_POINTS:
                     self._dbusservice["/TimeToSoC/" + str(num)] = (
                         self.battery.get_timetosoc(num, crntPrctPerSec)
@@ -469,15 +493,6 @@ class DbusHelper:
                         else None
                     )
 
-                # Update TimeToGo
-                self._dbusservice["/TimeToGo"] = (
-                    self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
-                    if self.battery.current
-                    else None
-                )
-
-            else:
-                self.battery.time_to_soc_update -= 1
         except:
             pass
 
