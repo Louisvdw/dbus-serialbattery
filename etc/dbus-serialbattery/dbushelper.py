@@ -295,11 +295,15 @@ class DbusHelper:
                 gettextcallback=lambda p, v: "{:0.3f}V".format(v),
             )
 
-        # Create TimeToSoC items
-        for num in TIME_TO_SOC_POINTS:
-            self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
-        # Create TimeToGO item
-        self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+        # Create TimeToSoC items only if enabled
+        if (
+            self.battery.capacity is not None
+            and len(TIME_TO_SOC_POINTS) > 0
+        ):
+            # Create TimeToGO item
+            self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+            for num in TIME_TO_SOC_POINTS:
+                self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
 
         logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
         if PUBLISH_CONFIG_VALUES == 1:
