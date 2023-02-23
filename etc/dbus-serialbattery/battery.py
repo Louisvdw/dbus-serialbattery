@@ -455,7 +455,7 @@ class Battery(ABC):
             secondstogo = int(diffSoc / crntPrctPerSec)
             ttgStr = ""
 
-            if utils.TIME_TO_SOC_VALUE_TYPE & 1:
+            if onlyNumber or utils.TIME_TO_SOC_VALUE_TYPE & 1:
                 ttgStr += str(secondstogo)
                 if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
                     ttgStr += " ["
