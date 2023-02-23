@@ -5,7 +5,6 @@ from utils import logger
 import utils
 import logging
 import math
-from datetime import timedelta
 from time import time
 from abc import ABC, abstractmethod
 
@@ -445,7 +444,7 @@ class Battery(ABC):
             return self.capacity * self.soc / 100
         return None
 
-    def get_timetosoc(self, socnum, crntPrctPerSec) -> str:
+    def get_timeToSoc(self, socnum, crntPrctPerSec, onlyNumber = False) -> str:
         if self.current > 0:
             diffSoc = socnum - self.soc
         else:
@@ -458,14 +457,41 @@ class Battery(ABC):
 
             if utils.TIME_TO_SOC_VALUE_TYPE & 1:
                 ttgStr += str(secondstogo)
-                if utils.TIME_TO_SOC_VALUE_TYPE & 2:
+                if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
                     ttgStr += " ["
-            if utils.TIME_TO_SOC_VALUE_TYPE & 2:
-                ttgStr += str(timedelta(seconds=secondstogo))
+            if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
+                ttgStr += self.get_secondsToString(secondstogo)
+
                 if utils.TIME_TO_SOC_VALUE_TYPE & 1:
                     ttgStr += "]"
 
         return ttgStr
+
+    def get_secondsToString(self, timespan, precision = 3) -> str:
+        """
+        Transforms seconds to a string in the format: 1d 1h 1m 1s (Victron Style)
+        :param precision:
+        0 = 1d
+        1 = 1d 1h
+        2 = 1d 1h 1m
+        3 = 1d 1h 1m 1s
+
+        This was added, since timedelta() returns strange values, if time is negative
+        e.g.: seconds: -70245 --> timedelta output: -1 day, 4:29:15 --> calculation: -1 day + 4:29:15 --> real value -19:30:45
+        """
+        tmp = '' if timespan >= 0 else '-'
+        timespan = abs(timespan)
+
+        m, s = divmod(timespan, 60)
+        h, m = divmod(m, 60)
+        d, h = divmod(h, 24)
+
+        tmp += ( ( str(d) + 'd ' ) if d > 0 else '' )
+        tmp += ( ( str(h) + 'h ' ) if precision >= 1 and h > 0 else '' )
+        tmp += ( ( str(m) + 'm ' ) if precision >= 2 and m > 0 else '' )
+        tmp += ( ( str(s) + 's ' ) if precision == 3 and s > 0 else '' )
+
+        return tmp.rstrip()
 
     def get_min_cell_voltage(self) -> Union[float, None]:
         min_voltage = None

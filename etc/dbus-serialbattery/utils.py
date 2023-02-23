@@ -198,8 +198,8 @@ TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lamb
 # Specify TimeToSoc value type [Valid values 1, 2, 3]
 # TODO: for what is this needed, if it's not displayed anywhere?
 # 1 Seconds
-# 2 Time string HH:MN:SC
-# 3 Both seconds and time string "<seconds> [days, HR:MN:SC]"
+# 2 Time string <days>d <hours>h <minutes>m <seconds>s
+# 3 Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"
 TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
 # Specify how often, in seconds, the TimeToSoc should be recalculated
 # Limit to minimum 5 seconds to prevent CPU overload

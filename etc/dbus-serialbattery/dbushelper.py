@@ -478,9 +478,9 @@ class DbusHelper:
                     abs(self.battery.current / (self.battery.capacity / 100)) / 3600
                 )
 
-                # Update TimeToGo item
+                # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
                 self._dbusservice["/TimeToGo"] = (
-                    self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
+                    abs ( int ( self.battery.get_timeToSoc(SOC_LOW_WARNING, crntPrctPerSec, True) ) )
                     if self.battery.current
                     else None
                 )
@@ -488,7 +488,7 @@ class DbusHelper:
                 # Update TimeToSoc items
                 for num in TIME_TO_SOC_POINTS:
                     self._dbusservice["/TimeToSoC/" + str(num)] = (
-                        self.battery.get_timetosoc(num, crntPrctPerSec)
+                        self.battery.get_timeToSoc(num, crntPrctPerSec)
                         if self.battery.current
                         else None
                     )
