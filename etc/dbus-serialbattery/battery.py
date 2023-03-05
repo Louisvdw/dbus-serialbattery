@@ -77,6 +77,7 @@ class Battery(ABC):
         self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
+        self.temp_mos = None
         self.cells: List[Cell] = []
         self.control_charging = None
         self.control_voltage = None
@@ -139,6 +140,8 @@ class Battery(ABC):
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
+        if sensor == 'mos':
+            self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
         """
@@ -597,6 +600,12 @@ class Battery(ABC):
         return self.extract_from_temp_values(
             extractor=lambda temp1, temp2: max(temp1, temp2)
         )
+
+    def get_mos_temp(self) -> Union[float, None]:
+        if self.temp_mos is not None:
+            return self.temp_mos
+        else:
+            return None
 
     def log_cell_data(self) -> bool:
         if logger.getEffectiveLevel() > logging.INFO and len(self.cells) == 0:
