@@ -143,8 +143,9 @@ class Jkbms_Ble(Battery):
         self.balancing_current = st["cell_info"]["balancing_current"] if st["cell_info"]["balancing_current"] < 32768 else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
         self.balancing_action = st["cell_info"]["balancing_action"]
 
+        # show wich cells are balancing
         for c in range(self.cell_count):
-            if self.balancing and (st["cell_info"]["max_voltage_cell"] == c or st["cell_info"]["min_voltage_cell"] == c ):
+            if self.balancing and ( st["cell_info"]["min_voltage_cell"] == c or st["cell_info"]["max_voltage_cell"] == c ):
                 self.cells[c].balance = True
             else:
                 self.cells[c].balance = False
