@@ -35,8 +35,8 @@ def _get_list_from_config(
 # if not specified: baud = 9600
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = ".3"
+DRIVER_VERSION = "1.0"
+DRIVER_SUBVERSION = ".0"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
