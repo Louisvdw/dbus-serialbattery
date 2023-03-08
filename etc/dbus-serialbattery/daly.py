@@ -31,7 +31,7 @@ class Daly(Battery):
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
     BATTERYTYPE = "Daly"
-    LENGTH_CHECK = 4
+    LENGTH_CHECK = 1
     LENGTH_POS = 3
     CURRENT_ZERO_CONSTANT = 30000
     TEMP_ZERO_CONSTANT = 40
@@ -272,14 +272,19 @@ class Daly(Battery):
                 for idx in range(self.cell_count):
                     self.cells.append(Cell(True))
 
+            # logger.warning("data " + bytes(cells_volts_data).hex())
+
             while (
                 bufIdx < len(cells_volts_data) - 4
             ):  # we at least need 4 bytes to extract the identifiers
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
-                    frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from(
-                        ">Bhhh", cells_volts_data, bufIdx + 4
+                    frame, frameCell[0], frameCell[1], frameCell[2], _, chk = unpack_from(
+                        ">BhhhBB", cells_volts_data, bufIdx + 4
                     )
+                    if sum(cells_volts_data[bufIdx:bufIdx+12]) & 0xFF != chk:
+                        logger.warning("bad cell voltages checksum")
+                        return False
                     for idx in range(3):
                         cellnum = (
                             (frame - 1) * 3
@@ -290,9 +295,9 @@ class Daly(Battery):
                         self.cells[cellnum].voltage = (
                             None if cellVoltage < lowMin else cellVoltage
                         )
-                    bufIdx += 10  # BBBBBhhh -> 11 byte
-                bufIdx += 1
-
+                    bufIdx += 13  # BBBBBhhhBB -> 13 byte
+                else:
+                    logger.warning("bad cell voltages header")
         return True
 
     def read_cell_voltage_range_data(self, ser):
@@ -362,7 +367,7 @@ class Daly(Battery):
         start, flag, command_ret, length = unpack_from("BBBB", data)
         checksum = sum(data[:-1]) & 0xFF
 
-        if start == 165 and length == 8 and checksum == data[12]:
+        if start == 165 and length == 8 and len(data)>12 and checksum == data[12]:
             return data[4 : length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
