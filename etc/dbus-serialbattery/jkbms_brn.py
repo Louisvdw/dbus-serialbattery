@@ -166,14 +166,14 @@ class JkBmsBle:
 
     def decode_device_info_jk02(self):
         fb = self.frame_buffer
-        has32s = (fb[189] == 0x00 and fb[189 + 32] > 0)
         for t in TRANSLATE_DEVICE_INFO:
-            self.translate(fb, t, self.bms_status, f32s=has32s)
+            self.translate(fb, t, self.bms_status)
 
     def decode_cellinfo_jk02(self):
         fb = self.frame_buffer
+        has32s = (fb[189] == 0x00 and fb[189 + 32] > 0)
         for t in TRANSLATE_CELL_INFO:
-            self.translate(fb, t, self.bms_status)
+            self.translate(fb, t, self.bms_status, f32s=has32s)
         self.decode_warnings(fb)
         debug(self.bms_status)
 
