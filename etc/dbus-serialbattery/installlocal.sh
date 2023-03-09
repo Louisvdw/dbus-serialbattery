@@ -14,5 +14,7 @@ grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || e
 
 
 echo "Make sure to disable Settings -> Bluetooth in the Remote-Console to prevent reconnects every minute."
-echo "ATTENTION: If you changed the default connection PIN of JKBMS, then you have to pair the JKBMS first using OS tools like the \"bluetoothctl\"."
+echo "ATTENTION!"
+echo "- At the moment this driver needs a serial to USB adapter attached to start. The serial side hasn't to be connected anywhere."
+echo "- If you changed the default connection PIN of JKBMS, then you have to pair the JKBMS first using OS tools like the \"bluetoothctl\"."
 echo "See https://wiki.debian.org/BluetoothUser#Using_bluetoothctl for more details."
