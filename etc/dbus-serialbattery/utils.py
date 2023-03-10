@@ -135,9 +135,9 @@ SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
 
-# Charge current control management enable (True/False).
+# Charge current control management reffering to SoC enable (True/False).
 CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
-# Discharge current control management enable (True/False).
+# Discharge current control management reffering to SoC enable (True/False).
 DCCM_SOC_ENABLE = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
 
 # charge current soc limits
