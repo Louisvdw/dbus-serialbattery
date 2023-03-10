@@ -66,6 +66,7 @@ if (( $venusVersionNumber < $versionNumber )); then
     fileList+=" $qmlDir/PageLynxIonIo.qml"
     for file in $fileList ; do
         sed -i -e 's/VisibleItemModel/VisualItemModel/' "$file"
+	done
     echo "done."
 fi
 
