@@ -23,7 +23,7 @@ class HLPdataBMS4S(Battery):
         try:
             result = self.read_test_data()
         except Exception as e:
-            logger.info(e, exc_info=True)
+#            logger.info(e, exc_info=True)
             pass
 
         return result
