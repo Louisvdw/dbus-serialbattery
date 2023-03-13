@@ -621,22 +621,17 @@ class Battery(ABC):
 
     def log_settings(self) -> None:
 
-        logger.info(f"Battery {self.type} connected to dbus from {self.port}")
-        logger.info("=== Settings ===")
         cell_counter = len(self.cells)
-        logger.info(
-            f"> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%"
-        )
-        logger.info(f"> Cell count {self.cell_count} | cells populated {cell_counter}")
-        logger.info(
-            f"> CCCM SOC {utils.CCCM_SOC_ENABLE} | DCCM SOC {utils.DCCM_SOC_ENABLE}"
-        )
-        logger.info(
-            f"> CCCM CV {utils.CCCM_CV_ENABLE} | DCCM CV {utils.DCCM_CV_ENABLE}"
-        )
-        logger.info(f"> CCCM T {utils.CCCM_T_ENABLE} | DCCM T {utils.DCCM_T_ENABLE}")
-        logger.info(
-            f"> MIN_CELL_VOLTAGE {utils.MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {utils.MAX_CELL_VOLTAGE}V"
-        )
+        logger.info(f"Battery {self.type} connected to dbus from {self.port}")
+        logger.info( "========== Settings ==========")
+        logger.info(f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc}%")
+        logger.info(f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}")
+        logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
+        logger.info(f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V")
+        logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
+        logger.info(f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V")
+        logger.info(f"> CCCM CV:  {str(utils.CCCM_CV_ENABLE).ljust(5)} | DCCM CV:  {utils.DCCM_CV_ENABLE}")
+        logger.info(f"> CCCM T:   {str(utils.CCCM_T_ENABLE).ljust(5)} | DCCM T:   {utils.DCCM_T_ENABLE}")
+        logger.info(f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}")
 
         return
