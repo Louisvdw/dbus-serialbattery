@@ -41,28 +41,74 @@ zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
 # Choose the mode for voltage / current limitations (True / False)
-# False is a Step mode. This is the default with limitations on hard boundary steps
-# True "Linear"    # New linear limitations by WaldemarFech for smoother values
+# False is a step mode. This is the default with limitations on hard boundary steps
+# True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
+#                        For CVL the penalties are only applied, if the cell voltage reaches the penalty voltage
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
-# battery Current limits
+# Battery Current limits
 MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
-MAX_BATTERY_DISCHARGE_CURRENT = float(
-    config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
+MAX_BATTERY_DISCHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"])
+
+
+# --------- Charge Voltage limitation (affecting CVL) ---------
+# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count) and switch from max voltage to float voltage (FLOAT_CELL_VOLTAGE * cell count)
+#              after max voltage is reached for MAX_VOLTAGE_TIME_SEC. It switches back to max voltage after SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT
+#              If LINEAR_LIMITATION_ENABLE is set to True then penalty voltages are applied
+# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float voltage of 53.6V to don't stress the batteries.
+#          Allow max voltage of 55.2V again, if SoC is once below 90%
+# Charge voltage control management enable (True/False).
+CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
+
+# -- Cell Voltages
+# Description: Cell min/max voltages which are used to calculate the min/max battery voltage
+# Example: 16 cells * 3.45V/cell = 55.2V max charge voltage. 16 cells * 2.90V = 46.4V min discharge voltage
+MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
+MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
+# Max voltage can seen as absorption voltage
+FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
+
+# -- Penalty Voltages
+# NOTE: works only when LINEAR_LIMITATION_ENABLE = True
+# More details can be found here: https://github.com/Louisvdw/dbus-serialbattery/issues/297#issuecomment-1327142635
+# If the cell voltage reaches 3.48V, then reduce actual battery-voltage by 0.01V
+# If the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
+# There will be a sum of all penalties for each cell, which exceeds the limits
+# NOTE: The first value of PENALTY_AT_CELL_VOLTAGE has to be at least MAX_CELL_VOLTAGE + the first value of PENALTY_BATTERY_VOLTAGE,
+#       else the FLOAT_CELL_VOLTAGE is never set. Additionally the battery voltage has to reach max voltage and all cells has to be below penalty voltage to switch to float voltage.
+PENALTY_AT_CELL_VOLTAGE = _get_list_from_config(
+    "DEFAULT",
+    "PENALTY_AT_CELL_VOLTAGE",
+    lambda v: float(v)
+)
+# this voltage will be subtracted
+PENALTY_BATTERY_VOLTAGE = _get_list_from_config(
+    "DEFAULT",
+    "PENALTY_BATTERY_VOLTAGE",
+    lambda v: float(v)
 )
 
-# -------- Cell Voltage limitation ---------
-# Description:
-# Maximal charge / discharge current will be in-/decreased depending on min- and max-cell-voltages
-# Example: 18cells * 3.55V/cell = 63.9V max charge voltage. 18 * 2.7V = 48,6V min discharge voltage
-#          ... but the (dis)charge current will be (in-/)decreased, if even ONE SINGLE BATTERY CELL reaches the limits
+# -- CVL Reset based on SoC option
+# Reset max voltage after
+MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
+# Specify SoC where CVL limit is reset to max voltage
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"])
+
+
+# --------- Cell Voltage Current limitation (affecting CCL/DCL) ---------
+# Description: Maximal charge / discharge current will be in-/decreased depending on min and max cell voltages
+# Example: 18 cells * 3.55V/cell = 63.9V max charge voltage
+#          18 cells * 2.70V/cell = 48.6V min discharge voltage
+#          But in reality not all cells reach the same voltage at the same time. The (dis)charge current
+#          will be (in-/)decreased, if even ONE SINGLE BATTERY CELL reaches the limits
 
 # Charge current control management referring to cell-voltage enable (True/False).
 CCCM_CV_ENABLE = "True" == config["DEFAULT"]["CCCM_CV_ENABLE"]
 # Discharge current control management referring to cell-voltage enable (True/False).
 DCCM_CV_ENABLE = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
 
-# Set Steps to reduce battery current. The current will be changed linear between those steps
+# Set steps to reduce battery current
+# The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE is set to True
 CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
 )
@@ -81,9 +127,9 @@ MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
-# -------- Temperature limitation ---------
-# Description:
-# Maximal charge / discharge current will be in-/decreased depending on temperature
+
+# --------- Temperature limitation (affecting CCL/DCL) ---------
+# Description: Maximal charge / discharge current will be in-/decreased depending on temperature
 # Example: The temperature limit will be monitored to control the currents. If there are two temperature senors,
 #          then the worst case will be calculated and the more secure lower current will be set.
 # Charge current control management referring to temperature enable (True/False).
@@ -91,9 +137,12 @@ CCCM_T_ENABLE = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
 # Charge current control management referring to temperature enable (True/False).
 DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
 
-# Set Steps to reduce battery current. The current will be changed linear between those steps
+# Set steps to reduce battery current
+# The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE is set to True
 TEMPERATURE_LIMITS_WHILE_CHARGING = _get_list_from_config(
-    "DEFAULT", "TEMPERATURE_LIMITS_WHILE_CHARGING", lambda v: float(v)
+    "DEFAULT",
+    "TEMPERATURE_LIMITS_WHILE_CHARGING",
+    lambda v: float(v)
 )
 MAX_CHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT",
@@ -110,123 +159,104 @@ MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
-# if the cell voltage reaches 3.55V, then reduce current battery-voltage by 0.01V
-# if the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
-# there will be a sum of all penalties for each cell, which exceeds the limits
-PENALTY_AT_CELL_VOLTAGE = _get_list_from_config(
-    "DEFAULT", "PENALTY_AT_CELL_VOLTAGE", lambda v: float(v)
-)
-PENALTY_BATTERY_VOLTAGE = _get_list_from_config(
-    "DEFAULT", "PENALTY_BATTERY_VOLTAGE", lambda v: float(v)
-)
 
-
-# -------- SOC limitation ---------
-# Description:
-# Maximal charge / discharge current will be increased / decreased depending on State of Charge, see CC_SOC_LIMIT1 etc.
-# The State of Charge (SoC) charge / discharge current will be in-/decreased depending on SOC.
-# Example: 16cells * 3.45V/cell = 55,2V max charge voltage. 16*2.9V = 46,4V min discharge voltage
-# Cell min/max voltages - used with the cell count to get the min/max battery voltage
-MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
-MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
-FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
-MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
-SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
-    config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
-)
-
-# Charge current control management reffering to SoC enable (True/False).
+# --------- SOC limitation (affecting CCL/DCL) ---------
+# Description: Maximal charge / discharge current will be increased / decreased depending on State of Charge,
+#              see CC_SOC_LIMIT1 etc.
+# Example: The SoC limit will be monitored to control the currents.
+# Charge current control management enable (True/False).
 CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
-# Discharge current control management reffering to SoC enable (True/False).
+# Discharge current control management enable (True/False).
 DCCM_SOC_ENABLE = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
 
-# charge current soc limits
+# Charge current soc limits
 CC_SOC_LIMIT1 = float(config["DEFAULT"]["CC_SOC_LIMIT1"])
 CC_SOC_LIMIT2 = float(config["DEFAULT"]["CC_SOC_LIMIT2"])
 CC_SOC_LIMIT3 = float(config["DEFAULT"]["CC_SOC_LIMIT3"])
 
-# charge current limits
-CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT1_FRACTION"]
-)
-CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT2_FRACTION"]
-)
-CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT3_FRACTION"]
-)
+# Charge current limits
+CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * float(config["DEFAULT"]["CC_CURRENT_LIMIT1_FRACTION"])
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * float(config["DEFAULT"]["CC_CURRENT_LIMIT2_FRACTION"])
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * float(config["DEFAULT"]["CC_CURRENT_LIMIT3_FRACTION"])
 
-# discharge current soc limits
+# Discharge current soc limits
 DC_SOC_LIMIT1 = float(config["DEFAULT"]["DC_SOC_LIMIT1"])
 DC_SOC_LIMIT2 = float(config["DEFAULT"]["DC_SOC_LIMIT2"])
 DC_SOC_LIMIT3 = float(config["DEFAULT"]["DC_SOC_LIMIT3"])
 
-# discharge current limits
-DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT1_FRACTION"]
-)
-DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT2_FRACTION"]
-)
-DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"]
-)
+# Discharge current limits
+DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_CURRENT_LIMIT1_FRACTION"])
+DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_CURRENT_LIMIT2_FRACTION"])
+DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"])
 
-# Charge voltage control management enable (True/False).
-CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
+
+# --------- Time-To-Soc ---------
+# Description: Calculates the time to a specific SoC
+# Example: TIME_TO_SOC_POINTS = 50, 25, 15, 0
+#          6h 24m remaining until 50% SoC
+#          17h 36m remaining until 25% SoC
+#          22h 5m remaining until 15% SoC
+#          28h 48m remaining until 0% SoC
+# Set of SoC percentages to report on dbus and MQTT. The more you specify the more it will impact system performance.
+# [Valid values 0-100, comma separated list. More that 20 intervals are not recommended]
+# Example: TIME_TO_SOC_POINTS = 100, 95, 90, 85, 75, 50, 25, 20, 10, 0
+# Leave empty to disable
+TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lambda v: int(v))
+# Specify TimeToSoc value type [Valid values 1, 2, 3]
+# 1 Seconds
+# 2 Time string <days>d <hours>h <minutes>m <seconds>s
+# 3 Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"
+TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
+# Specify in seconds how often the TimeToSoc should be recalculated
+# Minimum are 5 seconds to prevent CPU overload
+TIME_TO_SOC_RECALCULATE_EVERY = int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5 else 5
+# Include TimeToSoC points when moving away from the SoC point [Valid values True, False]
+# These will be as negative time. Disabling this improves performance slightly
+TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
+
+
+# --------- Additional settings ---------
+# Specify only one BMS type to load else leave empty to try to load all availabe
+# LltJbd, Ant, Daly, Daly, Jkbms, Lifepower, Renogy, Renogy, Ecs
+BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
+
+# Publish the config settings to the dbus path "/Info/Config/"
+PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
+
+# Select the format of cell data presented on dbus [Valid values 0,1,2,3]
+# 0 Do not publish all the cells (only the min/max cell data as used by the default GX)
+# 1 Format: /Voltages/Cell (also available for display on Remote Console)
+# 2 Format: /Cell/#/Volts
+# 3 Both formats 1 and 2
+BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
 
-# soc low levels
+
+# --------- BMS specific settings ---------
+
+# -- LltJbd settings
+# SoC low levels
+# NOTE: SOC_LOW_WARNING is also used to calculate the Time-To-Go even if you are not using a LltJbd BMS
 SOC_LOW_WARNING = float(config["DEFAULT"]["SOC_LOW_WARNING"])
 SOC_LOW_ALARM = float(config["DEFAULT"]["SOC_LOW_ALARM"])
 
-# Daly settings
+# -- Daly settings
 # Battery capacity (amps) if the BMS does not support reading it
 BATTERY_CAPACITY = float(config["DEFAULT"]["BATTERY_CAPACITY"])
 # Invert Battery Current. Default non-inverted. Set to -1 to invert
 INVERT_CURRENT_MEASUREMENT = int(config["DEFAULT"]["INVERT_CURRENT_MEASUREMENT"])
 
-# TIME TO SOC settings [Valid values 0-100, but I don't recommend more that 20 intervals]
-# Set of SoC percentages to report on dbus. The more you specify the more it will impact system performance.
-# TIME_TO_SOC_POINTS = 100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0
-# Every 5% SoC
-# TIME_TO_SOC_POINTS = 100, 95, 90, 85, 75, 50, 25, 20, 10, 0
-# No data set to disable
-TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lambda v: int(v))
-# Specify TimeToSoc value type [Valid values 1, 2, 3]
-# TODO: for what is this needed, if it's not displayed anywhere?
-# 1 Seconds
-# 2 Time string <days>d <hours>h <minutes>m <seconds>s
-# 3 Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"
-TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
-# Specify how often, in seconds, the TimeToSoc should be recalculated
-# Limit to minimum 5 seconds to prevent CPU overload
-TIME_TO_SOC_RECALCULATE_EVERY = int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5 else 5
-# Include TimeToSoC points when moving away from the SoC point [Valid values True,False]
-# These will be as negative time. Disabling this improves performance slightly
-TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
-
-
-# Select the format of cell data presented on dbus. [Valid values 0,1,2,3]
-# 0 Do not publish all the cells (only the min/max cell data as used by the default GX)
-# 1 Format: /Voltages/Cell# (also available for display on Remote Console)
-# 2 Format: /Cell/#/Volts
-# 3 Both formats 1 and 2
-BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
-
-# Settings for ESC GreenMeter and Lipro devices
+# -- ESC GreenMeter and Lipro device settings
 GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])
 LIPRO_START_ADDRESS = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
 LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
-PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
-
-BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
 
 
+# --------- Functions ---------
 def constrain(val, min_val, max_val):
     if min_val > max_val:
         min_val, max_val = max_val, min_val
