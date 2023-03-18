@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 opkg update
 opkg install python3-misc python3-pip
 pip3 install bleak

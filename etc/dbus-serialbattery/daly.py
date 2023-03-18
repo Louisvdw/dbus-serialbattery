@@ -6,7 +6,7 @@ from struct import *
 
 class Daly(Battery):
     def __init__(self, port, baud, address):
-        super(Daly, self).__init__(port, baud)
+        super(Daly, self).__init__(port, baud, address)
         self.charger_connected = None
         self.load_connected = None
         self.command_address = address

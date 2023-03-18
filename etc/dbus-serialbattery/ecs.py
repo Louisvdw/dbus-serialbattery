@@ -7,8 +7,8 @@ import minimalmodbus
 
 
 class Ecs(Battery):
-    def __init__(self, port, baud):
-        super(Ecs, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Ecs, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "ECS_LiPro"

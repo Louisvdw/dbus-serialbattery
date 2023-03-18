@@ -6,8 +6,8 @@ from struct import unpack_from
 
 
 class Jkbms(Battery):
-    def __init__(self, port, baud):
-        super(Jkbms, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Jkbms, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "Jkbms"
@@ -18,17 +18,11 @@ class Jkbms(Battery):
     command_status = b"\x4E\x57\x00\x13\x00\x00\x00\x00\x06\x03\x00\x00\x00\x00\x00\x00\x68\x00\x00\x01\x29"
 
     def test_connection(self):
-        # call a function that will connect to the battery, send a command and retrieve the result.
-        # The result or call should be unique to this BMS. Battery name or version, etc.
-        # Return True if success, False for failure
-        result = False
         try:
-            result = self.read_status_data()
+            return self.read_status_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
-            pass
-
-        return result
+            return False
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -182,8 +176,12 @@ class Jkbms(Battery):
             1 if is_bit_set(tmp[pos - 4]) or is_bit_set(tmp[pos - 8]) else 0
         )
 
-    def read_serial_data_jkbms(self, command):
-        # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
+    def read_serial_data_jkbms(self, command: str) -> bool:
+        """
+        use the read_serial_data() function to read the data and then do BMS specific checks (crc, start bytes, etc)
+        :param command: the command to be sent to the bms
+        :return: True if everything is fine, else False
+        """
         data = read_serial_data(
             command,
             self.port,

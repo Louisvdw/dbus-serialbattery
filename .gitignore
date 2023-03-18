@@ -158,3 +158,6 @@ BMS-trials
 .project
 .pydevproject
 *.prefs
+
+# Local Clone of velib_python
+velib_python

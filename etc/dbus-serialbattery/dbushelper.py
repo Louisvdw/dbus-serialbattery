@@ -299,6 +299,12 @@ class DbusHelper:
         # Create TimeToSoC items
         for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
+        #Create TimeToGO item
+        self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+
+        logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
+        if PUBLISH_CONFIG_VALUES == 1:
+            publish_config_variables(self._dbusservice)
 
         return True
 
@@ -325,7 +331,7 @@ class DbusHelper:
             # This is to mannage CVCL
             self.battery.manage_charge_voltage()
 
-            # publish all the data fro the battery object to dbus
+            # publish all the data from the battery object to dbus
             self.publish_dbus()
 
         except:
@@ -363,7 +369,9 @@ class DbusHelper:
             1 if self.battery.charge_fet and self.battery.control_allow_charge else 0
         )
         self._dbusservice["/Io/AllowToDischarge"] = (
-            1 if self.battery.discharge_fet else 0
+            1
+            if self.battery.discharge_fet and self.battery.control_allow_discharge
+            else 0
         )
         self._dbusservice["/Io/AllowToBalance"] = (
             1 if self.battery.balance_fet else 0
@@ -484,6 +492,13 @@ class DbusHelper:
                         if self.battery.current
                         else None
                     )
+                
+                # Update TimeToGo
+                self._dbusservice["/TimeToGo"] = (
+                    self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
+                    if self.battery.current
+                    else None
+                )
 
             else:
                 self.battery.time_to_soc_update -= 1

@@ -5,8 +5,8 @@ from struct import *
 
 
 class BatteryTemplate(Battery):
-    def __init__(self, port, baud):
-        super(BatteryTemplate, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(BatteryTemplate, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "Template"

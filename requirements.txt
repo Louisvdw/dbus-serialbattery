@@ -1,3 +1,2 @@
 pyserial==3.5
-velib_python==2.80
 minimalmodbus==2.0.1

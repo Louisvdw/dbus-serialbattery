@@ -48,7 +48,7 @@ class MNBProtection(Protection):
 
 class MNB(Battery):
     def __init__(self, port, baud, address=0):
-        super(MNB, self).__init__(port, baud)
+        super(MNB, self).__init__(port, baud, address)
         self.protection = MNBProtection()
         self.hardware_version = 1.02
         self.voltage = 26
