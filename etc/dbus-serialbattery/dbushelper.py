@@ -46,38 +46,39 @@ class DbusHelper:
         path = "/Settings/Devices/serialbattery"
         default_instance = "battery:1"
         settings = {
+            # Name : [PATH, VALUE, MINIMUM, MAXIMUM, SILENT]
             "instance": [
                 path + "_" + str(bms_id).replace(" ", "_") + "/ClassAndVrmInstance",
                 default_instance,
                 0,
                 0,
             ],
-            # 'CellVoltageMin': [path + '/CellVoltageMin', 2.8, 0.0, 5.0],
-            # 'CellVoltageMax': [path + '/CellVoltageMax', 3.45, 0.0, 5.0],
-            # 'CellVoltageFloat': [path + '/CellVoltageFloat', 3.35, 0.0, 5.0],
-            # 'VoltageMaxTime': [path + '/VoltageMaxTime', 900, 0, 0],
-            # 'VoltageResetSocLimit': [path + '/VoltageResetSocLimit', 90, 0, 100],
-            # 'MaxChargeCurrent': [path + '/MaxCurrentCharge', 5, 0.0, 500],
-            # 'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', 7, 0.0, 500],
-            # 'AllowDynamicChargeCurrent': [path + '/AllowDynamicChargeCurrent', 1, 0, 1],
-            # 'AllowDynamicDischargeCurrent': [path + '/AllowDynamicDischargeCurrent', 1, 0, 1],
-            # 'AllowDynamicChargeVoltage': [path + '/AllowDynamicChargeVoltage', 0, 0, 1],
-            # 'SocLowWarning': [path + '/SocLowWarning', 20, 0, 100],
-            # 'SocLowAlarm': [path + '/SocLowAlarm', 10, 0, 100],
-            # 'Capacity': [path + '/Capacity', '', 0, 500],
-            # 'EnableInvertedCurrent': [path + '/EnableInvertedCurrent', 0, 0, 1],
-            # 'CCMSocLimitCharge1': [path + '/CCMSocLimitCharge1', 98, 0, 100],
-            # 'CCMSocLimitCharge2': [path + '/CCMSocLimitCharge2', 95, 0, 100],
-            # 'CCMSocLimitCharge3': [path + '/CCMSocLimitCharge3', 91, 0, 100],
-            # 'CCMSocLimitDischarge1': [path + '/CCMSocLimitDischarge1', 10, 0, 100],
-            # 'CCMSocLimitDischarge2': [path + '/CCMSocLimitDischarge2', 20, 0, 100],
-            # 'CCMSocLimitDischarge3': [path + '/CCMSocLimitDischarge3', 30, 0, 100],
-            # 'CCMCurrentLimitCharge1': [path + '/CCMCurrentLimitCharge1', 5, 0, 100],
-            # 'CCMCurrentLimitCharge2': [path + '/CCMCurrentLimitCharge2', '', 0, 100],
-            # 'CCMCurrentLimitCharge3': [path + '/CCMCurrentLimitCharge3', '', 0, 100],
-            # 'CCMCurrentLimitDischarge1': [path + '/CCMCurrentLimitDischarge1', 5, 0, 100],
-            # 'CCMCurrentLimitDischarge2': [path + '/CCMCurrentLimitDischarge2', '', 0, 100],
-            # 'CCMCurrentLimitDischarge3': [path + '/CCMCurrentLimitDischarge3', '', 0, 100],
+            'CellVoltageMin': [path + '/CellVoltageMin', MIN_CELL_VOLTAGE, 2.5, 3.65],
+            'CellVoltageMax': [path + '/CellVoltageMax', MAX_CELL_VOLTAGE, 2.5, 3.65],
+            'CellVoltageFloat': [path + '/CellVoltageFloat', FLOAT_CELL_VOLTAGE, 2.5, 3.65],
+            'VoltageMaxTime': [path + '/VoltageMaxTime', MAX_VOLTAGE_TIME_SEC, 0, 0],
+            'VoltageResetSocLimit': [path + '/VoltageResetSocLimit', SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT, 0, 100],
+            'MaxChargeCurrent': [path + '/MaxCurrentCharge', MAX_BATTERY_CHARGE_CURRENT, 0.0, 500],
+            'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', MAX_BATTERY_DISCHARGE_CURRENT, 0.0, 500],
+            'AllowDynamicChargeCurrent': [path + '/AllowDynamicChargeCurrent', 1, 0, 1],
+            'AllowDynamicDischargeCurrent': [path + '/AllowDynamicDischargeCurrent', 1, 0, 1],
+            'AllowDynamicChargeVoltage': [path + '/AllowDynamicChargeVoltage', 0, 0, 1],
+            'SocLowWarning': [path + '/SocLowWarning', SOC_LOW_WARNING, 0, 100],
+            'SocLowAlarm': [path + '/SocLowAlarm', SOC_LOW_ALARM, 0, 100],
+            'Capacity': [path + '/Capacity', BATTERY_CAPACITY, 0, 500],
+            'EnableInvertedCurrent': [path + '/EnableInvertedCurrent', INVERT_CURRENT_MEASUREMENT, 0, 1],
+            'CCMSocLimitCharge1': [path + '/CCMSocLimitCharge1', CC_SOC_LIMIT1, 0, 100],
+            'CCMSocLimitCharge2': [path + '/CCMSocLimitCharge2', CC_SOC_LIMIT2, 0, 100],
+            'CCMSocLimitCharge3': [path + '/CCMSocLimitCharge3', CC_SOC_LIMIT3, 0, 100],
+            'CCMCurrentLimitCharge1': [path + '/CCMCurrentLimitCharge1', CC_CURRENT_LIMIT1, 0, 500],
+            'CCMCurrentLimitCharge2': [path + '/CCMCurrentLimitCharge2', CC_CURRENT_LIMIT2, 0, 500],
+            'CCMCurrentLimitCharge3': [path + '/CCMCurrentLimitCharge3', CC_CURRENT_LIMIT3, 0, 500],
+            'CCMSocLimitDischarge1': [path + '/CCMSocLimitDischarge1', DC_SOC_LIMIT1, 0, 100],
+            'CCMSocLimitDischarge2': [path + '/CCMSocLimitDischarge2', DC_SOC_LIMIT2, 0, 100],
+            'CCMSocLimitDischarge3': [path + '/CCMSocLimitDischarge3', DC_SOC_LIMIT3, 0, 100],
+            'CCMCurrentLimitDischarge1': [path + '/CCMCurrentLimitDischarge1', DC_CURRENT_LIMIT1, 0, 500],
+            'CCMCurrentLimitDischarge2': [path + '/CCMCurrentLimitDischarge2', DC_CURRENT_LIMIT2, 0, 500],
+            'CCMCurrentLimitDischarge3': [path + '/CCMCurrentLimitDischarge3', DC_CURRENT_LIMIT3, 0, 500],
         }
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
@@ -183,9 +184,6 @@ class DbusHelper:
             writeable=True,
             gettextcallback=lambda p, v: "{:0.0f}Ah".format(v),
         )
-        # Not used at this stage
-        # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
-        # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
 
         # Create SOC, DC and System items
         self._dbusservice.add_path("/Soc", None, writeable=True)
@@ -222,9 +220,15 @@ class DbusHelper:
         )
 
         # Create battery extras
+        self._dbusservice.add_path("/System/MinTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MinCellTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature1", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature2", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature3", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature4", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -390,8 +394,14 @@ class DbusHelper:
             0 if self.battery.online else 1
         )
         self._dbusservice["/System/MinCellTemperature"] = self.battery.get_min_temp()
+        self._dbusservice["/System/MinTemperatureCellId"] = self.battery.get_min_temp_cell_desc()
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
+        self._dbusservice["/System/MaxTemperatureCellId"] = self.battery.get_max_temp_cell_desc()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
+        self._dbusservice["/System/Temperature1"] = self.battery.temp1
+        self._dbusservice["/System/Temperature2"] = self.battery.temp2
+        self._dbusservice["/System/Temperature3"] = self.battery.temp3
+        self._dbusservice["/System/Temperature4"] = self.battery.temp4
 
         # Charge control
         self._dbusservice[
@@ -479,7 +489,7 @@ class DbusHelper:
             if (
                 self.battery.capacity is not None
                 and len(TIME_TO_SOC_POINTS) > 0
-                and self.battery.time_to_soc_update == 0
+                and self.battery.time_to_soc_update <= 0
             ):
                 self.battery.time_to_soc_update = TIME_TO_SOC_LOOP_CYCLES
                 crntPrctPerSec = (

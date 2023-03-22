@@ -20,6 +20,7 @@ from utils import logger
 import utils
 from battery import Battery
 from lltjbd import LltJbd
+from lltjbd_ble import LltJbdBle
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
@@ -31,10 +32,12 @@ from lifepower import Lifepower
 
 supported_bms_types = [
     {"bms": LltJbd, "baud": 9600},
+    {"bms": LltJbdBle, "address": "70:3E:97:D2:F4:D0"},
     {"bms": Ant, "baud": 19200},
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
     {"bms": Jkbms, "baud": 115200},
+    {"bms": Jkbms_Ble, "address": "C8:47:8C:E4:54:0E"},
     #    {"bms" : Sinowealth},
     {"bms": Lifepower, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
@@ -68,7 +71,7 @@ def main():
             for test in expected_bms_types:
                 logger.info("Testing " + test["bms"].__name__)
                 batteryClass = test["bms"]
-                baud = test["baud"]
+                baud = test.get("baud")
                 battery: Battery = batteryClass(
                     port=_port, baud=baud, address=test.get("address")
                 )

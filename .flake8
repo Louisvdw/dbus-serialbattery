@@ -9,6 +9,7 @@ exclude =
           ./etc/dbus-serialbattery/ecs.py,
           ./etc/dbus-serialbattery/lifepower.py,
           ./etc/dbus-serialbattery/lltjbd.py,
+          ./etc/dbus-serialbattery/lltjbd_ble.py,
           ./etc/dbus-serialbattery/minimalmodbus.py,
           ./etc/dbus-serialbattery/mnb.py,
           ./etc/dbus-serialbattery/renogy.py,
