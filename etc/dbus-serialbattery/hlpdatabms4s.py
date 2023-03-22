@@ -2,7 +2,6 @@
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
-import locale
 import serial
 from time import sleep
 
@@ -18,14 +17,12 @@ class HLPdataBMS4S(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
         result = False
         try:
             result = self.read_test_data()
         except Exception as e:
-#            logger.info(e, exc_info=True)
+#            logger.error(e, exc_info=True)
             pass
-
         return result
 
     def get_settings(self):
@@ -36,7 +33,7 @@ class HLPdataBMS4S(Battery):
         try:
             result = self.read_settings_data()
         except Exception as e:
-#            logger.info(e, exc_info=True)
+#            logger.error(e, exc_info=True)
             pass
         return result
 
@@ -48,44 +45,40 @@ class HLPdataBMS4S(Battery):
         try:
             result = self.read_status_data()
         except Exception as e:
-#            logger.info(e, exc_info=True)
+#            logger.error(e, exc_info=True)
             pass
-
         return result
 
     def read_test_data(self):
-        test_data = self.read_serial_data_HLPdataBMS4S(b"pv\n", 0.08)
+        test_data = self.read_serial_data_HLPdataBMS4S(b"pv\n", 1, 15)
         if test_data is False:
             return False
-        if len(test_data) >= 15:
-            s1 = str(test_data)
-            ix = s1.find("BMS4S")
-            if ix > 0:
-                self.hardware_version = s1[ix:len(s1)-1]
-                self.version = self.hardware_version
-                return True
+        s1 = str(test_data)
+        ix = s1.find("BMS4S")
+        if ix > 0:
+            self.hardware_version = s1[ix:len(s1)-1]
+            self.version = self.hardware_version
+            self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
+            self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+            self.poll_interval = 10000
+            self.control_discharge_current = 1000
+            self.control_charge_current = 1000
+            self.soc = 50
+            self.voltage = 13.2
+            self.current = 0
+            self.min_battery_voltage = 12.0
+            self.max_battery_voltage = 14.4
+
+            if self.cell_count is None:
+                self.cell_count = 4
+                for c in range(self.cell_count):
+                    self.cells.append(Cell(False))
+            return True
         return False
 
     def read_settings_data(self):
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.poll_interval = 5000
-        self.control_discharge_current = 1000
-        self.control_charge_current = 1000
-        self.soc = 50
-        self.voltage = 13.2
-        self.current = 0
-        self.min_battery_voltage = 12.0
-        self.max_battery_voltage = 14.4
-
-        if self.cell_count is None:
-            self.cell_count = 4
-            for c in range(self.cell_count):
-                self.cells.append(Cell(False))
-        test_data = self.read_serial_data_HLPdataBMS4S(b"ps\n", 1.0)
+        test_data = self.read_serial_data_HLPdataBMS4S(b"ps\n", 3, 700)
         if test_data is False:
-            return False
-        if len(test_data) < 500:
             return False
         s = str(test_data)
         s = s.replace(",", ".")
@@ -106,7 +99,7 @@ class HLPdataBMS4S(Battery):
 
 
     def read_status_data(self):
-        status_data = self.read_serial_data_HLPdataBMS4S(b"m1\n", 0.1)
+        status_data = self.read_serial_data_HLPdataBMS4S(b"m1\n", 0.2, 40)
         if status_data is False:
             return False
         par1 = str(status_data)
@@ -143,6 +136,25 @@ class HLPdataBMS4S(Battery):
             self.control_allow_discharge = False
         else:
             self.control_allow_discharge = True
+
+        beep = int(par[11])
+        if beep == 2:
+            self.protection.temp_low_charge = 1
+        else:
+            self.protection.temp_low_charge = 0
+        if beep == 3:
+            self.protection.temp_high_charge = 1
+        else:
+            self.protection.temp_high_charge = 0        
+        if beep == 4:
+            self.protection.voltage_low = 2
+        else:
+            self.protection.voltage_low = 0
+        if beep == 5:
+            self.protection.voltage_high = 2
+        else:
+            self.protection.voltage_high = 0
+
         return True
 
     def manage_charge_voltage(self):
@@ -153,33 +165,38 @@ class HLPdataBMS4S(Battery):
         self.control_charge_current = 1000
         self.control_discharge_current = 1000
 
-    def read_serial_data_HLPdataBMS4S(self, command, time):
-        data = read_serial_data2(command, self.port, self.baud_rate, time)
+    def read_serial_data_HLPdataBMS4S(self, command, time, min_len):
+        data = read_serial_data2(command, self.port, self.baud_rate, time, min_len)
         if data is False:
             return False
         return data
 
 
 
-def read_serial_data2(command, port, baud, time):
+def read_serial_data2(command, port, baud, time, min_len):
     try:
-        with serial.Serial(port, baudrate=baud, timeout=0.1) as ser:
-            return read_serialport_data2(ser, command, time)
+        with serial.Serial(port, baudrate=baud, timeout=0.5) as ser:
+            ret = read_serialport_data2(ser, command, time, min_len)
+            if not ret is False:
+                return ret
+        return False
 
     except serial.SerialException as e:
         logger.error(e)
         return False
 
-def read_serialport_data2(ser, command, time):
+def read_serialport_data2(ser, command, time, min_len):
     try:
-        ser.flushOutput()
-        ser.flushInput()
-        ser.write(command)
-
-        sleep(time)
-        res = ser.read(1000)
-        if len(res) > 0:
-            return res
+        cnt = 0
+        while cnt < 3:
+            cnt += 1
+            ser.flushOutput()
+            ser.flushInput()
+            ser.write(command)
+            sleep(time)
+            res = ser.read(1000)
+            if len(res) >= min_len:
+                return res
         return False
 
     except serial.SerialException as e:
@@ -191,7 +208,7 @@ def get_par(p, s):
     if ix > 0:
         ix += len(p)
         for i in range(ix, len(s)):
-            if s[i] == ' ' or s[i] == 10:
+            if s[i] == ' ' or s[i] == 10 or s[i] == 13:
                 ret = s[ix:i]
                 return ret
     return False
