@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import statistics
 from typing import Union, Tuple, List
 
 from utils import logger
@@ -581,9 +580,15 @@ class Battery(ABC):
 
     def get_temp(self) -> Union[float, None]:
         temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
-        if not temps:
+        n = len(temps)
+        if not temps or n == 0:
             return None
-        return statistics.median(temps)
+        data = sorted(temps)
+        if n % 2 == 1:
+            return data[n // 2]
+        else:
+            i = n // 2
+            return (data[i - 1] + data[i]) / 2
 
     def get_min_temp_cell_desc(self) -> Union[str, None]:
         temps = [(t, i) for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4]) if t is not None]
