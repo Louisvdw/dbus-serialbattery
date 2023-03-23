@@ -24,7 +24,6 @@ from lltjbd_ble import LltJbdBle
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
-from jkbms_ble import Jkbms_Ble
 # from sinowealth import Sinowealth
 from renogy import Renogy
 from ecs import Ecs
@@ -37,7 +36,6 @@ supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
     {"bms": Jkbms, "baud": 115200},
-    {"bms": Jkbms_Ble, "address": "C8:47:8C:E4:54:0E"},
     #    {"bms" : Sinowealth},
     {"bms": Lifepower, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
