@@ -110,6 +110,15 @@ class Battery(ABC):
         # return false when failed, true if successful
         return False
 
+    def connection_name(self) -> str:
+        return "Serial " + self.port
+
+    def custom_name(self) -> str:
+        return "SerialBattery(" + self.type + ")"
+
+    def product_name(self) -> str:
+        return "SerialBattery(" + self.type + ")"
+
     @abstractmethod
     def get_settings(self) -> bool:
         """

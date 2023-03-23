@@ -116,13 +116,13 @@ class DbusHelper:
         self._dbusservice.add_path(
             "/Mgmt/ProcessVersion", "Python " + platform.python_version()
         )
-        self._dbusservice.add_path("/Mgmt/Connection", "Serial " + self.battery.port)
+        self._dbusservice.add_path("/Mgmt/Connection", self.battery.connection_name())
 
         # Create the mandatory objects
         self._dbusservice.add_path("/DeviceInstance", self.instance)
         self._dbusservice.add_path("/ProductId", 0x0)
         self._dbusservice.add_path(
-            "/ProductName", "SerialBattery(" + self.battery.type + ")"
+            "/ProductName", self.battery.product_name()
         )
         self._dbusservice.add_path(
             "/FirmwareVersion", str(DRIVER_VERSION) + DRIVER_SUBVERSION
@@ -130,7 +130,7 @@ class DbusHelper:
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
-            "/CustomName", "SerialBattery(" + self.battery.type + ")", writeable=True
+            "/CustomName", self.battery.custom_name(), writeable=True
         )
 
         # Create static battery info
@@ -489,7 +489,7 @@ class DbusHelper:
             if (
                 self.battery.capacity is not None
                 and len(TIME_TO_SOC_POINTS) > 0
-                and self.battery.time_to_soc_update <= 0
+                and self.battery.time_to_soc_update == 0
             ):
                 self.battery.time_to_soc_update = TIME_TO_SOC_LOOP_CYCLES
                 crntPrctPerSec = (
@@ -498,7 +498,7 @@ class DbusHelper:
 
                 for num in TIME_TO_SOC_POINTS:
                     self._dbusservice["/TimeToSoC/" + str(num)] = (
-                        self.battery.get_timetosoc(num, crntPrctPerSec)
+                        self.battery.get_timetosoc(float(num), crntPrctPerSec)
                         if self.battery.current
                         else None
                     )

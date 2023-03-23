@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import atexit
+import functools
 import threading
 from typing import Union, Optional
 
-from bleak import BleakClient
+from bleak import BleakClient, BleakScanner, BLEDevice
 
 from utils import *
 from struct import *
@@ -25,36 +26,48 @@ class LltJbdBle(LltJbd):
         self.protection = LltJbdProtection()
         self.type = self.BATTERYTYPE
         self.main_thread = threading.current_thread()
-        self.bt_loop = asyncio.new_event_loop()
         self.data: bytearray = bytearray()
         self.run = True
-        self.bt_thread = threading.Thread(name="BLELoop", target=self.background_loop, args=(self.bt_loop, ), daemon=True)
+        self.bt_thread = threading.Thread(name="BLELoop", target=self.background_loop, daemon=True)
+        self.bt_loop: Optional[asyncio.AbstractEventLoop] = None
         self.bt_client: Optional[BleakClient] = None
+        self.device: Optional[BLEDevice] = None
+        self.response_queue: Optional[asyncio.Queue] = None
+        self.ready_event: Optional[asyncio.Event] = None
+
+    def connection_name(self) -> str:
+        return "BLE " + self.address
+
+    def custom_name(self) -> str:
+        return self.device.name
 
     def on_disconnect(self, client):
         logger.info("BLE client disconnected")
 
     async def bt_main_loop(self):
-        async with BleakClient(self.address, disconnected_callback=self.on_disconnect) as client:
-            await client.start_notify(BLE_CHARACTERISTICS_RX_UUID, self.ncallback)
-            await asyncio.sleep(1)
+        self.device = await BleakScanner.find_device_by_address(
+            self.address, cb=dict(use_bdaddr=True)
+        )
+
+        if not self.device:
+            self.run = False
+            return
+
+        async with BleakClient(self.device, disconnected_callback=self.on_disconnect) as client:
             self.bt_client = client
-            self.name
+            self.bt_loop = asyncio.get_event_loop()
+            self.response_queue = asyncio.Queue()
+            self.ready_event.set()
             while self.run and client.is_connected and self.main_thread.is_alive():
-                await asyncio.sleep(1)
-            await client.stop_notify(BLE_CHARACTERISTICS_RX_UUID)
+                await asyncio.sleep(0.1)
+        self.bt_loop = None
 
-    def background_loop(self, loop: asyncio.AbstractEventLoop):
-        asyncio.set_event_loop(loop)
+    def background_loop(self):
         while self.run and self.main_thread.is_alive():
-            loop.run_until_complete(self.bt_main_loop())
-            sleep(0.01)
-        loop.stop()
+            asyncio.run(self.bt_main_loop())
 
-    def test_connection(self):
-        if not self.address:
-            return False
-
+    async def async_test_connection(self):
+        self.ready_event = asyncio.Event()
         if not self.bt_thread.is_alive():
             self.bt_thread.start()
 
@@ -63,68 +76,62 @@ class LltJbdBle(LltJbd):
                 thread.join()
 
             atexit.register(shutdown_ble_atexit, self.bt_thread)
-        count = 0
-        while not self.bt_client:
-            count += 1
-            sleep(0.2)
-            if count == 10:
-                return False
+        try:
+            return await asyncio.wait_for(self.ready_event.wait(), timeout=5)
+        except asyncio.TimeoutError:
+            logger.error(">>> ERROR: Unable to connect with BLE device")
+            return False
+
+    def test_connection(self):
+        if not self.address:
+            return False
+
+        if not asyncio.run(self.async_test_connection()):
+            return False
         return super().test_connection()
 
-    def ncallback(self, sender, data: bytearray):
-        self.data.extend(data)
-
     async def send_command(self, command) -> Union[bytearray, bool]:
-        await self.bt_client.write_gatt_char(BLE_CHARACTERISTICS_TX_UUID, command, False)
-        await asyncio.sleep(0.5)
-        result = await self.read_bluetooth_data()
-        return result
-
-    async def read_bluetooth_data(
-        self
-    ) -> Union[bytearray, bool]:
-        count = 0
-        while len(self.data) < (self.LENGTH_POS + 1):
-            await asyncio.sleep(0.01)
-            count += 1
-            if count > 50:
-                break
-
-        if len(self.data) < (self.LENGTH_POS + 1):
-            if len(self.data) == 0:
-                logger.error(">>> ERROR: No reply - returning")
-            else:
-                logger.error(
-                    ">>> ERROR: No reply - returning [len:" + str(len(self.data)) + "]"
-                )
+        if not self.bt_client:
+            logger.error(">>> ERROR: No BLE client connection - returning")
             return False
 
-        length = self.data[self.LENGTH_POS]
-        count = 0
-        while len(self.data) <= length + self.LENGTH_POS:
-            await asyncio.sleep(0.005)
-            count += 1
-            if count > 150:
-                logger.error(
-                    ">>> ERROR: No reply - returning [len:"
-                    + str(len(self.data))
-                    + "/"
-                    + str(length + self.LENGTH_POS)
-                    + "]"
-                )
-                return False
+        fut = self.bt_loop.create_future()
 
-        result = self.data
-        self.data = bytearray()
+        def rx_callback(future: asyncio.Future, data: bytearray, sender, rx: bytearray):
+            data.extend(rx)
+            if len(data) < (self.LENGTH_POS + 1):
+                return
+
+            length = data[self.LENGTH_POS]
+            if len(data) <= length + self.LENGTH_POS + 1:
+                return
+            if not future.done():
+                future.set_result(data)
+
+        rx_collector = functools.partial(rx_callback, fut, bytearray())
+        await self.bt_client.start_notify(BLE_CHARACTERISTICS_RX_UUID, rx_collector)
+        await self.bt_client.write_gatt_char(BLE_CHARACTERISTICS_TX_UUID, command, False)
+        result = await fut
+        await self.bt_client.stop_notify(BLE_CHARACTERISTICS_RX_UUID)
+
         return result
 
-    def read_serial_data_llt(self, command):
-        task = asyncio.run_coroutine_threadsafe(self.send_command(command), self.bt_loop)
+    async def async_read_serial_data_llt(self, command):
         try:
-            data = task.result(timeout=2)
-        except:
+            bt_task = asyncio.run_coroutine_threadsafe(self.send_command(command), self.bt_loop)
+            result = await asyncio.wait_for(asyncio.wrap_future(bt_task), 20)
+            return result
+        except asyncio.TimeoutError:
             logger.error(">>> ERROR: No reply - returning")
             return False
+        except Exception as e:
+            logger.error(">>> ERROR: No reply - returning", e)
+            return False
+
+    def read_serial_data_llt(self, command):
+        if not self.bt_loop:
+            return False
+        data = asyncio.run(self.async_read_serial_data_llt(command))
         if not data:
             return False
 
@@ -145,11 +152,8 @@ async def testBLE():
         logger.error(">>> ERROR: Unable to connect")
     else:
         bat.refresh_data()
-    bat.refresh_data()
-    bat.refresh_data()
-    print("Done")
 
 
 if __name__ == "__main__":
-    asyncio.run(testBLE())
+    testBLE()
 

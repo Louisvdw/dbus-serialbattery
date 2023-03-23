@@ -49,6 +49,7 @@ class LltJbd(Battery):
         super(LltJbd, self).__init__(port, baud, address)
         self.protection = LltJbdProtection()
         self.type = self.BATTERYTYPE
+        self._product_name: str = ""
 
     # degree_sign = u'\N{DEGREE SIGN}'
     command_general = b"\xDD\xA5\x03\x00\xFF\xFD\x77"
@@ -66,6 +67,9 @@ class LltJbd(Battery):
             pass
 
         return result
+
+    def product_name(self) -> str:
+        return self._product_name
 
     def get_settings(self):
         self.read_gen_data()
@@ -149,7 +153,7 @@ class LltJbd(Battery):
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
         self.to_cell_bits(balance, balance2)
-        self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
+        self.hardware_version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
@@ -182,10 +186,10 @@ class LltJbd(Battery):
         if hardware_data is False:
             return False
 
-        self.hardware_version = unpack_from(
+        self._product_name = unpack_from(
             ">" + str(len(hardware_data)) + "s", hardware_data
         )[0].decode()
-        logger.debug(self.hardware_version)
+        logger.debug(self._product_name)
         return True
 
     def read_serial_data_llt(self, command):
