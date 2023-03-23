@@ -36,7 +36,8 @@ class LltJbdBle(LltJbd):
         self.ready_event: Optional[asyncio.Event] = None
 
     def connection_name(self) -> str:
-        return "BLE " + self.address
+        # TODO investigate failing dbus-systemcalc due to ':' in self.address
+        return "BLE"
 
     def custom_name(self) -> str:
         return self.device.name
