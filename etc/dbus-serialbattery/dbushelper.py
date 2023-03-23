@@ -498,14 +498,14 @@ class DbusHelper:
 
                 for num in TIME_TO_SOC_POINTS:
                     self._dbusservice["/TimeToSoC/" + str(num)] = (
-                        self.battery.get_timetosoc(float(num), crntPrctPerSec)
+                        self.battery.get_timetosoc(float(num), crntPrctPerSec, TIME_TO_SOC_VALUE_TYPE)
                         if self.battery.current
                         else None
                     )
                 
                 # Update TimeToGo
                 self._dbusservice["/TimeToGo"] = (
-                    self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)
+                    int(self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec, 1))
                     if self.battery.current
                     else None
                 )

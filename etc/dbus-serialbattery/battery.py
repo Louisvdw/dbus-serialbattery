@@ -465,7 +465,7 @@ class Battery(ABC):
             return self.capacity * self.soc / 100
         return None
 
-    def get_timetosoc(self, socnum, crntPrctPerSec) -> str:
+    def get_timetosoc(self, socnum, crntPrctPerSec, value_type) -> str:
         if self.current > 0:
             diffSoc = socnum - self.soc
         else:
@@ -476,13 +476,13 @@ class Battery(ABC):
             secondstogo = int(diffSoc / crntPrctPerSec)
             ttgStr = ""
 
-            if utils.TIME_TO_SOC_VALUE_TYPE & 1:
+            if value_type & 1:
                 ttgStr += str(secondstogo)
-                if utils.TIME_TO_SOC_VALUE_TYPE & 2:
+                if value_type & 2:
                     ttgStr += " ["
-            if utils.TIME_TO_SOC_VALUE_TYPE & 2:
+            if value_type & 2:
                 ttgStr += str(timedelta(seconds=secondstogo))
-                if utils.TIME_TO_SOC_VALUE_TYPE & 1:
+                if value_type & 1:
                     ttgStr += "]"
 
         return ttgStr
