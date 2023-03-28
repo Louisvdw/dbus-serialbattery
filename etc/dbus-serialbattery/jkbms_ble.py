@@ -65,7 +65,8 @@ class Jkbms_Ble(Battery):
             self.jk.stop_scraping()
             return False
 
-        if not status["device_info"]["vendor_id"].startswith("JK-"):
+
+        if not status["device_info"]["vendor_id"].startswith(("JK-", "JK_")):
             self.jk.stop_scraping()
             return False
 
