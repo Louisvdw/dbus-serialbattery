@@ -15,7 +15,7 @@ class Jkbms_Ble(Battery):
         self.type = self.BATTERYTYPE
         self.jk = JkBmsBle(address)
 
-        logger.error("init of jkbmsble")
+        logger.error("init of jkbmsble at " + address)
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -24,7 +24,7 @@ class Jkbms_Ble(Battery):
 
         # check if device with given mac is found, otherwise abort
 
-        logger.info("test of jkbmsble")
+        logger.info("test of jkbmsble at " + self.jk.address)
         try:
             loop = asyncio.get_event_loop()
             t = loop.create_task(BleakScanner.discover())

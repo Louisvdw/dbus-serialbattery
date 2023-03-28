@@ -81,7 +81,17 @@ def main():
     logger.info("dbus-serialbattery v" + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
 
     port = get_port()
-    battery = get_battery_type(port)
+    battery = None
+    if port.endswith("_Ble") and len(sys.argv) > 2:
+        class_ = eval(port)
+        testbms = class_("", 9600, sys.argv[2])
+        if testbms.test_connection() is True:
+            logger.info(
+                "Connection established to " + testbms.__class__.__name__
+            )
+            battery = testbms
+    else:
+        battery = get_battery_type(port)
 
     # exit if no battery could be found
     if battery is None:

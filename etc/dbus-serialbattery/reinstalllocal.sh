@@ -24,4 +24,4 @@ if [ ! -f $filename ]; then
     chmod 755 $filename
 fi
 grep -qxF "sh /data/etc/$DRIVERNAME/reinstalllocal.sh" $filename || echo "sh /data/etc/$DRIVERNAME/reinstalllocal.sh" >> $filename
-
+grep -qxF "sh /data/etc/$DRIVERNAME/installble.sh" $filename || echo "sh /data/etc/$DRIVERNAME/installble.sh" >> $filename
