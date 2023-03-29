@@ -49,6 +49,18 @@ class HLPdataBMS4S(Battery):
             pass
         return result
 
+    #def log_settings(self):
+    #    logger.info(f'Battery {self.type} connected to dbus from {self.port}')
+    #    logger.info(f'=== Settings ===')
+    #    cell_counter = len(self.cells)
+    #    logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
+    #    logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
+    #    logger.info(f'> CCCM SOC {CCCM_SOC_ENABLE} | DCCM SOC {DCCM_SOC_ENABLE}')
+    #    logger.info(f'> CCCM CV {CCCM_CV_ENABLE} | DCCM CV {DCCM_CV_ENABLE}')
+    #    logger.info(f'> CCCM T {CCCM_T_ENABLE} | DCCM T {DCCM_T_ENABLE}')
+    #    logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
+
+        return
     def read_test_data(self):
         test_data = self.read_serial_data_HLPdataBMS4S(b"pv\n", 1, 15)
         if test_data is False:
@@ -154,7 +166,32 @@ class HLPdataBMS4S(Battery):
             self.protection.voltage_high = 2
         else:
             self.protection.voltage_high = 0
-
+        
+        if len(par) > 13:
+            nb = 0
+            min = int(1000)
+            max = int(-1000)
+            ix = 13
+            while ix < len(par):
+                tmp = par[ix].split(" ")
+                ix += 1
+                if len(tmp) == 2:
+                    name = tmp[0]
+                    temp = tmp[1]
+                    temp = temp[:-1]
+                    temp = int(temp)
+                    if name[0] == "b":
+                        nb += 1
+                        if temp > max:
+                            max = temp
+                        if temp < min:
+                            min = temp
+            if nb == 1:
+                self.temp1 = max
+            if nb > 1:
+                self.temp1 = max
+                self.temp2 = min
+                            
         return True
 
     def manage_charge_voltage(self):
@@ -190,6 +227,8 @@ def read_serialport_data2(ser, command, time, min_len):
         cnt = 0
         while cnt < 3:
             cnt += 1
+            if cnt > 1:
+                pass
             ser.flushOutput()
             ser.flushInput()
             ser.write(command)
