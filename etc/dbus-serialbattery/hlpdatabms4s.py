@@ -129,13 +129,9 @@ class HLPdataBMS4S(Battery):
 
         self.voltage = float(par0) + float(par[1]) + float(par[2]) + float(par[3])
         self.cells[0].voltage = float(par0)
-#        self.cells[0].temp = 20
         self.cells[1].voltage = float(par[1])
-#        self.cells[0].temp = 20
         self.cells[2].voltage = float(par[2])
-#        self.cells[0].temp = 20
         self.cells[3].voltage = float(par[3])
-#        self.cells[0].temp = 20
 
         self.current = float(par[4])
         self.soc = int(par[5])
@@ -177,9 +173,7 @@ class HLPdataBMS4S(Battery):
                 ix += 1
                 if len(tmp) == 2:
                     name = tmp[0]
-                    temp = tmp[1]
-                    temp = temp[:-1]
-                    temp = int(temp)
+                    temp = int("".join(filter(str.isdigit, tmp[1])))
                     if name[0] == "b":
                         nb += 1
                         if temp > max:
