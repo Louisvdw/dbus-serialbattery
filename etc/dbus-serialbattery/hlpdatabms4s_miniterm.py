@@ -6,6 +6,8 @@
 # (C)2002-2020 Chris Liechti <cliechti@gmx.net>
 #
 # SPDX-License-Identifier:    BSD-3-Clause
+#
+# Modified to enable managing HLPdataBMS4S in Venus OS
 
 from __future__ import absolute_import
 
