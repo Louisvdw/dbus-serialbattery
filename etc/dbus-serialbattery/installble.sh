@@ -4,6 +4,7 @@
 install_service() {
     mkdir -p /service/dbus-blebattery-$1
     echo '#!/bin/sh' > /service/dbus-blebattery-$1/run
+    echo 'bluetoothctl disconnect ' "$3" >> /service/dbus-blebattery-$1/run
     echo 'python /data/etc/dbus-serialbattery/dbus-serialbattery.py ' "$2" "$3" >> /service/dbus-blebattery-$1/run
     chmod 755 /service/dbus-blebattery-$1/run
 }
