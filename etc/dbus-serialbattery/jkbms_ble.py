@@ -15,7 +15,7 @@ class Jkbms_Ble(Battery):
         self.type = self.BATTERYTYPE
         self.jk = JkBmsBle(address)
 
-        logger.error("init of jkbmsble at " + address)
+        logger.info("init of jkbmsble at " + address)
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -38,6 +38,7 @@ class Jkbms_Ble(Battery):
             if d.address == self.jk.address:
                 found = True
         if not found:
+            logger.error("no BMS found at " + self.jk.address)
             return False
 
         # device was found, presumeably a jkbms so start scraping
