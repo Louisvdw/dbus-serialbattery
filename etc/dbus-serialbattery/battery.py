@@ -367,6 +367,7 @@ class Battery(ABC):
                 False,
             )
         except Exception:
+            logger.exception("Max CC on CellV")
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self) -> float:
@@ -384,6 +385,7 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            logger.exception("Max DC on CellV")
             return self.max_battery_charge_current
 
     def calcMaxChargeCurrentReferringToTemperature(self) -> float:
@@ -455,6 +457,7 @@ class Battery(ABC):
                 self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True
             )
         except Exception:
+            logger.exception("Max CC on SOC")
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToSoc(self) -> float:
@@ -479,6 +482,7 @@ class Battery(ABC):
                 self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True
             )
         except Exception:
+            logger.exception("Max DC on SOC")
             return self.max_battery_charge_current
 
     def get_min_cell(self) -> int:
