@@ -323,11 +323,12 @@ class DbusHelper:
                 if self.error_count >= 60:
                     loop.quit()
 
-            # This is to manage CCL\DCL
+            # This is to manage CCL/DCL
             self.battery.manage_charge_current()
 
-            # This is to manage CVCL
+            # This is to manage CVCL and DVCL
             self.battery.manage_charge_voltage()
+            self.battery.manage_discharge_voltage()
 
             # publish all the data from the battery object to dbus
             self.publish_dbus()
@@ -395,8 +396,8 @@ class DbusHelper:
             "/Info/MaxDischargeCurrent"
         ] = self.battery.control_discharge_current
 
-        # Voltage control
-        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
+        self._dbusservice["/Info/BatteryLowVoltage"] = self.battery.control_charge_voltage
+        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_discharge_voltage
 
         # Updates from cells
         self._dbusservice["/System/MinVoltageCellId"] = self.battery.get_min_cell_desc()

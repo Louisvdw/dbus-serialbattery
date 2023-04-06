@@ -78,7 +78,8 @@ class Battery(ABC):
         self.temp2 = None
         self.cells: List[Cell] = []
         self.control_charging = None
-        self.control_voltage = None
+        self.control_charge_voltage = None
+        self.control_discharge_voltage = None
         self.allow_max_voltage = True
         self.max_voltage_start_time = None
         self.control_current = None
@@ -143,17 +144,109 @@ class Battery(ABC):
 
     def manage_charge_voltage(self) -> None:
         """
-        manages the charge voltage by setting self.control_voltage
+        manages the charge voltage by setting self.control_charge_voltage
         :return: None
         """
-        if utils.LINEAR_LIMITATION_ENABLE:
+        if utils.CVCM_DYNAMIC:
+            self.manage_charge_voltage_dynamic()
+        elif utils.LINEAR_LIMITATION_ENABLE:
             self.manage_charge_voltage_linear()
         else:
             self.manage_charge_voltage_step()
 
+    def manage_discharge_voltage(self) -> None:
+        """
+        manages the charge voltage by setting self.control_charge_voltage
+        :return: None
+        """
+        if utils.DVCM_DYNAMIC:
+            self.manage_discharge_voltage_dynamic()
+        else:
+            self.control_discharge_voltage = self.min_battery_voltage
+
+    def manage_charge_voltage_dynamic(self):
+        """
+        manages the charge voltage by setting self.control_charge_voltage
+        :return: None
+        """
+        vmax = self.get_max_cell_voltage()
+        vd = utils.MAX_CELL_VOLTAGE - vmax
+
+        if vd < 0:
+            # Owch. A cell is over the limit. This really shouldn't happen.
+            try:
+                return sum(min(utils.MAX_CELL_VOLTAGE, c.voltage) for c in self.cells)
+            except ValueError:
+                # Oh bother.
+                return self.max_battery_voltage
+
+        # To explain the following algorithm, let's assume MAX_CV is 3.5V.
+        # If the top cell is at 3.4V (=vmax) and all others are at 3.39 or
+        # so, the pack is well-balanced and we can (most likely) safely
+        # charge until they're all slightly below 3.5V.
+        #
+        # However, if all other cells are at 3.3 or so, we can only
+        # increase the total pack voltage by 0.1V before the top cell's
+        # voltage exceeds MAX_CV. The other cell voltages will not move
+        # much, if at all, thanks to the highly nonlinear charge curve of
+        # LiFePo4 cells.
+        #
+        # In this example the difference between MAX_CV and the top cell
+        # (=vd) is 0.1V. We multiply this by a safety factor and consider
+        # all cells whose voltage is between vmax and vmax-vrange(=vlow).
+        #
+        # Cells with voltages between these two values contribute to the
+        # eventual maximum voltage, relative to where they are within this
+        # range.
+        #
+        # NB: this algorithm is far from perfect, esp. when the knee is
+        # between vlow and vmax. This is OK if we assume that it will run
+        # again sometime before the top cell exceeds MAX_CV.
+        # 
+        # The problem is that a large discounting factor on cells that are
+        # still in the linear range results in a low voltage difference
+        # between the battery and its charger, which reduces the charge
+        # current too much.
+
+        vrange = self.CVCM_DYN_RANGE * vd
+        vlow = vmax - vrange
+        # thus vrange == vmax-vlow
+
+        self.control_charge_voltage = \
+            self.voltage + sum(
+                utils.mapRangeConstrain(c.voltage, vlow, vmax, 0, self.MAX_CELL_VOLTAGE - c.voltage))
+                for c in self.cells if c.voltage is not None
+            )
+
+
+    def manage_discharge_voltage_dynamic(self):
+        """
+        manages the minimum voltage by setting self.control_discharge_voltage
+        :return: None
+        """
+        vmin = self.get_min_cell().voltage
+        vd = vmin - utils.MIN_CELL_VOLTAGE
+
+        if vd < 0:
+            # owch
+            try:
+                return sum(max(utils.MIN_CELL_VOLTAGE, c.voltage) for c in self.cells)
+            except ValueError:
+                return self.min_battery_voltage
+
+        vrange = self.DVCM_DYN_RANGE * vd
+        vhigh = vmin + vrange
+        # thus vrange == vhigh-vmin
+
+        return self.voltage - sum(
+                utils.mapRangeConstrain(c.voltage, vhigh, vmin, 0, c.voltage - utils.MIN_CELL_VOLTAGE)
+                for c in self.cells if c.voltage is not None
+            )
+ 
+
     def manage_charge_voltage_linear(self) -> None:
         """
-        manages the charge voltage using linear interpolation by setting self.control_voltage
+        manages the charge voltage using linear interpolation by setting self.control_charge_voltage
         :return: None
         """
         foundHighCellVoltage = False
@@ -176,16 +269,16 @@ class Battery(ABC):
 
         if foundHighCellVoltage:
             # Keep penalty above min battery voltage
-            self.control_voltage = max(
+            self.control_charge_voltage = max(
                 currentBatteryVoltage - penaltySum,
                 utils.MIN_CELL_VOLTAGE * self.cell_count,
             )
         else:
-            self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
+            self.control_charge_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_step(self) -> None:
         """
-        manages the charge voltage using a step function by setting self.control_voltage
+        manages the charge voltage using a step function by setting self.control_charge_voltage
         :return: None
         """
         voltageSum = 0
@@ -215,12 +308,12 @@ class Battery(ABC):
 
         if self.allow_max_voltage:
             # Keep penalty above min battery voltage
-            self.control_voltage = max(
+            self.control_charge_voltage = max(
                 utils.MAX_CELL_VOLTAGE * self.cell_count,
                 utils.MIN_CELL_VOLTAGE * self.cell_count,
             )
         else:
-            self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
+            self.control_charge_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_current(self) -> None:
         # Manage Charge Current Limitations

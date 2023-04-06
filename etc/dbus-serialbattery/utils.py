@@ -172,8 +172,16 @@ DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(
     config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"]
 )
 
-# Charge voltage control management enable (True/False).
+# Charge voltage control management enable (True/False/Dynamic).
+CVCM_DYNAMIC = "Dynamic" == config["DEFAULT"]["CVCM_ENABLE"]
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
+# Discharge voltage control management enable (True/False/Dynamic).
+DVCM_DYNAMIC = "Dynamic" == config["DEFAULT"]["DVCM_ENABLE"]
+DVCM_ENABLE = "True" == config["DEFAULT"]["DVCM_ENABLE"]
+
+# dynamic voltage control: range factor. Should be 0.5…1 or so.
+CVCM_DYN_RANGE = float(config["DEFAULT"]["CVCM_DYN_RANGE"])
+DVCM_DYN_RANGE = float(config["DEFAULT"]["DVCM_DYN_RANGE"])
 
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
