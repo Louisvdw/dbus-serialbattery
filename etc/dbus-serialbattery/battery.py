@@ -214,7 +214,7 @@ class Battery(ABC):
 
         self.control_charge_voltage = \
             self.voltage + sum(
-                utils.mapRangeConstrain(c.voltage, vlow, vmax, 0, self.MAX_CELL_VOLTAGE - c.voltage))
+                utils.mapRangeConstrain(c.voltage, vlow, vmax, 0, vd))
                 for c in self.cells if c.voltage is not None
             )
 
@@ -239,7 +239,7 @@ class Battery(ABC):
         # thus vrange == vhigh-vmin
 
         return self.voltage - sum(
-                utils.mapRangeConstrain(c.voltage, vhigh, vmin, 0, c.voltage - utils.MIN_CELL_VOLTAGE)
+                utils.mapRangeConstrain(c.voltage, vhigh, vmin, 0, vd)
                 for c in self.cells if c.voltage is not None
             )
  
