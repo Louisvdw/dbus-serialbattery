@@ -61,6 +61,7 @@ class HLPdataBMS4S(Battery):
     #    logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
 
         return
+        
     def read_test_data(self):
         test_data = self.read_serial_data_HLPdataBMS4S(b"pv\n", 1, 15)
         if test_data is False:
@@ -132,19 +133,13 @@ class HLPdataBMS4S(Battery):
         self.cells[1].voltage = float(par[1])
         self.cells[2].voltage = float(par[2])
         self.cells[3].voltage = float(par[3])
-
         self.current = float(par[4])
         self.soc = int(par[5])
-
-        if par[6] == "0":
-            self.control_allow_charge = False
-        else:
-            self.control_allow_charge = True
-        if par[7] == "0":
-            self.control_allow_discharge = False
-        else:
-            self.control_allow_discharge = True
-
+        self.control_allow_charge = par[6]
+        self.charge_fet = par[6]
+        self.control_allow_discharge = par[7]
+        self.discharge_fet = par[7]
+        
         beep = int(par[11])
         if beep == 2:
             self.protection.temp_low_charge = 1
@@ -221,8 +216,6 @@ def read_serialport_data2(ser, command, time, min_len):
         cnt = 0
         while cnt < 3:
             cnt += 1
-            if cnt > 1:
-                pass
             ser.flushOutput()
             ser.flushInput()
             ser.write(command)
