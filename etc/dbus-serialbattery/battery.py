@@ -690,6 +690,7 @@ class Battery(ABC):
             f"> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%"
         )
         logger.info(f"> Cell count {self.cell_count} | cells populated {cell_counter}")
+        logger.info(f"> CVCM {'DYN' if utils.CVCM_DYNAMIC else utils.CVCM_ENABLE} | {'DYN' if utils.DVCM_DYNAMIC else utils.DVCM_ENABLE}")
         logger.info(
             f"> CCCM SOC {utils.CCCM_SOC_ENABLE} | DCCM SOC {utils.DCCM_SOC_ENABLE}"
         )
