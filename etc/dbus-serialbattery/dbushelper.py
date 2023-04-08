@@ -396,8 +396,8 @@ class DbusHelper:
             "/Info/MaxDischargeCurrent"
         ] = self.battery.control_discharge_current
 
-        self._dbusservice["/Info/BatteryLowVoltage"] = self.battery.control_charge_voltage
-        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_discharge_voltage
+        self._dbusservice["/Info/BatteryLowVoltage"] = self.battery.control_discharge_voltage
+        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_charge_voltage
 
         # Updates from cells
         self._dbusservice["/System/MinVoltageCellId"] = self.battery.get_min_cell_desc()

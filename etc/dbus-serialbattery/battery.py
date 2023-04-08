@@ -208,13 +208,13 @@ class Battery(ABC):
         # between the battery and its charger, which reduces the charge
         # current too much.
 
-        vrange = self.CVCM_DYN_RANGE * vd
+        vrange = utils.CVCM_DYN_RANGE * vd
         vlow = vmax - vrange
         # thus vrange == vmax-vlow
 
         self.control_charge_voltage = \
             self.voltage + sum(
-                utils.mapRangeConstrain(c.voltage, vlow, vmax, 0, vd))
+                utils.mapRangeConstrain(c.voltage, vlow, vmax, 0, vd)
                 for c in self.cells if c.voltage is not None
             )
 
@@ -224,7 +224,7 @@ class Battery(ABC):
         manages the minimum voltage by setting self.control_discharge_voltage
         :return: None
         """
-        vmin = self.get_min_cell().voltage
+        vmin = self.get_min_cell_voltage()
         vd = vmin - utils.MIN_CELL_VOLTAGE
 
         if vd < 0:
@@ -234,11 +234,11 @@ class Battery(ABC):
             except ValueError:
                 return self.min_battery_voltage
 
-        vrange = self.DVCM_DYN_RANGE * vd
+        vrange = utils.DVCM_DYN_RANGE * vd
         vhigh = vmin + vrange
         # thus vrange == vhigh-vmin
 
-        return self.voltage - sum(
+        self.control_discharge_voltage = self.voltage - sum(
                 utils.mapRangeConstrain(c.voltage, vhigh, vmin, 0, vd)
                 for c in self.cells if c.voltage is not None
             )
