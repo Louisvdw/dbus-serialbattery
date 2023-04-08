@@ -176,7 +176,7 @@ class Battery(ABC):
             # Owch. A cell is over the limit. This really shouldn't happen.
             try:
                 return sum(min(utils.MAX_CELL_VOLTAGE, c.voltage) for c in self.cells)
-            except ValueError:
+            except (ValueError, TypeError):
                 # Oh bother.
                 return self.max_battery_voltage
 
@@ -231,7 +231,7 @@ class Battery(ABC):
             # owch
             try:
                 return sum(max(utils.MIN_CELL_VOLTAGE, c.voltage) for c in self.cells)
-            except ValueError:
+            except (ValueError, TypeError):
                 return self.min_battery_voltage
 
         vrange = utils.DVCM_DYN_RANGE * vd
@@ -574,7 +574,7 @@ class Battery(ABC):
                 min_voltage = min(
                     c.voltage for c in self.cells if c.voltage is not None
                 )
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
         return min_voltage
 
@@ -588,7 +588,7 @@ class Battery(ABC):
                 max_voltage = max(
                     c.voltage for c in self.cells if c.voltage is not None
                 )
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
         return max_voltage
 
@@ -624,7 +624,7 @@ class Battery(ABC):
                 for cell in self.cells[halfcount + uneven_cells_offset :]
                 if cell.voltage is not None
             )
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
         try:
@@ -635,7 +635,7 @@ class Battery(ABC):
                 midpoint,
                 (half2voltage - half1voltage) / (half2voltage + half1voltage) * 100,
             )
-        except ValueError:
+        except (ValueError, TypeError):
             return None, None
 
     def get_balancing(self) -> int:
