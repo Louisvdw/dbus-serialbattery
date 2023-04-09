@@ -213,19 +213,12 @@ class Battery(ABC):
                     utils.MIN_CELL_VOLTAGE * self.cell_count,
                 ), 3)
                 self.control_voltage_last_set = control_voltage_time
-        if foundHighCellVoltage:
-            # Keep penalty above min battery voltage
-            self.control_voltage = max(
-                currentBatteryVoltage - penaltySum,
-                utils.MIN_CELL_VOLTAGE * self.cell_count,
-            )
 
         elif self.allow_max_voltage:
             self.control_voltage = round( (utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
 
         else:
             self.control_voltage = round( (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
-            self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_step(self) -> None:
         """
@@ -275,11 +268,6 @@ class Battery(ABC):
 
         if self.allow_max_voltage:
             self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-            # Keep penalty above min battery voltage
-            self.control_voltage = max(
-                utils.MAX_CELL_VOLTAGE * self.cell_count,
-                utils.MIN_CELL_VOLTAGE * self.cell_count,
-            )
         else:
             self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
 
