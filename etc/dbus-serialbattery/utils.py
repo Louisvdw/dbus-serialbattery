@@ -87,6 +87,8 @@ PENALTY_BATTERY_VOLTAGE = _get_list_from_config(
     "PENALTY_BATTERY_VOLTAGE",
     lambda v: float(v)
 )
+# Specify in seconds how often the penalty should be recalculated
+PENALTY_RECALCULATE_EVERY = int(config["DEFAULT"]["PENALTY_RECALCULATE_EVERY"])
 
 # -- CVL Reset based on SoC option
 # Reset max voltage after

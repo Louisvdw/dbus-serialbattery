@@ -82,6 +82,7 @@ class Battery(ABC):
         self.control_charging = None
         self.control_voltage = None
         self.allow_max_voltage = True
+        self.control_voltage_last_set = 0
         self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
@@ -159,30 +160,71 @@ class Battery(ABC):
         :return: None
         """
         foundHighCellVoltage = False
+        voltageSum = 0
+        penaltySum = 0
+        tDiff = 0
         if utils.CVCM_ENABLE:
-            currentBatteryVoltage = 0
-            penaltySum = 0
+            # calculate battery sum
             for i in range(self.cell_count):
-                cv = self.get_cell_voltage(i)
-                if cv:
-                    currentBatteryVoltage += cv
+                voltage = self.get_cell_voltage(i)
+                if voltage:
+                    voltageSum += voltage
 
-                    if cv >= utils.PENALTY_AT_CELL_VOLTAGE[0]:
+                    # calculate penalty sum to prevent single cell overcharge
+                    if voltage >= utils.PENALTY_AT_CELL_VOLTAGE[0]:
+                        # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
                         foundHighCellVoltage = True
                         penaltySum += utils.calcLinearRelationship(
-                            cv,
+                            voltage,
                             utils.PENALTY_AT_CELL_VOLTAGE,
                             utils.PENALTY_BATTERY_VOLTAGE,
                         )
-            self.voltage = currentBatteryVoltage  # for testing
 
+            voltageSum = round(voltageSum, 3)
+
+            if self.max_voltage_start_time is None:
+                if (
+                    utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                    and self.allow_max_voltage
+                ):
+                    self.max_voltage_start_time = time()
+                elif (
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    and not self.allow_max_voltage
+                ):
+                    self.allow_max_voltage = True
+            else:
+                tDiff = time() - self.max_voltage_start_time
+                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                    self.allow_max_voltage = False
+                    self.max_voltage_start_time = None
+
+        # INFO: battery will only switch to Absorption if all cells are balanced.reach MAC_CELL_VOLTAGE * cell count if they are all balanced.
+        if (
+            foundHighCellVoltage
+            and self.allow_max_voltage
+        ):
+            # set CVL only once every PENALTY_RECALCULATE_EVERY seconds
+            control_voltage_time = int(time() / utils.PENALTY_RECALCULATE_EVERY)
+            if control_voltage_time != self.control_voltage_last_set:
+                # Keep penalty above min battery voltage
+                self.control_voltage = round( max(
+                    voltageSum - penaltySum,
+                    utils.MIN_CELL_VOLTAGE * self.cell_count,
+                ), 3)
+                self.control_voltage_last_set = control_voltage_time
         if foundHighCellVoltage:
             # Keep penalty above min battery voltage
             self.control_voltage = max(
                 currentBatteryVoltage - penaltySum,
                 utils.MIN_CELL_VOLTAGE * self.cell_count,
             )
+
+        elif self.allow_max_voltage:
+            self.control_voltage = round( (utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+
         else:
+            self.control_voltage = round( (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
             self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_step(self) -> None:
@@ -191,31 +233,48 @@ class Battery(ABC):
         :return: None
         """
         voltageSum = 0
+        tDiff = 0
         if utils.CVCM_ENABLE:
+
+            # calculate battery sum
             for i in range(self.cell_count):
                 voltage = self.get_cell_voltage(i)
                 if voltage:
                     voltageSum += voltage
 
             if self.max_voltage_start_time is None:
+                # check if max voltage is reached and start timer to keep max voltage
                 if (
                     utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
                     and self.allow_max_voltage
                 ):
+                    # example 2
                     self.max_voltage_start_time = time()
+
+                # check if reset soc is greater than battery soc
+                # this prevents flapping between max and float voltage
+                elif (
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    and not self.allow_max_voltage
+                ):
+                    self.allow_max_voltage = True
+
+                # do nothing
                 else:
-                    if (
-                        utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
-                        and not self.allow_max_voltage
-                    ):
-                        self.allow_max_voltage = True
+                    pass
+
+            # timer started
             else:
                 tDiff = time() - self.max_voltage_start_time
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                    self.max_voltage_start_time = None
                     self.allow_max_voltage = False
+                    self.max_voltage_start_time = None
+
+                else:
+                    pass
 
         if self.allow_max_voltage:
+            self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
             # Keep penalty above min battery voltage
             self.control_voltage = max(
                 utils.MAX_CELL_VOLTAGE * self.cell_count,
@@ -234,7 +293,7 @@ class Battery(ABC):
         if utils.CCCM_T_ENABLE:
             charge_limits.append(self.calcMaxChargeCurrentReferringToTemperature())
 
-        self.control_charge_current = min(charge_limits)
+        self.control_charge_current = round( min(charge_limits), 3)
 
         if self.control_charge_current == 0:
             self.control_allow_charge = False
@@ -254,7 +313,7 @@ class Battery(ABC):
                 self.calcMaxDischargeCurrentReferringToTemperature()
             )
 
-        self.control_discharge_current = min(discharge_limits)
+        self.control_discharge_current = round( min(discharge_limits), 3)
 
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False
