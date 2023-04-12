@@ -11,28 +11,65 @@ class Seplos(Battery):
     def __init__(self, port, baud, address):
         super(Seplos, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
+        self.poll_interval = 5000
 
     BATTERYTYPE = "Seplos"
 
-    LENGTH_POS = 10
+    COMMAND_STATUS = 0x42
+    COMMAND_ALARM = 0x44
+    COMMAND_PROTOCOL_VERSION = 0x4f
+    COMMAND_VENDOR_INFO = 0x51
 
-    # TODO: use address parameter in command
-    comm_start = b"\x7e"
-    comm_version = b"\x32\x30"  # 20
-    comm_addr = b"\x30\x30"  # 00
-    comm_cid1 = b"\x34\x36"  # 46
-    comm_cid2 = b"\x34\x32"  # 42
-    comm_length = b"\x45\x30\x30\x32"
-    comm_datainfo = b"\x30\x31"
-    comm_chksum = b"\x46\x44\x33\x36"
-    comm_end = b"\x0d"
+    @staticmethod
+    def int_from_1byte_hex_ascii(data: bytes, offset: int, signed=False):
+        return int.from_bytes(bytes.fromhex(data[offset:offset+2].decode('ascii')), byteorder="big", signed=signed)
 
-    command_status = comm_start \
-                 + comm_version \
-                 + comm_addr \
-                 + comm_cid1 \
-                 + comm_cid2 \
-                 + comm_length + comm_datainfo + comm_chksum + comm_end
+    @staticmethod
+    def int_from_2byte_hex_ascii(data: bytes, offset: int, signed=False):
+        return int.from_bytes(bytes.fromhex(data[offset:offset+4].decode('ascii')), byteorder="big", signed=signed)
+
+    @staticmethod
+    def get_checksum(frame: bytes) -> int:
+        """ implements the Seplos checksum algorithm, returns 4 bytes
+        """
+        checksum = 0
+        for b in frame:
+            checksum += b
+        checksum %= 0xffff
+        checksum ^= 0xffff
+        checksum += 1
+        return checksum
+
+    @staticmethod
+    def get_info_length(info: bytes) -> int:
+        """ implements the Seplos checksum for the info length
+        """
+        lenid = len(info)
+        if lenid == 0:
+            return 0
+
+        lchksum = (lenid & 0xf) + ((lenid >> 4) & 0xf) + ((lenid >> 8) & 0xf)
+        lchksum %= 16
+        lchksum ^= 0xf
+        lchksum += 1
+
+        return (lchksum << 12) + lenid
+
+
+    @staticmethod
+    def encode_cmd(address: int, cid2: int, info: bytes = b'') -> bytes:
+        """ encodes a command sent to a battery (cid1=0x46)
+        """
+        cid1 = 0x46
+
+        info_length = Seplos.get_info_length(info)
+
+        frame = '{:02X}{:02X}{:02X}{:02X}{:04X}'.format(0x20, address, cid1, cid2, info_length).encode()
+        frame += info
+
+        checksum = Seplos.get_checksum(frame)
+        encoded = (b"~" + frame + "{:04X}".format(checksum).encode() + b"\r")
+        return encoded
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -61,7 +98,6 @@ class Seplos(Battery):
         for _ in range(self.cell_count):
             self.cells.append(Cell(False))
 
-        # self.hardware_version = "Seplos BMS " + str(self.cell_count) + " cells"
         return True
 
     def refresh_data(self):
@@ -72,92 +108,100 @@ class Seplos(Battery):
 
         return result
 
-    def read_status_data(self):
-        logger.info("read status data")
-        data = self.read_serial_data_seplos(self.command_status)
+
+    def read_alarm_data(self):
+        logger.info("read alarm data")
+        data = self.read_serial_data_seplos(self.encode_cmd(address=0x00, cid2=self.COMMAND_ALARM, info=b"01"))
         # check if connection success
         if data is False:
             return False
 
-        self.cell_count = int_from_hex_ascii(data[4:6])
+        logger.info("alarm info {}".format(bytes.fromhex(data.decode('ascii'))))
+        return True
+
+    def read_status_data(self):
+        logger.debug("read status data")
+        data = self.read_serial_data_seplos(self.encode_cmd(address=0x00, cid2=0x42, info=b"01"))
+
+        # check if connection success
+        if data is False:
+            return False
+
+        cell_count_offset = 4
         voltage_offset = 6
+        temps_offset = 72
+        self.cell_count = Seplos.int_from_1byte_hex_ascii(data=data, offset=cell_count_offset)
         if self.cell_count == len(self.cells):
             for i in range(self.cell_count):
-                v = int_from_hex_ascii(data[voltage_offset + i*4 : voltage_offset + i*4 + 4 ]) / 1000
-                logger.info("voltage cell[" + str(i) + "]=" + str(v))
+                v = Seplos.int_from_2byte_hex_ascii(data, voltage_offset + i*4) / 1000
                 self.cells[i].voltage = v
-
-        temps_offset = 72
-        if self.cell_count == len(self.cells):
-            for i in range(4):
-                t = (int_from_hex_ascii(data[temps_offset + i * 4: temps_offset + i * 4 + 4]) - 2731) / 10
+                logger.debug("Voltage cell[{}]={}V".format(i,v))
+            for i in range(min(4, self.cell_count)):
+                t = (Seplos.int_from_2byte_hex_ascii(data, temps_offset + i*4) - 2731) / 10
                 self.cells[i].temp = t
-                logger.info("temp cell[" + str(i) + "]=" + str(t))
-        self.temp1 = (int_from_hex_ascii(data[72 + 4*4 : 72 + 4*4 + 4]) - 2731) / 10
-        self.temp2 = (int_from_hex_ascii(data[72 + 5*4 : 72 + 5*4 + 4]) - 2731) / 10
-        logger.info("Environment temp = " + str(self.temp1) + " Power temp = " + str(self.temp2))
+                logger.debug("Temp cell[{}]={}°C".format(i,t))
 
-        self.current = int_from_hex_ascii(data[96:100], signed=True)/100
-        self.voltage = int_from_hex_ascii(data[100:104])/100
-        logger.info("Current = " + str(self.current) + " Voltage = " + str(self.voltage))
+        self.temp1 = (Seplos.int_from_2byte_hex_ascii(data, temps_offset + 4*4) - 2731) / 10
+        self.temp2 = (Seplos.int_from_2byte_hex_ascii(data, temps_offset + 5*4) - 2731) / 10
+        self.current = Seplos.int_from_2byte_hex_ascii(data, offset = 96, signed=True)/100
+        self.voltage = Seplos.int_from_2byte_hex_ascii(data, offset = 100)/100
+        self.capacity_remain = Seplos.int_from_2byte_hex_ascii(data, offset=104)/100
+        self.capacity        = Seplos.int_from_2byte_hex_ascii(data, offset=110)/100
+        self.soc             = Seplos.int_from_2byte_hex_ascii(data, offset=114)/10
+        self.cycles          = Seplos.int_from_2byte_hex_ascii(data, offset=122)
+        self.hardware_version = "Seplos BMS {} cells".format(self.cell_count)
 
-        self.capacity_remain = int_from_hex_ascii(data[104:108])/100
-        self.capacity        = int_from_hex_ascii(data[110:114])/100
-        self.soc             = int_from_hex_ascii(data[114:118])/10
-        logger.info("Capacity = " + str(self.capacity_remain) + "/" + str(self.capacity) + " SOC = " + str(self.soc))
-
-        self.cycles          = int_from_hex_ascii(data[122:126])
-        logger.debug("Cycles = " + str(self.cycles))
-
-        self.hardware_version = "Seplos BMS " + str(self.cell_count) + " cells"
-        logger.info(self.hardware_version)
+        logger.debug("Current = {}A , Voltage = {}V".format(self.current, self.voltage))
+        logger.debug("Capacity = {}/{}Ah , SOC = {}%".format(self.capacity_remain, self.capacity, self.soc))
+        logger.debug("Cycles = {}".format(self.cycles))
+        logger.debug("Environment temp = {}°C ,  Power temp = {}°C".format(self.temp1, self.temp2))
+        logger.debug("HW:" + self.hardware_version)
 
         # TODO: read alarms?
         return True
 
+
+    @staticmethod
+    def is_frame_valid(data: bytes) -> bool:
+        """ checks if data contains a valid frame
+        * minimum length is 18 Byte
+        * checksum needs to be valid
+        * also checks for error code as return code in cid2
+        * not checked: lchksum
+        """
+        if len(data) < 18:
+            logger.warning('short read, data={}'.format(data))
+            return False
+
+        chksum = Seplos.get_checksum(data[1: -5])
+        if chksum != Seplos.int_from_2byte_hex_ascii(data, -5):
+            logger.warning("checksum error")
+            return False
+
+        cid2 = data[7:9]
+        if cid2 != b'00':
+            logger.warning('command returned with error code {}'.format(cid2))
+            return False
+
+        return True
+
     def read_serial_data_seplos(self, command):
-        logger.info("read serial data seplos")
+        logger.debug("read serial data seplos")
 
         with serial.Serial(self.port, baudrate=self.baud_rate, timeout=1) as ser:
-            # TODO: revisit timing problems
             ser.flushOutput()
             ser.flushInput()
             written = ser.write(command)
-            logger.info("wrote " + str(written) + " bytes to serialport, command=" + str(command))
+            logger.debug("wrote {} bytes to serial port {}, command={}".format(written, self.port, command))
 
-            count = 0
-            toread = ser.inWaiting()
+            data = ser.readline()
 
-            while toread < self.LENGTH_POS + 4: # need to read at least until the 4 Byte length information are available
-                sleep(0.1)
-                toread = ser.inWaiting()
-                count += 1
-                if count > 20:
-                    logger.error(">>> ERROR: No reply - returning")
-                    return False
+            if not Seplos.is_frame_valid(data):
+                return False
 
-            bytes_read = ser.read(toread)
-            # we can now decode the length, it is encoded in 4 ascii bytes, first byte is lchksum, rest is actual length
-            # XXX: verify LENGTH CHECKSUM, ignoring it for now
-            length = int_from_hex_ascii( b"0" + bytes_read[self.LENGTH_POS:self.LENGTH_POS + 3] )
+            length_pos = 10
+            return_data = data[length_pos + 3 : -5]
+            info_length = Seplos.int_from_2byte_hex_ascii( b"0" + data[length_pos:], 0)
+            logger.debug("return info data of length {} : {}".format(info_length, return_data))
 
-            # length is the number of bytes in INFO, total response length is length + 18
-            total_length = length + 18
-            logger.info("decoded length=" + str(length) + " total_length=" + str(total_length))
-
-            data = bytearray(bytes_read)
-            count = 0
-            while len(data) < total_length:
-                res = ser.read(total_length)
-                data.extend(res)
-                logger.info('serial data length ' + str(len(data)))
-                sleep(0.005)
-                count += 1
-                if count > 150:
-                    logger.error( ">>> ERROR: No reply - returning [len:" + str(len(data)) + "/" + str(total_length) + "]" )
-                    return False
-
-            # XXX check validity of result: return code, checksum
-            return_data = data[self.LENGTH_POS + 3:self.LENGTH_POS + 3 + length]
-            logger.info("returning data: " + return_data.decode('ascii'))
             return return_data
