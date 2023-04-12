@@ -5,10 +5,12 @@ from jkbms_brn import JkBmsBle
 from bleak import BleakScanner, BleakError
 import asyncio
 import time
+import os
 
 
 class Jkbms_Ble(Battery):
     BATTERYTYPE = "Jkbms BLE"
+    resetting = False
 
     def __init__(self, port, baud, address):
         super(Jkbms_Ble, self).__init__("zero", baud)
@@ -25,20 +27,29 @@ class Jkbms_Ble(Battery):
         # check if device with given mac is found, otherwise abort
 
         logger.info("test of jkbmsble")
-        try:
-            loop = asyncio.get_event_loop()
-            t = loop.create_task(BleakScanner.discover())
-            devices = loop.run_until_complete(t)
-        except BleakError as e:
-            logger.error(str(e))
-            return False
+        tries = 0
+        while True:
+            try:
+                loop = asyncio.get_event_loop()
+                t = loop.create_task(
+                    BleakScanner.find_device_by_address(self.jk.address)
+                )
+                device = loop.run_until_complete(t)
 
-        found = False
-        for d in devices:
-            if d.address == self.jk.address:
-                found = True
-        if not found:
-            return False
+                if device is None:
+                    logger.info("jkbmsble not found")
+                    if tries > 2:
+                        return False
+                else:
+                    # device found, exit loop and continue test
+                    break
+            except BleakError as e:
+                if tries > 2:
+                    return False
+                # recover from error if tries left
+                logger.error(str(e))
+                self.reset_bluetooth()
+            tries += 1
 
         # device was found, presumeably a jkbms so start scraping
         self.jk.start_scraping()
@@ -51,9 +62,12 @@ class Jkbms_Ble(Battery):
         # load initial data, from here on get_status has valid values to be served to the dbus
         status = self.jk.get_status()
         if status is None:
+            self.jk.stop_scraping()
             return False
 
+
         if not status["device_info"]["vendor_id"].startswith(("JK-", "JK_")):
+            self.jk.stop_scraping()
             return False
 
         logger.info("JK BMS found!")
@@ -97,14 +111,25 @@ class Jkbms_Ble(Battery):
             return False
         if time.time() - st["last_update"] > 30:
             # if data not updated for more than 30s, sth is wrong, then fail
+            logger.info("jkbmsble: bluetooth died")
+
+            # if the thread is still alive but data too old there is sth
+            # wrong with the bt-connection; restart whole stack
+            if not self.resetting:
+                self.reset_bluetooth()
+                self.jk.start_scraping()
+                time.sleep(2)
+
             return False
+        else:
+            self.resetting = False
 
         for c in range(self.cell_count):
             self.cells[c].voltage = st["cell_info"]["voltages"][c]
 
         self.to_temp(1, st["cell_info"]["temperature_sensor_1"])
         self.to_temp(2, st["cell_info"]["temperature_sensor_2"])
-        self.to_temp('mos', st["cell_info"]["temperature_mos"])
+        self.to_temp("mos", st["cell_info"]["temperature_mos"])
         self.current = st["cell_info"]["current"]
         self.voltage = st["cell_info"]["total_voltage"]
 
@@ -116,11 +141,18 @@ class Jkbms_Ble(Battery):
         self.balance_fet = st["settings"]["balancing_switch"]
 
         self.balancing = False if st["cell_info"]["balancing_action"] == 0.000 else True
-        self.balancing_current = st["cell_info"]["balancing_current"] if st["cell_info"]["balancing_current"] < 32768 else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
+        self.balancing_current = (
+            st["cell_info"]["balancing_current"]
+            if st["cell_info"]["balancing_current"] < 32768 
+            else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
+        )
         self.balancing_action = st["cell_info"]["balancing_action"]
 
         for c in range(self.cell_count):
-            if self.balancing and (st["cell_info"]["max_voltage_cell"] == c or st["cell_info"]["min_voltage_cell"] == c ):
+            if self.balancing and (
+                st["cell_info"]["max_voltage_cell"] == c
+                or st["cell_info"]["min_voltage_cell"] == c 
+            ):
                 self.cells[c].balance = True
             else:
                 self.cells[c].balance = False
@@ -129,9 +161,13 @@ class Jkbms_Ble(Battery):
         # self.protection.soc_low = 2 if status["cell_info"]["battery_soc"] < 10.0 else 0
 
         # trigger cell imbalance warning when delta is to great
-        if st["cell_info"]["delta_cell_voltage"] > min(st["settings"]["cell_ovp"] * 0.05, 0.200):
+        if st["cell_info"]["delta_cell_voltage"] > min(
+            st["settings"]["cell_ovp"] * 0.05, 0.200
+        ):
             self.protection.cell_imbalance = 2
-        elif st["cell_info"]["delta_cell_voltage"] > min(st["settings"]["cell_ovp"] * 0.03, 0.120):
+        elif st["cell_info"]["delta_cell_voltage"] > min(
+            st["settings"]["cell_ovp"] * 0.03, 0.120
+        ):
             self.protection.cell_imbalance = 1
         else:
             self.protection.cell_imbalance = 0
@@ -157,6 +193,19 @@ class Jkbms_Ble(Battery):
         )
         return True
 
+    def reset_bluetooth(self):
+        logger.info("reset of bluetooth triggered")
+        self.resetting = True
+        # if self.jk.is_running():
+        # self.jk.stop_scraping()
+        logger.info("scraping ended, issuing sys-commands")
+        os.system("kill -9 $(pidof bluetoothd)")
+        # os.system("/etc/init.d/bluetooth stop") is not enugh, kill -9 via pid is needed
+        time.sleep(2)
+        os.system("rfkill block bluetooth")
+        os.system("rfkill unblock bluetooth")
+        os.system("/etc/init.d/bluetooth start")
+        logger.info("bluetooth should have been restarted")
 
     def get_balancing(self):
         return 1 if self.balancing else 0
