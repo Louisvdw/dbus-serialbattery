@@ -13,7 +13,7 @@ class Jkbms_Ble(Battery):
     resetting = False
 
     def __init__(self, port, baud, address):
-        super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud)
+        super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud, address)
         self.type = self.BATTERYTYPE
         self.jk = JkBmsBle(address)
 
@@ -43,10 +43,10 @@ class Jkbms_Ble(Battery):
             logger.error("no BMS found at " + self.jk.address)
             return False
 
-  
+
         """
         # before indipended service, has to be checked
-        
+
         logger.info("test of jkbmsble")
         tries = 0
         while True:
@@ -165,7 +165,7 @@ class Jkbms_Ble(Battery):
         self.balancing = False if st["cell_info"]["balancing_action"] == 0.000 else True
         self.balancing_current = (
             st["cell_info"]["balancing_current"]
-            if st["cell_info"]["balancing_current"] < 32768 
+            if st["cell_info"]["balancing_current"] < 32768
             else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
         )
         self.balancing_action = st["cell_info"]["balancing_action"]
@@ -174,7 +174,7 @@ class Jkbms_Ble(Battery):
         for c in range(self.cell_count):
             if self.balancing and (
                 st["cell_info"]["min_voltage_cell"] == c
-                or st["cell_info"]["max_voltage_cell"] == c 
+                or st["cell_info"]["max_voltage_cell"] == c
             ):
                 self.cells[c].balance = True
             else:
