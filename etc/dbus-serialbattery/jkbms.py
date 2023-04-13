@@ -6,8 +6,8 @@ from struct import unpack_from
 
 
 class Jkbms(Battery):
-    def __init__(self, port, baud):
-        super(Jkbms, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Jkbms, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "Jkbms"
@@ -21,14 +21,11 @@ class Jkbms(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        result = False
         try:
-            result = self.read_status_data()
+            return self.read_status_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
-            pass
-
-        return result
+            return False
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -134,6 +131,10 @@ class Jkbms(Battery):
         self.to_fet_bits(
             unpack_from(">H", self.get_data(status_data, b"\x8C", offset, 2))[0]
         )
+        offset = cellbyte_count + 84
+        self.to_balance_bits(
+            unpack_from(">B", self.get_data(status_data, b"\x9D", offset, 1))[0]
+        )
 
         offset = cellbyte_count + 155
         self.production = unpack_from(
@@ -144,13 +145,53 @@ class Jkbms(Battery):
             ">15s", self.get_data(status_data, b"\xB7", offset, 15)
         )[0].decode()
 
+        # show wich cells are balancing
+        if self.get_min_cell() is not None and self.get_max_cell() is not None:
+            for c in range(self.cell_count):
+                if self.balancing and ( self.get_min_cell() == c or self.get_max_cell() == c ):
+                    self.cells[c].balance = True
+                else:
+                    self.cells[c].balance = False
+
         # logger.info(self.hardware_version)
         return True
 
     def to_fet_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(2, utils.zero_char)
-        self.charge_fet = is_bit_set(tmp[1])
-        self.discharge_fet = is_bit_set(tmp[0])
+        tmp = bin(byte_data)[2:].rjust(3, utils.zero_char)
+        self.charge_fet = is_bit_set(tmp[2])
+        self.discharge_fet = is_bit_set(tmp[1])
+        self.balancing = is_bit_set(tmp[0])
+
+    def to_balance_bits(self, byte_data):
+        tmp = bin(byte_data)[2:]
+        self.balance_fet = is_bit_set(tmp)
+
+    def get_balancing(self):
+        return 1 if self.balancing else 0
+
+    def get_min_cell(self):
+        min_voltage = 9999
+        min_cell = None
+        for c in range(min(len(self.cells), self.cell_count)):
+            if (
+                self.cells[c].voltage is not None
+                and min_voltage > self.cells[c].voltage
+            ):
+                min_voltage = self.cells[c].voltage
+                min_cell = c
+        return min_cell
+
+    def get_max_cell(self):
+        max_voltage = 0
+        max_cell = None
+        for c in range(min(len(self.cells), self.cell_count)):
+            if (
+                self.cells[c].voltage is not None
+                and max_voltage < self.cells[c].voltage
+            ):
+                max_voltage = self.cells[c].voltage
+                max_cell = c
+        return max_cell
 
     def to_protection_bits(self, byte_data):
         pos = 13
@@ -182,8 +223,12 @@ class Jkbms(Battery):
             1 if is_bit_set(tmp[pos - 4]) or is_bit_set(tmp[pos - 8]) else 0
         )
 
-    def read_serial_data_jkbms(self, command):
-        # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
+    def read_serial_data_jkbms(self, command: str) -> bool:
+        """
+        use the read_serial_data() function to read the data and then do BMS specific checks (crc, start bytes, etc)
+        :param command: the command to be sent to the bms
+        :return: True if everything is fine, else False
+        """
         data = read_serial_data(
             command,
             self.port,

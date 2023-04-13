@@ -5,8 +5,8 @@ from struct import *
 
 
 class Ant(Battery):
-    def __init__(self, port, baud):
-        super(Ant, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Ant, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     command_general = b"\xDB\xDB\x00\x00\x00\x00"

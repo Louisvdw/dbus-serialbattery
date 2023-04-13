@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -x
 
 ## DO NOT TOUCH THIS ##
 install_service() {
@@ -6,6 +7,7 @@ install_service() {
     echo "#!/bin/sh" > /service/dbus-blebattery-$1/log/run
     echo "exec multilog t s25000 n4 /var/log/dbus-blebattery-$1" >> /service/dbus-blebattery-$1/log/run
     chmod 755 /service/dbus-blebattery-$1/log/run
+
     echo "#!/bin/sh" > /service/dbus-blebattery-$1/run
     echo "exec 2>&1" >> /service/dbus-blebattery-$1/run
     echo "bluetoothctl disconnect $3" >> /service/dbus-blebattery-$1/run

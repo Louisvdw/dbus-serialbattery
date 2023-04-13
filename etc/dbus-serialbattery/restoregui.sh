@@ -1,5 +1,5 @@
-#!/bin/sh
-
+#!/bin/bash
+set -x
 #restore original backup 
 cp -f /opt/victronenergy/gui/qml/PageBattery.qml.backup /opt/victronenergy/gui/qml/PageBattery.qml
 
