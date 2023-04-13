@@ -27,8 +27,8 @@ battery_types = [
 ]
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = 0.14
-DRIVER_SUBVERSION = "b3ble"
+DRIVER_VERSION = '0.15'
+DRIVER_SUBVERSION = ".0-ble"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 

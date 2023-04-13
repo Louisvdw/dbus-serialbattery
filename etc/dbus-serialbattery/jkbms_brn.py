@@ -11,7 +11,6 @@ logging.basicConfig(level=logging.INFO)
 
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
-DEVICE_INFO_REFRESH_S = 60 * 60 * 5  # every 5 Hours
 CHAR_HANDLE = "0000ffe1-0000-1000-8000-00805f9b34fb"
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 
@@ -56,12 +55,12 @@ TRANSLATE_SETTINGS = [
 
 
 TRANSLATE_CELL_INFO = [
-    [["cell_info", "voltages", 16], 6, "<H", 0.001],
+    [["cell_info", "voltages", 32], 6, "<H", 0.001],
     [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
     [["cell_info", "delta_cell_voltage"], 60, "<H", 0.001],
     [["cell_info", "max_voltage_cell"], 62, "<B"],
     [["cell_info", "min_voltage_cell"], 63, "<B"],
-    [["cell_info", "resistances", 16], 64, "<H", 0.001],
+    [["cell_info", "resistances", 32], 64, "<H", 0.001],
     [["cell_info", "total_voltage"], 118, "<H", 0.001],
     [["cell_info", "current"], 126, "<l", 0.001],
     [["cell_info", "temperature_sensor_1"], 130, "<H", 0.1],
@@ -100,7 +99,7 @@ class JkBmsBle:
             print(d)
 
     # iterative implementation maybe later due to referencing
-    def translate(self, fb, translation, o, i=0):
+    def translate(self, fb, translation, o, f32s=False, i=0):
         if i == len(translation[0]) - 1:
             # keep things universal by using an n=1 list
             kees = (
@@ -108,18 +107,24 @@ class JkBmsBle:
                 if isinstance(translation[0][i], int)
                 else [translation[0][i]]
             )
+            offset = 0
+            if f32s:
+                if translation[1] >= 112:
+                    offset = 32
+                elif translation[1] >= 54:
+                    offset = 16
             i = 0
             for j in kees:
                 if isinstance(translation[2], int):
                     # handle raw bytes without unpack_from;
                     # 3. param gives no format but number of bytes
                     val = bytearray(
-                        fb[translation[1] + i : translation[1] + i + translation[2]]
+                        fb[translation[1] + i + offset: translation[1] + i + translation[2] + offset]
                     )
                     i += translation[2]
                 else:
                     val = unpack_from(
-                        translation[2], bytearray(fb), translation[1] + i
+                        translation[2], bytearray(fb), translation[1] + i + offset
                     )[0]
                     # calculate stepping in case of array
                     i = i + calcsize(translation[2])
@@ -137,7 +142,7 @@ class JkBmsBle:
                 else:
                     o[translation[0][i]] = {}
 
-            self.translate(fb, translation, o[translation[0][i]], i + 1)
+            self.translate(fb, translation, o[translation[0][i]], f32s=f32s, i=i + 1)
 
     def decode_warnings(self, fb):
         val = unpack_from("<H", bytearray(fb), 136)[0]
@@ -166,8 +171,9 @@ class JkBmsBle:
 
     def decode_cellinfo_jk02(self):
         fb = self.frame_buffer
+        has32s = (fb[189] == 0x00 and fb[189 + 32] > 0)
         for t in TRANSLATE_CELL_INFO:
-            self.translate(fb, t, self.bms_status)
+            self.translate(fb, t, self.bms_status, f32s=has32s)
         self.decode_warnings(fb)
         debug(self.bms_status)
 
@@ -184,6 +190,11 @@ class JkBmsBle:
             info("Processing frame with settings info")
             if protocol_version == PROTOCOL_VERSION_JK02:
                 self.decode_settings_jk02()
+                # adapt translation table for cell array lengths
+                ccount = self.bms_status["settings"]["cell_count"]
+                for i, t in enumerate(TRANSLATE_CELL_INFO):
+                    if t[0][-2] == "voltages" or t[0][-2] == "voltages":
+                        TRANSLATE_CELL_INFO[i][0][-1] = ccount
                 self.bms_status["last_update"] = time.time()
 
         elif info_type == 0x02:
@@ -308,6 +319,7 @@ class JkBmsBle:
             client = BleakClient(self.address)
             print("btloop")
             try:
+                print("reconnect")
                 await client.connect()
                 self.bms_status["model_nbr"] = (
                     await client.read_gatt_char(MODEL_NBR_UUID)
@@ -320,15 +332,16 @@ class JkBmsBle:
                 # await self.enable_charging(client)
                 last_dev_info = time.time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
-                    if time.time() - last_dev_info > DEVICE_INFO_REFRESH_S:
-                        last_dev_info = time.time()
-                        await self.request_bt("device_info", client)
                     await asyncio.sleep(0.01)
             except Exception as e:
                 info("error while connecting to bt: " + str(e))
                 self.run = False
             finally:
-                await client.disconnect()
+                if client.is_connected:
+                    try:
+                        await client.disconnect()
+                    except Exception as e:
+                        info("error while disconnecting")
 
         print("Exiting bt-loop")
 
@@ -346,8 +359,12 @@ class JkBmsBle:
 
     def stop_scraping(self):
         self.run = False
+        stop = time.time()
         while self.is_running():
             time.sleep(0.1)
+            if time.time() - stop > 10:
+                return False
+        return True
 
     def is_running(self):
         return self.bt_thread.is_alive()
@@ -362,12 +379,11 @@ class JkBmsBle:
         await self.write_register(0x1F, b"\x01\x00\x00\x00", 4, c)
         await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
 
-
+'''
 if __name__ == "__main__":
     jk = JkBmsBle("C8:47:8C:E4:54:0E")
-    info("sss")
     jk.start_scraping()
     while True:
-        print("asdf")
         print(jk.get_status())
         time.sleep(5)
+'''

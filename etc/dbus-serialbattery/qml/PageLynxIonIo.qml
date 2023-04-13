@@ -5,7 +5,7 @@ MbPage {
 	id: root
 	property string bindPrefix
 
-	model: VisualItemModel {
+	model: VisibleItemModel {
 		MbItemOptions {
 			id: systemSwitch
 			description: qsTr("System Switch")
@@ -37,16 +37,16 @@ MbPage {
 			]
 		}
 
-        MbItemOptions {
-            description: qsTr("Allow to balance")
-            bind: service.path("/Io/AllowToBalance")
-            readonly: true
-            show: item.valid
+		MbItemOptions {
+			description: qsTr("Allow to balance")
+			bind: service.path("/Io/AllowToBalance")
+			readonly: true
+			show: item.valid
 			possibleValues:[
 				MbOption{description: qsTr("No"); value: 0},
 				MbOption{description: qsTr("Yes"); value: 1}
 			]
-        }
+		}
 
 		MbItemOptions {
 			description: qsTr("External relay")
