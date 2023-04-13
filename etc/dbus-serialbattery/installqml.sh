@@ -30,42 +30,47 @@ function versionStringToNumber ()
 	fi
 }
 
+# backup old PageBattery.qml once. New firmware upgrade will remove the backup
+if [ ! -f /opt/victronenergy/gui/qml/PageBattery.qml.backup ]; then
+    cp /opt/victronenergy/gui/qml/PageBattery.qml /opt/victronenergy/gui/qml/PageBattery.qml.backup
+fi
+# backup old PageLynxIonIo.qml once. New firmware upgrade will remove the backup
+if [ ! -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
+    cp /opt/victronenergy/gui/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup
+fi
+# copy new PageBattery.qml
+cp /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/
+# copy new PageBatteryCellVoltages
+cp /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/
+# copy new PageBatterySetup
+cp /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/
+# copy new PageLynxIonIo.qml
+cp /data/etc/dbus-serialbattery/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/
+
+
 # get current Venus OS version
 versionStringToNumber $(head -n 1 /opt/victronenergy/version)
 ((venusVersionNumber = $versionNumber))
 
-# revert to VisualItemModel, if before v3.00~14 (v3.00~14 uses VisibleItemModel)
+# revert to VisualItemModel, if Venus OS older than v3.00~14 (v3.00~14 uses VisibleItemModel)
 versionStringToNumber "v3.00~14"
 
-qmlDir="/data/etc/dbus-serialbattery/qml"
+# change in Victron directory, else the files are "broken" if upgrading from v2 to v3
+qmlDir="/opt/victronenergy/gui/qml"
 
 if (( $venusVersionNumber < $versionNumber )); then
-    echo "Venus OS $(head -n 1 /opt/victronenergy/version) is olter than v3.00~14. Replacing VisibleItemModel with VisualItemModel"
+    echo -n "Venus OS $(head -n 1 /opt/victronenergy/version) is older than v3.00~14. Replacing VisibleItemModel with VisualItemModel... "
     fileList="$qmlDir/PageBattery.qml"
     fileList+=" $qmlDir/PageBatteryCellVoltages.qml"
     fileList+=" $qmlDir/PageBatterySetup.qml"
     fileList+=" $qmlDir/PageLynxIonIo.qml"
     for file in $fileList ; do
         sed -i -e 's/VisibleItemModel/VisualItemModel/' "$file"
-    done
+	done
+    echo "done."
 fi
 
 
-# backup old PageBattery.qml once. New firmware upgrade will remove the backup
-if [ ! -f /opt/victronenergy/gui/qml/PageBattery.qml.backup ]; then
-    cp /opt/victronenergy/gui/qml/PageBattery.qml /opt/victronenergy/gui/qml/PageBattery.qml.backup
-fi
-if [ ! -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
-    cp /opt/victronenergy/gui/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup
-fi
-
-# copy new PageBattery.qml
-cp /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/
-# copy new PageLynxIonIo.qml
-cp /data/etc/dbus-serialbattery/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/
-# copy new PageBatteryCellVoltages
-cp /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/
-cp /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/
 # stop gui
 svc -d /service/gui
 # sleep 1 sec

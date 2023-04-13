@@ -6,7 +6,7 @@ import struct
 
 class Renogy(Battery):
     def __init__(self, port, baud, address):
-        super(Renogy, self).__init__(port, baud)
+        super(Renogy, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
         # The RBT100LFP12SH-G1 uses 0xF7, another battery uses 0x30

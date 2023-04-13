@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 # install required packages
 opkg update
