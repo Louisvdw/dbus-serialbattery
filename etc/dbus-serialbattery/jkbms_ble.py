@@ -13,11 +13,11 @@ class Jkbms_Ble(Battery):
     resetting = False
 
     def __init__(self, port, baud, address):
-        super(Jkbms_Ble, self).__init__("zero", baud)
+        super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud)
         self.type = self.BATTERYTYPE
         self.jk = JkBmsBle(address)
 
-        logger.error("init of jkbmsble")
+        logger.info("init of jkbmsble at " + address)
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -26,6 +26,27 @@ class Jkbms_Ble(Battery):
 
         # check if device with given mac is found, otherwise abort
 
+        logger.info("test of jkbmsble at " + self.jk.address)
+        try:
+            loop = asyncio.get_event_loop()
+            t = loop.create_task(BleakScanner.discover())
+            devices = loop.run_until_complete(t)
+        except BleakError as e:
+            logger.error(str(e))
+            return False
+
+        found = False
+        for d in devices:
+            if d.address == self.jk.address:
+                found = True
+        if not found:
+            logger.error("no BMS found at " + self.jk.address)
+            return False
+
+  
+        """
+        # before indipended service, has to be checked
+        
         logger.info("test of jkbmsble")
         tries = 0
         while True:
@@ -50,6 +71,7 @@ class Jkbms_Ble(Battery):
                 logger.error(str(e))
                 self.reset_bluetooth()
             tries += 1
+        """
 
         # device was found, presumeably a jkbms so start scraping
         self.jk.start_scraping()
