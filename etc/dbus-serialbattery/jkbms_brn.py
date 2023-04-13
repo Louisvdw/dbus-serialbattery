@@ -319,6 +319,7 @@ class JkBmsBle:
             client = BleakClient(self.address)
             print("btloop")
             try:
+                print("reconnect")
                 await client.connect()
                 self.bms_status["model_nbr"] = (
                     await client.read_gatt_char(MODEL_NBR_UUID)
