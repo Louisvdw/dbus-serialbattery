@@ -18,6 +18,9 @@ class Jkbms(Battery):
     command_status = b"\x4E\x57\x00\x13\x00\x00\x00\x00\x06\x03\x00\x00\x00\x00\x00\x00\x68\x00\x00\x01\x29"
 
     def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
         try:
             return self.read_status_data()
         except Exception as err:

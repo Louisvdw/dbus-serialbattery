@@ -13,7 +13,9 @@ jobs:
         uses: actions/checkout@v3
       - name: build release archive
         run: |
+          find . -type f -name "*.py" -exec chmod +x {} \;
           find . -type f -name "*.sh" -exec chmod +x {} \;
+          find . -type f -name "run" -exec chmod +x {} \;
           tar -czvf venus-data.tar.gz \
             --mode='a+rwX' \
             --exclude battery_template.py \

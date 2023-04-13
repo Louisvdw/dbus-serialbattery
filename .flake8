@@ -19,5 +19,5 @@ exclude =
           ./velib_python
           venv
 extend-ignore:
- # E203 whitespace fefore ':' conflicts with black code formatting. Will be ignored in flake8
+ # E203 whitespace before ':' conflicts with black code formatting. Will be ignored in flake8
  E203
