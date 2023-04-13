@@ -148,10 +148,11 @@ class Jkbms_Ble(Battery):
         )
         self.balancing_action = st["cell_info"]["balancing_action"]
 
+        # show wich cells are balancing
         for c in range(self.cell_count):
             if self.balancing and (
-                st["cell_info"]["max_voltage_cell"] == c
-                or st["cell_info"]["min_voltage_cell"] == c 
+                st["cell_info"]["min_voltage_cell"] == c
+                or st["cell_info"]["max_voltage_cell"] == c 
             ):
                 self.cells[c].balance = True
             else:
@@ -209,3 +210,18 @@ class Jkbms_Ble(Battery):
 
     def get_balancing(self):
         return 1 if self.balancing else 0
+
+
+    def reset_bluetooth(self):
+        logger.info("reset of bluetooth triggered")
+        self.resetting = True
+        # if self.jk.is_running():
+        # self.jk.stop_scraping()
+        logger.info("scraping ended, issuing sys-commands")
+        os.system("kill -9 $(pidof bluetoothd)")
+        # os.system("/etc/init.d/bluetooth stop") is not enugh, kill -9 via pid is needed
+        time.sleep(2)
+        os.system("rfkill block bluetooth")
+        os.system("rfkill unblock bluetooth")
+        os.system("/etc/init.d/bluetooth start")
+        logger.info("bluetooth should have been restarted")

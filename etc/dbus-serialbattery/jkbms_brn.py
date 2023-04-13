@@ -11,7 +11,6 @@ logging.basicConfig(level=logging.INFO)
 
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
-DEVICE_INFO_REFRESH_S = 60 * 60 * 10  # every 10 Hours
 CHAR_HANDLE = "0000ffe1-0000-1000-8000-00805f9b34fb"
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 
@@ -380,12 +379,11 @@ class JkBmsBle:
         await self.write_register(0x1F, b"\x01\x00\x00\x00", 4, c)
         await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
 
-
+'''
 if __name__ == "__main__":
     jk = JkBmsBle("C8:47:8C:E4:54:0E")
-    info("sss")
     jk.start_scraping()
     while True:
-        print("asdf")
         print(jk.get_status())
         time.sleep(5)
+'''
