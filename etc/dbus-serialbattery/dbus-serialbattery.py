@@ -98,6 +98,7 @@ def main():
     port = get_port()
     battery: Battery = get_battery(port)
 
+    # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)
