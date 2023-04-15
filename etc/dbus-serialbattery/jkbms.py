@@ -94,7 +94,7 @@ class Jkbms(Battery):
         # MOSFET temperature
         offset = cellbyte_count + 3
         temp_mos = unpack_from(">H", self.get_data(status_data, b"\x80", offset, 2))[0]
-        self.to_temp('mos', temp_mos if temp_mos < 99 else (100 - temp_mos))
+        self.to_temp("mos", temp_mos if temp_mos < 99 else (100 - temp_mos))
 
         offset = cellbyte_count + 12
         voltage = unpack_from(">H", self.get_data(status_data, b"\x83", offset, 2))[0]
@@ -148,7 +148,9 @@ class Jkbms(Battery):
         # show wich cells are balancing
         if self.get_min_cell() is not None and self.get_max_cell() is not None:
             for c in range(self.cell_count):
-                if self.balancing and ( self.get_min_cell() == c or self.get_max_cell() == c ):
+                if self.balancing and (
+                    self.get_min_cell() == c or self.get_max_cell() == c
+                ):
                     self.cells[c].balance = True
                 else:
                     self.cells[c].balance = False
