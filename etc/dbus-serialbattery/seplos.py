@@ -150,6 +150,10 @@ class Seplos(Battery):
 
         soc_alarm_byte = data[34]
         self.protection.soc_low = Seplos.decode_alarm_byte(data_byte=soc_alarm_byte, alarm_bit=3, warn_bit=2)
+
+        switch_byte = data[35]
+        self.discharge_fet = (True if switch_byte & 0b01 != 0 else False)
+        self.charge_fet = (True if switch_byte & 0b10 != 0 else False)
         return True
 
     def read_status_data(self):
