@@ -11,6 +11,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: build release archive
         run: |
           find . -type f -name "*.py" -exec chmod +x {} \;
@@ -25,6 +26,7 @@ jobs:
             --exclude test_max17853.py \
             conf/serial-starter.d \
             etc/dbus-serialbattery/
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

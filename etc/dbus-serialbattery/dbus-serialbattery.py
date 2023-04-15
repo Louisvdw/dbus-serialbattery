@@ -92,9 +92,7 @@ def main():
             logger.info("No Port needed")
             return "/dev/tty/USB9"
 
-    logger.info(
-        "dbus-serialbattery v" + str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
-    )
+    logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION)
 
     port = get_port()
     battery = None
