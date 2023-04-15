@@ -34,3 +34,5 @@ If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.
+
+Please add multiline code or logfiles by useing three backticks (```) or three tildes (~~~) on the lines before and after the code block. See https://www.markdownguide.org/extended-syntax/#fenced-code-blocks for more details.

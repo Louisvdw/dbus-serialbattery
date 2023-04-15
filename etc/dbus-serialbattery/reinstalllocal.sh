@@ -18,11 +18,24 @@ cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVE
 sh /data/etc/$DRIVERNAME/installqml.sh
 
 # check if serial-starter.d was deleted
-serialstarter=/data/conf/serial-starter.d
-if [ ! -f $serialstarter ]; then
-    echo "service sbattery        dbus-serialbattery" >> $serialstarter
-    echo "alias default gps:vedirect:sbattery" >> $serialstarter
-    echo "alias rs485 cgwacs:fzsonick:imt:modbus:sbattery" >> $serialstarter
+serialstarter_path="/data/conf/serial-starter.d"
+serialstarter_file="$serialstarter_path/dbus-serialbattery.conf"
+
+# check if folder is a file (older versions of this driver)
+if [ -f $serialstarter_path ]; then
+    rm -f $serialstarter_path
+fi
+
+# check if folder exists
+if [ ! -d $serialstarter_path ]; then
+    mkdir $serialstarter_path
+fi
+
+# check if file exists
+if [ ! -f $serialstarter_file ]; then
+    echo "service sbattery        dbus-serialbattery" >> $serialstarter_file
+    echo "alias default gps:vedirect:sbattery" >> $serialstarter_file
+    echo "alias rs485 cgwacs:fzsonick:imt:modbus:sbattery" >> $serialstarter_file
 fi
 
 # restart if running

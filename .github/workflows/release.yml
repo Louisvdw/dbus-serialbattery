@@ -24,7 +24,6 @@ jobs:
             --exclude restartservice.sh \
             --exclude revov.py \
             --exclude test_max17853.py \
-            conf/serial-starter.d \
             etc/dbus-serialbattery/
 
       - name: Release
