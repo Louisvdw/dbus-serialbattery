@@ -1,7 +1,18 @@
 #!/bin/bash
 set -x
 
-## DO NOT TOUCH THIS ##
+# install required packages
+# TO DO: Check first if packages are already installed
+opkg update
+opkg install python3-misc python3-pip
+pip3 install bleak
+
+# setup cronjob to restart Bluetooth
+grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+
+# add install-script to rc.local to be ready for firmware update
+grep -qxF "sh /data/etc/$DRIVERNAME/installble.sh" $filename || echo "sh /data/etc/$DRIVERNAME/installble.sh" >> $filename
+
 install_service() {
     mkdir -p /service/dbus-blebattery-$1/log
     echo "#!/bin/sh" > /service/dbus-blebattery-$1/log/run
@@ -14,9 +25,11 @@ install_service() {
     echo "python /data/etc/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery-$1/run
     chmod 755 /service/dbus-blebattery-$1/run
 }
-## END DO NOT TOUCH AREA ##
 
-## Uncomment for each adapter here, increase the number for each service
+
+## CONFIG AREA
+
+## Uncomment for each adapter here, increase the number for each adapter/service
 
 # install_service 0 Jkbms_Ble C8:47:8C:12:34:56
 # install_service 1 Jkbms_Ble C8:47:8C:78:9A:BC
