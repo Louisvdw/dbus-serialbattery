@@ -1,8 +1,10 @@
 #!/bin/sh
 set -x
 
-# install driver
+# extract driver
 tar -zxf ./venus-data.tar.gz -C /data
+
+# install driver
 sh /data/etc/dbus-serialbattery/reinstalllocal.sh
 
 echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
