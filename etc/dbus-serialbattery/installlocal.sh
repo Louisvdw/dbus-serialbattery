@@ -1,5 +1,7 @@
 #!/bin/sh
-set -x
+
+# remove comment for easier troubleshooting
+#set -x
 
 # extract driver
 tar -zxf ./venus-data.tar.gz -C /data

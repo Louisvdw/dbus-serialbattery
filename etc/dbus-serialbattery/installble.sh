@@ -1,5 +1,7 @@
 #!/bin/bash
-set -x
+
+# remove comment for easier troubleshooting
+#set -x
 
 # install required packages
 # TO DO: Check first if packages are already installed

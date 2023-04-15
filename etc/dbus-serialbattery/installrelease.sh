@@ -1,5 +1,7 @@
 #!/bin/bash
-set -x
+
+# remove comment for easier troubleshooting
+#set -x
 
 # download latest release
 curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/latest | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -O venus-data.tar.gz -qi -
