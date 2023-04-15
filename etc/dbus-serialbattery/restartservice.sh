@@ -1,2 +1,6 @@
-#!/bin/sh
-svc -d -u /service/dbus-serialbattery  
+#!/bin/bash
+
+# remove comment for easier troubleshooting
+#set -x
+
+svc -d -u /service/dbus-serialbattery

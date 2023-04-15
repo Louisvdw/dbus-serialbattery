@@ -43,7 +43,6 @@ class Jkbms_Ble(Battery):
             logger.error("no BMS found at " + self.jk.address)
             return False
 
-
         """
         # before indipended service, has to be checked
 
@@ -86,7 +85,6 @@ class Jkbms_Ble(Battery):
         if status is None:
             self.jk.stop_scraping()
             return False
-
 
         if not status["device_info"]["vendor_id"].startswith(("JK-", "JK_")):
             self.jk.stop_scraping()
@@ -166,7 +164,7 @@ class Jkbms_Ble(Battery):
         self.balancing_current = (
             st["cell_info"]["balancing_current"]
             if st["cell_info"]["balancing_current"] < 32768
-            else ( 65536/1000 - st["cell_info"]["balancing_current"] ) * -1
+            else (65536 / 1000 - st["cell_info"]["balancing_current"]) * -1
         )
         self.balancing_action = st["cell_info"]["balancing_action"]
 
@@ -232,18 +230,3 @@ class Jkbms_Ble(Battery):
 
     def get_balancing(self):
         return 1 if self.balancing else 0
-
-
-    def reset_bluetooth(self):
-        logger.info("reset of bluetooth triggered")
-        self.resetting = True
-        # if self.jk.is_running():
-        # self.jk.stop_scraping()
-        logger.info("scraping ended, issuing sys-commands")
-        os.system("kill -9 $(pidof bluetoothd)")
-        # os.system("/etc/init.d/bluetooth stop") is not enugh, kill -9 via pid is needed
-        time.sleep(2)
-        os.system("rfkill block bluetooth")
-        os.system("rfkill unblock bluetooth")
-        os.system("/etc/init.d/bluetooth start")
-        logger.info("bluetooth should have been restarted")

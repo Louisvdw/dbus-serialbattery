@@ -102,9 +102,7 @@ def main():
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
         if testbms.test_connection() is True:
-            logger.info(
-                "Connection established to " + testbms.__class__.__name__
-            )
+            logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
     else:
         battery = get_battery_type(port)

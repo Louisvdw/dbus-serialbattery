@@ -36,27 +36,32 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0-jkbms_ble (20230413)"
+DRIVER_SUBVERSION = ".0-jkbms_ble (20230415)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
-# True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
-#                        For CVL the penalties are only applied, if the cell voltage reaches the penalty voltage
+# True is a linear mode. For CCL and DCL the values between the steps are calculated for
+#                          smoother values (by WaldemarFech)
+#                        For CVL the penalties are only applied, if the cell voltage reaches
+#                          the penalty voltage
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
 # Battery Current limits
 MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
-MAX_BATTERY_DISCHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"])
+MAX_BATTERY_DISCHARGE_CURRENT = float(
+    config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
+)
 
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
-# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count) and switch from max voltage to float voltage (FLOAT_CELL_VOLTAGE * cell count)
-#              after max voltage is reached for MAX_VOLTAGE_TIME_SEC. It switches back to max voltage after SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT
+# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count) and switch from max voltage to
+#              float voltage (FLOAT_CELL_VOLTAGE * cell count) after max voltage is reached for MAX_VOLTAGE_TIME_SEC.
+#              It switches back to max voltage after SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT.
 #              If LINEAR_LIMITATION_ENABLE is set to True then penalty voltages are applied
-# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float voltage of 53.6V to don't stress the batteries.
-#          Allow max voltage of 55.2V again, if SoC is once below 90%
+# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float
+#          voltage of 53.6V to don't stress the batteries. Allow max voltage of 55.2V again, if SoC is once below 90%
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 
@@ -74,18 +79,15 @@ FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
 # If the cell voltage reaches 3.48V, then reduce actual battery-voltage by 0.01V
 # If the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
 # There will be a sum of all penalties for each cell, which exceeds the limits
-# NOTE: The first value of PENALTY_AT_CELL_VOLTAGE has to be at least MAX_CELL_VOLTAGE + the first value of PENALTY_BATTERY_VOLTAGE,
-#       else the FLOAT_CELL_VOLTAGE is never set. Additionally the battery voltage has to reach max voltage and all cells has to be below penalty voltage to switch to float voltage.
+# NOTE: The first value of PENALTY_AT_CELL_VOLTAGE has to be at least MAX_CELL_VOLTAGE + the first value of
+#       PENALTY_BATTERY_VOLTAGE, else the FLOAT_CELL_VOLTAGE is never set. Additionally the battery voltage
+#       has to reach max voltage and all cells has to be below penalty voltage to switch to float voltage.
 PENALTY_AT_CELL_VOLTAGE = _get_list_from_config(
-    "DEFAULT",
-    "PENALTY_AT_CELL_VOLTAGE",
-    lambda v: float(v)
+    "DEFAULT", "PENALTY_AT_CELL_VOLTAGE", lambda v: float(v)
 )
 # this voltage will be subtracted
 PENALTY_BATTERY_VOLTAGE = _get_list_from_config(
-    "DEFAULT",
-    "PENALTY_BATTERY_VOLTAGE",
-    lambda v: float(v)
+    "DEFAULT", "PENALTY_BATTERY_VOLTAGE", lambda v: float(v)
 )
 # Specify in seconds how often the penalty should be recalculated
 PENALTY_RECALCULATE_EVERY = int(config["DEFAULT"]["PENALTY_RECALCULATE_EVERY"])
@@ -94,7 +96,9 @@ PENALTY_RECALCULATE_EVERY = int(config["DEFAULT"]["PENALTY_RECALCULATE_EVERY"])
 # Reset max voltage after
 MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
 # Specify SoC where CVL limit is reset to max voltage
-SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"])
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
+    config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
+)
 
 
 # --------- Cell Voltage Current limitation (affecting CCL/DCL) ---------
@@ -142,9 +146,7 @@ DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
 # Set steps to reduce battery current
 # The current will be changed linear between those steps if LINEAR_LIMITATION_ENABLE is set to True
 TEMPERATURE_LIMITS_WHILE_CHARGING = _get_list_from_config(
-    "DEFAULT",
-    "TEMPERATURE_LIMITS_WHILE_CHARGING",
-    lambda v: float(v)
+    "DEFAULT", "TEMPERATURE_LIMITS_WHILE_CHARGING", lambda v: float(v)
 )
 MAX_CHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT",
@@ -177,9 +179,15 @@ CC_SOC_LIMIT2 = float(config["DEFAULT"]["CC_SOC_LIMIT2"])
 CC_SOC_LIMIT3 = float(config["DEFAULT"]["CC_SOC_LIMIT3"])
 
 # Charge current limits
-CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * float(config["DEFAULT"]["CC_CURRENT_LIMIT1_FRACTION"])
-CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * float(config["DEFAULT"]["CC_CURRENT_LIMIT2_FRACTION"])
-CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * float(config["DEFAULT"]["CC_CURRENT_LIMIT3_FRACTION"])
+CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * float(
+    config["DEFAULT"]["CC_CURRENT_LIMIT1_FRACTION"]
+)
+CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * float(
+    config["DEFAULT"]["CC_CURRENT_LIMIT2_FRACTION"]
+)
+CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * float(
+    config["DEFAULT"]["CC_CURRENT_LIMIT3_FRACTION"]
+)
 
 # Discharge current soc limits
 DC_SOC_LIMIT1 = float(config["DEFAULT"]["DC_SOC_LIMIT1"])
@@ -187,9 +195,15 @@ DC_SOC_LIMIT2 = float(config["DEFAULT"]["DC_SOC_LIMIT2"])
 DC_SOC_LIMIT3 = float(config["DEFAULT"]["DC_SOC_LIMIT3"])
 
 # Discharge current limits
-DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_CURRENT_LIMIT1_FRACTION"])
-DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_CURRENT_LIMIT2_FRACTION"])
-DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"])
+DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * float(
+    config["DEFAULT"]["DC_CURRENT_LIMIT1_FRACTION"]
+)
+DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * float(
+    config["DEFAULT"]["DC_CURRENT_LIMIT2_FRACTION"]
+)
+DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(
+    config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"]
+)
 
 
 # --------- Time-To-Soc ---------
@@ -203,7 +217,9 @@ DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(config["DEFAULT"]["DC_
 # [Valid values 0-100, comma separated list. More that 20 intervals are not recommended]
 # Example: TIME_TO_SOC_POINTS = 100, 95, 90, 85, 75, 50, 25, 20, 10, 0
 # Leave empty to disable
-TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lambda v: int(v))
+TIME_TO_SOC_POINTS = _get_list_from_config(
+    "DEFAULT", "TIME_TO_SOC_POINTS", lambda v: int(v)
+)
 # Specify TimeToSoc value type [Valid values 1, 2, 3]
 # 1 Seconds
 # 2 Time string <days>d <hours>h <minutes>m <seconds>s
@@ -211,7 +227,11 @@ TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lamb
 TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
 # Specify in seconds how often the TimeToSoc should be recalculated
 # Minimum are 5 seconds to prevent CPU overload
-TIME_TO_SOC_RECALCULATE_EVERY = int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5 else 5
+TIME_TO_SOC_RECALCULATE_EVERY = (
+    int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"])
+    if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5
+    else 5
+)
 # Include TimeToSoC points when moving away from the SoC point [Valid values True, False]
 # These will be as negative time. Disabling this improves performance slightly
 TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
@@ -257,7 +277,6 @@ LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
 
-
 # --------- Functions ---------
 def constrain(val, min_val, max_val):
     if min_val > max_val:
@@ -277,7 +296,6 @@ def calcLinearRelationship(inValue, inArray, outArray):
     if inArray[0] > inArray[-1]:  # change compare-direction in array
         return calcLinearRelationship(inValue, inArray[::-1], outArray[::-1])
     else:
-
         # Handle out of bounds
         if inValue <= inArray[0]:
             return outArray[0]

@@ -141,7 +141,7 @@ class Battery(ABC):
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
-        if sensor == 'mos':
+        if sensor == "mos":
             self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
@@ -199,26 +199,29 @@ class Battery(ABC):
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
 
-        # INFO: battery will only switch to Absorption if all cells are balanced.reach MAC_CELL_VOLTAGE * cell count if they are all balanced.
-        if (
-            foundHighCellVoltage
-            and self.allow_max_voltage
-        ):
+        # INFO: battery will only switch to Absorption, if all cells are balanced.
+        #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
+        if foundHighCellVoltage and self.allow_max_voltage:
             # set CVL only once every PENALTY_RECALCULATE_EVERY seconds
             control_voltage_time = int(time() / utils.PENALTY_RECALCULATE_EVERY)
             if control_voltage_time != self.control_voltage_last_set:
                 # Keep penalty above min battery voltage
-                self.control_voltage = round( max(
-                    voltageSum - penaltySum,
-                    utils.MIN_CELL_VOLTAGE * self.cell_count,
-                ), 3)
+                self.control_voltage = round(
+                    max(
+                        voltageSum - penaltySum,
+                        utils.MIN_CELL_VOLTAGE * self.cell_count,
+                    ),
+                    3,
+                )
                 self.control_voltage_last_set = control_voltage_time
 
         elif self.allow_max_voltage:
-            self.control_voltage = round( (utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+            self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
 
         else:
-            self.control_voltage = round( (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
+            self.control_voltage = round(
+                (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3
+            )
 
     def manage_charge_voltage_step(self) -> None:
         """
@@ -228,7 +231,6 @@ class Battery(ABC):
         voltageSum = 0
         tDiff = 0
         if utils.CVCM_ENABLE:
-
             # calculate battery sum
             for i in range(self.cell_count):
                 voltage = self.get_cell_voltage(i)
@@ -281,7 +283,7 @@ class Battery(ABC):
         if utils.CCCM_T_ENABLE:
             charge_limits.append(self.calcMaxChargeCurrentReferringToTemperature())
 
-        self.control_charge_current = round( min(charge_limits), 3)
+        self.control_charge_current = round(min(charge_limits), 3)
 
         if self.control_charge_current == 0:
             self.control_allow_charge = False
@@ -301,7 +303,7 @@ class Battery(ABC):
                 self.calcMaxDischargeCurrentReferringToTemperature()
             )
 
-        self.control_discharge_current = round( min(discharge_limits), 3)
+        self.control_discharge_current = round(min(discharge_limits), 3)
 
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False
@@ -494,7 +496,7 @@ class Battery(ABC):
             return self.capacity * self.soc / 100
         return None
 
-    def get_timeToSoc(self, socnum, crntPrctPerSec, onlyNumber = False) -> str:
+    def get_timeToSoc(self, socnum, crntPrctPerSec, onlyNumber=False) -> str:
         if self.current > 0:
             diffSoc = socnum - self.soc
         else:
@@ -517,7 +519,7 @@ class Battery(ABC):
 
         return ttgStr
 
-    def get_secondsToString(self, timespan, precision = 3) -> str:
+    def get_secondsToString(self, timespan, precision=3) -> str:
         """
         Transforms seconds to a string in the format: 1d 1h 1m 1s (Victron Style)
         :param precision:
@@ -527,19 +529,22 @@ class Battery(ABC):
         3 = 1d 1h 1m 1s
 
         This was added, since timedelta() returns strange values, if time is negative
-        e.g.: seconds: -70245 --> timedelta output: -1 day, 4:29:15 --> calculation: -1 day + 4:29:15 --> real value -19:30:45
+        e.g.: seconds: -70245
+              --> timedelta output: -1 day, 4:29:15
+              --> calculation: -1 day + 4:29:15
+              --> real value -19:30:45
         """
-        tmp = '' if timespan >= 0 else '-'
+        tmp = "" if timespan >= 0 else "-"
         timespan = abs(timespan)
 
         m, s = divmod(timespan, 60)
         h, m = divmod(m, 60)
         d, h = divmod(h, 24)
 
-        tmp += ( ( str(d) + 'd ' ) if d > 0 else '' )
-        tmp += ( ( str(h) + 'h ' ) if precision >= 1 and h > 0 else '' )
-        tmp += ( ( str(m) + 'm ' ) if precision >= 2 and m > 0 else '' )
-        tmp += ( ( str(s) + 's ' ) if precision == 3 and s > 0 else '' )
+        tmp += (str(d) + "d ") if d > 0 else ""
+        tmp += (str(h) + "h ") if precision >= 1 and h > 0 else ""
+        tmp += (str(m) + "m ") if precision >= 2 and m > 0 else ""
+        tmp += (str(s) + "s ") if precision == 3 and s > 0 else ""
 
         return tmp.rstrip()
 
@@ -667,18 +672,32 @@ class Battery(ABC):
         return True
 
     def log_settings(self) -> None:
-
         cell_counter = len(self.cells)
         logger.info(f"Battery {self.type} connected to dbus from {self.port}")
-        logger.info( "========== Settings ==========")
-        logger.info(f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc}%")
-        logger.info(f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}")
+        logger.info("========== Settings ==========")
+        logger.info(
+            f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc}%"
+        )
+        logger.info(
+            f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}"
+        )
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
-        logger.info(f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V")
+        logger.info(
+            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | "
+            + "MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V"
+        )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
-        logger.info(f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V")
-        logger.info(f"> CCCM CV:  {str(utils.CCCM_CV_ENABLE).ljust(5)} | DCCM CV:  {utils.DCCM_CV_ENABLE}")
-        logger.info(f"> CCCM T:   {str(utils.CCCM_T_ENABLE).ljust(5)} | DCCM T:   {utils.DCCM_T_ENABLE}")
-        logger.info(f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}")
+        logger.info(
+            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
+        )
+        logger.info(
+            f"> CCCM CV:  {str(utils.CCCM_CV_ENABLE).ljust(5)} | DCCM CV:  {utils.DCCM_CV_ENABLE}"
+        )
+        logger.info(
+            f"> CCCM T:   {str(utils.CCCM_T_ENABLE).ljust(5)} | DCCM T:   {utils.DCCM_T_ENABLE}"
+        )
+        logger.info(
+            f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
+        )
 
         return
