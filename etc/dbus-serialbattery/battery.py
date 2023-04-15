@@ -199,7 +199,8 @@ class Battery(ABC):
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
 
-        # INFO: battery will only switch to Absorption if all cells are balanced.reach MAC_CELL_VOLTAGE * cell count if they are all balanced.
+        # INFO: battery will only switch to Absorption, if all cells are balanced.
+        #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
         if foundHighCellVoltage and self.allow_max_voltage:
             # set CVL only once every PENALTY_RECALCULATE_EVERY seconds
             control_voltage_time = int(time() / utils.PENALTY_RECALCULATE_EVERY)
@@ -302,7 +303,7 @@ class Battery(ABC):
                 self.calcMaxDischargeCurrentReferringToTemperature()
             )
 
-        self.control_discharge_current = round( min(discharge_limits), 3)
+        self.control_discharge_current = round(min(discharge_limits), 3)
 
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False
@@ -528,7 +529,10 @@ class Battery(ABC):
         3 = 1d 1h 1m 1s
 
         This was added, since timedelta() returns strange values, if time is negative
-        e.g.: seconds: -70245 --> timedelta output: -1 day, 4:29:15 --> calculation: -1 day + 4:29:15 --> real value -19:30:45
+        e.g.: seconds: -70245
+              --> timedelta output: -1 day, 4:29:15
+              --> calculation: -1 day + 4:29:15
+              --> real value -19:30:45
         """
         tmp = "" if timespan >= 0 else "-"
         timespan = abs(timespan)
@@ -679,7 +683,8 @@ class Battery(ABC):
         )
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
-            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V"
+            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | " +
+            "MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V"
         )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
         logger.info(

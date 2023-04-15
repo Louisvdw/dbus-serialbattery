@@ -42,8 +42,10 @@ degree_sign = "\N{DEGREE SIGN}"
 
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
-# True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
-#                        For CVL the penalties are only applied, if the cell voltage reaches the penalty voltage
+# True is a linear mode. For CCL and DCL the values between the steps are calculated for
+#                          smoother values (by WaldemarFech)
+#                        For CVL the penalties are only applied, if the cell voltage reaches
+#                          the penalty voltage
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
 # Battery Current limits
@@ -52,11 +54,12 @@ MAX_BATTERY_DISCHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_DISCHARGE_C
 
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
-# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count) and switch from max voltage to float voltage (FLOAT_CELL_VOLTAGE * cell count)
-#              after max voltage is reached for MAX_VOLTAGE_TIME_SEC. It switches back to max voltage after SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT
+# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count) and switch from max voltage to
+#              float voltage (FLOAT_CELL_VOLTAGE * cell count) after max voltage is reached for MAX_VOLTAGE_TIME_SEC.
+#              It switches back to max voltage after SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT.
 #              If LINEAR_LIMITATION_ENABLE is set to True then penalty voltages are applied
-# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float voltage of 53.6V to don't stress the batteries.
-#          Allow max voltage of 55.2V again, if SoC is once below 90%
+# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float
+#          voltage of 53.6V to don't stress the batteries. Allow max voltage of 55.2V again, if SoC is once below 90%
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 
@@ -74,8 +77,9 @@ FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
 # If the cell voltage reaches 3.48V, then reduce actual battery-voltage by 0.01V
 # If the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
 # There will be a sum of all penalties for each cell, which exceeds the limits
-# NOTE: The first value of PENALTY_AT_CELL_VOLTAGE has to be at least MAX_CELL_VOLTAGE + the first value of PENALTY_BATTERY_VOLTAGE,
-#       else the FLOAT_CELL_VOLTAGE is never set. Additionally the battery voltage has to reach max voltage and all cells has to be below penalty voltage to switch to float voltage.
+# NOTE: The first value of PENALTY_AT_CELL_VOLTAGE has to be at least MAX_CELL_VOLTAGE + the first value of
+#       PENALTY_BATTERY_VOLTAGE, else the FLOAT_CELL_VOLTAGE is never set. Additionally the battery voltage
+#       has to reach max voltage and all cells has to be below penalty voltage to switch to float voltage.
 PENALTY_AT_CELL_VOLTAGE = _get_list_from_config(
     "DEFAULT",
     "PENALTY_AT_CELL_VOLTAGE",
@@ -211,7 +215,11 @@ TIME_TO_SOC_POINTS = _get_list_from_config("DEFAULT", "TIME_TO_SOC_POINTS", lamb
 TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
 # Specify in seconds how often the TimeToSoc should be recalculated
 # Minimum are 5 seconds to prevent CPU overload
-TIME_TO_SOC_RECALCULATE_EVERY = int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5 else 5
+TIME_TO_SOC_RECALCULATE_EVERY = (
+    int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"])
+    if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5
+    else 5
+)
 # Include TimeToSoC points when moving away from the SoC point [Valid values True, False]
 # These will be as negative time. Disabling this improves performance slightly
 TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
@@ -255,7 +263,6 @@ GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])
 LIPRO_START_ADDRESS = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
 LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
-
 
 
 # --------- Functions ---------

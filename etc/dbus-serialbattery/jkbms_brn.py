@@ -330,7 +330,7 @@ class JkBmsBle:
 
                 await self.request_bt("cell_info", client)
                 # await self.enable_charging(client)
-                last_dev_info = time.time()
+                # last_dev_info = time.time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
                     await asyncio.sleep(0.01)
             except Exception as e:
@@ -341,7 +341,7 @@ class JkBmsBle:
                     try:
                         await client.disconnect()
                     except Exception as e:
-                        info("error while disconnecting")
+                        info("error while disconnecting: " + str(e))
 
         print("Exiting bt-loop")
 
@@ -378,6 +378,7 @@ class JkBmsBle:
         await self.write_register(0x1E, b"\x01\x00\x00\x00", 4, c)
         await self.write_register(0x1F, b"\x01\x00\x00\x00", 4, c)
         await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
+
 
 '''
 if __name__ == "__main__":
