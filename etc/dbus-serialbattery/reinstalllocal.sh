@@ -33,3 +33,12 @@ if [ ! -f $filename ]; then
     chmod 755 $filename
 fi
 grep -qxF "sh /data/etc/$DRIVERNAME/reinstalllocal.sh" $filename || echo "sh /data/etc/$DRIVERNAME/reinstalllocal.sh" >> $filename
+
+# add empty config.ini, if it does not exist to make it easier for users to add custom settings
+filename=/data/etc/$DRIVERNAME/config.ini
+if [ ! -f $filename ]; then
+    echo "[DEFAULT]" > $filename
+    echo "" >> $filename
+    echo "; If you want to add custom settings, then check the settings you want to change in \"config.default.ini\"" >> $filename
+    echo "; and add them below to persist future driver updates." >> $filename
+fi
