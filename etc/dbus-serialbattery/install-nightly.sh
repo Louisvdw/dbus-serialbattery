@@ -33,7 +33,7 @@ cd /tmp
 wget https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
 unzip $branch.zip
 
-cp /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
+cp -rf /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
 
 chmod +x /data/etc/dbus-serialbattery/*.sh
 chmod +x /data/etc/dbus-serialbattery/*.py
