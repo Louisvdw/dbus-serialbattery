@@ -30,7 +30,10 @@ done
 
 cd /tmp
 
-wget https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
+# clean already extracted folder
+rm -rf /tmp/dbus-serialbattery-$branch
+
+wget -O $branch.zip https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
 unzip $branch.zip
 
 cp -rf /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
@@ -42,6 +45,6 @@ chmod +x /data/etc/dbus-serialbattery/service/log/run
 
 bash /data/etc/dbus-serialbattery/reinstalllocal.sh
 
-if [[ $branch == "jkbms_ble" ]]; then
-    nano /data/etc/dbus-serialbattery/installble.sh
-fi
+#if [[ $branch == "jkbms_ble" ]]; then
+#    nano /data/etc/dbus-serialbattery/installble.sh
+#fi
