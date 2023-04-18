@@ -3,7 +3,7 @@
 # remove comment for easier troubleshooting
 #set -x
 
-PS3="Select the branch you want to install the unreleased code (possible bugs included): "
+PS3="Select the branch from wich you want to install the current code (possible bugs included): "
 
 select branch in master jkbms_ble quit
 do
@@ -30,18 +30,21 @@ done
 
 cd /tmp
 
-wget https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
+# clean already extracted folder
+rm -rf /tmp/dbus-serialbattery-$branch
+
+wget -O $branch.zip https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
 unzip $branch.zip
 
-cp /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
+cp -rf /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
 
 chmod +x /data/etc/dbus-serialbattery/*.sh
 chmod +x /data/etc/dbus-serialbattery/*.py
 chmod +x /data/etc/dbus-serialbattery/service/run
 chmod +x /data/etc/dbus-serialbattery/service/log/run
 
-bash /data/etc/dbus-serialbattery/install-local.sh
+bash /data/etc/dbus-serialbattery/reinstalllocal.sh
 
-if [[ $branch == "jkbms_ble" ]]; then
-    nano /data/etc/dbus-serialbattery/install-ble.sh
-fi
+#if [[ $branch == "jkbms_ble" ]]; then
+#    nano /data/etc/dbus-serialbattery/installble.sh
+#fi

@@ -57,3 +57,11 @@ if [ ! -f $filename ]; then
     echo "; If you want to add custom settings, then check the settings you want to change in \"config.default.ini\"" >> $filename
     echo "; and add them below to persist future driver updates." >> $filename
 fi
+
+# install notes
+echo
+echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
+echo
+echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"config.default.ini\" and add them to \"config.ini\" to persist future driver updates."
+echo
+echo
