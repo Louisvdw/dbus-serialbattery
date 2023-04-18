@@ -40,8 +40,8 @@ chmod +x /data/etc/dbus-serialbattery/*.py
 chmod +x /data/etc/dbus-serialbattery/service/run
 chmod +x /data/etc/dbus-serialbattery/service/log/run
 
-bash /data/etc/dbus-serialbattery/install-local.sh
+bash /data/etc/dbus-serialbattery/reinstalllocal.sh
 
 if [[ $branch == "jkbms_ble" ]]; then
-    nano /data/etc/dbus-serialbattery/install-ble.sh
+    nano /data/etc/dbus-serialbattery/installble.sh
 fi

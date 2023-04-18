@@ -18,11 +18,24 @@ cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVE
 sh /data/etc/$DRIVERNAME/installqml.sh
 
 # check if serial-starter.d was deleted
-serialstarter=/data/conf/serial-starter.d
-if [ ! -f $serialstarter ]; then
-    echo "service sbattery        dbus-serialbattery" >> $serialstarter
-    echo "alias default gps:vedirect:sbattery" >> $serialstarter
-    echo "alias rs485 cgwacs:fzsonick:imt:modbus:sbattery" >> $serialstarter
+serialstarter_path="/data/conf/serial-starter.d"
+serialstarter_file="$serialstarter_path/dbus-serialbattery.conf"
+
+# check if folder is a file (older versions of this driver)
+if [ -f $serialstarter_path ]; then
+    rm -f $serialstarter_path
+fi
+
+# check if folder exists
+if [ ! -d $serialstarter_path ]; then
+    mkdir $serialstarter_path
+fi
+
+# check if file exists
+if [ ! -f $serialstarter_file ]; then
+    echo "service sbattery        dbus-serialbattery" >> $serialstarter_file
+    echo "alias default gps:vedirect:sbattery" >> $serialstarter_file
+    echo "alias rs485 cgwacs:fzsonick:imt:modbus:sbattery" >> $serialstarter_file
 fi
 
 # restart if running
@@ -44,3 +57,19 @@ if [ ! -f $filename ]; then
     echo "; If you want to add custom settings, then check the settings you want to change in \"config.default.ini\"" >> $filename
     echo "; and add them below to persist future driver updates." >> $filename
 fi
+
+# install notes
+echo
+echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
+echo
+echo "BLUETOOTH battery connection: There are a few more steps to complete installation."
+echo "    1. Make sure to disable Settings -> Bluetooth in the Remote-Console to prevent reconnects every minute."
+echo "    2. Put your Bluetooth MAC adress in \"/data/etc/dbus-serialbattery/installble.sh\" and make sure to uncomment at least one install_service line at the bottom of the file."
+echo "    3. Execute \"/data/etc/dbus-serialbattery/installble.sh\" once to create services for each Bluetooth BMS."
+echo "    ATTENTION!"
+echo "    If you changed the default connection PIN of your BMS, then you have to pair the BMS first using OS tools like the \"bluetoothctl\"."
+echo "    See https://wiki.debian.org/BluetoothUser#Using_bluetoothctl for more details."
+echo
+echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"config.default.ini\" and add them to \"config.ini\" to persist future driver updates."
+echo
+echo

@@ -9,7 +9,7 @@ DRIVERNAME=dbus-serialbattery
 sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # remove files
-rm -f /data/conf/serial-starter.d
+rm -f /data/conf/serial-starter.d/$DRIVERNAME.conf
 rm -rf /service/dbus-blebattery-*
 
 # kill if running
