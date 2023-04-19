@@ -24,3 +24,15 @@ sed -i "/sh \/data\/etc\/$DRIVERNAME\/installble.sh/d" /data/rc.local
 
 # remove cronjob
 sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
+
+# uninstall modules
+read -r -p "Do you also want to uninstall bleak, python3-pip and python3-modules? If you don't know select y. [Y/n] " response
+echo
+response=${response,,} # tolower
+if [[ $response =~ ^(y| ) ]] || [[ -z $response ]]; then
+    echo "Uninstalling modules..."
+    pip3 uninstall bleak
+    opkg remove python3-pip python3-modules
+    echo "done."
+    echo
+fi
