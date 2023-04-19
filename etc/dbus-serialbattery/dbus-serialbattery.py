@@ -23,12 +23,16 @@ from lltjbd import LltJbd
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
-from jkbms_ble import Jkbms_Ble
 
 # from sinowealth import Sinowealth
 from renogy import Renogy
 from ecs import Ecs
 from lifepower import Lifepower
+
+# import Bluetooth BMS classes
+if utils.BLUETOOTH_ENABLED:
+    from jkbms_ble import Jkbms_Ble
+
 
 supported_bms_types = [
     {"bms": LltJbd, "baud": 9600},
@@ -105,7 +109,7 @@ def main():
             logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
     else:
-        battery = get_battery_type(port)
+        battery = get_battery(port)
 
     # exit if no battery could be found
     if battery is None:
