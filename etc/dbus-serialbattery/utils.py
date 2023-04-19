@@ -36,9 +36,12 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0-jkbms_ble (20230415)"
+DRIVER_SUBVERSION = ".0-jkbms_ble (20230419)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
+
+# Enables the search/support for Bluetooth BMS
+BLUETOOTH_ENABLED = "True" == config["DEFAULT"]["BLUETOOTH_ENABLED"]
 
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps

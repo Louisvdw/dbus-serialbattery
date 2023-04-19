@@ -3,7 +3,7 @@
 # remove comment for easier troubleshooting
 #set -x
 
-PS3="Select the branch you want to install the unreleased code (possible bugs included): "
+PS3="Select the branch from wich you want to install the current code (possible bugs included): "
 
 select branch in master jkbms_ble quit
 do
