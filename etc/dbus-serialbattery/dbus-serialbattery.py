@@ -109,7 +109,7 @@ def main():
             logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
     else:
-        battery = get_battery_type(port)
+        battery = get_battery(port)
 
     # exit if no battery could be found
     if battery is None:
