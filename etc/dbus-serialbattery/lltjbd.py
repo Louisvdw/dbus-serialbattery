@@ -156,7 +156,10 @@ class LltJbd(Battery):
 
         for t in range(self.temp_sensors):
             temp1 = unpack_from(">H", gen_data, 23 + (2 * t))[0]
-            self.to_temp(t + 1, kelvin_to_celsius(temp1 / 10))
+            if t == 0:
+                self.to_temp("mos", kelvin_to_celsius(temp1 / 10))
+            else:
+                self.to_temp(t, kelvin_to_celsius(temp1 / 10))
 
         return True
 
