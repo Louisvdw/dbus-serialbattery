@@ -406,7 +406,7 @@ class Miniterm(object):
     def __init__(self, serial_instance, echo=False, eol='crlf', filters=()):
         self.console = Console(self)
         self.serial = serial_instance
-        self.echo = echo
+        self.echo = True
         self.raw = False
         self.input_encoding = 'UTF-8'
         self.output_encoding = 'UTF-8'
