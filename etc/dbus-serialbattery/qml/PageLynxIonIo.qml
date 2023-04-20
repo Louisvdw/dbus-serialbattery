@@ -11,6 +11,7 @@ MbPage {
 			description: qsTr("System Switch")
 			bind: Utils.path(bindPrefix, "/SystemSwitch")
 			readonly: true
+			show: item.valid
 			possibleValues:[
 				MbOption{description: qsTr("Disabled"); value: 0},
 				MbOption{description: qsTr("Enabled"); value: 1}
