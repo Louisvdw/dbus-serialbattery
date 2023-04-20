@@ -142,28 +142,28 @@ class Renogy(Battery):
     def read_temp_data(self):
         # Check to see how many Enviromental Temp Sensors this battery has, it may have none.
         num_env_temps = self.read_serial_data_renogy(self.command_env_temp_count)
-        logger.info('Number of Enviromental Sensors = %s', num_env_temps)
+        logger.info("Number of Enviromental Sensors = %s", num_env_temps)
 
-        if (num_env_temps == 0):
+        if num_env_temps == 0:
             return False
 
-        if (num_env_temps == 1):
+        if num_env_temps == 1:
             temp1 = self.read_serial_data_renogy(self.command_env_temp1)
 
         if temp1 is False:
             return False
         else:
             self.temp1 = unpack(">H", temp1)[0] / 10
-            logger.info('temp1 = %s °C', temp1)
+            logger.info("temp1 = %s °C", temp1)
 
-        if (num_env_temps == 2):
+        if num_env_temps == 2:
             temp2 = self.read_serial_data_renogy(self.command_env_temp2)
 
         if temp2 is False:
             return False
         else:
             self.temp2 = unpack(">H", temp2)[0] / 10
-            logger.info('temp2 = %s °C', temp2)
+            logger.info("temp2 = %s °C", temp2)
 
         return True
 
