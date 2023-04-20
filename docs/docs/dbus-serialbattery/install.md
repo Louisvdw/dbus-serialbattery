@@ -67,6 +67,12 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
   > reboot
 
+
+### BMS specific settings
+* ECS BMS --> https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313
+
+
+
 ## Disable the driver
 
 ### Disable

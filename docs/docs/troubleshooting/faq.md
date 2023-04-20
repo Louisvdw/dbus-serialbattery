@@ -30,7 +30,7 @@ Cable preferences:
 ## Which UART connection is the best to use (TTL/RS232/RS485)?
 The driver works the same with all the supported UART types. Most BMS will use the 3.3V TTL (which some would lable as UART) and/or RS485(5V). Victron's VE.Direct is RS232 (12V), but not many BMS use that.
 You need to match the UART type with what your BMS support.
-If the bluetooth module for your BMS use the UART, then you will need to remove that to plug in your USB adapter if you do not have another UART available. After your initial setup you do not need the bluetooth, but you will not be able to connect to it with the phone app.
+If the Bluetooth module for your BMS use the UART, then you will need to remove that to plug in your USB adapter, if you do not have another UART available. After your initial setup you do not need the Bluetooth, but you will not be able to connect to it with the phone app.
 
 
 ## Do I need a SmartShunt as well?
@@ -86,6 +86,17 @@ MAX_CELL_VOLTAGE = 4.0
 MIN_CELL_VOLTAGE = 3.6
 ```
 
+# Why do I get a Low Voltage alarm?
+https://github.com/Louisvdw/dbus-serialbattery/issues/407
+https://github.com/Louisvdw/dbus-serialbattery/issues/363
+
+# Why is DCL jumping from/to 0?
+https://github.com/Louisvdw/dbus-serialbattery/issues/371
+
+What helped me here was reducing the Cut-off voltages in the ESS asisstant (there are 4 voltages for different currents) - when the battery voltage dropped to this cut-off voltage, the discharging will stop and the "sustain voltage" will jump in until the battery voltage rises up over the "above-cut-off" value.
+
+Important!!! - When the ESS asisstant is activated, all the 3 "DC input low voltage" settings under the "Inverter" tab are completely ignored by the MP2.
+
 
 ## Why do I get a High Voltage alarm?
 If you receive High Voltage alarms that would indicate your battery is
@@ -104,6 +115,8 @@ Balancing works when ever 1 cell go above the balance threshold, so you are tryi
 ## Why is the battery current inverted?
 Some Daly BMS send the current as inverted value. This can be correted by setting `INVERT_CURRENT_MEASUREMENT` to `-1`.
 
+## What can I do, if the BMS communication is unstable?
+Most unstable communications are due to cabeling. Please check your cables again and make sure that all solder points are making good connection.
 
 ## Fix white screen after install
 Normally this will happen if you were on an older firmware for your GX.
