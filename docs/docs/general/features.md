@@ -4,7 +4,7 @@ title: Features
 sidebar_position: 2
 ---
 
-The driver can ahndle batteries from 3 to 32 cells. It will act as Battery Monitor inside Venus OS and update the following values:
+The driver can handle batteries from 3 to 32 cells. It will act as Battery Monitor inside Venus OS and update the following values:
 
 * Voltage
 * Current

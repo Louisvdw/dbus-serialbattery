@@ -19,10 +19,10 @@ Disabled by default as it requires additional manual steps to install.
 
 ## &bull; Smart BMS
 Including:
-### &bull; [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/)
-### &bull; [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/)
-### &bull; Overkill Solar
-### &bull; Other BMS that use the Xiaoxiang phone app
+### - [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/)
+### - [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/)
+### - Overkill Solar
+### - Other BMS that use the Xiaoxiang phone app
 
 | Android | iOS |
 |-|-|
@@ -30,7 +30,7 @@ Including:
 
 ## &bull; Smart Daly BMS
 Including:
-### &bull; Sinowealth based Daly BMS
+### - Sinowealth based Daly BMS
 
 ![Daly app](../../screenshots/bms-daly.jpg)
 
