@@ -46,7 +46,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: 'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+          editUrl: 'https://github.com/Louisvdw/dbus-serialbattery/tree/docusaurus/docs/',
           sidebarCollapsible: false
         },
         theme: {
@@ -60,9 +60,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       algolia: {
-        appId: '6VHIC02B53',
-        apiKey: 'bdacb7ddfb23f509d64b0bebdc10dd5c',
-        indexName: 'test_docs',
+        appId: 'BUS7YVLUUB',
+        apiKey: '11f8f0c4ceaf5dd684a254191cc007d6',
+        indexName: 'dbus-serialbattery',
       },
       //
       colorMode: {
@@ -83,6 +83,12 @@ const config = {
             to: '/',
             activeBasePath: 'docs',
             label: 'Docs',
+            position: 'left',
+          },
+          {
+            to: '/troubleshoot/faq',
+            activeBasePath: 'docs',
+            label: 'FAQ',
             position: 'left',
           },
           {
