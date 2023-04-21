@@ -1,6 +1,6 @@
 ---
 id: faq
-title: FAQ (frequently asked questions)
+title: FAQ (Frequently Asked Questions)
 ---
 
 ## Why do I need a BMS for lithium batteries?
@@ -9,7 +9,7 @@ The BMS will prevent your battery reaching an unsafe situation (it will disconne
 
 
 ## Which BMS should I buy?
-Most of the BMS that the driver support will work fine and the driver does support most features for all the BMS brands. See the [comparison table](https://github.com/Louisvdw/dbus-serialbattery/wiki/Features#battery-feature-comparison) for any small differenaces.
+Most of the BMS that the driver support will work fine and the driver does support most features for all the BMS brands. See the [comparison table](../general/features#bms-feature-comparison) for any small differenaces.
 Find the BMS that fits your budget with the features that you need.
 
 The balancers on Smart Daly BMS don't seem to work that well so many users have opted to add an external balancer to help with that.
@@ -65,12 +65,12 @@ Now if you still do want to aim for 3.65V per cell you will have to change the s
 
 You get most of the power from the cells between `3.1V - 3.45V` and you will have less issues.
 
-![lfp-charge-discharge-curves](https://user-images.githubusercontent.com/12592765/231790137-f2b9a3d5-e901-44db-906e-a6f89a28f734.jpg)
+![lfp-charge-discharge-curves](../../screenshots/faq-lfp-curves.jpg)
 
 
 
 ## Why is the charging/discharging current limit (CCL/DCL) smaller than the set one?
-### Driver version <= v0.14.3
+### Driver version `<= v0.14.3`
 Check in the `utils.py`, if you have set one of this to true. If yes, then you also have to change the corresponding limits.
 * `CCCM_CV_ENABLE = True` then modify the highest value (60) `MAX_CHARGE_CURRENT_CV = [0, 2, 30, 60]` to the same value or bigger as `MAX_BATTERY_CHARGE_CURRENT`
 * `DCCM_CV_ENABLE = True` then modify `MAX_DISCHARGE_CURRENT_CV = [0, 5, 30, 60]`
@@ -79,7 +79,7 @@ Check in the `utils.py`, if you have set one of this to true. If yes, then you a
 
 
 ## Does the driver work for `3.7V` based cells also?
-Yes, but you will [need to adjust](https://github.com/Louisvdw/dbus-serialbattery/wiki/How-to-install#how-to-increase-the-default-limits) the `MAX_CELL_VOLTAGE` and `MIN_CELL_VOLTAGE` values for `3.7V` cells instead of the default `3.2V` cells.
+Yes, but you will [need to adjust](../general/install#how-to-change-the-default-limits) the `MAX_CELL_VOLTAGE` and `MIN_CELL_VOLTAGE` values for `3.7V` cells instead of the default `3.2V` cells.
 Recommended values for `3.7V` cells are:
 ```
 MAX_CELL_VOLTAGE = 4.0
@@ -87,15 +87,27 @@ MIN_CELL_VOLTAGE = 3.6
 ```
 
 # Why do I get a Low Voltage alarm?
-https://github.com/Louisvdw/dbus-serialbattery/issues/407
-https://github.com/Louisvdw/dbus-serialbattery/issues/363
+
+> Not elaborated completely, in the meanwhile see infos below
+
+* [Low Battery Voltage Alarm if /Info/MaxDischargeCurrent = 0](https://github.com/Louisvdw/dbus-serialbattery/issues/407)
+* [Undervoltage alarm - why?](https://github.com/Louisvdw/dbus-serialbattery/issues/363)
 
 # Why is DCL jumping from/to 0?
-https://github.com/Louisvdw/dbus-serialbattery/issues/371
+
+> Not elaborated completely, in the meanwhile see infos below
+
+* [DCL is "jumping" - should be 0 ?! - JKBMS](https://github.com/Louisvdw/dbus-serialbattery/issues/371)
+
+What is happening is that as soon as no more current is drawn the cell values starts to recover and the BMS release (the charger should only kick in when you are below the min SoC value you have set in the ES settings).
 
 What helped me here was reducing the Cut-off voltages in the ESS asisstant (there are 4 voltages for different currents) - when the battery voltage dropped to this cut-off voltage, the discharging will stop and the "sustain voltage" will jump in until the battery voltage rises up over the "above-cut-off" value.
 
 Important!!! - When the ESS asisstant is activated, all the 3 "DC input low voltage" settings under the "Inverter" tab are completely ignored by the MP2.
+
+**How to solve this:**
+1. Current setting >0 (but I did not test this)
+2. Reducing the ESS "Cut-off voltage" like I mentioned above
 
 
 ## Why do I get a High Voltage alarm?

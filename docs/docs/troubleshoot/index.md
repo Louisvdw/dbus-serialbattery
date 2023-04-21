@@ -55,9 +55,11 @@ If there is no log folder under `/data/log/dbus-serialbattery.*` then check
      to check all devices the serialstarter started.
 
 
-### Forum help
+### Forum and community help
+
 Forum thead discussions for this driver can be found at:
-* https://github.com/Louisvdw/dbus-serialbattery/discussions (primary)
-* https://energytalk.co.za/t/diy-serial-battery-driver-for-victron-gx/80
-* https://community.victronenergy.com/questions/76159/victron-venusos-driver-for-serial-connected-bms-av.html
-* https://diysolarforum.com/threads/victron-venusos-driver-for-serial-connected-bms-available-ltt-power-jbd-battery-overkill-solar-smart-bms.17847/
+
+* [Github Discussions](https://github.com/Louisvdw/dbus-serialbattery/discussions) (most frequented and recommended)
+* [Energy Talk - DIY Serial battery driver for Victron GX](https://energytalk.co.za/t/diy-serial-battery-driver-for-victron-gx/80)
+* [Victron Community - Victron VenusOS driver for serial battery BMS](https://community.victronenergy.com/questions/76159/victron-venusos-driver-for-serial-connected-bms-av.html)
+* [DIY Solar Power Forum - Victron VenusOS driver for serial connected BMS](https://diysolarforum.com/threads/victron-venusos-driver-for-serial-connected-bms-available-ltt-power-jbd-battery-overkill-solar-smart-bms.17847/)

@@ -10,7 +10,7 @@ sidebar_position: 3
 
 ## &bull; ECS GreenMeter with LiPro
 
-## &bull; JKBMS / Heltec BMS
+## &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS
 
 ## &bull; MNB spi BMS
 Disabled by default as it requires additional manual steps to install.
@@ -36,9 +36,8 @@ Including:
 
 ## &bull; Tian Power (LifePower / Revov)
 
-# Planned support
+## Planned support / request new BMS
 
-For a list of requested support for BMS types see the issue list and vote for the next one to be supported
-https://github.com/Louisvdw/dbus-serialbattery/issues?q=is%3Aissue+is%3Aopen+label%3Abattery
+You can view the [issue list](https://github.com/Louisvdw/dbus-serialbattery/issues?q=is%3Aissue+is%3Aopen+label%3Abattery) to see which BMS support is requested and vote for the BMS you want to be supported.
 
-If you would like to donate hardware or would like to help testing a spesific BMS please get in contact.
+If you would like to donate hardware or would like to help testing a specific BMS please get in contact over the [discussions section](https://github.com/Louisvdw/dbus-serialbattery/discussions).
