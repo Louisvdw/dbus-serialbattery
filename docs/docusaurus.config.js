@@ -64,6 +64,12 @@ const config = {
         apiKey: 'bdacb7ddfb23f509d64b0bebdc10dd5c',
         indexName: 'test_docs',
       },
+      //
+      colorMode: {
+        //defaultMode: 'light',
+        //disableSwitch: false,
+        respectPrefersColorScheme: true,
+      },
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
