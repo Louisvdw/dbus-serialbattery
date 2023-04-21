@@ -86,14 +86,14 @@ MAX_CELL_VOLTAGE = 4.0
 MIN_CELL_VOLTAGE = 3.6
 ```
 
-# Why do I get a Low Voltage alarm?
+## Why do I get a Low Voltage alarm?
 
 > Not elaborated completely, in the meanwhile see infos below
 
 * [Low Battery Voltage Alarm if /Info/MaxDischargeCurrent = 0](https://github.com/Louisvdw/dbus-serialbattery/issues/407)
 * [Undervoltage alarm - why?](https://github.com/Louisvdw/dbus-serialbattery/issues/363)
 
-# Why is DCL jumping from/to 0?
+## Why is DCL jumping from/to 0?
 
 > Not elaborated completely, in the meanwhile see infos below
 
@@ -128,7 +128,14 @@ Balancing works when ever 1 cell go above the balance threshold, so you are tryi
 Some Daly BMS send the current as inverted value. This can be correted by setting `INVERT_CURRENT_MEASUREMENT` to `-1`.
 
 ## What can I do, if the BMS communication is unstable?
-Most unstable communications are due to cabeling. Please check your cables again and make sure that all solder points are making good connection.
+
+Most unstable communications arise due to:
+
+* Cabeling: Check your cables again and make sure that all solder points are making good connection.
+* Damaged/Defective serial adapters: Try another serial adapter.
+* Cheap USB Hubs: Make sure you are using a qualitative USB Hub with enough power.
+* Raspberry Pi: Do not use a charger for powering the Raspberry Pi. Instead buy a power supply with enough power.
+
 
 ## Fix white screen after install
 Normally this will happen if you were on an older firmware for your GX.
@@ -149,4 +156,4 @@ Update firmware run
 If you like to use the driver to only show the cell voltages and to not interact with the Victron System, then this unfortunately is not possible. A workaround is to use a separate Raspberry Pi to just show the battery details.
 
 ## How many USB to serial adapters can I connect?
-It seems that the Victron GX device has a limit of maximum 8 USB to serial adapters. See [issue #422](https://github.com/Louisvdw/dbus-serialbattery/issues/422)
+It seems that the Victron GX device has a limit of maximum 8 USB to serial adapters. See [Serial battery driver not found if other VE.direct-USB devices are present](https://github.com/Louisvdw/dbus-serialbattery/issues/422)

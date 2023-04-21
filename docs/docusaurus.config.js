@@ -92,8 +92,18 @@ const config = {
             position: 'left',
           },
           {
-            href: `https://github.com/${organizationName}/${projectName}`,
+            label: 'GitHub Issues',
+            href: `https://github.com/${organizationName}/${projectName}/issues?q=is%3Aissue`,
+            position: 'left',
+          },
+          {
+            label: 'GitHub Discussions',
+            href: `https://github.com/${organizationName}/${projectName}/discussions?discussions_q=`,
+            position: 'left',
+          },
+          {
             label: 'GitHub',
+            href: `https://github.com/${organizationName}/${projectName}`,
             position: 'right',
           },
         ],
@@ -105,12 +115,16 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Github',
+                label: 'GitHub',
                 href: `https://github.com/${organizationName}/${projectName}`,
               },
               {
+                label: 'GitHub Issues',
+                href: `https://github.com/${organizationName}/${projectName}/issues?q=is%3Aissue`,
+              },
+              {
                 label: 'GitHub Discussions',
-                href: `https://github.com/${organizationName}/${projectName}/discussions`,
+                href: `https://github.com/${organizationName}/${projectName}/discussions?discussions_q=`,
               },
             ],
           },
