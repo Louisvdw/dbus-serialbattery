@@ -38,7 +38,7 @@ No you don't.
 All BMS do measure the total battery voltage and most do use a shunt to do that already.
 The Smartshunt is very well build and most likely better calibrated, but it can only measure the total battery voltage and the current input/output. There are no sensors for the cells inside the battery so the Smartshunt have much less information to work with.
 It is best to let the BMS be the Battery Monitor.
-You can add both to your system and in the newer VenusOS firmwares you can select to upload both values to the VRM cloud.
+You can add both to your system and in the newer Venus OS firmwares you can select to upload both values to the VRM cloud.
 
 
 ## Should I set the Smartshunt or the BMS as the Battery Monitor?

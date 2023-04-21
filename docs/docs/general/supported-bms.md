@@ -1,39 +1,40 @@
 ---
-id: bms-supported
+id: supported-bms
 title: Supported BMS
+sidebar_position: 3
 ---
 
 # Supported BMS
 
-## ANT BMS
+## &bull; ANT BMS
 
-## ECS GreenMeter with LiPro
+## &bull; ECS GreenMeter with LiPro
 
-## JKBMS / Heltec BMS
+## &bull; JKBMS / Heltec BMS
 
-## MNB spi BMS
-Disabled by default as it requires aditional manual step to install.
+## &bull; MNB spi BMS
+Disabled by default as it requires additional manual steps to install.
 
-## Renogy BMS
+## &bull; Renogy BMS
 
-## Smart BMS
+## &bull; Smart BMS
 Including:
-* ### [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/)
-* ### [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/)
-* ### Overkill Solar
-* ### Other BMS that use the Xiaoxiang phone app
+### &bull; [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/)
+### &bull; [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/)
+### &bull; Overkill Solar
+### &bull; Other BMS that use the Xiaoxiang phone app
 
 | Android | iOS |
 |-|-|
 | ![Xiaoxian app](../../screenshots/bms-xiaoxian-android.jpg) | ![Xiaoxian app](../../screenshots/bms-xiaoxian-ios.jpg) |
 
-## Smart Daly BMS
+## &bull; Smart Daly BMS
 Including:
-* ### Sinowealth based Daly BMS
+### &bull; Sinowealth based Daly BMS
 
 ![Daly app](../../screenshots/bms-daly.jpg)
 
-## Tian Power (LifePower / Revov)
+## &bull; Tian Power (LifePower / Revov)
 
 # Planned support
 

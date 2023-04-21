@@ -15,7 +15,7 @@ You can use the graphs to look at your values over time. This makes finding valu
 ### Check your cable connections if the log, file shows to reply from the battery.
 The RX/TX lights should both flash as data is transfered. If only one flash then your RX/TX might be swopped.
 ### Check the log files on your GX device
-There are 2 important log files on the VenusOS device to look at.
+There are 2 important log files on the Venus OS device to look at.
 * `/data/log/serial-starter/current`
   - serial starter will show if the driver was started against a USB port. In this case USB0.
     ```
