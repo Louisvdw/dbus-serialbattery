@@ -134,7 +134,7 @@ If the `MAX_CELL_VOLTAGE` * `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` t
 | Installed capacity | Yes | No | Yes | Yes | Yes | Yes | Yes | Yes |
 | Available capacity | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
 | Cell details | ? | ? | ? | ? | Yes | ? | ? | ? |
-| Raise alarms from the BMS | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes<br>(no cells yet) |
+| Raise alarms from the BMS | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes (no cells yet) |
 | History of charge cycles | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No |
 | Charge current control management (CCCM) | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
 | Set battery parameters (DVCC) | Fixed | Fixed | Fixed | Fixed | Fixed | Fixed | Fixed | Yes |
