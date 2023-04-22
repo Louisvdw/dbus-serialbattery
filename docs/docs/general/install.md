@@ -2,20 +2,23 @@
 id: install
 title: How to install
 sidebar_position: 4
+# Display h2 to h5 headings
+toc_min_heading_level: 2
+toc_max_heading_level: 4
 ---
 
 ## 🚨 NB! Before you begin
 
-> The driver does not do any setup of your BMS/Battery. You need to have a working battery before you start
+> The driver does not do any setup of your BMS/battery. You need to have a working battery before you start.
 
-> From release v0.12 you need to be running Venus OS `v2.80` or higher.
+> From the driver release `v0.12` you need to be running Venus OS `v2.80` or higher.
 
-> Note! The current version require Venus OS `2.91` or `2.92` else you will see a white screen after the install. I will remove this note when that issue is fixed.
+> Note! The current version require Venus OS `v2.91` or `v2.92`. Else you will see a white screen after the install. I will remove this note when that issue is fixed.
 
 The driver currently implement some hard limits. Make sure your device is set up correctly and can handle these limits before you install.
 
- * `50A` charge (to lower this see 2. below Settings for your GX)
- * `60A` discharge (to lower this see 2. below Settings for your GX)
+ * `50A` charge (to lower this see [How to change the default limits](/dbus-serialbattery/general/install#how-to-change-the-default-limits))
+ * `60A` discharge (to lower this see [How to change the default limits](/dbus-serialbattery/general/install#how-to-change-the-default-limits))
  * `2.9V` min cell voltage
  * `3.45V` max cell voltage
 
@@ -46,26 +49,26 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 ## Install or update
 
-> CerboGX users cannot use the the automatic installer. Use SSH option instead.
-
 ### Installation video
 
 [![dbus-serialbattery install](https://img.youtube.com/vi/Juht6XGLcu0/0.jpg)](https://www.youtube.com/watch?v=Juht6XGLcu0)
 
 ### Install automatically with flash drive/SD
 
-1. Download and copy the [latest release venus-data.tar.gz](https://github.com/Louisvdw/dbus-serialbattery/releases) to the root of a USB flash drive that is in Fat32 format. (A SD card is also an option for GX devices, but not for Raspberry Pi)
+> CerboGX users cannot use the the automatic installer. Use SSH option instead.
+
+1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
 2. Plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.
 
-3. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`)
+3. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`).
 
 
 ### Install over SSH
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access)
 
-1. Log into your Venus OS device using a SSH client like Putty or bash
+1. Log into your Venus OS device using a SSH client like Putty or bash.
 
 2. Run these commands to install or update to the latest release version.
 
@@ -82,15 +85,15 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access)
 
-1. Log into your Venus OS device using a SSH client like Putty or bash
+1. Log into your Venus OS device using a SSH client like Putty or bash.
 
-2. Download the version you need using the command below replacing the URL with the link to the venus-data.tar.gz version you need
+2. Download [the version you need](https://github.com/Louisvdw/dbus-serialbattery/releases) using the command below replacing the URL with the link to the `venus-data.tar.gz` version you need.
 
   ```bash
-  wget _**venus-data-URL**_
+  wget REPLACE_WITH_URL_TO_VENUS_DATA_TAR_GZ
   ```
 
-3. Run this script command to install the update from the same location
+3. Run this script command to install the update from the same location.
 
   ```bash
   tar -zxf venus-data.tar.gz -C /data
@@ -120,28 +123,29 @@ Select `2` for `jkbms_ble`.
 
 The driver currently use a fixed upper current limit for the BMS:
 
-* 50A charge
-* 60A discharge
+* `50A` charge
+* `60A` discharge
 
-If you require more current and your battery can handle that, you can make changes to the source code for that. (Note any updates will override this change with driver version <= v0.14.3)
-
-### Driver version <= v0.14.3
-Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
-
-### Driver version > v.0.14.3
-Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/ba5a09df4600cd3d23ad409b06ab7a77e6543d66/etc/dbus-serialbattery/config.default.ini).
+If you require more current and your battery can handle that, you can make changes to the source code for that (note that any updates will override this change with driver version `<= v0.14.3`)
 
 ```ini
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
-If you use the cell voltage limits or temperature limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](/dbus-serialbattery/troubleshoot/faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](/dbus-serialbattery/troubleshoot/faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
-### How to edit utils.py and/or config.ini
+### Driver version `<= v0.14.3`
+Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
+
+### Driver version `> v0.14.3`
+Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/ba5a09df4600cd3d23ad409b06ab7a77e6543d66/etc/dbus-serialbattery/config.default.ini).
+
+### How to edit `utils.py` or `config.ini`
 
 There are 2 ways to edit it.
-You can edit it inside the GX while in SSH terminal or edit it on your PC and then only copy the `utils.py`and/or `config.ini` over to the GX.
+
+You can edit it inside the GX while in SSH terminal or edit it on your PC and then only copy the `utils.py` or `config.ini` over to the GX.
 
 #### SSH edit using Nano editor
 
@@ -158,13 +162,16 @@ nano /data/etc/dbus-serialbattery/config.ini
 ```
 
 You can use the arrow keys to scroll down and edit the values you need.
+
 User Ctrl-O to save and Ctrl-X to exit the editor, and reboot for the settings to apply.
 
 #### Copy edited file from PC to GX device
 
-You can edit the file in a plain text editor on you PC like notepad on Widows. Then you need a program that can do SFTP like FileZilla.
-Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py`
-Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
+You can edit the file in a plain text editor on you PC like notepad on Windows. Then you need a program that can do SFTP like FileZilla.
+
+Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py` or `/data/etc/dbus-serialbattery/config.ini`.
+
+> Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
 
 
 ## Disable the driver

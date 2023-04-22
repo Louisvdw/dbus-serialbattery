@@ -33,11 +33,11 @@ The driver can handle batteries from 3 to 32 cells. It will act as Battery Monit
 * Charge current control management (CCCM)
 
 * Set battery parameters (DVCC)
-  * Charge Voltage Limit(CVL)
-  * Charge Current Limit(CCL)
-  * Discharge Current Limit(DCL)
-  * CVL (battery bax) automatically adjusted by cell count \* 3.45V
-  * Battery min automatically adjusted by cell count \* 3.1V
+  * Charge Voltage Limit (CVL)
+  * Charge Current Limit (CCL)
+  * Discharge Current Limit (DCL)
+  * CVL (battery max) automatically adjusted by `cell count` \* `3.45V`
+  * Battery min automatically adjusted by `cell count` \* `3.1V`
 
 ### Screenshots
 
