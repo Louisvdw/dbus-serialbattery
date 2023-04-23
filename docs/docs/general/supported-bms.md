@@ -41,3 +41,7 @@ Including:
 You can view the [issue list](https://github.com/Louisvdw/dbus-serialbattery/issues?q=is%3Aissue+is%3Aopen+label%3Abattery) to see which BMS support is requested and vote for the BMS you want to be supported.
 
 If you would like to donate hardware or would like to help testing a specific BMS please get in contact over the [discussions section](https://github.com/Louisvdw/dbus-serialbattery/discussions).
+
+
+## Which BMS are you using?
+Please let us know, which BMS you are using with the driver by upvoting your BMS: [Which BMS are you using?](https://github.com/Louisvdw/dbus-serialbattery/discussions/546)

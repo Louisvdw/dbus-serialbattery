@@ -4,6 +4,8 @@ title: Features
 sidebar_position: 2
 ---
 
+# Features
+
 The driver can handle batteries from 3 to 32 cells. It will act as Battery Monitor inside Venus OS and update the following values:
 
 * Voltage
@@ -65,21 +67,21 @@ The limits can be applied in Step or Linear mode.
 You can set CCCM limits for 3 attributes which can be enabled / disabled and adjusted by settings in `utils.py` (driver version `<= v0.14.3`) or `config.ini` (driver version `> v0.14.3`).
 The smallest limit from all enabled will apply.
 
-### Cell Voltage
+### Cell voltage
 * `CCCM_CV_ENABLE = True/False`
 * `DCCM_CV_ENABLE = True/False`
 
 CCCM limits the charge/discharge current depending on the highest/lowest cell voltages
 
-* between 3.50V - 3.55V &rarr; 2A charge
-* between 3.45V - 3.50V &rarr; 30A charge
-* between 3.30V - 3.45V &rarr; 60A
+* between `3.50V - 3.55V` &rarr; `2A` charge
+* between `3.45V - 3.50V` &rarr; `30A` charge
+* between `3.30V - 3.45V` &rarr; `60A`
 
-* 3.30V - 3.10V &rarr; Max charge and Max discharge (60A)
+* `3.30V - 3.10V` &rarr; max charge and max discharge (`60A`)
 
-* between 2.90V - 3.10V &rarr; 30A discharge
-* between 2.8V - 2.9V &rarr; 5A discharge
-* below <= 2.70V &rarr; 0A discharge
+* between `2.90V - 3.10V` &rarr; `30A` discharge
+* between `2.8V - 2.9V` &rarr; `5A `discharge
+* below `<= 2.70V` &rarr; `0A` discharge
 
 ### Temprature
 
@@ -87,8 +89,8 @@ CCCM limits the charge/discharge current depending on the highest/lowest cell vo
 * `DCCM_T_ENABLE = True/False`
 
 CCCM limits the charge/discharge current depending on the highest/lowest temperature sensor values
-* Charging will be 0A if below 0°C or above 55°C
-Discharging will be 0A if below -20°C or above 55°C
+* Charging will be `0A` if below `0°C` or above `55°C`
+* Discharging will be `0A` if below `-20°C` or above `55°C`
 
 ### SoC (State of Charge) from the BMS
 * `CCCM_SOC_ENABLE = True/False`
@@ -96,15 +98,15 @@ Discharging will be 0A if below -20°C or above 55°C
 
 CCCM limits the charge/discharge current depending on the SoC
 
-* between 99% - 100% &rarr; 5A charge
-* between 95% - 98% &rarr; 1/4 max charge
-* between 91% - 95% &rarr; 1/2 max charge
+* between `99% - 100%` &rarr; `5A` charge
+* between `95% - 98%` &rarr; 1/4 max charge
+* between `91% - 95%` &rarr; 1/2 max charge
 
-* 30% - 91% &rarr; max charge and max discharge
+* `30% - 91%` &rarr; max charge and max discharge
 
-* between 20% - 30% &rarr; 1/2 max discharge
-* between 10% - 20% &rarr; 1/4 max discharge
-* below <= 10% &rarr; 5A
+* between `20% - 30%` &rarr; 1/2 max discharge
+* between `10% - 20%` &rarr; 1/4 max discharge
+* below `<= 10%` &rarr; `5A`
 
 ![VenusOS values](../../screenshots/vrm-charge-limits.png)
 

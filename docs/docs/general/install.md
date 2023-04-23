@@ -7,6 +7,8 @@ toc_min_heading_level: 2
 toc_max_heading_level: 4
 ---
 
+# How to install
+
 ## 🚨 NB! Before you begin
 
 > The driver does not do any setup of your BMS/battery. You need to have a working battery before you start.
@@ -73,9 +75,9 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 2. Run these commands to install or update to the latest release version.
 
   ```bash
-  wget https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/installrelease.sh
+  wget -O /tmp/installrelease.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/installrelease.sh
 
-  bash installrelease.sh
+  bash /tmp/installrelease.sh
 
   reboot
   ```

@@ -4,17 +4,24 @@ title: Troubleshoot
 ---
 
 # Troubleshoot
-### Check the [FAQ](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ) for answers
-### Check your Alarm Logs in your [VRM](https://vrm.victronenergy.com/)
-### Check your graphs in Advance section in your [VRM](https://vrm.victronenergy.com/)
+
+## Check the [FAQ](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ) for answers
+
+## Check your Alarm Logs in your [VRM](https://vrm.victronenergy.com/)
+
+## Check your graphs in Advance section in your [VRM](https://vrm.victronenergy.com/)
 You can use the graphs to look at your values over time. This makes finding values that change much easier.
 * BMS Charge and Dischare limits
 * BMS Min/Max Cell Voltage
 * Battery Voltage
 * Battery Summary
-### Check your cable connections if the log, file shows to reply from the battery.
+
+
+## Check your cable connections if the log, file shows to reply from the battery.
 The RX/TX lights should both flash as data is transfered. If only one flash then your RX/TX might be swopped.
-### Check the log files on your GX device
+
+
+## Check the log files on your GX device
 There are 2 important log files on the Venus OS device to look at.
 * `/data/log/serial-starter/current`
   - serial starter will show if the driver was started against a USB port. In this case USB0.
@@ -55,7 +62,7 @@ If there is no log folder under `/data/log/dbus-serialbattery.*` then check
      to check all devices the serialstarter started.
 
 
-### Forum and community help
+## Forum and community help
 
 Forum thead discussions for this driver can be found at:
 
