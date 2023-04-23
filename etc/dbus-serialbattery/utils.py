@@ -36,7 +36,7 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0 (20230420)"
+DRIVER_SUBVERSION = ".0 (20230423)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -205,6 +205,10 @@ DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(
     config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"]
 )
 
+
+# --------- Time-To-Go ---------
+# Description: Calculates the time to go shown in the GUI
+TIME_TO_GO_ENABLE = "True" == config["DEFAULT"]["TIME_TO_GO_ENABLE"]
 
 # --------- Time-To-Soc ---------
 # Description: Calculates the time to a specific SoC
