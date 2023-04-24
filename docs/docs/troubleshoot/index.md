@@ -1,9 +1,9 @@
 ---
 id: troubleshoot
-title: Troubleshoot
+title: How to troubleshoot
 ---
 
-# Troubleshoot
+# How to troubleshoot
 
 ## Check the [FAQ](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ) for answers
 
