@@ -34,7 +34,9 @@ TRANSLATE_DEVICE_INFO = [
     [["device_info", "sw_rev"], 30, "8s"],
     [["device_info", "uptime"], 38, "<L"],
     [["device_info", "vendor_id"], 6, "16s"],
-    [["device_info", "manufacturing_date"], 78, "8s"],
+    # disabled since some BMS throw a UnicodeDecodeError
+    # https://github.com/Louisvdw/dbus-serialbattery/discussions/485#discussioncomment-5694781
+    # [["device_info", "manufacturing_date"], 78, "8s"],
 ]
 
 TRANSLATE_SETTINGS = [
