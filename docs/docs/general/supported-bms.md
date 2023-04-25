@@ -36,9 +36,16 @@ Including:
 
 ## &bull; Tian Power (LifePower / Revov)
 
-## Planned support / request new BMS
+## Planned support
 
-You can view the [issue list](https://github.com/Louisvdw/dbus-serialbattery/issues?q=is%3Aissue+is%3Aopen+label%3Abattery) to see which BMS support is requested and vote for the BMS you want to be supported.
+You can view the current [BMS requests](https://github.com/Louisvdw/dbus-serialbattery/discussions/categories/new-bms-requests) to see which BMS support is requested and vote for the BMS you want to be supported.
+
+## Add/Request new BMS
+There are two possibilities to add a new BMS.
+
+1. Fork the repository and use the [`battery_template.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/battery_template.py) as template to add a new battery. As soon as the BMS works you can open a PR (pull request) to merge it.
+
+2. Start a [new discussion](https://github.com/Louisvdw/dbus-serialbattery/discussions/new?category=new-bms-requests) in the `New BMS request` category. Please add also the protocol documentation which you can request from the manufacturer/seller. The more upvotes the BMS request has, the higher is the priority.
 
 If you would like to donate hardware or would like to help testing a specific BMS please get in contact over the [discussions section](https://github.com/Louisvdw/dbus-serialbattery/discussions).
 
