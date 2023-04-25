@@ -5,6 +5,10 @@ on:
     branches:
       - '**'
 
+    # Run on changes in the etc folder
+    paths:
+      - etc/**
+
 jobs:
   analyse:
     name: Analyze Using GitHub CodeQL

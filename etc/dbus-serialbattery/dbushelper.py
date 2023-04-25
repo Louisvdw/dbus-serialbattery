@@ -298,15 +298,17 @@ class DbusHelper:
             )
 
         # Create TimeToSoC items only if enabled
-        if self.battery.capacity is not None and len(TIME_TO_SOC_POINTS) > 0:
+        if self.battery.capacity is not None:
             # Create TimeToGo item
-            self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+            if TIME_TO_GO_ENABLE:
+                self._dbusservice.add_path("/TimeToGo", None, writeable=True)
 
             # Create TimeToSoc items
-            for num in TIME_TO_SOC_POINTS:
-                self._dbusservice.add_path(
-                    "/TimeToSoC/" + str(num), None, writeable=True
-                )
+            if len(TIME_TO_SOC_POINTS) > 0:
+                for num in TIME_TO_SOC_POINTS:
+                    self._dbusservice.add_path(
+                        "/TimeToSoC/" + str(num), None, writeable=True
+                    )
 
         logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
         if PUBLISH_CONFIG_VALUES == 1:
@@ -481,7 +483,7 @@ class DbusHelper:
         try:
             if (
                 self.battery.capacity is not None
-                and len(TIME_TO_SOC_POINTS) > 0
+                and (TIME_TO_GO_ENABLE or len(TIME_TO_SOC_POINTS) > 0)
                 and (
                     (
                         # update only once in same second
@@ -500,26 +502,29 @@ class DbusHelper:
                     abs(self.battery.current / (self.battery.capacity / 100)) / 3600
                 )
 
-                # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
-                self._dbusservice["/TimeToGo"] = (
-                    abs(
-                        int(
-                            self.battery.get_timeToSoc(
-                                SOC_LOW_WARNING, crntPrctPerSec, True
+                # Update TimeToGo item
+                if TIME_TO_GO_ENABLE:
+                    # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
+                    self._dbusservice["/TimeToGo"] = (
+                        abs(
+                            int(
+                                self.battery.get_timeToSoc(
+                                    SOC_LOW_WARNING, crntPrctPerSec, True
+                                )
                             )
                         )
-                    )
-                    if self.battery.current
-                    else None
-                )
-
-                # Update TimeToSoc items
-                for num in TIME_TO_SOC_POINTS:
-                    self._dbusservice["/TimeToSoC/" + str(num)] = (
-                        self.battery.get_timeToSoc(num, crntPrctPerSec)
                         if self.battery.current
                         else None
                     )
+
+                # Update TimeToSoc items
+                if len(TIME_TO_SOC_POINTS) > 0:
+                    for num in TIME_TO_SOC_POINTS:
+                        self._dbusservice["/TimeToSoC/" + str(num)] = (
+                            self.battery.get_timeToSoc(num, crntPrctPerSec)
+                            if self.battery.current
+                            else None
+                        )
 
         except:
             pass

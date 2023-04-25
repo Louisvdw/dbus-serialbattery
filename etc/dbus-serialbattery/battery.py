@@ -616,8 +616,10 @@ class Battery(ABC):
             # get the midpoint of the battery
             midpoint = half1voltage + extra
             return (
-                midpoint,
-                (half2voltage - half1voltage) / (half2voltage + half1voltage) * 100,
+                abs(midpoint),
+                abs(
+                    (half2voltage - half1voltage) / (half2voltage + half1voltage) * 100
+                ),
             )
         except ValueError:
             return None, None
