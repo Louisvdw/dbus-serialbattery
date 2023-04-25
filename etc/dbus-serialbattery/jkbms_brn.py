@@ -34,9 +34,7 @@ TRANSLATE_DEVICE_INFO = [
     [["device_info", "sw_rev"], 30, "8s"],
     [["device_info", "uptime"], 38, "<L"],
     [["device_info", "vendor_id"], 6, "16s"],
-    # disabled since some BMS throw a UnicodeDecodeError
-    # https://github.com/Louisvdw/dbus-serialbattery/discussions/485#discussioncomment-5694781
-    # [["device_info", "manufacturing_date"], 78, "8s"],
+    [["device_info", "manufacturing_date"], 78, "8s"],
 ]
 
 TRANSLATE_SETTINGS = [
@@ -137,8 +135,13 @@ class JkBmsBle:
                     )[0]
                     # calculate stepping in case of array
                     i = i + calcsize(translation[2])
+
                 if isinstance(val, bytes):
-                    val = val.decode("utf-8").rstrip(" \t\n\r\0")
+                    try:
+                        val = val.decode("utf-8").rstrip(" \t\n\r\0")
+                    except UnicodeDecodeError:
+                        val = ""
+
                 elif isinstance(val, int) and len(translation) == 4:
                     val = val * translation[3]
                 o[j] = val
