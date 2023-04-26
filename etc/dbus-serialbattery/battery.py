@@ -660,9 +660,16 @@ class Battery(ABC):
             return None
 
     def get_temp(self) -> Union[float, None]:
-        return self.extract_from_temp_values(
-            extractor=lambda temp1, temp2: round((float(temp1) + float(temp2)) / 2, 2)
-        )
+        if utils.TEMP_BATTERY == 1:
+            return self.temp1
+        elif utils.TEMP_BATTERY == 2:
+            return self.temp2
+        else:
+            return self.extract_from_temp_values(
+                extractor=lambda temp1, temp2: round(
+                    (float(temp1) + float(temp2)) / 2, 2
+                )
+            )
 
     def get_min_temp(self) -> Union[float, None]:
         return self.extract_from_temp_values(
