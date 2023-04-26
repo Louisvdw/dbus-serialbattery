@@ -155,6 +155,11 @@ class DbusHelper:
             writeable=True,
             gettextcallback=lambda p, v: "{:0.2f}A".format(v),
         )
+
+        self._dbusservice.add_path("/Info/ChargeMode", None, writeable=True)
+        self._dbusservice.add_path("/Info/ChargeLimitation", None, writeable=True)
+        self._dbusservice.add_path("/Info/DischargeLimitation", None, writeable=True)
+
         self._dbusservice.add_path(
             "/System/NrOfCellsPerBattery", self.battery.cell_count, writeable=True
         )
@@ -245,7 +250,6 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
-        self._dbusservice.add_path("/Info/ChargeMode", None, writeable=True)
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
@@ -384,7 +388,6 @@ class DbusHelper:
             else 0
         )
         self._dbusservice["/Io/AllowToBalance"] = 1 if self.battery.balance_fet else 0
-        self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
         self._dbusservice["/System/NrOfModulesBlockingCharge"] = (
             0
             if self.battery.charge_fet is None
@@ -418,6 +421,13 @@ class DbusHelper:
         self._dbusservice[
             "/Info/MaxDischargeCurrent"
         ] = self.battery.control_discharge_current
+
+        # Voltage and charge control info
+        self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
+        self._dbusservice["/Info/ChargeLimitation"] = self.battery.charge_limitation
+        self._dbusservice[
+            "/Info/DischargeLimitation"
+        ] = self.battery.discharge_limitation
 
         # Updates from cells
         self._dbusservice["/System/MinVoltageCellId"] = self.battery.get_min_cell_desc()

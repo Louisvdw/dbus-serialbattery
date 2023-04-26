@@ -19,10 +19,22 @@ MbPage {
 			item.bind: service.path("/Info/MaxChargeVoltage")
 		}
 
+        MbItemValue {
+            description: qsTr("Charge limitation")
+            item.bind: service.path("/Info/ChargeLimitation")
+            show: item.valid
+        }
+
 		MbItemValue {
 			description: qsTr("Charge Current Limit (CCL)")
 			item.bind: service.path("/Info/MaxChargeCurrent")
 		}
+
+        MbItemValue {
+            description: qsTr("Discharge limitation")
+            item.bind: service.path("/Info/DischargeLimitation")
+            show: item.valid
+        }
 
 		MbItemValue {
 			description: qsTr("Discharge Current Limit (DCL)")
