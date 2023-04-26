@@ -366,7 +366,9 @@ class Battery(ABC):
         discharge_limits = [
             self.max_battery_discharge_current
         ]  # gets removed after finished testing
-        discharge_limits_new = {self.max_battery_discharge_current: "None (Max Config Limit)"}
+        discharge_limits_new = {
+            self.max_battery_discharge_current: "None (Max Config Limit)"
+        }
 
         if utils.DCCM_CV_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToCellVoltage()
