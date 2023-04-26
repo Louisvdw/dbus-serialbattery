@@ -300,7 +300,7 @@ class Battery(ABC):
         charge_limits = [
             self.max_battery_charge_current
         ]  # gets removed after finished testing
-        charge_limits_new = {self.max_battery_charge_current: "Default"}
+        charge_limits_new = {self.max_battery_charge_current: "None (Max Config Limit)"}
 
         if utils.CCCM_CV_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToCellVoltage()
@@ -313,10 +313,10 @@ class Battery(ABC):
             if self.max_battery_charge_current != tmp:
                 if tmp in charge_limits_new:
                     charge_limits_new.update(
-                        {tmp: charge_limits_new[tmp] + ", cell voltage"}
+                        {tmp: charge_limits_new[tmp] + ", Cell voltage"}
                     )
                 else:
-                    charge_limits_new.update({tmp: "cell voltage"})
+                    charge_limits_new.update({tmp: "Cell voltage"})
 
         if utils.CCCM_T_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToTemperature()
@@ -328,9 +328,9 @@ class Battery(ABC):
             # + str(tmp))
             if self.max_battery_charge_current != tmp:
                 if tmp in charge_limits_new:
-                    charge_limits_new.update({tmp: charge_limits_new[tmp] + ", temp"})
+                    charge_limits_new.update({tmp: charge_limits_new[tmp] + ", Temp"})
                 else:
-                    charge_limits_new.update({tmp: "temp"})
+                    charge_limits_new.update({tmp: "Temp"})
 
         if utils.CCCM_SOC_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToSoc()
@@ -366,7 +366,7 @@ class Battery(ABC):
         discharge_limits = [
             self.max_battery_discharge_current
         ]  # gets removed after finished testing
-        discharge_limits_new = {self.max_battery_discharge_current: "Default"}
+        discharge_limits_new = {self.max_battery_discharge_current: "None (Max Config Limit)"}
 
         if utils.DCCM_CV_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToCellVoltage()
@@ -379,10 +379,10 @@ class Battery(ABC):
             if self.max_battery_discharge_current != tmp:
                 if tmp in discharge_limits_new:
                     discharge_limits_new.update(
-                        {tmp: discharge_limits_new[tmp] + ", cell voltage"}
+                        {tmp: discharge_limits_new[tmp] + ", Cell voltage"}
                     )
                 else:
-                    discharge_limits_new.update({tmp: "cell voltage"})
+                    discharge_limits_new.update({tmp: "Cell voltage"})
 
         if utils.DCCM_T_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToTemperature()
@@ -395,10 +395,10 @@ class Battery(ABC):
             if self.max_battery_discharge_current != tmp:
                 if tmp in discharge_limits_new:
                     discharge_limits_new.update(
-                        {tmp: discharge_limits_new[tmp] + ", temp"}
+                        {tmp: discharge_limits_new[tmp] + ", Temp"}
                     )
                 else:
-                    discharge_limits_new.update({tmp: "temp"})
+                    discharge_limits_new.update({tmp: "Temp"})
 
         if utils.DCCM_SOC_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToSoc()

@@ -9,7 +9,7 @@ MbPage {
 	model: VisibleItemModel {
 
         MbItemValue {
-            description: qsTr("Charge mode")
+            description: qsTr("Charge Mode")
             item.bind: service.path("/Info/ChargeMode")
             show: item.valid
         }
@@ -20,7 +20,7 @@ MbPage {
 		}
 
         MbItemValue {
-            description: qsTr("Charge limitation")
+            description: qsTr("Charge Limitation")
             item.bind: service.path("/Info/ChargeLimitation")
             show: item.valid
         }
@@ -31,7 +31,7 @@ MbPage {
 		}
 
         MbItemValue {
-            description: qsTr("Discharge limitation")
+            description: qsTr("Discharge Limitation")
             item.bind: service.path("/Info/DischargeLimitation")
             show: item.valid
         }
