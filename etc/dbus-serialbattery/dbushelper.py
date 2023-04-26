@@ -221,9 +221,9 @@ class DbusHelper:
 
         # Create battery extras
         self._dbusservice.add_path("/System/MinCellTemperature", None, writeable=True)
-        self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
+        self._dbusservice.add_path("/System/MinTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
-        self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
+        self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
@@ -264,6 +264,9 @@ class DbusHelper:
         self._dbusservice.add_path("/Alarms/LowChargeTemperature", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighTemperature", None, writeable=True)
         self._dbusservice.add_path("/Alarms/LowTemperature", None, writeable=True)
+        self._dbusservice.add_path(
+            "/Alarms/HighInternalTemperature", None, writeable=True
+        )
 
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
@@ -396,9 +399,13 @@ class DbusHelper:
             0 if self.battery.online else 1
         )
         self._dbusservice["/System/MinCellTemperature"] = self.battery.get_min_temp()
-        self._dbusservice["/System/MinTemperatureCellId"] = self.battery.get_min_temp_id()
+        self._dbusservice[
+            "/System/MinTemperatureCellId"
+        ] = self.battery.get_min_temp_id()
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
-        self._dbusservice["/System/MaxTemperatureCellId"] = self.battery.get_max_temp_id()
+        self._dbusservice[
+            "/System/MaxTemperatureCellId"
+        ] = self.battery.get_max_temp_id()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
 
         # Charge control
@@ -454,6 +461,9 @@ class DbusHelper:
         self._dbusservice[
             "/Alarms/LowTemperature"
         ] = self.battery.protection.temp_low_discharge
+        self._dbusservice[
+            "/Alarms/HighInternalTemperature"
+        ] = self.battery.protection.temp_high_internal
 
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
