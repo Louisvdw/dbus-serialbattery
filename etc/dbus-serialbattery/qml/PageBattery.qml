@@ -190,6 +190,42 @@ MbPage {
             show: item.seen
         }
 
+        MbItemValue {
+            description: qsTr("Time-to-SoC 0%")
+            item.bind: service.path("/TimeToSoC/0")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 10%")
+            item.bind: service.path("/TimeToSoC/10")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 20%")
+            item.bind: service.path("/TimeToSoC/20")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 80%")
+            item.bind: service.path("/TimeToSoC/80")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 90%")
+            item.bind: service.path("/TimeToSoC/90")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 100%")
+            item.bind: service.path("/TimeToSoC/100")
+            show: item.seen
+        }
+
         MbItemOptions {
             description: qsTr("Relay state")
             bind: service.path("/Relay/0/State")
