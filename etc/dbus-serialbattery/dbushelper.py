@@ -224,6 +224,7 @@ class DbusHelper:
         self._dbusservice.add_path("/System/MinTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
+
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
