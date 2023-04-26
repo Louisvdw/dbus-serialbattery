@@ -36,6 +36,10 @@ function versionStringToNumber ()
 if [ ! -f /opt/victronenergy/gui/qml/PageBattery.qml.backup ]; then
     cp /opt/victronenergy/gui/qml/PageBattery.qml /opt/victronenergy/gui/qml/PageBattery.qml.backup
 fi
+# backup old PageBatteryParameters.qml once. New firmware upgrade will remove the backup
+if [ ! -f /opt/victronenergy/gui/qml/PageBatteryParameters.qml.backup ]; then
+    cp /opt/victronenergy/gui/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/PageBatteryParameters.qml.backup
+fi
 # backup old PageLynxIonIo.qml once. New firmware upgrade will remove the backup
 if [ ! -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
     cp /opt/victronenergy/gui/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup
@@ -44,6 +48,8 @@ fi
 cp /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/
 # copy new PageBatteryCellVoltages
 cp /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/
+# copy new PageBatteryParameters.qml
+cp /data/etc/dbus-serialbattery/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/
 # copy new PageBatterySetup
 cp /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/
 # copy new PageLynxIonIo.qml
@@ -64,6 +70,7 @@ if (( $venusVersionNumber < $versionNumber )); then
     echo -n "Venus OS $(head -n 1 /opt/victronenergy/version) is older than v3.00~14. Replacing VisibleItemModel with VisualItemModel... "
     fileList="$qmlDir/PageBattery.qml"
     fileList+=" $qmlDir/PageBatteryCellVoltages.qml"
+    fileList+=" $qmlDir/PageBatteryParameters.qml"
     fileList+=" $qmlDir/PageBatterySetup.qml"
     fileList+=" $qmlDir/PageLynxIonIo.qml"
     for file in $fileList ; do
