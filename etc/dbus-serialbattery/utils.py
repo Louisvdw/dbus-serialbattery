@@ -259,6 +259,12 @@ BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
 
+# Temperature sensor 1 name
+TEMP_1_NAME = config["DEFAULT"]["TEMP_1_NAME"]
+
+# Temperature sensor 2 name
+TEMP_2_NAME = config["DEFAULT"]["TEMP_2_NAME"]
+
 
 # --------- BMS specific settings ---------
 

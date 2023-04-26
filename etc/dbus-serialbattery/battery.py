@@ -669,10 +669,22 @@ class Battery(ABC):
             extractor=lambda temp1, temp2: min(temp1, temp2)
         )
 
+    def get_min_temp_id(self) -> Union[str, None]:
+        if self.temp1 < self.temp2:
+            return utils.TEMP_1_NAME
+        else:
+            return utils.TEMP_2_NAME
+
     def get_max_temp(self) -> Union[float, None]:
         return self.extract_from_temp_values(
             extractor=lambda temp1, temp2: max(temp1, temp2)
         )
+
+    def get_max_temp_id(self) -> Union[str, None]:
+        if self.temp1 > self.temp2:
+            return utils.TEMP_1_NAME
+        else:
+            return utils.TEMP_2_NAME
 
     def get_mos_temp(self) -> Union[float, None]:
         if self.temp_mos is not None:
