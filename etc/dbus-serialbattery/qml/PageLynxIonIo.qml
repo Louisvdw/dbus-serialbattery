@@ -18,6 +18,12 @@ MbPage {
 			]
 		}
 
+        MbItemValue {
+            description: qsTr("Charge mode")
+            item.bind: service.path("/Io/ChargeMode")
+            show: item.valid
+        }
+
 		MbItemOptions {
 			description: qsTr("Allow to charge")
 			bind: Utils.path(bindPrefix, "/Io/AllowToCharge")
