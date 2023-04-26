@@ -38,5 +38,6 @@ install_service() {
 
 ## Uncomment for each adapter here, increase the number for each adapter/service
 
+install_service 0 Jkbms_Ble C8:47:8C:E8:12:04
 # install_service 0 Jkbms_Ble C8:47:8C:12:34:56
 # install_service 1 Jkbms_Ble C8:47:8C:78:9A:BC
