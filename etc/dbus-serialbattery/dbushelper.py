@@ -252,7 +252,7 @@ class DbusHelper:
         self._dbusservice.add_path("/Alarms/LowVoltage", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighVoltage", None, writeable=True)
         self._dbusservice.add_path("/Alarms/LowCellVoltage", None, writeable=True)
-        self._dbusservice.add_path("/Alarms/HighCellVoltage", None, writeable=True)
+        # self._dbusservice.add_path("/Alarms/HighCellVoltage", None, writeable=True)  ## does not exist on the dbus
         self._dbusservice.add_path("/Alarms/LowSoc", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighChargeCurrent", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighDischargeCurrent", None, writeable=True)
