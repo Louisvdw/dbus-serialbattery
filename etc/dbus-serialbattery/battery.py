@@ -686,7 +686,7 @@ class Battery(ABC):
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
             f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | "
-            + "MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V"
+            + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V"
         )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
         logger.info(
