@@ -82,6 +82,7 @@ class Battery(ABC):
         self.control_charging = None
         self.control_voltage = None
         self.allow_max_voltage = True
+        self.charge_mode = None
         self.control_voltage_last_set = 0
         self.max_voltage_start_time = None
         self.control_current = None
@@ -214,14 +215,25 @@ class Battery(ABC):
                     3,
                 )
                 self.control_voltage_last_set = control_voltage_time
+            self.charge_mode = (
+                "Bulk dynamic (linear mode)"
+                if self.max_voltage_start_time is None
+                else "Absorption dynamic (linear mode)"
+            )
 
         elif self.allow_max_voltage:
             self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+            self.charge_mode = (
+                "Bulk (linear mode)"
+                if self.max_voltage_start_time is None
+                else "Absorption (linear mode)"
+            )
 
         else:
             self.control_voltage = round(
                 (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3
             )
+            self.charge_mode = "Float (linear mode)"
 
     def manage_charge_voltage_step(self) -> None:
         """
@@ -270,8 +282,15 @@ class Battery(ABC):
 
         if self.allow_max_voltage:
             self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+            self.charge_mode = (
+                "Bulk (step mode)"
+                if self.max_voltage_start_time is None
+                else "Absorption (step mode)"
+            )
+
         else:
             self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
+            self.charge_mode = "Float (step mode)"
 
     def manage_charge_current(self) -> None:
         # Manage Charge Current Limitations

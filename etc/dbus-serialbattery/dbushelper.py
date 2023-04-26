@@ -246,6 +246,7 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
+        self._dbusservice.add_path("/Io/ChargeMode", None, writeable=True)
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
@@ -381,6 +382,7 @@ class DbusHelper:
             else 0
         )
         self._dbusservice["/Io/AllowToBalance"] = 1 if self.battery.balance_fet else 0
+        self._dbusservice["/Io/ChargeMode"] = self.battery.charge_mode
         self._dbusservice["/System/NrOfModulesBlockingCharge"] = (
             0
             if self.battery.charge_fet is None
