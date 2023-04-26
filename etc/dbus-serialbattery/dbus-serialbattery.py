@@ -52,11 +52,7 @@ logger.info("Starting dbus-serialbattery")
 
 def main():
     def poll_battery(loop):
-        # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
-        poller = Thread(target=lambda: helper.publish_battery(loop))
-        # Thread will die with us if deamon
-        poller.daemon = True
-        poller.start()
+        helper.publish_battery(loop)
         return True
 
     def get_battery(_port) -> Union[Battery, None]:
