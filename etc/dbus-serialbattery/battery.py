@@ -28,6 +28,7 @@ class Protection(object):
         self.temp_low_charge: int = None
         self.temp_high_discharge: int = None
         self.temp_low_discharge: int = None
+        self.temp_high_internal: int = None
 
 
 class Cell:
