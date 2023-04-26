@@ -259,6 +259,13 @@ BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
 
+# Battery temperature
+# Specifiy how the battery temperature is assembled
+# 0 Get mean of temp sensor 1 and temp sensor 2
+# 1 Get only temp from temp sensor 1
+# 2 Get only temp from temp sensor 2
+TEMP_BATTERY = int(config["DEFAULT"]["TEMP_BATTERY"])
+
 # Temperature sensor 1 name
 TEMP_1_NAME = config["DEFAULT"]["TEMP_1_NAME"]
 
