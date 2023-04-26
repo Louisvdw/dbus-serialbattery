@@ -2,7 +2,6 @@
 
 ## v1.0.0-jkbms_ble
 
-* Added: Allow user to enable/disable Bluetooth over the config file.
 * Added: Balancing status for JKBMS
 * Added: Balancing switch status for JKBMS
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO

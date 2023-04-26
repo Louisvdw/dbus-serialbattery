@@ -40,9 +40,6 @@ DRIVER_SUBVERSION = ".0-jkbms_ble (20230426)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
-# Enables the search/support for Bluetooth BMS
-BLUETOOTH_ENABLED = "True" == config["DEFAULT"]["BLUETOOTH_ENABLED"]
-
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
 # True is a linear mode. For CCL and DCL the values between the steps are calculated for

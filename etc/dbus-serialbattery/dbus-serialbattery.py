@@ -29,10 +29,6 @@ from renogy import Renogy
 from ecs import Ecs
 from lifepower import Lifepower
 
-# import Bluetooth BMS classes
-if utils.BLUETOOTH_ENABLED:
-    from jkbms_ble import Jkbms_Ble
-
 
 supported_bms_types = [
     {"bms": LltJbd, "baud": 9600},
@@ -99,6 +95,13 @@ def main():
     port = get_port()
     battery = None
     if port.endswith("_Ble") and len(sys.argv) > 2:
+        """
+        Import ble classes only, if it's a ble port, else the driver won't start due to missing python modules
+        This prevent problems when using the driver only with a serial connection
+        """
+        if port == "Jkbms_Ble":
+            from jkbms_ble import Jkbms_Ble
+
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
         if testbms.test_connection() is True:
