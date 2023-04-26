@@ -30,6 +30,12 @@ MbPage {
 			item.bind: service.path("/Info/MaxChargeCurrent")
 		}
 
+        MbItemValue {
+            description: qsTr("Discharge limitation")
+            item.bind: service.path("/Info/DischargeLimitation")
+            show: item.valid
+        }
+
 		MbItemValue {
 			description: qsTr("Discharge Current Limit (DCL)")
 			item.bind: service.path("/Info/MaxDischargeCurrent")
