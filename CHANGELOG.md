@@ -24,7 +24,7 @@
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing
 * Added: Post install notes
 * Added: Script to install directly from repository
-* Added: Show charge mode (absorption, bulk, ...) in IO page
+* Added: Show charge mode (absorption, bulk, ...) in Parameters page
 * Added: Show charge/discharge limitation reason
 * Added: Show TimeToSoc in GUI only, if enabled
 * Added: Temperature name for temperature sensor 1 & 2. This allows to see which sensor is low and high (e.g. battery and cable)
