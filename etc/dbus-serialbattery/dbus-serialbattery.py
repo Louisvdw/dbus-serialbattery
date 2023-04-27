@@ -24,7 +24,7 @@ from battery import Battery
 from ant import Ant
 from daly import Daly
 from ecs import Ecs
-from ant import Ant
+from hlpdatabms4s import HLPdataBMS4S
 from jkbms import Jkbms
 from lifepower import Lifepower
 from lltjbd import LltJbd
@@ -36,6 +36,7 @@ supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
     {"bms": Ecs, "baud": 19200},
+    {'bms': HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
     {"bms": Lifepower, "baud": 9600},
     {"bms": LltJbd, "baud": 9600},
