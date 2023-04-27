@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
+from battery import Battery, Cell
+from utils import read_serial_data, unpack, unpack_from, logger
+import utils
 import struct
 
 
@@ -16,7 +17,8 @@ class Renogy(Battery):
     LENGTH_CHECK = 4
     LENGTH_POS = 2
 
-    # command bytes [Address field][Function code (03 = Read register)][Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
+    # command bytes [Address field][Function code (03 = Read register)]
+    #                   [Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
     command_read = b"\x03"
     # Core data = voltage, temp, current, soc
     command_cell_count = b"\x13\x88\x00\x01"  # Register  5000
@@ -44,9 +46,9 @@ class Renogy(Battery):
         result = False
         try:
             result = self.read_gen_data()
-        except:
-            logger.exception("Unexpected exception encountered")
-            pass
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
@@ -54,11 +56,11 @@ class Renogy(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
         return True
 
     def refresh_data(self):
@@ -203,7 +205,7 @@ class Renogy(Battery):
             return False
 
         start, flag, length = unpack_from("BBB", data)
-        checksum = unpack_from(">H", data, length + 3)
+        # checksum = unpack_from(">H", data, length + 3)
 
         if flag == 3:
             return data[3 : length + 3]

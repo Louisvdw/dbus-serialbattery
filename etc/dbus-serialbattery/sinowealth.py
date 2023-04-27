@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import kelvin_to_celsius, read_serial_data, logger
+import utils
+from struct import unpack_from
 
 
 class Sinowealth(Battery):
@@ -33,25 +34,30 @@ class Sinowealth(Battery):
     LENGTH_POS = 0
 
     def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
         result = False
         try:
             result = self.read_status_data()
             result = result and self.read_remaining_capacity()
             result = result and self.read_pack_config_data()
-        except:
-            pass
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
+
         return result
 
     def get_settings(self):
         # hardcoded parameters, to be requested from the BMS in the future
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
 
         if self.cell_count is None:
             self.read_pack_config_data()
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)

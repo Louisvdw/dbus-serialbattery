@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import open_serial_port, read_serialport_data, logger
+import utils
+from struct import unpack_from
 
 
 class Daly(Battery):
@@ -37,21 +38,26 @@ class Daly(Battery):
     TEMP_ZERO_CONSTANT = 40
 
     def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
         result = False
         try:
             ser = open_serial_port(self.port, self.baud_rate)
             if ser is not None:
                 result = self.read_status_data(ser)
                 ser.close()
-        except:
-            pass
+
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
     def get_settings(self):
-        self.capacity = BATTERY_CAPACITY
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.capacity = utils.BATTERY_CAPACITY
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
@@ -95,8 +101,8 @@ class Daly(Battery):
             self.cycles,
         ) = unpack_from(">bb??bhx", status_data)
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
@@ -104,8 +110,8 @@ class Daly(Battery):
 
     def read_soc_data(self, ser):
         # Ensure data received is valid
-        crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
-        crntMaxValid = MAX_BATTERY_CHARGE_CURRENT * 1.3
+        crntMinValid = -(utils.MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
+        crntMaxValid = utils.MAX_BATTERY_CHARGE_CURRENT * 1.3
         triesValid = 2
         while triesValid > 0:
             soc_data = self.read_serial_data_daly(ser, self.command_soc)
@@ -117,7 +123,7 @@ class Daly(Battery):
             current = (
                 (current - self.CURRENT_ZERO_CONSTANT)
                 / -10
-                * INVERT_CURRENT_MEASUREMENT
+                * utils.INVERT_CURRENT_MEASUREMENT
             )
             if crntMinValid < current < crntMaxValid:
                 self.voltage = voltage / 10
@@ -262,7 +268,7 @@ class Daly(Battery):
                 return False
 
             frameCell = [0, 0, 0]
-            lowMin = MIN_CELL_VOLTAGE / 2
+            lowMin = utils.MIN_CELL_VOLTAGE / 2
             frame = 0
             bufIdx = 0
 
