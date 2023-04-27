@@ -19,28 +19,29 @@ from dbushelper import DbusHelper
 from utils import logger
 import utils
 from battery import Battery
-from lltjbd import LltJbd
+
+# import battery classes
+from ant import Ant
 from daly import Daly
+from ecs import Ecs
 from ant import Ant
 from jkbms import Jkbms
-
-# from sinowealth import Sinowealth
-from renogy import Renogy
-from ecs import Ecs
 from lifepower import Lifepower
-
+from lltjbd import LltJbd
+from renogy import Renogy
+# from sinowealth import Sinowealth
 
 supported_bms_types = [
-    {"bms": LltJbd, "baud": 9600},
     {"bms": Ant, "baud": 19200},
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
+    {"bms": Ecs, "baud": 19200},
     {"bms": Jkbms, "baud": 115200},
-    #    {"bms" : Sinowealth},
     {"bms": Lifepower, "baud": 9600},
+    {"bms": LltJbd, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
-    {"bms": Ecs, "baud": 19200},
+    # {"bms": Sinowealth},
 ]
 expected_bms_types = [
     battery_type
