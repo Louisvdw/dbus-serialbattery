@@ -47,7 +47,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 3. You also need to connect your BMS to the Venus OS device using a serial interface. Use the cable for your BMS or a Victron branded USB&rarr;RS485 or USB&rarr;Ve.Direct (RS232) cable for best compatibility. Most FTDI/FT232R/CH340G USB&rarr;serial also works. The FT232R and CH340G already has a driver included in the Venus OS.
 
-  > 🚨 **NB! Only connect Rx & Tx to the BMS,** if you are NOT using an isolated cable or adapter. This prevents the current to flow through the adapter, if the BMS cuts the ground.
+  > 🚨 **NB! Only connect Rx & Tx to the BMS,** if you are NOT using an isolated ([galvanic separated](https://en.wikipedia.org/wiki/Galvanic_isolation)) cable or adapter. This prevents the current to flow through the adapter, if the BMS cuts the ground. Else it will destroy your BMS, GX device or Raspberry Pi.
 
 ## Install or update
 
@@ -218,3 +218,5 @@ pkill -f "python .*/dbus-serialbattery.py"
 # remove install-script from rc.local
 sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
 ```
+
+> If after the uninstall for some reason several items in the GUI were red, DO NOT reboot your GX device. See [Uninstalling driver bricked my cerbo #576](https://github.com/Louisvdw/dbus-serialbattery/issues/576)

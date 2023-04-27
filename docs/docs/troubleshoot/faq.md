@@ -24,15 +24,15 @@ If you own a Daly, then it will work just fine, but if you still need to buy you
 
 
 ## Which serial adapter/cable should I use?
-Most USB serial adapters and cables should work fine. You need to use the adapter for the UART type that your BMS use which is normally TTL, RS232, RS485 or even SPI.
+Most USB serial adapters and cables should work fine. You need to use the adapter for the UART type that your BMS use, which is normally TTL, RS232, RS485 or even SPI.
 
-Those adapters based on the FDTI or CH340 chips are the easiest to use because the GX opperating system already include drivers for them.
+Those adapters based on the **FDTI** or **CH340** chips are the easiest to use because the GX opperating system already include drivers for them. Also make sure, that your adapter is isolated ([galvanic separated](https://en.wikipedia.org/wiki/Galvanic_isolation)). This prevents the current to flow through the adapter, if the BMS cuts the ground. Else it will destroy your BMS, GX device or Raspberry Pi.
 
 Cable preferences:
 
 1. Best option is the UART cable/box for your BMS. These use connectors matching your BMS and minimise potential problems with errors from loose connections.
-2. Isolated cables. These are more expensive, but have electrical protection built in making them safer.
-3. Any adaptor that work with your BMS UART.
+2. Isolated ([galvanic separated](https://en.wikipedia.org/wiki/Galvanic_isolation)) cables. These are more expensive, but have electrical protection built in making them safer.
+3. Any adapter that work with your BMS UART.
 
 
 ## Which UART connection is the best to use (TTL/RS232/RS485)?
