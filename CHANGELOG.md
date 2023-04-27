@@ -44,6 +44,7 @@
 * Changed: Fixed black lint errors
 * Changed: Fixed cell balancing background for cells 17-24
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018
+* Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439
 * Changed: Logging to get relevant data
 * Changed: Moved ble part to `installble.sh`
 * Changed: Optimized installation scripts

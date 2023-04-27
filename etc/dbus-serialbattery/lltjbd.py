@@ -138,13 +138,14 @@ class LltJbd(Battery):
             balance2,
             protection,
             version,
-            self.soc,
+            soc,
             fet,
             self.cell_count,
             self.temp_sensors,
         ) = unpack_from(">HhHHHHhHHBBBBB", gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
+        self.soc = 100 * capacity_remain / capacity
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
         self.to_cell_bits(balance, balance2)
