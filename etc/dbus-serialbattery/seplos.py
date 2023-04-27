@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from battery import Protection, Battery, Cell
-from utils import *
+from utils import logger
+import utils
+import serial
 
 
 def int_from_hex_ascii(to_decode, signed=False):
@@ -97,10 +99,10 @@ class Seplos(Battery):
 
         # Uncomment if BMS does not supply capacity
         # self.capacity = BATTERY_CAPACITY
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         # init the cell array
         for _ in range(self.cell_count):

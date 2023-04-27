@@ -98,7 +98,11 @@ class LltJbd(Battery):
 
         # Software implementations for low soc
         self.protection.soc_low = (
-            2 if self.soc < utils.SOC_LOW_ALARM else 1 if self.soc < utils.SOC_LOW_WARNING else 0
+            2
+            if self.soc < utils.SOC_LOW_ALARM
+            else 1
+            if self.soc < utils.SOC_LOW_WARNING
+            else 0
         )
 
         # extra protection flags for LltJbd
