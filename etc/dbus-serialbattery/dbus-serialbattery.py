@@ -29,6 +29,7 @@ from jkbms import Jkbms
 from lifepower import Lifepower
 from lltjbd import LltJbd
 from renogy import Renogy
+from seplos import Seplos
 # from sinowealth import Sinowealth
 
 supported_bms_types = [
@@ -42,6 +43,7 @@ supported_bms_types = [
     {"bms": LltJbd, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
+    {"bms": Seplos, "baud": 19200},
     # {"bms": Sinowealth},
 ]
 expected_bms_types = [
