@@ -36,7 +36,7 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0-jkbms_ble (20230426)"
+DRIVER_SUBVERSION = ".0-jkbms_ble (20230427)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -441,8 +441,14 @@ def read_serialport_data(
 
         count = 0
         data = bytearray(res)
-        while len(data) <= length + length_check:
-            res = ser.read(length + length_check)
+
+        packetlen = (
+            length_fixed
+            if length_fixed is not None
+            else length_pos + length_byte_size + length + length_check
+        )
+        while len(data) < packetlen:
+            res = ser.read(packetlen - len(data))
             data.extend(res)
             # logger.info('serial data length ' + str(len(data)))
             sleep(0.005)

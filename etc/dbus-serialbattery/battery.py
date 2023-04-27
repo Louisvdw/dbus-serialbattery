@@ -15,6 +15,10 @@ class Protection(object):
     They are of type integer, 2 represents an Alarm, 1 a Warning, 0 if everything is fine
     """
 
+    ALARM = 2
+    WARNING = 1
+    OK = 0
+
     def __init__(self):
         self.voltage_high: int = None
         self.voltage_low: int = None
@@ -828,8 +832,8 @@ class Battery(ABC):
         )
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
-            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}V | "
-            + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}V"
+            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}A | "
+            + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
         )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
         logger.info(

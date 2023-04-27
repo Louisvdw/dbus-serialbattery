@@ -4,7 +4,8 @@ from typing import Union
 
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
-from threading import Thread
+
+# from threading import Thread  ## removed with https://github.com/Louisvdw/dbus-serialbattery/pull/582
 import sys
 
 if sys.version_info.major == 2:
@@ -19,28 +20,33 @@ from dbushelper import DbusHelper
 from utils import logger
 import utils
 from battery import Battery
-from lltjbd import LltJbd
-from daly import Daly
+
+# import battery classes
 from ant import Ant
+from daly import Daly
+from ecs import Ecs
+from hlpdatabms4s import HLPdataBMS4S
 from jkbms import Jkbms
+from lifepower import Lifepower
+from lltjbd import LltJbd
+from renogy import Renogy
+from seplos import Seplos
 
 # from sinowealth import Sinowealth
-from renogy import Renogy
-from ecs import Ecs
-from lifepower import Lifepower
-
 
 supported_bms_types = [
-    {"bms": LltJbd, "baud": 9600},
     {"bms": Ant, "baud": 19200},
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
+    {"bms": Ecs, "baud": 19200},
+    {"bms": HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
-    #    {"bms" : Sinowealth},
     {"bms": Lifepower, "baud": 9600},
+    {"bms": LltJbd, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
-    {"bms": Ecs, "baud": 19200},
+    {"bms": Seplos, "baud": 19200},
+    # {"bms": Sinowealth},
 ]
 expected_bms_types = [
     battery_type
@@ -100,7 +106,8 @@ def main():
         This prevent problems when using the driver only with a serial connection
         """
         if port == "Jkbms_Ble":
-            from jkbms_ble import Jkbms_Ble
+            # noqa: F401 --> ignore flake "imported but unused" error
+            from jkbms_ble import Jkbms_Ble  # noqa: F401
 
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
