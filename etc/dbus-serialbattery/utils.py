@@ -36,7 +36,7 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0 (20230423)"
+DRIVER_SUBVERSION = ".0 (20230426)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -258,6 +258,19 @@ BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 
 # Simulate Midpoint graph (True/False).
 MIDPOINT_ENABLE = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
+
+# Battery temperature
+# Specifiy how the battery temperature is assembled
+# 0 Get mean of temp sensor 1 and temp sensor 2
+# 1 Get only temp from temp sensor 1
+# 2 Get only temp from temp sensor 2
+TEMP_BATTERY = int(config["DEFAULT"]["TEMP_BATTERY"])
+
+# Temperature sensor 1 name
+TEMP_1_NAME = config["DEFAULT"]["TEMP_1_NAME"]
+
+# Temperature sensor 2 name
+TEMP_2_NAME = config["DEFAULT"]["TEMP_2_NAME"]
 
 
 # --------- BMS specific settings ---------

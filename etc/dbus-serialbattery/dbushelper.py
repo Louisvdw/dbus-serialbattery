@@ -151,6 +151,11 @@ class DbusHelper:
             writeable=True,
             gettextcallback=lambda p, v: "{:0.2f}A".format(v),
         )
+
+        self._dbusservice.add_path("/Info/ChargeMode", None, writeable=True)
+        self._dbusservice.add_path("/Info/ChargeLimitation", None, writeable=True)
+        self._dbusservice.add_path("/Info/DischargeLimitation", None, writeable=True)
+
         self._dbusservice.add_path(
             "/System/NrOfCellsPerBattery", self.battery.cell_count, writeable=True
         )
@@ -180,9 +185,6 @@ class DbusHelper:
             writeable=True,
             gettextcallback=lambda p, v: "{:0.0f}Ah".format(v),
         )
-        # Not used at this stage
-        # self._dbusservice.add_path('/System/MinTemperatureCellId', None, writeable=True)
-        # self._dbusservice.add_path('/System/MaxTemperatureCellId', None, writeable=True)
 
         # Create SOC, DC and System items
         self._dbusservice.add_path("/Soc", None, writeable=True)
@@ -220,7 +222,9 @@ class DbusHelper:
 
         # Create battery extras
         self._dbusservice.add_path("/System/MinCellTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/MinTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
@@ -248,7 +252,7 @@ class DbusHelper:
         self._dbusservice.add_path("/Alarms/LowVoltage", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighVoltage", None, writeable=True)
         self._dbusservice.add_path("/Alarms/LowCellVoltage", None, writeable=True)
-        self._dbusservice.add_path("/Alarms/HighCellVoltage", None, writeable=True)
+        # self._dbusservice.add_path("/Alarms/HighCellVoltage", None, writeable=True)  ## does not exist on the dbus
         self._dbusservice.add_path("/Alarms/LowSoc", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighChargeCurrent", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighDischargeCurrent", None, writeable=True)
@@ -260,6 +264,9 @@ class DbusHelper:
         self._dbusservice.add_path("/Alarms/LowChargeTemperature", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighTemperature", None, writeable=True)
         self._dbusservice.add_path("/Alarms/LowTemperature", None, writeable=True)
+        self._dbusservice.add_path(
+            "/Alarms/HighInternalTemperature", None, writeable=True
+        )
 
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
@@ -391,8 +398,17 @@ class DbusHelper:
             0 if self.battery.online else 1
         )
         self._dbusservice["/System/MinCellTemperature"] = self.battery.get_min_temp()
+        self._dbusservice[
+            "/System/MinTemperatureCellId"
+        ] = self.battery.get_min_temp_id()
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
+        self._dbusservice[
+            "/System/MaxTemperatureCellId"
+        ] = self.battery.get_max_temp_id()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
+
+        # Voltage control
+        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
 
         # Charge control
         self._dbusservice[
@@ -402,8 +418,12 @@ class DbusHelper:
             "/Info/MaxDischargeCurrent"
         ] = self.battery.control_discharge_current
 
-        # Voltage control
-        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
+        # Voltage and charge control info
+        self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
+        self._dbusservice["/Info/ChargeLimitation"] = self.battery.charge_limitation
+        self._dbusservice[
+            "/Info/DischargeLimitation"
+        ] = self.battery.discharge_limitation
 
         # Updates from cells
         self._dbusservice["/System/MinVoltageCellId"] = self.battery.get_min_cell_desc()
@@ -447,6 +467,9 @@ class DbusHelper:
         self._dbusservice[
             "/Alarms/LowTemperature"
         ] = self.battery.protection.temp_low_discharge
+        self._dbusservice[
+            "/Alarms/HighInternalTemperature"
+        ] = self.battery.protection.temp_high_internal
 
         # cell voltages
         if BATTERY_CELL_DATA_FORMAT > 0:
@@ -475,22 +498,14 @@ class DbusHelper:
             except:
                 pass
 
-        # Update TimeToSoC
+        # Update TimeToGo and/or TimeToSoC
         try:
             if (
                 self.battery.capacity is not None
                 and (TIME_TO_GO_ENABLE or len(TIME_TO_SOC_POINTS) > 0)
                 and (
-                    (
-                        # update only once in same second
-                        int(time()) != self.battery.time_to_soc_update
-                        and
-                        # update only every x seconds
-                        int(time()) % TIME_TO_SOC_RECALCULATE_EVERY == 0
-                    )
-                    or
-                    # update on first run
-                    self.battery.time_to_soc_update == 0
+                    int(time()) - self.battery.time_to_soc_update
+                    >= TIME_TO_SOC_RECALCULATE_EVERY
                 )
             ):
                 self.battery.time_to_soc_update = int(time())

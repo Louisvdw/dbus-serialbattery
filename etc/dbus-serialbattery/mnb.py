@@ -2,8 +2,8 @@
 from battery import Protection, Battery, Cell
 from struct import *
 
-# from test_max17853 import *#{these two lines are mutually}
-from util_max17853 import *  # {exclusive. use test for testing}
+# from test_max17853 import *  #{these two lines are mutually}
+# from util_max17853 import *  # {exclusive. use test for testing}
 
 
 class MNBProtection(Protection):

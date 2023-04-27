@@ -3,19 +3,17 @@
 # remove comment for easier troubleshooting
 #set -x
 
-DRIVERNAME=dbus-serialbattery
-
 # handle read only mounts
 sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
-# remove files
-rm -f /data/conf/serial-starter.d/$DRIVERNAME.conf
-rm -rf /opt/victronenergy/service/$DRIVERNAME
-rm -rf /opt/victronenergy/service-templates/$DRIVERNAME
-rm -rf /opt/victronenergy/$DRIVERNAME
+# remove files, don't use variables here, since on an error the whole /opt/victronenergy gets deleted
+rm -f /data/conf/serial-starter.d/dbus-serialbattery.conf
+rm -rf /opt/victronenergy/service/dbus-serialbattery
+rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
+rm -rf /opt/victronenergy/dbus-serialbattery
 
 # kill if running
-pkill -f "python .*/$DRIVERNAME.py"
+pkill -f "python .*/dbus-serialbattery.py"
 
 # remove install-script from rc.local
-sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
