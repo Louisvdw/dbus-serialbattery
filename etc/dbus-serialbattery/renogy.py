@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
-from utils import read_serial_data, unpack, unpack_from, logger
+from utils import read_serial_data, unpack_from, logger
 import utils
+from struct import unpack
 import struct
 
 
