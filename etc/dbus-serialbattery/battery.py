@@ -14,6 +14,7 @@ class Protection(object):
     This class holds Warning and alarm states for different types of Checks
     They are of type integer, 2 represents an Alarm, 1 a Warning, 0 if everything is fine
     """
+
     ALARM = 2
     WARNING = 1
     OK = 0
