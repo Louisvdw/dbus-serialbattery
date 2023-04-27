@@ -19,7 +19,6 @@ import threading
 import serial
 from serial.tools.list_ports import comports
 from serial.tools import hexlify_codec
-from time import sleep
 
 # pylint: disable=wrong-import-order,wrong-import-position
 
@@ -549,10 +548,10 @@ class Miniterm(object):
             # read all that is there or wait for one byte
             try:
                 data2 = self.serial.read(self.serial.in_waiting or 1)
-            except:
+            except Exception:
                 data2 = b""
             if data2:
-                if self.remove_no_write == True:
+                if self.remove_no_write is True:
                     self.remove_no_write = False
                     self.no_write = False
                     data = data2
@@ -567,7 +566,7 @@ class Miniterm(object):
                             text = transformation.rx(text)
                         if b"m1\n" in data:
                             self.no_write = True
-                        if self.no_write == False:
+                        if self.no_write is False:
                             self.console.write(text)
                     data = b""
 
@@ -606,7 +605,7 @@ class Miniterm(object):
                         for transformation in self.tx_transformations:
                             echo_text = transformation.echo(echo_text)
                         self.console.write(echo_text)
-        except:
+        except Exception:
             self.alive = False
             raise
 
@@ -1163,12 +1162,12 @@ def main(
             )
         )
         sys.stderr.write(
-            "--- Specifically modified for managing HLPdataBMS4S in Venus OS ---\n".format(
+            "--- Specifically modified for managing HLPdataBMS4S in Venus OS ---\n".format(  # noqa: F522
                 p=miniterm.serial
             )
         )
         sys.stderr.write(
-            "--- Quit: Ctrl-t q | Local echo: Ctrl-t Ctrl-e ---\n".format(
+            "--- Quit: Ctrl-t q | Local echo: Ctrl-t Ctrl-e ---\n".format(  # noqa: F522
                 p=miniterm.serial
             )
         )

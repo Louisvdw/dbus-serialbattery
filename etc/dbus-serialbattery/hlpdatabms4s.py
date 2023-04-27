@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import logger
+import utils
 import serial
 from time import sleep
 
@@ -20,9 +20,10 @@ class HLPdataBMS4S(Battery):
         result = False
         try:
             result = self.read_test_data()
-        except Exception as e:
-            # logger.error(e, exc_info=True)
-            pass
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
+
         return result
 
     def get_settings(self):
@@ -33,7 +34,7 @@ class HLPdataBMS4S(Battery):
         try:
             result = self.read_settings_data()
         except Exception as e:
-            # logger.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
             pass
         return result
 
@@ -45,7 +46,7 @@ class HLPdataBMS4S(Battery):
         try:
             result = self.read_status_data()
         except Exception as e:
-            # logger.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
             pass
         return result
 
@@ -71,8 +72,8 @@ class HLPdataBMS4S(Battery):
         if ix > 0:
             self.hardware_version = s1[ix : len(s1) - 1]
             self.version = self.hardware_version
-            self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-            self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+            self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+            self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
             self.poll_interval = 10000
             self.control_discharge_current = 1000
             self.control_charge_current = 1000
@@ -201,7 +202,7 @@ def read_serial_data2(command, port, baud, time, min_len):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.5) as ser:
             ret = read_serialport_data2(ser, command, time, min_len)
-            if not ret is False:
+            if False is not ret:
                 return ret
         return False
 
