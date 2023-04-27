@@ -4,7 +4,7 @@ from typing import Union
 
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
-from threading import Thread
+# from threading import Thread  ## removed with https://github.com/Louisvdw/dbus-serialbattery/pull/582
 import sys
 
 if sys.version_info.major == 2:
@@ -104,7 +104,7 @@ def main():
         This prevent problems when using the driver only with a serial connection
         """
         if port == "Jkbms_Ble":
-            from jkbms_ble import Jkbms_Ble
+            from jkbms_ble import Jkbms_Ble  # noqa: F401 (ignore flake "imported but unused" error)
 
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
