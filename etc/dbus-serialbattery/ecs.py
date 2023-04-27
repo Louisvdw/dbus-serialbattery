@@ -52,7 +52,9 @@ class Ecs(Battery):
 
     def find_LiPro_cells(self):
         # test for LiPro cell devices
-        for cell_address in range(utils.LIPRO_START_ADDRESS, utils.LIPRO_END_ADDRESS + 1):
+        for cell_address in range(
+            utils.LIPRO_START_ADDRESS, utils.LIPRO_END_ADDRESS + 1
+        ):
             try:
                 mbdev = minimalmodbus.Instrument(self.port, cell_address)
                 mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
