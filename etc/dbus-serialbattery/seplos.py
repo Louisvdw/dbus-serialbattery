@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import serial
+
 from battery import Protection, Battery, Cell
-from utils import *
+from utils import logger, MAX_BATTERY_CHARGE_CURRENT, MAX_BATTERY_DISCHARGE_CURRENT, MAX_CELL_VOLTAGE, MIN_CELL_VOLTAGE
 
 
 def int_from_hex_ascii(to_decode, signed=False):
