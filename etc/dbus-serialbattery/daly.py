@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import open_serial_port, read_serialport_data, logger
+import utils
+from struct import unpack_from
 
 
 class Daly(Battery):
@@ -20,7 +21,7 @@ class Daly(Battery):
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
-    cellvolt_buffer = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x82\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    cellvolt_buffer = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x82"
     command_soc = b"\x90"
     command_minmax_cell_volts = b"\x91"
     command_minmax_temp = b"\x92"
@@ -31,27 +32,32 @@ class Daly(Battery):
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
     BATTERYTYPE = "Daly"
-    LENGTH_CHECK = 4
+    LENGTH_CHECK = 1
     LENGTH_POS = 3
     CURRENT_ZERO_CONSTANT = 30000
     TEMP_ZERO_CONSTANT = 40
 
     def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
         result = False
         try:
             ser = open_serial_port(self.port, self.baud_rate)
             if ser is not None:
                 result = self.read_status_data(ser)
                 ser.close()
-        except:
-            pass
+
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
     def get_settings(self):
-        self.capacity = BATTERY_CAPACITY
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.capacity = utils.BATTERY_CAPACITY
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
@@ -95,8 +101,8 @@ class Daly(Battery):
             self.cycles,
         ) = unpack_from(">bb??bhx", status_data)
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
@@ -104,8 +110,8 @@ class Daly(Battery):
 
     def read_soc_data(self, ser):
         # Ensure data received is valid
-        crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
-        crntMaxValid = MAX_BATTERY_CHARGE_CURRENT * 1.3
+        crntMinValid = -(utils.MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
+        crntMaxValid = utils.MAX_BATTERY_CHARGE_CURRENT * 1.3
         triesValid = 2
         while triesValid > 0:
             soc_data = self.read_serial_data_daly(ser, self.command_soc)
@@ -117,7 +123,7 @@ class Daly(Battery):
             current = (
                 (current - self.CURRENT_ZERO_CONSTANT)
                 / -10
-                * INVERT_CURRENT_MEASUREMENT
+                * utils.INVERT_CURRENT_MEASUREMENT
             )
             if crntMinValid < current < crntMaxValid:
                 self.voltage = voltage / 10
@@ -246,20 +252,23 @@ class Daly(Battery):
             buffer[1] = self.command_address[0]  # Always serial 40 or 80
             buffer[2] = self.command_cell_volts[0]
 
-            maxFrame = int(self.cell_count / 3) + 1
+            if (int(self.cell_count) % 3) == 0:
+                maxFrame = int(self.cell_count / 3)
+            else:
+                maxFrame = int(self.cell_count / 3) + 1
             lenFixed = (
-                maxFrame * 12
-            )  # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved
+                maxFrame * 13
+            )  # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved + chksum
 
             cells_volts_data = read_serialport_data(
-                ser, buffer, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed
+                ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
                 logger.warning("read_cells_volts")
                 return False
 
             frameCell = [0, 0, 0]
-            lowMin = MIN_CELL_VOLTAGE / 2
+            lowMin = utils.MIN_CELL_VOLTAGE / 2
             frame = 0
             bufIdx = 0
 
@@ -269,14 +278,24 @@ class Daly(Battery):
                 for idx in range(self.cell_count):
                     self.cells.append(Cell(True))
 
+            # logger.warning("data " + bytes(cells_volts_data).hex())
+
             while (
                 bufIdx < len(cells_volts_data) - 4
             ):  # we at least need 4 bytes to extract the identifiers
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
-                    frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from(
-                        ">Bhhh", cells_volts_data, bufIdx + 4
-                    )
+                    (
+                        frame,
+                        frameCell[0],
+                        frameCell[1],
+                        frameCell[2],
+                        _,
+                        chk,
+                    ) = unpack_from(">BhhhBB", cells_volts_data, bufIdx + 4)
+                    if sum(cells_volts_data[bufIdx : bufIdx + 12]) & 0xFF != chk:
+                        logger.warning("bad cell voltages checksum")
+                        return False
                     for idx in range(3):
                         cellnum = (
                             (frame - 1) * 3
@@ -287,9 +306,9 @@ class Daly(Battery):
                         self.cells[cellnum].voltage = (
                             None if cellVoltage < lowMin else cellVoltage
                         )
-                    bufIdx += 10  # BBBBBhhh -> 11 byte
-                bufIdx += 1
-
+                    bufIdx += 13  # BBBBBhhhBB -> 13 byte
+                else:
+                    logger.warning("bad cell voltages header")
         return True
 
     def read_cell_voltage_range_data(self, ser):
@@ -359,7 +378,7 @@ class Daly(Battery):
         start, flag, command_ret, length = unpack_from("BBBB", data)
         checksum = sum(data[:-1]) & 0xFF
 
-        if start == 165 and length == 8 and checksum == data[12]:
+        if start == 165 and length == 8 and len(data) > 12 and checksum == data[12]:
             return data[4 : length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
