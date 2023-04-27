@@ -498,22 +498,14 @@ class DbusHelper:
             except:
                 pass
 
-        # Update TimeToSoC
+        # Update TimeToGo and/or TimeToSoC
         try:
             if (
                 self.battery.capacity is not None
                 and (TIME_TO_GO_ENABLE or len(TIME_TO_SOC_POINTS) > 0)
                 and (
-                    (
-                        # update only once in same second
-                        int(time()) != self.battery.time_to_soc_update
-                        and
-                        # update only every x seconds
-                        int(time()) % TIME_TO_SOC_RECALCULATE_EVERY == 0
-                    )
-                    or
-                    # update on first run
-                    self.battery.time_to_soc_update == 0
+                    int(time()) - self.battery.time_to_soc_update
+                    >= TIME_TO_SOC_RECALCULATE_EVERY
                 )
             ):
                 self.battery.time_to_soc_update = int(time())
