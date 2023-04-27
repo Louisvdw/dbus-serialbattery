@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from utils import logger
 import serial
 from time import sleep
 
@@ -71,8 +70,8 @@ class HLPdataBMS4S(Battery):
         if ix > 0:
             self.hardware_version = s1[ix:len(s1)-1]
             self.version = self.hardware_version
-            self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-            self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+            self.max_battery_charge_current = 1000
+            self.max_battery_discharge_current = 1000
             self.poll_interval = 10000
             self.control_discharge_current = 1000
             self.control_charge_current = 1000
