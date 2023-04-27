@@ -151,6 +151,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# VS Code
+.vscode/
+
 # Custom for this repo
 venus-data.tar.gz
 BMS-trials

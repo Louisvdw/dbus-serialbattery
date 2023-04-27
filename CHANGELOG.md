@@ -2,58 +2,60 @@
 
 ## v1.0.0-jkbms_ble
 
-* Added: Balancing status for JKBMS
-* Added: Balancing switch status for JKBMS
-* Added: Balancing switch status to the GUI -> SerialBattery -> IO
-* Added: Charge Mode display
-* Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2)
-* Added: Create empty `config.ini` for easier user usage
-* Added: Cronjob to restart Bluetooth service every 12 hours
-* Added: Driver uninstall script
-* Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469
-* Added: HighInternalTemperature alarm (MOSFET) for JKBMS
-* Added: Install needed components automatically after a Venus OS upgrade
-* Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440
-* Added: JKBMS BLE - Balancing switch status
-* Added: JKBMS BLE - Capacity
-* Added: JKBMS BLE - Cell imbalance alert
-* Added: JKBMS BLE - Charging switch status
-* Added: JKBMS BLE - Discharging switch status
-* Added: JKBMS BLE - MOS temperature
-* Added: JKBMS BLE - Show if balancing is active and which cells are balancing
-* Added: Post install notes
-* Added: Script to install directly from repository
-* Added: Show charge mode (absorption, bulk, ...) in Parameters page
-* Added: Show charge/discharge limitation reason
-* Added: Show specific TimeToSoC points in GUI, if 0%, 10%, 20%, 80%, 90% and/or 100% are selected
-* Added: Show TimeToGo in GUI only, if enabled
+* Added: Balancing status for JKBMS by @mr-manuel
+* Added: Balancing switch status for JKBMS by @mr-manuel
+* Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
+* Added: Charge Mode display by @mr-manuel
+* Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
+* Added: Config file by @ppuetsch
+* Added: Create empty `config.ini` for easier user usage by @mr-manuel
+* Added: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
+* Added: Driver uninstall script by @mr-manuel
+* Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
+* Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
+* Added: Install needed components automatically after a Venus OS upgrade by @mr-manuel
+* Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @mr-manuel
+* Added: JKBMS BLE - Balancing switch status by @mr-manuel
+* Added: JKBMS BLE - Capacity by @mr-manuel
+* Added: JKBMS BLE - Cell imbalance alert by @mr-manuel
+* Added: JKBMS BLE - Charging switch status by @mr-manuel
+* Added: JKBMS BLE - Discharging switch status by @mr-manuel
+* Added: JKBMS BLE - MOS temperature by @mr-manuel
+* Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
+* Added: Post install notes by @mr-manuel
+* Added: Script to install directly from repository by @mr-manuel
+* Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
+* Added: Show charge/discharge limitation reason by @mr-manuel
+* Added: Show specific TimeToSoC points in GUI, if 0%, 10%, 20%, 80%, 90% and/or 100% are selected by @mr-manuel
+* Added: Show TimeToGo in GUI only, if enabled by @mr-manuel
 * Added: Support for HLPdata BMS4S https://github.com/Louisvdw/dbus-serialbattery/pull/505 by @peterohman
 * Added: Support for Seplos BMS https://github.com/Louisvdw/dbus-serialbattery/pull/530 by @wollew
-* Added: Temperature name for temperature sensor 1 & 2. This allows to see which sensor is low and high (e.g. battery and cable)
-* Changed: `reinstalllocal.sh` to recreate `/data/conf/serial-starter.d` if deleted by `disabledriver.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository
-* Changed: Added QML to `restoregui.sh`
-* Changed: Bash output
-* Changed: Default config file
-  * Added missing descriptions to make it much clearer to understand
-  * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942
-  * Changed TimeToSoc default value `TIME_TO_SOC_VALUE_TYPE` from `Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"` to `1 Seconds`
-  * Changed TimeToSoc description
-  * Changed value positions, added groups and much clearer descriptions
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351
+* Added: Temperature name for temperature sensor 1 & 2. This allows to see which sensor is low and high (e.g. battery and cable) by @mr-manuel
+* Changed: `reinstalllocal.sh` to recreate `/data/conf/serial-starter.d` if deleted by `disabledriver.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
+* Changed: Added QML to `restoregui.sh` by @mr-manuel
+* Changed: Bash output by @mr-manuel
+* Changed: Default config file by @mr-manuel
+  * Added missing descriptions to make it much clearer to understand by @mr-manuel
+  * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel
+  * Changed TimeToSoc default value `TIME_TO_SOC_VALUE_TYPE` from `Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"` to `1 Seconds` by @mr-manuel
+  * Changed TimeToSoc description by @mr-manuel
+  * Changed value positions, added groups and much clearer descriptions by @mr-manuel
+* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
+* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
+* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/397 by @transistorgit
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/421
-* Changed: Fixed black lint errors
-* Changed: Fixed cell balancing background for cells 17-24
-* Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018
+* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/421 by @mr-manuel
+* Changed: Fixed black lint errors by @mr-manuel
+* Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
+* Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
-* Changed: Logging to get relevant data
-* Changed: Moved ble part to `installble.sh`
-* Changed: Optimized installation scripts
-* Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520
-* Changed: Separate Time-To-Go and Time-To-SoC activation
-* Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS
-* Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY`
-* Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go)
-* Changed: Uninstall also installed Bluetooth modules on uninstall.
+* Changed: Logging to get relevant data by @mr-manuel
+* Changed: Moved ble part to `installble.sh` by @mr-manuel
+* Changed: Optimized installation scripts by @mr-manuel
+* Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
+* Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
+* Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
+* Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS by @mr-manuel
+* Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY` by @mr-manuel
+* Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go) by @mr-manuel
+* Changed: Uninstall also installed Bluetooth modules on uninstall. by @mr-manuel
