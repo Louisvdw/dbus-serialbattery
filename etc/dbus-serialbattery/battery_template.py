@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from battery import Protection, Battery, Cell
-from utils import logger, read_serial_data, MIN_CELL_VOLTAGE, MAX_CELL_VOLTAGE, MAX_BATTERY_DISCHARGE_CURRENT, MAX_BATTERY_CHARGE_CURRENT
-from struct import unpack_from
+from utils import *
+from struct import *
 
 
 class BatteryTemplate(Battery):
