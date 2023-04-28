@@ -22,18 +22,18 @@ import utils
 from battery import Battery
 
 # import battery classes
-from ant import Ant
-from daly import Daly
-from ecs import Ecs
-from hlpdatabms4s import HLPdataBMS4S
-from jkbms import Jkbms
-from lifepower import Lifepower
-from lltjbd import LltJbd
-from renogy import Renogy
-from seplos import Seplos
+from bms.ant import Ant
+from bms.daly import Daly
+from bms.ecs import Ecs
+from bms.hlpdatabms4s import HLPdataBMS4S
+from bms.jkbms import Jkbms
+from bms.lifepower import Lifepower
+from bms.lltjbd import LltJbd
+from bms.renogy import Renogy
+from bms.seplos import Seplos
 
-# from mnb import MNB
-# from sinowealth import Sinowealth
+# from bms.mnb import MNB
+# from bms.sinowealth import Sinowealth
 
 supported_bms_types = [
     {"bms": Ant, "baud": 19200},
@@ -47,6 +47,7 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
+    # {"bms": MNB, "baud": 9600},
     # {"bms": Sinowealth},
 ]
 expected_bms_types = [

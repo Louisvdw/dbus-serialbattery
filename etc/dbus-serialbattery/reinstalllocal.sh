@@ -13,7 +13,9 @@ rm -rf /opt/victronenergy/service/$DRIVERNAME
 rm -rf /opt/victronenergy/service-templates/$DRIVERNAME
 rm -rf /opt/victronenergy/$DRIVERNAME
 mkdir /opt/victronenergy/$DRIVERNAME
+mkdir /opt/victronenergy/$DRIVERNAME/bms
 cp -f /data/etc/$DRIVERNAME/* /opt/victronenergy/$DRIVERNAME &>/dev/null
+cp -f /data/etc/$DRIVERNAME/bms/* /opt/victronenergy/$DRIVERNAME/bms &>/dev/null
 cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVERNAME
 sh /data/etc/$DRIVERNAME/installqml.sh
 
