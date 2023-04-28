@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+# remove Sinowealth by default as it causes other issues but can be enabled manually
+# https://github.com/Louisvdw/dbus-serialbattery/commit/7aab4c850a5c8d9c205efefc155fe62bb527da8e
+
 from battery import Battery, Cell
 from utils import kelvin_to_celsius, read_serial_data, logger
 import utils
