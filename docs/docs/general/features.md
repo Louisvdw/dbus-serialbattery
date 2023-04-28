@@ -119,22 +119,22 @@ Detailed info can be found here: https://github.com/Louisvdw/dbus-serialbattery/
 If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` then the CVL changes to `FLOAT_CELL_VOLTAGE` \* `cell count`. Max voltage could be reached again if the SoC gets under `SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT`.
 
 ## BMS feature comparison
-| Feature | JBD/LLT | Daly | ANT | MNB | JKBMS | RENOGY | TIAN/LIFE Power | ECS |
-| ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Voltage | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Current | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Power | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| State Of Charge | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Battery temperature | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Mosfet temperature | Yes | No | No | No | Yes | No | No | No |
-| Consumed Ah | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Time-to-go | Calc | Calc | Calc | Calc | Calc | Calc | Calc | Calc |
-| Min/max cell voltages | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No |
-| Min/max temperature | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Installed capacity | Yes | No | Yes | Yes | Yes | Yes | Yes | Yes |
-| Available capacity | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Cell details | ? | ? | ? | ? | Yes | ? | ? | ? |
-| Raise alarms from the BMS | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes (no cells yet) |
-| History of charge cycles | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No |
-| Charge current control management (CCCM) | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Set battery parameters (DVCC) | Fixed | Fixed | Fixed | Fixed | Fixed | Fixed | Fixed | Yes |
+| Feature | JBD/LLT | Daly | ANT | MNB | JKBMS | RENOGY | TIAN/LIFE Power | ECS | Seplos |
+| ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Voltage | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | 
+| Current | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | 
+| Power | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| State Of Charge | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Battery temperature | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Mosfet temperature | Yes | No | No | No | Yes | No | No | No | No |
+| Consumed Ah | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Time-to-go | Calc | Calc | Calc | Calc | Calc | Calc | Calc | Calc | Yes |
+| Min/max cell voltages | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | Yes |
+| Min/max temperature | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Installed capacity | Yes | No | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Available capacity | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Cell details | ? | ? | ? | ? | Yes | ? | ? | ? | Yes |
+| Raise alarms from the BMS | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes (no cells yet) | Yes |
+| History of charge cycles | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | Yes |
+| Charge current control management (CCCM) | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Set battery parameters (DVCC) | Fixed | Fixed | Fixed | Fixed | Fixed | Fixed | Fixed | Yes | Yes |
