@@ -169,7 +169,7 @@ Balancing works when ever 1 cell go above the balance threshold, so you are tryi
 
 
 ## Why is the battery current inverted?
-Some Daly BMS send the current as inverted value. This can be correted by setting `INVERT_CURRENT_MEASUREMENT` to `-1`.
+Some Daly BMS send the current as inverted value. This can be corrected by setting `INVERT_CURRENT_MEASUREMENT` to `-1` in the `utils.py` or `config.ini`. See [How to edit `utils.py` or `config.ini`](../general/install#how-to-edit-utilspy-or-configini).
 
 
 ## What can I do, if the BMS communication is unstable?

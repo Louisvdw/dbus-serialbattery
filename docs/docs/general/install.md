@@ -19,14 +19,13 @@ toc_max_heading_level: 4
 
 The driver currently implement some hard limits. Make sure your device is set up correctly and can handle these limits before you install.
 
- * `50A` charge (to lower this see [How to change the default limits](/dbus-serialbattery/general/install#how-to-change-the-default-limits))
- * `60A` discharge (to lower this see [How to change the default limits](/dbus-serialbattery/general/install#how-to-change-the-default-limits))
+ * `50A` charge (to change this see [How to change the default limits](#how-to-change-the-default-limits))
+ * `60A` discharge (to change this see [How to change the default limits](#how-to-change-the-default-limits))
  * `2.9V` min cell voltage
  * `3.45V` max cell voltage
 
 The cell voltages is used along with the cell count to set the battery voltage (e.g. for 16cells your battery min voltage will be `3.1 * 16 = 49.6V` and max coltage `3.45 * 16 = 55.2V`
 
-~~If you have other custom scripts installed, installing the driver might break that if they require /data/rc.local to work.~~
 
 ## Settings for your BMS/battery
 
@@ -135,7 +134,7 @@ MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
-If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](/dbus-serialbattery/troubleshoot/faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../troubleshoot/faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
 ### Settings location/path
 
@@ -178,7 +177,7 @@ You can edit the file in a plain text editor on you PC like Notepad (Windows) or
 
 Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py` or `/data/etc/dbus-serialbattery/config.ini`.
 
-⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](/dbus-serialbattery/troubleshoot/faq#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
+⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../troubleshoot/faq#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
 
 > Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
 
