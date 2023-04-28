@@ -7,10 +7,10 @@
 
 from battery import Protection, Battery, Cell
 from utils import logger
-from mnb_utils_max17853 import data_cycle, init_max
+from bms.mnb_utils_max17853 import data_cycle, init_max
 
 # from struct import *
-# from mnb_test_max17853 import *  # use test for testing
+# from bms.mnb_test_max17853 import *  # use test for testing
 
 
 class MNBProtection(Protection):

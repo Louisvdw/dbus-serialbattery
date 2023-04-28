@@ -22,18 +22,18 @@ import utils
 from battery import Battery
 
 # import battery classes
-from ant import Ant
-from daly import Daly
-from ecs import Ecs
-from hlpdatabms4s import HLPdataBMS4S
-from jkbms import Jkbms
-from lifepower import Lifepower
-from lltjbd import LltJbd
-from renogy import Renogy
-from seplos import Seplos
+from bms.ant import Ant
+from bms.daly import Daly
+from bms.ecs import Ecs
+from bms.hlpdatabms4s import HLPdataBMS4S
+from bms.jkbms import Jkbms
+from bms.lifepower import Lifepower
+from bms.lltjbd import LltJbd
+from bms.renogy import Renogy
+from bms.seplos import Seplos
 
-# from mnb import MNB
-# from sinowealth import Sinowealth
+# from bms.mnb import MNB
+# from bms.sinowealth import Sinowealth
 
 supported_bms_types = [
     {"bms": Ant, "baud": 19200},
@@ -108,7 +108,7 @@ def main():
         """
         if port == "Jkbms_Ble":
             # noqa: F401 --> ignore flake "imported but unused" error
-            from jkbms_ble import Jkbms_Ble  # noqa: F401
+            from bms.jkbms_ble import Jkbms_Ble  # noqa: F401
 
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
