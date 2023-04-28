@@ -5,7 +5,7 @@ from typing import Union
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 
-# from threading import Thread
+# from threading import Thread  ## removed with https://github.com/Louisvdw/dbus-serialbattery/pull/582
 import sys
 
 if sys.version_info.major == 2:
