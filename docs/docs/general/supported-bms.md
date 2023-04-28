@@ -10,12 +10,17 @@ sidebar_position: 3
 
 ## &bull; ECS GreenMeter with LiPro
 
+## &bull; HLPdataBMS4S
+
 ## &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS
 
 ## &bull; MNB spi BMS
 Disabled by default as it requires additional manual steps to install.
 
 ## &bull; Renogy BMS
+
+## &bull; Seplos
+So far only tested on version `16E`.
 
 ## &bull; Smart BMS
 Including:
@@ -35,9 +40,6 @@ Including:
 ![Daly app](../../screenshots/bms-daly.jpg)
 
 ## &bull; Tian Power (LifePower / Revov)
-
-## &bull; Seplos 
-so far only tested on version 16E
 
 ## Planned support
 
