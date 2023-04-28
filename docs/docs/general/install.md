@@ -137,21 +137,26 @@ MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
 If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](/dbus-serialbattery/troubleshoot/faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
-### Driver version `<= v0.14.3`
+### Settings location/path
+
+💡 After updating the settings reboot the device or run `/data/etc/dbus-serialbattery/reinstalllocal.sh` to apply the changes.
+
+#### Driver version `<= v0.14.3`
 Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
 
-### Driver version `> v0.14.3`
-Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/ba5a09df4600cd3d23ad409b06ab7a77e6543d66/etc/dbus-serialbattery/config.default.ini).
+#### Driver version `> v0.14.3`
+Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini).
 
 ### How to edit `utils.py` or `config.ini`
 
-There are 2 ways to edit it.
+There are two ways to edit the files. You can edit them:
 
-You can edit it inside the GX while in SSH terminal or edit it on your PC and then only copy the `utils.py` or `config.ini` over to the GX.
+1. Inside the GX device/Raspberry Pi over SSH
+2. On your PC and then copy only the `utils.py` or `config.ini` over to the GX device/Raspberry Pi
 
-#### SSH edit using Nano editor
+#### SSH edit using Nano editor (recommended)
 
-Log into your GX using SSH and run
+Log into your GX device/Raspberry Pi using SSH and run
 
 ```bash
 nano /data/etc/dbus-serialbattery/utils.py
@@ -165,13 +170,15 @@ nano /data/etc/dbus-serialbattery/config.ini
 
 You can use the arrow keys to scroll down and edit the values you need.
 
-User Ctrl-O to save and Ctrl-X to exit the editor, and reboot for the settings to apply.
+Use `Ctrl + O` to save and `Ctrl + X` to exit the editor.
 
-#### Copy edited file from PC to GX device
+#### Copy edited file from PC to GX device/Raspberry Pi
 
-You can edit the file in a plain text editor on you PC like notepad on Windows. Then you need a program that can do SFTP like FileZilla.
+You can edit the file in a plain text editor on you PC like Notepad (Windows) or TextEdit (macOS). Then you need a program that can do SFTP like [FileZilla](https://filezilla-project.org/download.php?show_all=1) (Windows/macOS/Linux), [WinSCP](https://winscp.net/eng/downloads.php) (Windows) or [Cyberduck](https://cyberduck.io/download/) (macOS).
 
 Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py` or `/data/etc/dbus-serialbattery/config.ini`.
+
+⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](/dbus-serialbattery/troubleshoot/faq#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
 
 > Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
 

@@ -204,3 +204,18 @@ reboot
 
 ## How many USB to serial adapters can I connect?
 It seems that the Victron GX device has a limit of maximum 8 USB to serial adapters. See [Serial battery driver not found if other VE.direct-USB devices are present](https://github.com/Louisvdw/dbus-serialbattery/issues/422)
+
+
+
+## `$'\r': command not found` or `syntax error: unexpected end of file`
+
+This indicates, that the line endlings were changed during the upload from `LF` to `CRLF`. Run this commands to repair the files:
+
+```bash
+sed -i 's/\r//' /data/etc/dbus-serialbattery/*.sh
+sed -i 's/\r//' /data/etc/dbus-serialbattery/*.py
+sed -i 's/\r//' /data/etc/dbus-serialbattery/service/run
+sed -i 's/\r//' /data/etc/dbus-serialbattery/service/log/run
+```
+
+Now reboot the device. If this doesn't help, then download/unpack and reinstall the driver again.
