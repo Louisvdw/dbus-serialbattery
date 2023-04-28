@@ -5,6 +5,7 @@
 * Added: Balancing status for JKBMS by @mr-manuel
 * Added: Balancing switch status for JKBMS by @mr-manuel
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
+* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
@@ -50,7 +51,8 @@
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
 * Changed: Logging to get relevant data by @mr-manuel
-* Changed: Moved ble part to `installble.sh` by @mr-manuel
+* Changed: Moved Bluetooth part to `installble.sh` by @mr-manuel
+* Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Optimized installation scripts by @mr-manuel
 * Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
 * Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel

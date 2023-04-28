@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
 from utils import logger
-from jkbms_brn import JkBmsBle
+from bms.jkbms_brn import JkBmsBle
 from bleak import BleakScanner, BleakError
 import asyncio
 import time

@@ -11,6 +11,10 @@ rm -f /data/conf/serial-starter.d/dbus-serialbattery.conf
 rm -rf /opt/victronenergy/service/dbus-serialbattery
 rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
 rm -rf /opt/victronenergy/dbus-serialbattery
+rm -rf /service/dbus-blebattery.*
+
+# remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
+# can be removed on second release (>1.0.0)
 rm -rf /service/dbus-blebattery-*
 
 # kill if running

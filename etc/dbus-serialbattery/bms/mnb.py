@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from struct import *
 
-# from test_max17853 import *#{these two lines are mutually}
-# from util_max17853 import *  # {exclusive. use test for testing}
+# disable MNB battery by default
+# https://github.com/Louisvdw/dbus-serialbattery/commit/65241cbff36feb861ff43dbbcfb2b495f14a01ce
+# remove duplicate MNB lines
+# https://github.com/Louisvdw/dbus-serialbattery/commit/23afec33c2fd87fd4d4c53516f0a25f290643c82
+
+from battery import Protection, Battery, Cell
+from utils import logger
+from bms.mnb_utils_max17853 import data_cycle, init_max
+
+# from struct import *
+# from bms.mnb_test_max17853 import *  # use test for testing
 
 
 class MNBProtection(Protection):
@@ -90,8 +97,9 @@ class MNB(Battery):
         result = False
         try:
             result = self.read_status_data()
-        except:
-            pass
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
