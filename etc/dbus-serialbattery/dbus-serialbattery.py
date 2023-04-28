@@ -32,6 +32,7 @@ from lltjbd import LltJbd
 from renogy import Renogy
 from seplos import Seplos
 
+# from mnb import MNB
 # from sinowealth import Sinowealth
 
 supported_bms_types = [
