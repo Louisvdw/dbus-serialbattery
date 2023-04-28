@@ -47,6 +47,7 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
+    # {"bms": MNB, "baud": 9600},
     # {"bms": Sinowealth},
 ]
 expected_bms_types = [

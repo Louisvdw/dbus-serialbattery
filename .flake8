@@ -1,13 +1,13 @@
 [flake8]
 max-line-length = 120
 exclude =
-          ./etc/dbus-serialbattery/battery_template.py,
+          ./etc/dbus-serialbattery/bms/battery_template.py,
+          ./etc/dbus-serialbattery/bms/mnb_test_max17853.py,
+          ./etc/dbus-serialbattery/bms/mnb_utils_max17853.py,
+          ./etc/dbus-serialbattery/bms/revov.py,
           #./etc/dbus-serialbattery/dbus-serialbattery.py,
           ./etc/dbus-serialbattery/dbushelper.py,
           ./etc/dbus-serialbattery/minimalmodbus.py,
-          ./etc/dbus-serialbattery/mnb_test_max17853.py,
-          ./etc/dbus-serialbattery/mnb_utils_max17853.py,
-          ./etc/dbus-serialbattery/revov.py,
           ./velib_python
           venv
 extend-ignore:
