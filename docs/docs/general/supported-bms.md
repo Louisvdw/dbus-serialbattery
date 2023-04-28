@@ -36,6 +36,9 @@ Including:
 
 ## &bull; Tian Power (LifePower / Revov)
 
+## &bull; Seplos 
+so far only tested on version 16E
+
 ## Planned support
 
 You can view the current [BMS requests](https://github.com/Louisvdw/dbus-serialbattery/discussions/categories/new-bms-requests) to see which BMS support is requested and vote for the BMS you want to be supported.
