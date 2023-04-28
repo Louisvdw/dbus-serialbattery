@@ -140,9 +140,9 @@ Check your cable connections, if the log file shows `ERROR: No reply - returning
 
 The RX/TX lights should both flash as data is transfered. If only one flashes then your RX/TX might be swapped.
 
-## [FAQ (Frequently Asked Questions)](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ)
+## FAQ (Frequently Asked Questions)
 
-Check the [FAQ (Frequently Asked Questions)](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ) for answers
+Check the [FAQ (Frequently Asked Questions)](../troubleshoot/FAQ) for answers
 
 ## Alarm logs (VRM Portal)
 

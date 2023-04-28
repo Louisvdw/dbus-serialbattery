@@ -48,7 +48,7 @@ You can view the current [BMS requests](https://github.com/Louisvdw/dbus-serialb
 ## Add/Request new BMS
 There are two possibilities to add a new BMS.
 
-1. Fork the repository and use the [`battery_template.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/battery_template.py) as template to add a new battery. As soon as the BMS works you can open a PR (pull request) to merge it.
+1. Fork the repository and use the [`battery_template.py`](https://github.com/mr-manuel/venus-os_dbus-serialbattery/blob/master/etc/dbus-serialbattery/bms/battery_template.py) as template to add a new battery. As soon as the BMS works you can open a PR (pull request) to merge it.
 
 2. Start a [new discussion](https://github.com/Louisvdw/dbus-serialbattery/discussions/new?category=new-bms-requests) in the `New BMS request` category. Please add also the protocol documentation which you can request from the manufacturer/seller. The more upvotes the BMS request has, the higher is the priority.
 
