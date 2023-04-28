@@ -29,7 +29,7 @@ install_service() {
     echo "#!/bin/sh" > /service/dbus-blebattery-$1/run
     echo "exec 2>&1" >> /service/dbus-blebattery-$1/run
     echo "bluetoothctl disconnect $3" >> /service/dbus-blebattery-$1/run
-    echo "python /data/etc/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery-$1/run
+    echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery-$1/run
     chmod 755 /service/dbus-blebattery-$1/run
 }
 
