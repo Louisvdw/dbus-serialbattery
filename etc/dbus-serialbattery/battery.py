@@ -99,6 +99,9 @@ class Battery(ABC):
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
 
+        # used to identify a BMS when multiple BMS are connected - planned for future use
+        self.unique_identifier = None
+
     @abstractmethod
     def test_connection(self) -> bool:
         """

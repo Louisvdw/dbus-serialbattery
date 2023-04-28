@@ -4,7 +4,8 @@
 
 * Added: Balancing status for JKBMS by @mr-manuel
 * Added: Balancing switch status for JKBMS by @mr-manuel
-* Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
+* Added: Balancing switch status to the GUI -> SerialBattery -> IO
+* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
