@@ -20,17 +20,24 @@ if [ ! -f $filename ]; then
 fi
 grep -qxF "sh /data/etc/dbus-serialbattery/installble.sh" $filename || echo "sh /data/etc/dbus-serialbattery/installble.sh" >> $filename
 
-install_service() {
-    mkdir -p /service/dbus-blebattery-$1/log
-    echo "#!/bin/sh" > /service/dbus-blebattery-$1/log/run
-    echo "exec multilog t s25000 n4 /var/log/dbus-blebattery-$1" >> /service/dbus-blebattery-$1/log/run
-    chmod 755 /service/dbus-blebattery-$1/log/run
+# kill if running, needed when an adapter changes
+pkill -f "python .*/dbus-serialbattery.py"
 
-    echo "#!/bin/sh" > /service/dbus-blebattery-$1/run
-    echo "exec 2>&1" >> /service/dbus-blebattery-$1/run
-    echo "bluetoothctl disconnect $3" >> /service/dbus-blebattery-$1/run
-    echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery-$1/run
-    chmod 755 /service/dbus-blebattery-$1/run
+# remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
+# can be removed on second release (>1.0.0)
+rm -rf /service/dbus-blebattery-*
+
+install_service() {
+    mkdir -p /service/dbus-blebattery.$1/log
+    echo "#!/bin/sh" > /service/dbus-blebattery.$1/log/run
+    echo "exec multilog t s25000 n4 /var/log/dbus-blebattery.$1" >> /service/dbus-blebattery.$1/log/run
+    chmod 755 /service/dbus-blebattery.$1/log/run
+
+    echo "#!/bin/sh" > /service/dbus-blebattery.$1/run
+    echo "exec 2>&1" >> /service/dbus-blebattery.$1/run
+    echo "bluetoothctl disconnect $3" >> /service/dbus-blebattery.$1/run
+    echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery.$1/run
+    chmod 755 /service/dbus-blebattery.$1/run
 }
 
 
@@ -38,5 +45,6 @@ install_service() {
 
 ## Uncomment for each adapter here, increase the number for each adapter/service
 
+install_service 0 Jkbms_Ble C8:47:8C:E8:12:04
 # install_service 0 Jkbms_Ble C8:47:8C:12:34:56
 # install_service 1 Jkbms_Ble C8:47:8C:78:9A:BC
