@@ -308,6 +308,7 @@ class Daly(Battery):
                         )
                     bufIdx += 13  # BBBBBhhhBB -> 13 byte
                 else:
+                    bufIdx += 1   # step through buffer to find valid start
                     logger.warning("bad cell voltages header")
         return True
 
