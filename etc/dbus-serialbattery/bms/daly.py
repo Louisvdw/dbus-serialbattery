@@ -31,6 +31,7 @@ class Daly(Battery):
     command_temp = b"\x96"
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
+    command_rated_params = b"\x50"
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
     LENGTH_POS = 3
@@ -56,6 +57,9 @@ class Daly(Battery):
 
     def get_settings(self):
         self.capacity = utils.BATTERY_CAPACITY
+        with open_serial_port(self.port, self.baud_rate) as ser:
+            self.read_capacity(ser)
+
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
@@ -373,6 +377,17 @@ class Daly(Battery):
             capacity_remain,
         ) = unpack_from(">b??BL", fed_data)
         self.capacity_remain = capacity_remain / 1000
+        return True
+
+    def read_capacity(self, ser):
+        capa_data = self.read_serial_data_daly(ser, self.command_rated_params)
+        # check if connection success
+        if capa_data is False:
+            logger.warning("read_capacity")
+            return False
+
+        (capacity, cell_volt) = unpack_from(">LL", capa_data)
+        self.capacity = capacity / 1000
         return True
 
     def generate_command(self, command):
