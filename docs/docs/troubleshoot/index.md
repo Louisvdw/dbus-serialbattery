@@ -13,7 +13,7 @@ toc_max_heading_level: 4
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
-Check the log files on your GX device/Raspberry Pi.
+Check the log files on your GX device/Raspberry Pi. Connect to your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
 
 ### Serial BMS connection

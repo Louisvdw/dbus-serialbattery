@@ -69,7 +69,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
-1. Log into your Venus OS device using a SSH client like Putty or bash.
+1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
 2. Run these commands to install or update to the latest release version.
 
@@ -86,7 +86,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
-1. Log into your Venus OS device using a SSH client like Putty or bash.
+1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
 2. Download [the version you need](https://github.com/Louisvdw/dbus-serialbattery/releases) using the command below replacing the URL with the link to the `venus-data.tar.gz` version you need.
 
