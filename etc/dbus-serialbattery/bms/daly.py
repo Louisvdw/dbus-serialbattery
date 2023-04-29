@@ -372,10 +372,7 @@ class Daly(Battery):
             logger.warning("read_capacity")
             return False
 
-        (
-            capacity,
-            cell_volt
-        ) = unpack_from(">LL", capa_data)
+        (capacity, cell_volt) = unpack_from(">LL", capa_data)
         self.capacity = capacity / 1000
         return True
 
