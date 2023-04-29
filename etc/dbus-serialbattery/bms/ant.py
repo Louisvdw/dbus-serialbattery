@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+# disable Sinowealth by default as it causes other issues but can be enabled manually
+# https://github.com/Louisvdw/dbus-serialbattery/issues/479
+
 from battery import Battery
 from utils import read_serial_data, logger
 import utils
