@@ -114,10 +114,11 @@ class Daly(Battery):
         crntMaxValid = utils.MAX_BATTERY_CHARGE_CURRENT * 1.3
         triesValid = 2
         while triesValid > 0:
+            triesValid -= 1
             soc_data = self.read_serial_data_daly(ser, self.command_soc)
             # check if connection success
             if soc_data is False:
-                return False
+                continue
 
             voltage, tmp, current, soc = unpack_from(">hhhh", soc_data)
             current = (
@@ -132,8 +133,6 @@ class Daly(Battery):
                 return True
 
             logger.warning("read_soc_data - triesValid " + str(triesValid))
-            triesValid -= 1
-
         return False
 
     def read_alarm_data(self, ser):
