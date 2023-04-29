@@ -1,6 +1,8 @@
 ---
 id: troubleshoot
 title: How to troubleshoot
+sidebar_position: 2
+# Display h2 to h4 headings
 toc_min_heading_level: 2
 toc_max_heading_level: 4
 ---
@@ -67,7 +69,7 @@ ERROR:SerialBattery:ERROR >>> No battery connection at /dev/ttyUSB0
 ### Bluetooth BMS connection
 
 #### `/data/log/dbus-blebattery.*/current`
-When you are using a Bluetooth connection. `*` is the MAC address of your BMS.
+When you are using a Bluetooth connection `*` is the MAC address of your BMS.
 
 **Execute**
 ```bash
@@ -142,7 +144,7 @@ The RX/TX lights should both flash as data is transfered. If only one flashes th
 
 ## FAQ (Frequently Asked Questions)
 
-Check the [FAQ (Frequently Asked Questions)](../troubleshoot/FAQ) for answers
+Check the [FAQ (Frequently Asked Questions)](../faq) for answers
 
 ## Alarm logs (VRM Portal)
 

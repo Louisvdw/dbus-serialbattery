@@ -1,13 +1,13 @@
 ---
 id: install
-title: How to install
+title: How to install, update, disable, enable and uninstall
 sidebar_position: 4
-# Display h2 to h5 headings
+# Display h2 to h4 headings
 toc_min_heading_level: 2
 toc_max_heading_level: 4
 ---
 
-# How to install
+# How to install, update, disable, enable and uninstall
 
 ## 🚨 NB! Before you begin
 
@@ -134,7 +134,7 @@ MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
-If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../troubleshoot/faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
 ### Settings location/path
 
@@ -143,43 +143,61 @@ If you use the cell voltage limits, temperature limits or SoC limits you also ne
 #### Driver version `<= v0.14.3`
 Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
 
-#### Driver version `> v0.14.3`
+#### Driver version `>= v1.0.0`
 Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini).
 
-### How to edit `utils.py` or `config.ini`
+## How to edit `utils.py` or `config.ini`
 
 There are two ways to edit the files. You can edit them:
 
 1. Inside the GX device/Raspberry Pi over SSH
 2. On your PC and then copy only the `utils.py` or `config.ini` over to the GX device/Raspberry Pi
 
-#### SSH edit using Nano editor (recommended)
+### SSH edit using Nano editor (recommended)
 
-Log into your GX device/Raspberry Pi using SSH and run
-
-```bash
-nano /data/etc/dbus-serialbattery/utils.py
-```
-
-or
+Log into your GX device/Raspberry Pi using SSH and run this command. Replace `FILE_NAME` with the file name you want to edit.
 
 ```bash
-nano /data/etc/dbus-serialbattery/config.ini
+nano /data/etc/dbus-serialbattery/FILE_NAME
 ```
 
 You can use the arrow keys to scroll down and edit the values you need.
 
-Use `Ctrl + O` to save and `Ctrl + X` to exit the editor.
+Use `Ctrl + O` (O like Oskar) to save and `Ctrl + X` to exit the editor.
 
-#### Copy edited file from PC to GX device/Raspberry Pi
+### Copy edited file from PC to GX device/Raspberry Pi
 
 You can edit the file in a plain text editor on you PC like Notepad (Windows) or TextEdit (macOS). Then you need a program that can do SFTP like [FileZilla](https://filezilla-project.org/download.php?show_all=1) (Windows/macOS/Linux), [WinSCP](https://winscp.net/eng/downloads.php) (Windows) or [Cyberduck](https://cyberduck.io/download/) (macOS).
 
 Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py` or `/data/etc/dbus-serialbattery/config.ini`.
 
-⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../troubleshoot/faq#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
+⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../faq#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
 
 > Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
+
+## How to enable a disabled BMS
+If your BMS is disabled by default, you have to enable it to get it working.
+
+💡 See also [How to edit `utils.py` or `config.ini`](#how-to-edit-utilspy-or-configini) if you don't know how to edit a file.
+
+#### Driver version `<= v0.14.3`
+Edit `/data/etc/dbus-serialbattery/utils.py` and uncomment (remove the `#` as first line character) your BMS.
+
+E.g.
+
+```python
+#    {"bms" : "Sinowealth"},
+```
+becomes
+
+```python
+    {"bms" : "Sinowealth"},
+```
+
+Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and check, if your BMS is already uncommented (without the `#` as first line character) your BMS.
+
+#### Driver version `>= v1.0.0`
+Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and uncommented (without the `#` as first line character) your BMS twice (`# from ...` and `# {"bms": ...}`).
 
 
 ## Disable the driver

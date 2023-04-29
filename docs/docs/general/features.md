@@ -64,7 +64,7 @@ The limits can be applied in Step or Linear mode.
 * **Linear** will give a gradual change from one limit range to the next
 
 ### CCCM attributes
-You can set CCCM limits for 3 attributes which can be enabled / disabled and adjusted by settings in `utils.py` (driver version `<= v0.14.3`) or `config.ini` (driver version `> v0.14.3`).
+You can set CCCM limits for 3 attributes which can be enabled / disabled and adjusted by settings in `utils.py` (driver version `<= v0.14.3`) or `config.ini` (driver version `>= v1.0.0`).
 The smallest limit from all enabled will apply.
 
 ### Cell voltage
@@ -114,13 +114,14 @@ CCCM limits the charge/discharge current depending on the SoC
 
 ### Cell voltage penalty
 If the cell voltage reaches a specific value, then subtract a penalty from the CVL.
-Detailed info can be found here: https://github.com/Louisvdw/dbus-serialbattery/issues/297#issuecomment-1327142635
+Detailed info can be found here: [CCL/DCL depending on cell-voltage does not turn off charging completely, still overvoltage alarm](https://github.com/Louisvdw/dbus-serialbattery/issues/297#issuecomment-1327142635)
+
 ### Float voltage emulation
 If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` then the CVL changes to `FLOAT_CELL_VOLTAGE` \* `cell count`. Max voltage could be reached again if the SoC gets under `SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT`.
 
 ## BMS feature comparison
 
-| Feature                                  | Ant   | Daly  | ECS                | HLPdataBMS4S | JK BMS | LIFE/TIAN Power | LLT/JBD | MNB <sup>(1)</sup> | Renogy | Seplos | Sinowealth <sup>(1)</sup> |
+| Feature                                  | Ant   | Daly  | ECS                | HLPdataBMS4S | JK BMS | Life/Tian Power | LLT/JBD | MNB <sup>(1)</sup> | Renogy | Seplos | Sinowealth <sup>(1)</sup> |
 | ---:                                     | :---: | :---: | :---:              | :---:        | :---:  | :---:           | :---:   | :---:              | :---:  | :---:  | :---:                     |
 | Voltage                                  | Yes   | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
 | Current                                  | Yes   | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |

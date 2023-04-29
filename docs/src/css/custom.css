@@ -4,6 +4,10 @@
  * work well for content-centric websites.
  */
 
+.hidden {
+  display: none !important;
+}
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-container-width-xl: 1780px;

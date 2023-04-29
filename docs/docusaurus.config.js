@@ -84,7 +84,7 @@ const config = {
                         position: 'left',
                     },
                     {
-                        to: '/troubleshoot/faq',
+                        to: '/faq',
                         activeBasePath: 'docs',
                         label: 'FAQ',
                         position: 'left',
