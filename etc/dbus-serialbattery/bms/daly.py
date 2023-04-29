@@ -281,8 +281,8 @@ class Daly(Battery):
             # logger.warning("data " + bytes(cells_volts_data).hex())
 
             while (
-                bufIdx < len(cells_volts_data) - 4
-            ):  # we at least need 4 bytes to extract the identifiers
+                bufIdx <= len(cells_volts_data) - (4 + 8 + 1)
+            ):  # we at least need 13 bytes to extract the identifiers + 8 bytes payload + checksum
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
                     (
@@ -295,17 +295,17 @@ class Daly(Battery):
                     ) = unpack_from(">BhhhBB", cells_volts_data, bufIdx + 4)
                     if sum(cells_volts_data[bufIdx : bufIdx + 12]) & 0xFF != chk:
                         logger.warning("bad cell voltages checksum")
-                        return False
-                    for idx in range(3):
-                        cellnum = (
-                            (frame - 1) * 3
-                        ) + idx  # daly is 1 based, driver 0 based
-                        if cellnum >= self.cell_count:
-                            break
-                        cellVoltage = frameCell[idx] / 1000
-                        self.cells[cellnum].voltage = (
-                            None if cellVoltage < lowMin else cellVoltage
-                        )
+                    else:
+                        for idx in range(3):
+                            cellnum = (
+                                (frame - 1) * 3
+                            ) + idx  # daly is 1 based, driver 0 based
+                            if cellnum >= self.cell_count:
+                                break
+                            cellVoltage = frameCell[idx] / 1000
+                            self.cells[cellnum].voltage = (
+                                None if cellVoltage < lowMin else cellVoltage
+                            )
                     bufIdx += 13  # BBBBBhhhBB -> 13 byte
                 else:
                     bufIdx += 1   # step through buffer to find valid start
