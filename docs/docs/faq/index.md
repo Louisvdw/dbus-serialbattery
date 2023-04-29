@@ -69,7 +69,7 @@ You can add both to your system and in the newer Venus OS firmwares you can sele
 
 ## Can the driver be used as monitor only?
 
-> Please also read [Should I set the Smartshunt or the BMS as the Battery Monitor?](../faq#should-i-set-the-smartshunt-or-the-bms-as-the-battery-monitor)
+> Please also read [Should I set the Smartshunt or the BMS as the Battery Monitor?](../faq/#should-i-set-the-smartshunt-or-the-bms-as-the-battery-monitor)
 
 Yes it can, but there are certain limitations.
 

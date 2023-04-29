@@ -67,7 +67,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 ### Install over SSH
 
-> Require [root access](https://www.victronenergy.com/live/ccgx:root_access)
+> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
 1. Log into your Venus OS device using a SSH client like Putty or bash.
 
@@ -84,7 +84,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 ### Install over SSH: specific version/testing option
 
-> Require [root access](https://www.victronenergy.com/live/ccgx:root_access)
+> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
 1. Log into your Venus OS device using a SSH client like Putty or bash.
 
@@ -105,7 +105,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 ### Install over SSH: nightly version/beta test
 
-> Require [root access](https://www.victronenergy.com/live/ccgx:root_access)
+> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
 > This version is installed directly from the repository and can contain errors. Not recommended for production environments unless you know what you do.
 
@@ -134,7 +134,7 @@ MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
-If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../faq#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../faq/#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
 ### Settings location/path
 
@@ -171,7 +171,7 @@ You can edit the file in a plain text editor on you PC like Notepad (Windows) or
 
 Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py` or `/data/etc/dbus-serialbattery/config.ini`.
 
-⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../faq#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
+⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../faq/#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
 
 > Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
 

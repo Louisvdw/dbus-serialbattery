@@ -13,6 +13,8 @@ toc_max_heading_level: 4
 
 Check the log files on your GX device/Raspberry Pi.
 
+> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
+
 
 ### Serial BMS connection
 
