@@ -74,7 +74,7 @@ class Daly(Battery):
                 result = result and self.read_temperature_range_data(ser)
             elif self.poll_step == 1:
                 result = result and self.read_cells_volts(ser)
-
+                result = result and self.read_balance_state(ser)
                 # else:          # A placeholder to remind this is the last step. Add any additional steps before here
                 # This is last step so reset poll_step
                 self.poll_step = -1
@@ -331,6 +331,20 @@ class Daly(Battery):
         self.cell_max_voltage = cell_max_voltage / 1000
         self.cell_min_voltage = cell_min_voltage / 1000
         return True
+
+    def read_balance_state(self, ser):
+        balance_data = self.read_serial_data_daly(ser, self.command_cell_balance)
+        # check if connection success
+        if balance_data is False:
+            logger.debug("read_balance_state")
+            return False
+
+        bitdata = unpack_from(">Q", balance_data)[0]
+
+        mask = 1 << 48
+        for i in range(len(self.cells)):
+            self.cells[i].balance = True if bitdata & mask else False
+            mask >>= 1
 
     def read_temperature_range_data(self, ser):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
