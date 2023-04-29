@@ -374,13 +374,33 @@ class Daly(Battery):
             ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
+            logger.info("No reply to cmd " + bytes(command).hex())
             return False
 
-        start, flag, command_ret, length = unpack_from("BBBB", data)
-        checksum = sum(data[:-1]) & 0xFF
+        if len(data) <= 12:
+            logger.debug("Too short reply to cmd " + bytes(command).hex())
+            return False;
 
-        if start == 165 and length == 8 and len(data) > 12 and checksum == data[12]:
-            return data[4 : length + 4]
+        # search sentence start
+        try:
+            idx = data.index(0xA5)
+        except ValueError:
+            logger.debug("No Sentence Start found for reply to cmd " + bytes(command).hex())
+            return False
+
+        if len(data[idx:]) <= 12:
+            logger.debug("Too short reply to cmd " + bytes(command).hex())
+            return False;
+
+        if data[12+idx] != sum(data[idx:12+idx]) & 0xFF:
+            logger.debug("Bad checksum in reply to cmd " + bytes(command).hex())
+            return False
+
+        _, _, _, length = unpack_from(">BBBB", data, idx)
+
+        if length == 8:
+            return data[4 + idx : length + 4 + idx]
         else:
-            logger.error(">>> ERROR: Incorrect Reply")
+            logger.debug(">>> ERROR: Incorrect Reply to CMD " + bytes(command).hex() + ": 0x" + bytes(data).hex())
             return False
+
