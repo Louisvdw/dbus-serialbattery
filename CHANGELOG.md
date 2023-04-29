@@ -11,6 +11,7 @@
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
 * Added: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
+* Added: Daly BMS read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by transistorgit
 * Added: Driver uninstall script by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
@@ -41,6 +42,7 @@
   * Changed TimeToSoc default value `TIME_TO_SOC_VALUE_TYPE` from `Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"` to `1 Seconds` by @mr-manuel
   * Changed TimeToSoc description by @mr-manuel
   * Changed value positions, added groups and much clearer descriptions by @mr-manuel
+* Changed: Disabled ANT BMS by default https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
