@@ -96,7 +96,7 @@ If you set your charger to aim for `3.65V` it means you are aiming to reach the 
 
 If you look at your cells you will see that it takes hours of charging to go from `3.2V` to `3.4V`, but from `3.45V` to `3.6+V` can be in just a second. This give no time for balancing to kick in, thus one cell will reach `3.65V` while most of the rest will still be around `3.45V` (assuming all your cells are closely balanced. This is much worse if they are not). This all gets multiplied by the cell count that you have.
 
-An example might help (using a 8 sell batery):
+An example might help (using a 8 cell battery):
 
 * If we aim for `3.45V` per cell that will tell the charger to charge to `27.60V` (`3.45V x 8`)
 * If we aim for `3.64V` per cell that will tell the charger to charge to `29.12V` (`3.64V x 8`)
