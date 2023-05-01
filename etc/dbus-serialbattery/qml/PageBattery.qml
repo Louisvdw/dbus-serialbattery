@@ -118,6 +118,15 @@ MbPage {
                 displayUnit: user.temperatureUnit
             }
         }
+        
+        MbItemValue {
+            description: qsTr("MOSFET temperature")
+            show: item.valid
+            item {
+                bind: service.path("/System/MOSTemperature")
+                displayUnit: user.temperatureUnit
+            }
+        }
 
         MbItemValue {
             description: qsTr("Air temperature")
