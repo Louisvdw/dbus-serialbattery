@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
-from utils import open_serial_port, read_serialport_data, logger
+from utils import open_serial_port, logger
 import utils
 from struct import unpack_from
+from time import sleep
 
 
 class Daly(Battery):
@@ -263,7 +264,7 @@ class Daly(Battery):
                 maxFrame * 13
             )  # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved + chksum
 
-            cells_volts_data = read_serialport_data(
+            cells_volts_data = self.read_serialport_data(
                 ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
@@ -398,7 +399,7 @@ class Daly(Battery):
         return buffer
 
     def read_serial_data_daly(self, ser, command):
-        data = read_serialport_data(
+        data = self.read_serialport_data(
             ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
@@ -432,3 +433,80 @@ class Daly(Battery):
             logger.debug(">>> ERROR: Incorrect Reply to CMD " + bytes(command).hex() + ": 0x" + bytes(data).hex())
             return False
 
+    # Read data from previously openned serial port
+    def read_serialport_data(
+        self,
+        ser,
+        command,
+        length_pos,
+        length_check,
+        length_fixed=None,
+        length_size=None,
+    ):
+        try:
+            ser.flushOutput()
+            ser.flushInput()
+            ser.write(command)
+
+            length_byte_size = 1
+            if length_size is not None:
+                if length_size.upper() == "H":
+                    length_byte_size = 2
+                elif length_size.upper() == "I" or length_size.upper() == "L":
+                    length_byte_size = 4
+
+            count = 0
+            toread = ser.inWaiting()
+
+            while toread < (length_pos + length_byte_size):
+                sleep(0.005)
+                toread = ser.inWaiting()
+                count += 1
+                if count > 50:
+                    logger.error(">>> ERROR: No reply - returning")
+                    return False
+
+            # logger.info('serial data toread ' + str(toread))
+            res = ser.read(toread)
+            if length_fixed is not None:
+                length = length_fixed
+            else:
+                if len(res) < (length_pos + length_byte_size):
+                    logger.error(
+                        ">>> ERROR: No reply - returning [len:" + str(len(res)) + "]"
+                    )
+                    return False
+                length_size = length_size if length_size is not None else "B"
+                length = unpack_from(">" + length_size, res, length_pos)[0]
+
+            # logger.info('serial data length ' + str(length))
+
+            count = 0
+            data = bytearray(res)
+
+            packetlen = (
+                length_fixed
+                if length_fixed is not None
+                else length_pos + length_byte_size + length + length_check
+            )
+            while len(data) < packetlen:
+                res = ser.read(packetlen - len(data))
+                data.extend(res)
+                # logger.info('serial data length ' + str(len(data)))
+                sleep(0.005)
+                count += 1
+                if count > 150:
+                    logger.error(
+                        ">>> ERROR: No reply - returning [len:"
+                        + str(len(data))
+                        + "/"
+                        + str(length + length_check)
+                        + "]"
+                    )
+                    return False
+
+            return data
+
+        except Exception as e:
+            logger.error(e)
+            return False
