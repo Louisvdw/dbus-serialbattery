@@ -48,6 +48,7 @@ class Daly(Battery):
             ser = open_serial_port(self.port, self.baud_rate)
             if ser is not None:
                 result = self.read_status_data(ser)
+                self.read_soc_data(ser)
                 ser.close()
 
         except Exception as err:
