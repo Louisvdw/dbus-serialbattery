@@ -48,10 +48,8 @@ MAX_BATTERY_DISCHARGE_CURRENT = float(
 
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
-# True is a linear mode. For CCL and DCL the values between the steps are calculated for
-#                          smoother values (by WaldemarFech)
-#                        For CVL the penalties are only applied, if the cell voltage reaches
-#                          the penalty voltage
+# True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
+#                        For CVL max battery voltage is calculated dynamically in order that the max cell voltage is not exceeded
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
 # Specify in seconds how often the penalty should be recalculated
@@ -64,12 +62,17 @@ LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
 
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
-# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count) and switch from max voltage to
-#              float voltage (FLOAT_CELL_VOLTAGE * cell count) after max voltage is reached for MAX_VOLTAGE_TIME_SEC.
-#              It switches back to max voltage after SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT.
-#              If LINEAR_LIMITATION_ENABLE is set to True then penalty voltages are applied
-# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float
-#          voltage of 53.6V to don't stress the batteries. Allow max voltage of 55.2V again, if SoC is once below 90%
+# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count), switch from max voltage to float voltage (FLOAT_CELL_VOLTAGE * cell count) and back
+#     Step mode: After max voltage is reached for MAX_VOLTAGE_TIME_SEC it switches to float voltage. After SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT it
+#                switches back to max voltage.
+#     Linear mode: After max voltage is reachend and cell voltage difference is smaller or equal to CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL it switches to
+#                  float voltage after 300 (fixed) additional seconds. After cell voltage difference is greater or equal to CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+#                  it switches back to max voltage.
+# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float voltage of 53.6V to don't stress the batteries.
+#          Allow max voltage of 55.2V again, if SoC is once below 90%
+#          OR
+#          The battery reached max voltage of 55.2V and the max cell difference is 0.010V, then switch to float voltage of 53.6V after 300 additional seconds
+#          to don't stress the batteries. Allow max voltage of 55.2V again if max cell difference is above 0.050V
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 
@@ -81,24 +84,15 @@ MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
 # Max voltage can seen as absorption voltage
 FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
 
-# -- Penalty Voltages
-# NOTE: works only when LINEAR_LIMITATION_ENABLE = True
-# More details can be found here: https://github.com/Louisvdw/dbus-serialbattery/issues/297#issuecomment-1327142635
-# If the cell voltage reaches 3.48V, then reduce actual battery-voltage by 0.01V
-# If the cell voltage goes over 3.6V, then the maximum penalty will not be exceeded
-# There will be a sum of all penalties for each cell, which exceeds the limits
-# NOTE: The first value of PENALTY_AT_CELL_VOLTAGE has to be at least MAX_CELL_VOLTAGE + the first value of
-#       PENALTY_BATTERY_VOLTAGE, else the FLOAT_CELL_VOLTAGE is never set. Additionally the battery voltage
-#       has to reach max voltage and all cells has to be below penalty voltage to switch to float voltage.
-PENALTY_AT_CELL_VOLTAGE = _get_list_from_config(
-    "DEFAULT", "PENALTY_AT_CELL_VOLTAGE", lambda v: float(v)
+# -- CVL reset based on cell voltage diff (linear mode)
+# Specify cell voltage diff where CVL limit is kept until diff is equal or lower
+CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL = float(
+    config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL"]
 )
-# this voltage will be subtracted
-PENALTY_BATTERY_VOLTAGE = _get_list_from_config(
-    "DEFAULT", "PENALTY_BATTERY_VOLTAGE", lambda v: float(v)
+# Specify cell voltage diff where CVL limit is reset to max voltage, if value get above
+CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
+    config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
-# Specify in seconds how often the penalty should be recalculated
-PENALTY_RECALCULATE_EVERY = int(config["DEFAULT"]["PENALTY_RECALCULATE_EVERY"])
 
 # -- CVL Reset based on SoC option
 # Reset max voltage after
