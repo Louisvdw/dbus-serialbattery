@@ -1,5 +1,7 @@
 [flake8]
 max-line-length = 120
+per-file-ignores =
+          ./etc/dbus-serialbattery/utils.py: E501
 exclude =
           ./etc/dbus-serialbattery/bms/battery_template.py,
           ./etc/dbus-serialbattery/bms/mnb_test_max17853.py,
