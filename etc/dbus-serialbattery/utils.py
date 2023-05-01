@@ -447,14 +447,8 @@ def read_serialport_data(
 
         count = 0
         data = bytearray(res)
-
-        packetlen = (
-            length_fixed
-            if length_fixed is not None
-            else length_pos + length_byte_size + length + length_check
-        )
-        while len(data) < packetlen:
-            res = ser.read(packetlen - len(data))
+        while len(data) <= length + length_check:
+            res = ser.read(length + length_check)
             data.extend(res)
             # logger.info('serial data length ' + str(len(data)))
             sleep(0.005)
