@@ -7,8 +7,8 @@ from time import sleep
 
 
 class HLPdataBMS4S(Battery):
-    def __init__(self, port, baud):
-        super(HLPdataBMS4S, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(HLPdataBMS4S, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     BATTERYTYPE = "HLPdataBMS4S"
