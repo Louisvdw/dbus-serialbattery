@@ -241,7 +241,6 @@ def calcLinearRelationship(inValue, inArray, outArray):
     if inArray[0] > inArray[-1]:  # change compare-direction in array
         return calcLinearRelationship(inValue, inArray[::-1], outArray[::-1])
     else:
-
         # Handle out of bounds
         if inValue <= inArray[0]:
             return outArray[0]

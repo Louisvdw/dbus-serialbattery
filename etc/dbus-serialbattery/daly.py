@@ -247,9 +247,9 @@ class Daly(Battery):
             buffer[2] = self.command_cell_volts[0]
 
             if (int(self.cell_count) % 3) == 0:
-                maxFrame = (int(self.cell_count / 3))
+                maxFrame = int(self.cell_count / 3)
             else:
-                maxFrame = (int(self.cell_count / 3) + 1)
+                maxFrame = int(self.cell_count / 3) + 1
             lenFixed = (
                 maxFrame * 13
             )  # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved + chksum
@@ -279,10 +279,15 @@ class Daly(Battery):
             ):  # we at least need 4 bytes to extract the identifiers
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
-                    frame, frameCell[0], frameCell[1], frameCell[2], _, chk = unpack_from(
-                        ">BhhhBB", cells_volts_data, bufIdx + 4
-                    )
-                    if sum(cells_volts_data[bufIdx:bufIdx+12]) & 0xFF != chk:
+                    (
+                        frame,
+                        frameCell[0],
+                        frameCell[1],
+                        frameCell[2],
+                        _,
+                        chk,
+                    ) = unpack_from(">BhhhBB", cells_volts_data, bufIdx + 4)
+                    if sum(cells_volts_data[bufIdx : bufIdx + 12]) & 0xFF != chk:
                         logger.warning("bad cell voltages checksum")
                         return False
                     for idx in range(3):
@@ -367,7 +372,7 @@ class Daly(Battery):
         start, flag, command_ret, length = unpack_from("BBBB", data)
         checksum = sum(data[:-1]) & 0xFF
 
-        if start == 165 and length == 8 and len(data)>12 and checksum == data[12]:
+        if start == 165 and length == 8 and len(data) > 12 and checksum == data[12]:
             return data[4 : length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
