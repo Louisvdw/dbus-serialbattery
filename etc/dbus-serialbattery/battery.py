@@ -86,7 +86,9 @@ class Battery(ABC):
         self.charge_mode = None
         self.charge_limitation = None
         self.discharge_limitation = None
-        self.control_voltage_last_set = 0
+        self.linear_cvl_last_set = 0
+        self.linear_ccl_last_set = 0
+        self.linear_dcl_last_set = 0
         self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
@@ -177,41 +179,45 @@ class Battery(ABC):
                 if voltage:
                     voltageSum += voltage
 
-                    # calculate penalty sum to prevent single cell overcharge
-                    if voltage >= utils.PENALTY_AT_CELL_VOLTAGE[0]:
+                    # calculate penalty sum to prevent single cell overcharge by using current cell voltage
+                    if voltage > utils.MAX_CELL_VOLTAGE:
                         # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
                         foundHighCellVoltage = True
-                        penaltySum += utils.calcLinearRelationship(
-                            voltage,
-                            utils.PENALTY_AT_CELL_VOLTAGE,
-                            utils.PENALTY_BATTERY_VOLTAGE,
-                        )
+                        penaltySum += voltage - utils.MAX_CELL_VOLTAGE - 0.010
 
-            voltageSum = round(voltageSum, 3)
+            voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
             if self.max_voltage_start_time is None:
                 if (
                     utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                    and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
                 ):
                     self.max_voltage_start_time = time()
                 elif (
-                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    # utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
                     and not self.allow_max_voltage
                 ):
                     self.allow_max_voltage = True
             else:
                 tDiff = time() - self.max_voltage_start_time
-                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                # keep max voltage for 300 more seconds
+                if 300 < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
 
         # INFO: battery will only switch to Absorption, if all cells are balanced.
         #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
         if foundHighCellVoltage and self.allow_max_voltage:
-            # set CVL only once every PENALTY_RECALCULATE_EVERY seconds
-            control_voltage_time = int(time() / utils.PENALTY_RECALCULATE_EVERY)
-            if control_voltage_time != self.control_voltage_last_set:
+            # set CVL only once every LINEAR_RECALCULATION_EVERY seconds
+            if (
+                int(time()) - self.linear_cvl_last_set
+                >= utils.LINEAR_RECALCULATION_EVERY
+            ):
+                self.linear_cvl_last_set = int(time())
+
                 # Keep penalty above min battery voltage
                 self.control_voltage = round(
                     max(
@@ -220,26 +226,40 @@ class Battery(ABC):
                     ),
                     3,
                 )
-                self.control_voltage_last_set = control_voltage_time
+
             self.charge_mode = (
-                "Bulk dynamic (linear mode)"
+                "Bulk dynamic (vS: "
+                + str(round(voltageSum, 2))
+                + " - pS: "
+                + str(round(penaltySum, 2))
+                + ")"
                 if self.max_voltage_start_time is None
-                else "Absorption dynamic (linear mode)"
+                else "Absorption dynamic (vS: "
+                + str(round(voltageSum, 2))
+                + " - pS: "
+                + str(round(penaltySum, 2))
+                + ")"
             )
 
         elif self.allow_max_voltage:
             self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
             self.charge_mode = (
-                "Bulk (linear mode)"
-                if self.max_voltage_start_time is None
-                else "Absorption (linear mode)"
+                "Bulk" if self.max_voltage_start_time is None else "Absorption"
             )
 
         else:
             self.control_voltage = round(
                 (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3
             )
-            self.charge_mode = "Float (linear mode)"
+            self.charge_mode = "Float"
+
+        if (
+            self.allow_max_voltage
+            and self.get_balancing()
+            and voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+        ):
+            self.charge_mode += " + Balancing"
+        self.charge_mode += " (LM)"
 
     def manage_charge_voltage_step(self) -> None:
         """
@@ -289,14 +309,14 @@ class Battery(ABC):
         if self.allow_max_voltage:
             self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
             self.charge_mode = (
-                "Bulk (step mode)"
-                if self.max_voltage_start_time is None
-                else "Absorption (step mode)"
+                "Bulk" if self.max_voltage_start_time is None else "Absorption"
             )
 
         else:
             self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
-            self.charge_mode = "Float (step mode)"
+            self.charge_mode = "Float"
+
+        self.charge_mode += " (Step Mode)"
 
     def manage_charge_current(self) -> None:
         # Manage Charge Current Limitations
@@ -316,10 +336,10 @@ class Battery(ABC):
             if self.max_battery_charge_current != tmp:
                 if tmp in charge_limits_new:
                     charge_limits_new.update(
-                        {tmp: charge_limits_new[tmp] + ", Cell voltage"}
+                        {tmp: charge_limits_new[tmp] + ", Cell Voltage"}
                     )
                 else:
-                    charge_limits_new.update({tmp: "Cell voltage"})
+                    charge_limits_new.update({tmp: "Cell Voltage"})
 
         if utils.CCCM_T_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToTemperature()

@@ -15,6 +15,7 @@
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
 * Added: Install needed components automatically after a Venus OS upgrade by @mr-manuel
 * Added: Post install notes by @mr-manuel
+* Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
@@ -27,6 +28,7 @@
 * Changed: `reinstalllocal.sh` to recreate `/data/conf/serial-starter.d` if deleted by `disabledriver.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restoregui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
+* Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
 * Changed: Default config file by @mr-manuel
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
   * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel
