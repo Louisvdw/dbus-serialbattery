@@ -349,21 +349,43 @@ class Battery(ABC):
                 else:
                     charge_limits_new.update({tmp: "SoC"})
 
-        self.control_charge_current = round(
-            min(charge_limits), 3
-        )  # gets changed after finished testing
-
-        self.charge_limitation = (
-            charge_limits_new[min(charge_limits_new)]
-            + " ("
-            + str(round(min(charge_limits_new), 3))
-            + ")"
+        # do not set CCL immediately, but only
+        # - after LINEAR_RECALCULATION_EVERY passed
+        # - if CCL changes to 0
+        # - if CCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        ccl = round(min(charge_limits), 3)  # gets changed after finished testing
+        diff = (
+            abs(self.control_charge_current - ccl)
+            if self.control_charge_current is not None
+            else 0
         )
+        if (
+            int(time()) - self.linear_ccl_last_set >= utils.LINEAR_RECALCULATION_EVERY
+            or ccl == 0
+            or (
+                diff
+                >= self.control_charge_current
+                * utils.LINEAR_RECALCULATION_ON_PERC_CHANGE
+                / 100
+            )
+        ):
+            self.linear_ccl_last_set = int(time())
+
+            self.control_charge_current = ccl
+
+            self.charge_limitation = (
+                charge_limits_new[min(charge_limits_new)]
+                + " ("
+                + str(round(min(charge_limits_new), 3))
+                + ")"
+            )
 
         if self.control_charge_current == 0:
             self.control_allow_charge = False
         else:
             self.control_allow_charge = True
+
+        #####
 
         # Manage Discharge Current Limitations
         discharge_limits = [
@@ -384,10 +406,10 @@ class Battery(ABC):
             if self.max_battery_discharge_current != tmp:
                 if tmp in discharge_limits_new:
                     discharge_limits_new.update(
-                        {tmp: discharge_limits_new[tmp] + ", Cell voltage"}
+                        {tmp: discharge_limits_new[tmp] + ", Cell Voltage"}
                     )
                 else:
-                    discharge_limits_new.update({tmp: "Cell voltage"})
+                    discharge_limits_new.update({tmp: "Cell Voltage"})
 
         if utils.DCCM_T_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToTemperature()
@@ -421,16 +443,36 @@ class Battery(ABC):
                 else:
                     discharge_limits_new.update({tmp: "SoC"})
 
-        self.control_discharge_current = round(
-            min(discharge_limits), 3
-        )  # gets changed after finished testing
-
-        self.discharge_limitation = (
-            discharge_limits_new[min(discharge_limits_new)]
-            + " ("
-            + str(round(min(discharge_limits_new), 3))
-            + ")"
+        # do not set DCL immediately, but only
+        # - after LINEAR_RECALCULATION_EVERY passed
+        # - if DCL changes to 0
+        # - if DCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        dcl = round(min(discharge_limits), 3)  # gets changed after finished testing
+        diff = (
+            abs(self.control_discharge_current - dcl)
+            if self.control_discharge_current is not None
+            else 0
         )
+        if (
+            int(time()) - self.linear_dcl_last_set >= utils.LINEAR_RECALCULATION_EVERY
+            or dcl == 0
+            or (
+                diff
+                >= self.control_discharge_current
+                * utils.LINEAR_RECALCULATION_ON_PERC_CHANGE
+                / 100
+            )
+        ):
+            self.linear_dcl_last_set = int(time())
+
+            self.control_discharge_current = dcl
+
+            self.discharge_limitation = (
+                discharge_limits_new[min(discharge_limits_new)]
+                + " ("
+                + str(round(min(discharge_limits_new), 3))
+                + ")"
+            )
 
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False

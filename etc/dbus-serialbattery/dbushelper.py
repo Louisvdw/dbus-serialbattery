@@ -336,11 +336,11 @@ class DbusHelper:
                 if self.error_count >= 60:
                     loop.quit()
 
-            # This is to mannage CCL\DCL
-            self.battery.manage_charge_current()
-
             # This is to mannage CVCL
             self.battery.manage_charge_voltage()
+
+            # This is to mannage CCL\DCL
+            self.battery.manage_charge_current()
 
             # publish all the data from the battery object to dbus
             self.publish_dbus()
