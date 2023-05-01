@@ -10,6 +10,7 @@
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
+* Added: Daly BMS read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by transistorgit
 * Added: Driver uninstall script by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
@@ -28,13 +29,13 @@
 * Changed: `reinstalllocal.sh` to recreate `/data/conf/serial-starter.d` if deleted by `disabledriver.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restoregui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
-* Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
 * Changed: Default config file by @mr-manuel
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
   * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel
   * Changed TimeToSoc default value `TIME_TO_SOC_VALUE_TYPE` from `Both seconds and time string "<seconds> [<days>d <hours>h <minutes>m <seconds>s]"` to `1 Seconds` by @mr-manuel
   * Changed TimeToSoc description by @mr-manuel
   * Changed value positions, added groups and much clearer descriptions by @mr-manuel
+* Changed: Disabled ANT BMS by default https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
@@ -46,7 +47,8 @@
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
 * Changed: Logging to get relevant data by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
-* Changed: Optimized installation scripts by @mr-manuel
+* Changed: Optimized installation scripts by @mr-manuel* Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
+* Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
 * Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
 * Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel

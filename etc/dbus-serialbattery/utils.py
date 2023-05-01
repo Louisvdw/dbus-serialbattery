@@ -394,7 +394,7 @@ def open_serial_port(port, baud):
     return ser
 
 
-# Read data from previously openned serial port
+# Read data from previously opened serial port
 def read_serialport_data(
     ser: serial.Serial,
     command,
