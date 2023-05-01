@@ -25,9 +25,11 @@
 * Added: JKBMS BLE - MOS temperature by @mr-manuel
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: Post install notes by @mr-manuel
+* Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
+* Added: Show MOSFET temperature for JKBMS https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
 * Added: Show specific TimeToSoC points in GUI, if 0%, 10%, 20%, 80%, 90% and/or 100% are selected by @mr-manuel
 * Added: Show TimeToGo in GUI only, if enabled by @mr-manuel
 * Added: Support for HLPdata BMS4S https://github.com/Louisvdw/dbus-serialbattery/pull/505 by @peterohman
@@ -56,6 +58,7 @@
 * Changed: Moved Bluetooth part to `installble.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Optimized installation scripts by @mr-manuel
+* Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
 * Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
 * Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
