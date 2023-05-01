@@ -18,6 +18,10 @@ See [this page](../general/install#how-to-change-the-default-limits).
 See [this page](../general/install#how-to-change-the-default-limits).
 
 
+## What is the username and password of the SSH connection?
+
+See the Victron Energy documentation how to get [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access).
+
 ## Why do I need a BMS for lithium batteries?
 Lithuim cells are great at storing energy, but they can be dangerous. An overcharged cell can cause a fire. A Battery Management System (BMS) first priority is to protect the cells in your battery from any potential hazards.
 
