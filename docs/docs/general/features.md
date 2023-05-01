@@ -133,7 +133,7 @@ If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` 
 | Time-to-go                               | Calc  | Calc  | Calc               | Calc         | Calc   | Calc            | Calc    | Calc               | Calc   | Calc   | Calc                      |
 | Min/max cell voltages                    | Yes   | Yes   | No                 | Yes          | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes                       |
 | Min/max temperature                      | Yes   | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
-| Installed capacity                       | Yes   | No    | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
+| Installed capacity                       | Yes   | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
 | Available capacity                       | Yes   | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
 | Cell details                             | No    | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | ?                         |
 | Balancing status                         | Yes   | No    | Yes                | No           | Yes    | Yes             | No      | No                 | No     | No     | ?                         |
