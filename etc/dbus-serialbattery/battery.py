@@ -142,7 +142,7 @@ class Battery(ABC):
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
         if sensor == 'mos':
-            self.temp_mos = min(max(value, -20), 100
+            self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
         """
