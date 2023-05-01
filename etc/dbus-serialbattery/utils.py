@@ -36,9 +36,15 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0-jkbms_ble (20230429)"
+DRIVER_SUBVERSION = ".0-jkbms_ble (20230501)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
+
+# Battery Current limits
+MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
+MAX_BATTERY_DISCHARGE_CURRENT = float(
+    config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
+)
 
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
@@ -48,10 +54,12 @@ degree_sign = "\N{DEGREE SIGN}"
 #                          the penalty voltage
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
-# Battery Current limits
-MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
-MAX_BATTERY_DISCHARGE_CURRENT = float(
-    config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
+# Specify in seconds how often the penalty should be recalculated
+LINEAR_RECALCULATION_EVERY = int(config["DEFAULT"]["LINEAR_RECALCULATION_EVERY"])
+# Specify in percent when the linear values should be recalculated immediately
+# Example: 5 for a immediate change, when the value changes by more than 5%
+LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
+    config["DEFAULT"]["LINEAR_RECALCULATION_ON_PERC_CHANGE"]
 )
 
 
