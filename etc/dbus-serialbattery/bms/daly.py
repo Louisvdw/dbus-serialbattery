@@ -285,8 +285,8 @@ class Daly(Battery):
 
             # logger.warning("data " + bytes(cells_volts_data).hex())
 
-            while (
-                bufIdx <= len(cells_volts_data) - (4 + 8 + 1)
+            while bufIdx <= len(cells_volts_data) - (
+                4 + 8 + 1
             ):  # we at least need 13 bytes to extract the identifiers + 8 bytes payload + checksum
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
@@ -313,7 +313,7 @@ class Daly(Battery):
                             )
                     bufIdx += 13  # BBBBBhhhBB -> 13 byte
                 else:
-                    bufIdx += 1   # step through buffer to find valid start
+                    bufIdx += 1  # step through buffer to find valid start
                     logger.warning("bad cell voltages header")
         return True
 
@@ -409,20 +409,22 @@ class Daly(Battery):
 
         if len(data) <= 12:
             logger.debug("Too short reply to cmd " + bytes(command).hex())
-            return False;
+            return False
 
         # search sentence start
         try:
             idx = data.index(0xA5)
         except ValueError:
-            logger.debug("No Sentence Start found for reply to cmd " + bytes(command).hex())
+            logger.debug(
+                "No Sentence Start found for reply to cmd " + bytes(command).hex()
+            )
             return False
 
         if len(data[idx:]) <= 12:
             logger.debug("Too short reply to cmd " + bytes(command).hex())
-            return False;
+            return False
 
-        if data[12+idx] != sum(data[idx:12+idx]) & 0xFF:
+        if data[12 + idx] != sum(data[idx : 12 + idx]) & 0xFF:
             logger.debug("Bad checksum in reply to cmd " + bytes(command).hex())
             return False
 
@@ -431,7 +433,12 @@ class Daly(Battery):
         if length == 8:
             return data[4 + idx : length + 4 + idx]
         else:
-            logger.debug(">>> ERROR: Incorrect Reply to CMD " + bytes(command).hex() + ": 0x" + bytes(data).hex())
+            logger.debug(
+                ">>> ERROR: Incorrect Reply to CMD "
+                + bytes(command).hex()
+                + ": 0x"
+                + bytes(data).hex()
+            )
             return False
 
     # Read data from previously openned serial port
