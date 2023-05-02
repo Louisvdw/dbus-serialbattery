@@ -1,0 +1,125 @@
+name: Support request
+description: Report a bug that you found, e.g. something is not working as expected
+# title: ""
+labels: ["support"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before opening a support request, please check first [How to troubleshoot](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/) and the [FAQ (Frequently Asked Questions)](https://louisvdw.github.io/dbus-serialbattery/faq/) page
+
+        In the case you have difficulties to write in english, try the [deepl.com](https://www.deepl.com) translator.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the problem
+      description: A clear and concise description of what the problem is. Paste also screenshots and pictures, if needed. The more informations you give, the faster we find a solution.
+    validations:
+      required: true
+
+  - type: input
+    id: driver_version
+    attributes:
+      label: Driver version
+      description: Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`
+    validations:
+      required: true
+
+  - type: dropdown
+    id: venus_os_device_type
+    attributes:
+      label: Venus OS device type
+      description: Select your Venus OS device type.
+      multiple: false
+      # https://github.com/victronenergy/venus/wiki/machines
+      options:
+        - Please select
+        - CCGX
+        - Cerbo GX
+        - Ekrano GX
+        - GX Card (integrated in Victron device)
+        - Octo GX
+        - Raspberry Pi
+        - VANcu GX
+        - Venus_GX
+    validations:
+      required: true
+
+  - type: input
+    id: venus_os_version
+    attributes:
+      label: Venus OS version
+      description: Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+      placeholder: e.g. v2.94
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bms_type
+    attributes:
+      label: BMS type
+      description: Select your used BMS type.
+      multiple: true
+      # https://louisvdw.github.io/dbus-serialbattery/general/supported-bms
+      options:
+        - ANT BMS
+        - Daly Smart BMS
+        - ECS GreenMeter
+        - HLPdataBMS4S
+        - JKBMS / Heltec BMS
+        - Life/Tian Power
+        - MNB spi BMS
+        - Renogy BMS
+        - Revov
+        - Seplos
+        - Sinowealth
+        - Smart BMS (LLT, JBD, Overkill Solar)
+    validations:
+      required: true
+
+  - type: input
+    id: cell_count
+    attributes:
+      label: Cell count
+      description: Specify how many cells your battery has.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connection_type
+    attributes:
+      label: Connection type
+      description: Select how you connected your battery to the Venus OS device.
+      multiple: false
+      options:
+        - Please select
+        - Serial USB adapter to TTL
+        - Serial USB adapter to RS485
+        - Bluetooth
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Config file
+      description: Paste your config file here. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#settings-locationpath) where you can find it. to get This will be automatically formatted into code, so no need for backticks.
+      render: ini
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: other
+    attributes:
+      label: Any other information that may be helpful
