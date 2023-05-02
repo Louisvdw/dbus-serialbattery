@@ -39,6 +39,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
 
+    # execute only in Louisvdw repository
+    if: github.repository_owner == 'Louisvdw'
+
     #defaults:
     #  run:
     #    working-directory: 'docs' # Here the path to the folder where package-lock.json is located.
