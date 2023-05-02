@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+# NOTES
+# Please also update the feature comparison table, if you are adding a new BMS
+# https://louisvdw.github.io/dbus-serialbattery/general/features/#bms-feature-comparison
+
 from battery import Protection, Battery, Cell
 from utils import is_bit_set, read_serial_data, logger
 import utils
@@ -32,12 +37,23 @@ class BatteryTemplate(Battery):
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
 
-        # Uncomment if BMS does not supply capacity
-        # self.capacity = BATTERY_CAPACITY
-        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
+        self.capacity = (
+            utils.BATTERY_CAPACITY  # if possible replace constant with value read from BMS
+        )
+        self.max_battery_charge_current = (
+            utils.MAX_BATTERY_CHARGE_CURRENT  # if possible replace constant with value read from BMS
+        )
+        self.max_battery_discharge_current = (
+            utils.MAX_BATTERY_DISCHARGE_CURRENT  # if possible replace constant with value read from BMS
+        )
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
+
+        # provide a unique identifier from the BMS to identify a BMS, if multiple same BMS are connected
+        # e.g. the serial number
+        # If there is no such value, please leave the line commented. In this case the capacity is used,
+        # since it can be changed by small amounts to make a battery unique. On +/- 5 Ah you can identify 11 batteries
+        # self.unique_identifier = str()
         return True
 
     def refresh_data(self):
