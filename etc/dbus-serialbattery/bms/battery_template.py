@@ -26,6 +26,9 @@ class BatteryTemplate(Battery):
         result = False
         try:
             result = self.read_status_data()
+            # get first data to show in startup log
+            if result:
+                self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
