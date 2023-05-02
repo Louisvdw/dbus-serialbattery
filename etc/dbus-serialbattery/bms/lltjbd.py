@@ -67,6 +67,9 @@ class LltJbd(Battery):
         result = False
         try:
             result = self.read_hardware_data()
+            # get first data to show in startup log
+            if result:
+                self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -165,12 +168,10 @@ class LltJbd(Battery):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
+        # 0 = MOS, 1 = temp 1, 2 = temp 2
         for t in range(self.temp_sensors):
             temp1 = unpack_from(">H", gen_data, 23 + (2 * t))[0]
-            if t == 0:
-                self.to_temp("mos", utils.kelvin_to_celsius(temp1 / 10))
-            else:
-                self.to_temp(t, utils.kelvin_to_celsius(temp1 / 10))
+            self.to_temp(t, utils.kelvin_to_celsius(temp1 / 10))
 
         return True
 

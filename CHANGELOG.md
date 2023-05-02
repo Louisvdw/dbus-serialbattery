@@ -26,6 +26,7 @@
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: Post install notes by @mr-manuel
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
+* Added: Read charge/discharge limits from JKBMS by @mr-manuel
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
@@ -50,6 +51,7 @@
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/397 by @transistorgit
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/421 by @mr-manuel
+* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/450 by @mr-manuel
 * Changed: Fixed black lint errors by @mr-manuel
 * Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
