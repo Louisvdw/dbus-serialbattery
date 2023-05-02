@@ -143,6 +143,7 @@ If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` 
 | Charge current control management (CCCM) | Yes   | Yes   | Yes                | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
 | Set battery parameters (DVCC)            | Calc  | Calc  | Yes                | Yes          | Calc   | Calc            | Calc    | Yes                | Calc   | Calc   | Calc                      |
 
+
 `Calc` means that the value is calculated by the driver.
 
 `?` means that it's unknown, if the value is fetched. It has to be verified. If you know this, please update this page.

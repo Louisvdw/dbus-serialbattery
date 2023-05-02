@@ -119,6 +119,7 @@ You get most of the power from the cells between `3.1V - 3.45V` and you will hav
 
 
 ## Why is the charging/discharging current limit (CCL/DCL) smaller than the set one?
+
 ### Driver version `<= v0.14.3`
 Check in the `utils.py`, if you have set one of this to true. If yes, then you also have to change the corresponding limits.
 
