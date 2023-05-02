@@ -316,7 +316,6 @@ def v_cell_d(self):
     b_lim = False
 
     for index, v in enumerate(V_Cells):
-
         if v > 3.55:
             b_lim = True
         if v > vc_max:
