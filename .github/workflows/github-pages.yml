@@ -5,7 +5,9 @@ on:
   # Runs on pushes targeting the default branch
   push:
     # Run on changes in the master branch
-    #branches: [master]:
+    branches:
+      - master
+      - docusaurus
 
     # Run on changes in the docs folder
     paths:
