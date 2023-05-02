@@ -900,6 +900,14 @@ class Battery(ABC):
             f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}A | "
             + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
         )
+        if (
+            utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current
+            or utils.MAX_BATTERY_DISCHARGE_CURRENT != self.max_battery_discharge_current
+        ):
+            logger.info(
+                f"> MAX BATTERY CHARGE CURRENT: {self.max_battery_charge_current}A | "
+                + f"MAX BATTERY DISCHARGE CURRENT: {self.max_battery_discharge_current}A (read from BMS)"
+            )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
         logger.info(
             f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
