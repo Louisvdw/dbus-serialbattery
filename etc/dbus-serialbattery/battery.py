@@ -232,17 +232,19 @@ class Battery(ABC):
                 )
 
             self.charge_mode = (
-                "Bulk dynamic (vS: "
-                + str(round(voltageSum, 2))
-                + " - pS: "
-                + str(round(penaltySum, 2))
-                + ")"
+                "Bulk dynamic"
+                # + " (vS: "
+                # + str(round(voltageSum, 2))
+                # + " - pS: "
+                # + str(round(penaltySum, 2))
+                # + ")"
                 if self.max_voltage_start_time is None
-                else "Absorption dynamic (vS: "
-                + str(round(voltageSum, 2))
-                + " - pS: "
-                + str(round(penaltySum, 2))
-                + ")"
+                else "Absorption dynamic"
+                # + "(vS: "
+                # + str(round(voltageSum, 2))
+                # + " - pS: "
+                # + str(round(penaltySum, 2))
+                # + ")"
             )
 
         elif self.allow_max_voltage:
@@ -263,7 +265,7 @@ class Battery(ABC):
             and voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
         ):
             self.charge_mode += " + Balancing"
-        self.charge_mode += " (LM)"
+        self.charge_mode += " (Linear Mode)"
 
     def manage_charge_voltage_step(self) -> None:
         """
@@ -327,7 +329,11 @@ class Battery(ABC):
         charge_limits = [
             self.max_battery_charge_current
         ]  # gets removed after finished testing
-        charge_limits_new = {self.max_battery_charge_current: "None (Max Config Limit)"}
+        charge_limits_new = {utils.MAX_BATTERY_CHARGE_CURRENT: "Config Limit"}
+
+        # if values are not the same, then the limit was read also from the BMS
+        if utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current:
+            charge_limits_new.update({self.max_battery_charge_current: "BMS Limit"})
 
         if utils.CCCM_CV_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToCellVoltage()
@@ -399,9 +405,9 @@ class Battery(ABC):
 
             self.charge_limitation = (
                 charge_limits_new[min(charge_limits_new)]
-                + " ("
-                + str(round(min(charge_limits_new), 3))
-                + ")"
+                # + " ("
+                # + str(round(min(charge_limits_new), 3))
+                # + ")"
             )
 
         if self.control_charge_current == 0:
@@ -415,9 +421,13 @@ class Battery(ABC):
         discharge_limits = [
             self.max_battery_discharge_current
         ]  # gets removed after finished testing
-        discharge_limits_new = {
-            self.max_battery_discharge_current: "None (Max Config Limit)"
-        }
+        discharge_limits_new = {utils.MAX_BATTERY_DISCHARGE_CURRENT: "Config Limit"}
+
+        # if values are not the same, then the limit was read also from the BMS
+        if utils.MAX_BATTERY_DISCHARGE_CURRENT != self.max_battery_discharge_current:
+            discharge_limits_new.update(
+                {self.max_battery_discharge_current: "BMS Limit"}
+            )
 
         if utils.DCCM_CV_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToCellVoltage()
@@ -493,9 +503,9 @@ class Battery(ABC):
 
             self.discharge_limitation = (
                 discharge_limits_new[min(discharge_limits_new)]
-                + " ("
-                + str(round(min(discharge_limits_new), 3))
-                + ")"
+                # + " ("
+                # + str(round(min(discharge_limits_new), 3))
+                # + ")"
             )
 
         if self.control_discharge_current == 0:
@@ -900,6 +910,19 @@ class Battery(ABC):
             f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}A | "
             + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
         )
+        if (
+            (
+                utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current
+                or utils.MAX_BATTERY_DISCHARGE_CURRENT
+                != self.max_battery_discharge_current
+            )
+            and self.max_battery_charge_current is not None
+            and self.max_battery_discharge_current is not None
+        ):
+            logger.info(
+                f"> MAX BATTERY CHARGE CURRENT: {self.max_battery_charge_current}A | "
+                + f"MAX BATTERY DISCHARGE CURRENT: {self.max_battery_discharge_current}A (read from BMS)"
+            )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
         logger.info(
             f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
