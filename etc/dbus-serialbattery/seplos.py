@@ -5,11 +5,6 @@ import utils
 import serial
 
 
-def int_from_hex_ascii(to_decode, signed=False):
-    return int.from_bytes(
-        bytes.fromhex(to_decode.decode("ascii")), byteorder="big", signed=signed
-    )
-
 
 class Seplos(Battery):
     def __init__(self, port, baud, address=0x00):
