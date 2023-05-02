@@ -150,12 +150,12 @@ class Battery(ABC):
         :param value: the sensor value
         :return:
         """
+        if sensor == 0:
+            self.temp_mos = min(max(value, -20), 100)
         if sensor == 1:
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
-        if sensor == "mos":
-            self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
         """
