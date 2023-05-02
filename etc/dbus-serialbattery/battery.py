@@ -911,8 +911,13 @@ class Battery(ABC):
             + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
         )
         if (
-            utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current
-            or utils.MAX_BATTERY_DISCHARGE_CURRENT != self.max_battery_discharge_current
+            (
+                utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current
+                or utils.MAX_BATTERY_DISCHARGE_CURRENT
+                != self.max_battery_discharge_current
+            )
+            and self.max_battery_charge_current is not None
+            and self.max_battery_discharge_current is not None
         ):
             logger.info(
                 f"> MAX BATTERY CHARGE CURRENT: {self.max_battery_charge_current}A | "
