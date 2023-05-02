@@ -46,6 +46,9 @@ class Ecs(Battery):
 
                 self.find_LiPro_cells()
 
+                # get first data to show in startup log
+                self.refresh_data()
+
                 return self.get_settings()
         except IOError:
             return False
