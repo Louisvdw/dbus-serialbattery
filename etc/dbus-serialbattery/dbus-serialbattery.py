@@ -23,6 +23,7 @@ from lltjbd import LltJbd
 from daly import Daly
 from ant import Ant
 from jkbms import Jkbms
+from seplos import Seplos
 
 # from sinowealth import Sinowealth
 from renogy import Renogy
@@ -42,6 +43,7 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Ecs, "baud": 19200},
+    {"bms": Seplos, "baud": 19200},
 ]
 expected_bms_types = [
     battery_type
