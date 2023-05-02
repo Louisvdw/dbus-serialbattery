@@ -144,7 +144,7 @@ class Battery(ABC):
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
-        if sensor == 'mos':
+        if sensor == "mos":
             self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
@@ -577,7 +577,7 @@ class Battery(ABC):
         return self.extract_from_temp_values(
             extractor=lambda temp1, temp2: max(temp1, temp2)
         )
-                   
+
     def get_mos_temp(self) -> Union[float, None]:
         if self.temp_mos is not None:
             return self.temp_mos
@@ -597,7 +597,6 @@ class Battery(ABC):
         return True
 
     def log_settings(self) -> None:
-
         logger.info(f"Battery {self.type} connected to dbus from {self.port}")
         logger.info("=== Settings ===")
         cell_counter = len(self.cells)

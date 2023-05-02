@@ -29,8 +29,10 @@ from seplos import Seplos
 from renogy import Renogy
 from ecs import Ecs
 from lifepower import Lifepower
+from hlpdatabms4s import HLPdataBMS4S
 
 supported_bms_types = [
+    {'bms': HLPdataBMS4S, "baud": 9600},
     {"bms": LltJbd, "baud": 9600},
     {"bms": Ant, "baud": 19200},
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
