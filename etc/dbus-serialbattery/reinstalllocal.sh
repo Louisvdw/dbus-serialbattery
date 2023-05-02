@@ -96,20 +96,15 @@ if [ $length -gt 0 ]; then
     # setup cronjob to restart Bluetooth
     grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
 
-    # add install-script to rc.local to be ready for firmware update
-    filename=/data/rc.local
-    if [ ! -f $filename ]; then
-        echo "#!/bin/bash" >> $filename
-        chmod 755 $filename
-    fi
-    grep -qxF "sh /data/etc/dbus-serialbattery/installble.sh" $filename || echo "sh /data/etc/dbus-serialbattery/installble.sh" >> $filename
 
-    # kill if running, needed when an adapter changes
-    pkill -f "python .*/dbus-serialbattery.py"
-
-    # remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
+    ### temporary | start
     # can be removed on second release (>1.0.0)
+    # remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
     rm -rf /service/dbus-blebattery-*
+    # remove old entry from rc.local
+    sed -i "/sh \/data\/etc\/$DRIVERNAME\/installble.sh/d" /data/rc.local
+    ### temporary | end
+
 
     # remove existing driver to cleanup
     rm -rf /service/dbus-blebattery.*
