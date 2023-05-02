@@ -60,19 +60,114 @@ if [ ! -f $filename ]; then
     echo "; and add them below to persist future driver updates." >> $filename
 fi
 
+
+
+### BLUETOOTH PART | START ###
+
+# get BMS list from config file
+bluetooth_bms=$(awk -F "=" '/BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+#echo $bluetooth_bms
+
+# clear whitespaces
+bluetooth_bms_clean="$(echo $bluetooth_bms | sed 's/\s*,\s*/,/g')"
+#echo $bluetooth_bms_clean
+
+# split into array
+IFS="," read -r -a bms_array <<< "$bluetooth_bms_clean"
+#declare -p bms_array
+# readarray -td, bms_array <<< "$bluetooth_bms_clean,"; unset 'bms_array[-1]'; declare -p bms_array;
+
+length=${#bms_array[@]}
+# echo $length
+
+
+if [ $length -gt 0 ]; then
+
+    echo "Found $length Bluetooth BMS in the config file!"
+    echo ""
+
+    # install required packages
+    # TO DO: Check first if packages are already installed
+    echo "Installing required packages..."
+    opkg update
+    opkg install python3-misc python3-pip
+    pip3 install bleak
+
+    # setup cronjob to restart Bluetooth
+    grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+
+    # add install-script to rc.local to be ready for firmware update
+    filename=/data/rc.local
+    if [ ! -f $filename ]; then
+        echo "#!/bin/bash" >> $filename
+        chmod 755 $filename
+    fi
+    grep -qxF "sh /data/etc/dbus-serialbattery/installble.sh" $filename || echo "sh /data/etc/dbus-serialbattery/installble.sh" >> $filename
+
+    # kill if running, needed when an adapter changes
+    pkill -f "python .*/dbus-serialbattery.py"
+
+    # remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
+    # can be removed on second release (>1.0.0)
+    rm -rf /service/dbus-blebattery-*
+
+    # remove existing driver to cleanup
+    rm -rf /service/dbus-blebattery.*
+
+    # function to install ble battery
+    install_blebattery_service() {
+        mkdir -p /service/dbus-blebattery.$1/log
+        echo "#!/bin/sh" > /service/dbus-blebattery.$1/log/run
+        echo "exec multilog t s25000 n4 /var/log/dbus-blebattery.$1" >> /service/dbus-blebattery.$1/log/run
+        chmod 755 /service/dbus-blebattery.$1/log/run
+
+        echo "#!/bin/sh" > /service/dbus-blebattery.$1/run
+        echo "exec 2>&1" >> /service/dbus-blebattery.$1/run
+        echo "bluetoothctl disconnect $3" >> /service/dbus-blebattery.$1/run
+        echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery.$1/run
+        chmod 755 /service/dbus-blebattery.$1/run
+    }
+
+    echo "Packages installed."
+    echo ""
+
+    # install_blebattery_service 0 Jkbms_Ble C8:47:8C:12:34:56
+    # install_blebattery_service 1 Jkbms_Ble C8:47:8C:78:9A:BC
+
+    for (( i=0; i<${length}; i++ ));
+    do
+        echo "Installing ${bms_array[$i]} as dbus-blebattery.$i"
+        install_blebattery_service $i "${bms_array[$i]}"
+    done
+
+else
+    echo "No Bluetooth battery configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
+    echo "You can ignore this, if you are using only a serial connection."
+fi
+### BLUETOOTH PART | END ###
+
+
 # install notes
+echo
 echo
 echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
 echo
 echo "BLUETOOTH battery connection: There are a few more steps to complete installation."
-echo "    1. Please enable Bluetooth in the config file by adding/changing \"BLUETOOTH_ENABLED = True\"."
-echo "    2. Make sure to disable Settings -> Bluetooth in the Remote-Console to prevent reconnects every minute."
-echo "    3. Put your Bluetooth MAC adress in \"/data/etc/dbus-serialbattery/installble.sh\" and make sure to uncomment at least one install_service line at the bottom of the file."
-echo "    4. Execute \"/data/etc/dbus-serialbattery/installble.sh\" once to create services for each Bluetooth BMS."
+echo
+echo "    1. Please add the Bluetooth BMS to the config file \"/data/etc/dbus-serialbattery/config.ini\" by adding \"BLUETOOTH_BMS\":"
+echo "       Example with 1 BMS: BLUETOOTH_BMS = Jkbms_Ble C8:47:8C:00:00:00"
+echo "       Example with 3 BMS: BLUETOOTH_BMS = Jkbms_Ble C8:47:8C:00:00:00, Jkbms_Ble C8:47:8C:00:00:11, Jkbms_Ble C8:47:8C:00:00:22"
+echo "       If your Bluetooth BMS are nearby you can show the MAC address with \"bluetoothctl devices\"."
+echo
+echo "    2. Make sure to disable Settings -> Bluetooth in the remote console/GUI to prevent reconnects every minute."
+echo
+echo "    3. Re-run \"/data/etc/dbus-serialbattery/reinstalllocal.sh\", if the Bluetooth BMS were not added to the \"config.ini\" before."
+echo
 echo "    ATTENTION!"
 echo "    If you changed the default connection PIN of your BMS, then you have to pair the BMS first using OS tools like the \"bluetoothctl\"."
 echo "    See https://wiki.debian.org/BluetoothUser#Using_bluetoothctl for more details."
 echo
-echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"config.default.ini\" and add them to \"config.ini\" to persist future driver updates."
+echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"/data/etc/dbus-serialbattery/config.default.ini\""
+echo "                 and add them to \"/data/etc/dbus-serialbattery/config.ini\" to persist future driver updates."
 echo
 echo
