@@ -1812,7 +1812,6 @@ def _extract_payload(
         )
 
     if mode == MODE_ASCII:
-
         # Validate the ASCII header and footer.
         if response[_BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
             raise InvalidResponseError(

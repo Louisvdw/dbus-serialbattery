@@ -298,7 +298,7 @@ class DbusHelper:
         # Create TimeToSoC items
         for num in TIME_TO_SOC_POINTS:
             self._dbusservice.add_path("/TimeToSoC/" + str(num), None, writeable=True)
-        #Create TimeToGO item
+        # Create TimeToGO item
         self._dbusservice.add_path("/TimeToGo", None, writeable=True)
 
         logger.info(f"publish config values = {PUBLISH_CONFIG_VALUES}")
@@ -338,7 +338,6 @@ class DbusHelper:
             loop.quit()
 
     def publish_dbus(self):
-
         # Update SOC, DC and System items
         self._dbusservice["/System/NrOfCellsPerBattery"] = self.battery.cell_count
         self._dbusservice["/Soc"] = round(self.battery.soc, 2)
@@ -488,7 +487,7 @@ class DbusHelper:
                         if self.battery.current
                         else None
                     )
-                
+
                 # Update TimeToGo
                 self._dbusservice["/TimeToGo"] = (
                     self.battery.get_timetosoc(SOC_LOW_WARNING, crntPrctPerSec)

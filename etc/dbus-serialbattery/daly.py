@@ -20,7 +20,7 @@ class Daly(Battery):
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
-    cellvolt_buffer = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x82\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    cellvolt_buffer = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x82"
     command_soc = b"\x90"
     command_minmax_cell_volts = b"\x91"
     command_minmax_temp = b"\x92"
@@ -31,7 +31,7 @@ class Daly(Battery):
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
     BATTERYTYPE = "Daly"
-    LENGTH_CHECK = 4
+    LENGTH_CHECK = 1
     LENGTH_POS = 3
     CURRENT_ZERO_CONSTANT = 30000
     TEMP_ZERO_CONSTANT = 40
@@ -246,13 +246,16 @@ class Daly(Battery):
             buffer[1] = self.command_address[0]  # Always serial 40 or 80
             buffer[2] = self.command_cell_volts[0]
 
-            maxFrame = int(self.cell_count / 3) + 1
+            if (int(self.cell_count) % 3) == 0:
+                maxFrame = int(self.cell_count / 3)
+            else:
+                maxFrame = int(self.cell_count / 3) + 1
             lenFixed = (
-                maxFrame * 12
-            )  # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved
+                maxFrame * 13
+            )  # 0xA5, 0x01, 0x95, 0x08 + 1 byte frame + 6 byte data + 1byte reserved + chksum
 
-            cells_volts_data = read_serialport_data(
-                ser, buffer, self.LENGTH_POS, self.LENGTH_CHECK, lenFixed
+            cells_volts_data = self.read_serialport_data(
+                ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
                 logger.warning("read_cells_volts")
@@ -269,14 +272,24 @@ class Daly(Battery):
                 for idx in range(self.cell_count):
                     self.cells.append(Cell(True))
 
+            # logger.warning("data " + bytes(cells_volts_data).hex())
+
             while (
                 bufIdx < len(cells_volts_data) - 4
             ):  # we at least need 4 bytes to extract the identifiers
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
-                    frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from(
-                        ">Bhhh", cells_volts_data, bufIdx + 4
-                    )
+                    (
+                        frame,
+                        frameCell[0],
+                        frameCell[1],
+                        frameCell[2],
+                        _,
+                        chk,
+                    ) = unpack_from(">BhhhBB", cells_volts_data, bufIdx + 4)
+                    if sum(cells_volts_data[bufIdx : bufIdx + 12]) & 0xFF != chk:
+                        logger.warning("bad cell voltages checksum")
+                        return False
                     for idx in range(3):
                         cellnum = (
                             (frame - 1) * 3
@@ -287,9 +300,9 @@ class Daly(Battery):
                         self.cells[cellnum].voltage = (
                             None if cellVoltage < lowMin else cellVoltage
                         )
-                    bufIdx += 10  # BBBBBhhh -> 11 byte
-                bufIdx += 1
-
+                    bufIdx += 13  # BBBBBhhhBB -> 13 byte
+                else:
+                    logger.warning("bad cell voltages header")
         return True
 
     def read_cell_voltage_range_data(self, ser):
@@ -350,7 +363,7 @@ class Daly(Battery):
         return buffer
 
     def read_serial_data_daly(self, ser, command):
-        data = read_serialport_data(
+        data = self.read_serialport_data(
             ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
@@ -359,8 +372,86 @@ class Daly(Battery):
         start, flag, command_ret, length = unpack_from("BBBB", data)
         checksum = sum(data[:-1]) & 0xFF
 
-        if start == 165 and length == 8 and checksum == data[12]:
+        if start == 165 and length == 8 and len(data) > 12 and checksum == data[12]:
             return data[4 : length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
+            return False
+
+    # Read data from previously openned serial port
+    def read_serialport_data(
+        self,
+        ser,
+        command,
+        length_pos,
+        length_check,
+        length_fixed=None,
+        length_size=None,
+    ):
+        try:
+            ser.flushOutput()
+            ser.flushInput()
+            ser.write(command)
+
+            length_byte_size = 1
+            if length_size is not None:
+                if length_size.upper() == "H":
+                    length_byte_size = 2
+                elif length_size.upper() == "I" or length_size.upper() == "L":
+                    length_byte_size = 4
+
+            count = 0
+            toread = ser.inWaiting()
+
+            while toread < (length_pos + length_byte_size):
+                sleep(0.005)
+                toread = ser.inWaiting()
+                count += 1
+                if count > 50:
+                    logger.error(">>> ERROR: No reply - returning")
+                    return False
+
+            # logger.info('serial data toread ' + str(toread))
+            res = ser.read(toread)
+            if length_fixed is not None:
+                length = length_fixed
+            else:
+                if len(res) < (length_pos + length_byte_size):
+                    logger.error(
+                        ">>> ERROR: No reply - returning [len:" + str(len(res)) + "]"
+                    )
+                    return False
+                length_size = length_size if length_size is not None else "B"
+                length = unpack_from(">" + length_size, res, length_pos)[0]
+
+            # logger.info('serial data length ' + str(length))
+
+            count = 0
+            data = bytearray(res)
+
+            packetlen = (
+                length_fixed
+                if length_fixed is not None
+                else length_pos + length_byte_size + length + length_check
+            )
+            while len(data) < packetlen:
+                res = ser.read(packetlen - len(data))
+                data.extend(res)
+                # logger.info('serial data length ' + str(len(data)))
+                sleep(0.005)
+                count += 1
+                if count > 150:
+                    logger.error(
+                        ">>> ERROR: No reply - returning [len:"
+                        + str(len(data))
+                        + "/"
+                        + str(length + length_check)
+                        + "]"
+                    )
+                    return False
+
+            return data
+
+        except Exception as e:
+            logger.error(e)
             return False

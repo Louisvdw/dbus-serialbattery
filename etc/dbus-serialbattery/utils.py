@@ -241,7 +241,6 @@ def calcLinearRelationship(inValue, inArray, outArray):
     if inArray[0] > inArray[-1]:  # change compare-direction in array
         return calcLinearRelationship(inValue, inArray[::-1], outArray[::-1])
     else:
-
         # Handle out of bounds
         if inValue <= inArray[0]:
             return outArray[0]
@@ -321,7 +320,7 @@ def open_serial_port(port, baud):
     return ser
 
 
-# Read data from previously openned serial port
+# Read data from previously opened serial port
 def read_serialport_data(
     ser: serial.Serial,
     command,
