@@ -63,7 +63,7 @@ fi
 ### BLUETOOTH PART | START ###
 
 # get BMS list from config file
-bluetooth_bms=$(awk -F "=" '/BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+bluetooth_bms=$(awk -F "=" '/^BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
 #echo $bluetooth_bms
 
 # clear whitespaces
