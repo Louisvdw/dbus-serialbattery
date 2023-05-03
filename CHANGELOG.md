@@ -4,10 +4,10 @@
 
 ### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
 
+* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Balancing status for JKBMS by @mr-manuel
 * Added: Balancing switch status for JKBMS by @mr-manuel
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
-* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
@@ -51,12 +51,12 @@
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
 * Changed: Logging to get relevant data by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
-* Changed: Renamed scripts for better reading #532 by @mr-manuel
-* Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
 * Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
-* Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
+* Changed: Renamed scripts for better reading #532 by @mr-manuel
+* Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
+* Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
 * Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS by @mr-manuel
 * Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY` by @mr-manuel
 * Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go) by @mr-manuel
