@@ -6,7 +6,7 @@
 DRIVERNAME=dbus-serialbattery
 
 # handle read only mounts
-sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
+bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # install
 rm -rf /opt/victronenergy/service/$DRIVERNAME
@@ -17,7 +17,7 @@ mkdir /opt/victronenergy/$DRIVERNAME/bms
 cp -f /data/etc/$DRIVERNAME/* /opt/victronenergy/$DRIVERNAME &>/dev/null
 cp -f /data/etc/$DRIVERNAME/bms/* /opt/victronenergy/$DRIVERNAME/bms &>/dev/null
 cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVERNAME
-sh /data/etc/$DRIVERNAME/install-qml.sh
+bash /data/etc/$DRIVERNAME/install-qml.sh
 
 # check if serial-starter.d was deleted
 serialstarter_path="/data/conf/serial-starter.d"
