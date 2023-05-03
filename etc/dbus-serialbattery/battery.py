@@ -62,8 +62,15 @@ class Battery(ABC):
         self.type = "Generic"
         self.poll_interval = 1000
         self.online = True
-
         self.hardware_version = None
+        self.cell_count = None
+
+        self.init_values()
+
+        # used to identify a BMS when multiple BMS are connected - planned for future use
+        self.unique_identifier = None
+
+    def init_values(self):
         self.voltage = None
         self.current = None
         self.capacity_remain = None
@@ -78,7 +85,6 @@ class Battery(ABC):
         self.charge_fet = None
         self.discharge_fet = None
         self.balance_fet = None
-        self.cell_count = None
         self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
@@ -102,9 +108,6 @@ class Battery(ABC):
         # max battery charge/discharge current
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
-
-        # used to identify a BMS when multiple BMS are connected - planned for future use
-        self.unique_identifier = None
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -306,12 +309,20 @@ class Battery(ABC):
         # Manage Charge Current Limitations
         charge_limits = [
             self.max_battery_charge_current
+            if self.max_battery_charge_current is not None
+            else 0
         ]  # gets removed after finished testing
-        charge_limits_new = {self.max_battery_charge_current: "None (Max Config Limit)"}
+        charge_limits_new = {
+            self.max_battery_charge_current
+            if self.max_battery_charge_current is not None
+            else 0: "None (Max Config Limit)"
+        }
 
         if utils.CCCM_CV_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToCellVoltage()
-            charge_limits.append(tmp)  # gets removed after finished testing
+            charge_limits.append(
+                tmp if tmp is not None else 0
+            )  # gets removed after finished testing
 
             # logging.error("self.max_battery_charge_current: "
             # + str(self.max_battery_charge_current)
@@ -327,7 +338,9 @@ class Battery(ABC):
 
         if utils.CCCM_T_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToTemperature()
-            charge_limits.append(tmp)  # gets removed after finished testing
+            charge_limits.append(
+                tmp if tmp is not None else 0
+            )  # gets removed after finished testing
 
             # logging.error("self.max_battery_charge_current: "
             # + str(self.max_battery_charge_current)
@@ -341,7 +354,9 @@ class Battery(ABC):
 
         if utils.CCCM_SOC_ENABLE:
             tmp = self.calcMaxChargeCurrentReferringToSoc()
-            charge_limits.append(tmp)  # gets removed after finished testing
+            charge_limits.append(
+                tmp if tmp is not None else 0
+            )  # gets removed after finished testing
 
             # logging.error("self.max_battery_charge_current: "
             # + str(self.max_battery_charge_current)
@@ -372,14 +387,20 @@ class Battery(ABC):
         # Manage Discharge Current Limitations
         discharge_limits = [
             self.max_battery_discharge_current
+            if self.max_battery_discharge_current is not None
+            else 0
         ]  # gets removed after finished testing
         discharge_limits_new = {
-            self.max_battery_discharge_current: "None (Max Config Limit)"
+            self.max_battery_discharge_current
+            if self.max_battery_discharge_current is not None
+            else 0: "None (Max Config Limit)"
         }
 
         if utils.DCCM_CV_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToCellVoltage()
-            discharge_limits.append(tmp)  # gets removed after finished testing
+            discharge_limits.append(
+                tmp if tmp is not None else 0
+            )  # gets removed after finished testing
 
             # logging.error("self.max_battery_discharge_current: "
             # + str(self.max_battery_discharge_current)
@@ -395,7 +416,9 @@ class Battery(ABC):
 
         if utils.DCCM_T_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToTemperature()
-            discharge_limits.append(tmp)  # gets removed after finished testing
+            discharge_limits.append(
+                tmp if tmp is not None else 0
+            )  # gets removed after finished testing
 
             # logging.error("self.max_battery_discharge_current: "
             # + str(self.max_battery_discharge_current)
@@ -411,7 +434,9 @@ class Battery(ABC):
 
         if utils.DCCM_SOC_ENABLE:
             tmp = self.calcMaxDischargeCurrentReferringToSoc()
-            discharge_limits.append(tmp)  # gets removed after finished testing
+            discharge_limits.append(
+                tmp if tmp is not None else 0
+            )  # gets removed after finished testing
 
             # logging.error("self.max_battery_discharge_current: "
             # + str(self.max_battery_discharge_current)
@@ -772,43 +797,61 @@ class Battery(ABC):
             return None
 
     def get_temp(self) -> Union[float, None]:
-        if utils.TEMP_BATTERY == 1:
-            return self.temp1
-        elif utils.TEMP_BATTERY == 2:
-            return self.temp2
-        else:
-            return self.extract_from_temp_values(
-                extractor=lambda temp1, temp2: round(
-                    (float(temp1) + float(temp2)) / 2, 2
+        try:
+            if utils.TEMP_BATTERY == 1:
+                return self.temp1
+            elif utils.TEMP_BATTERY == 2:
+                return self.temp2
+            else:
+                return self.extract_from_temp_values(
+                    extractor=lambda temp1, temp2: round(
+                        (float(temp1) + float(temp2)) / 2, 2
+                    )
                 )
-            )
+        except:
+            return None
 
     def get_min_temp(self) -> Union[float, None]:
-        return self.extract_from_temp_values(
-            extractor=lambda temp1, temp2: min(temp1, temp2)
-        )
+        try:
+            return self.extract_from_temp_values(
+                extractor=lambda temp1, temp2: min(temp1, temp2)
+            )
+        except:
+            return None
 
     def get_min_temp_id(self) -> Union[str, None]:
-        if self.temp1 < self.temp2:
-            return utils.TEMP_1_NAME
-        else:
-            return utils.TEMP_2_NAME
+        try:
+            if self.temp1 < self.temp2:
+                return utils.TEMP_1_NAME
+            else:
+                return utils.TEMP_2_NAME
+        except:
+            return None
 
     def get_max_temp(self) -> Union[float, None]:
-        return self.extract_from_temp_values(
-            extractor=lambda temp1, temp2: max(temp1, temp2)
-        )
+        try:
+            return self.extract_from_temp_values(
+                extractor=lambda temp1, temp2: max(temp1, temp2)
+            )
+        except:
+            return None
 
     def get_max_temp_id(self) -> Union[str, None]:
-        if self.temp1 > self.temp2:
-            return utils.TEMP_1_NAME
-        else:
-            return utils.TEMP_2_NAME
+        try:
+            if self.temp1 > self.temp2:
+                return utils.TEMP_1_NAME
+            else:
+                return utils.TEMP_2_NAME
+        except:
+            return None
 
     def get_mos_temp(self) -> Union[float, None]:
-        if self.temp_mos is not None:
-            return self.temp_mos
-        else:
+        try:
+            if self.temp_mos is not None:
+                return self.temp_mos
+            else:
+                return None
+        except:
             return None
 
     def log_cell_data(self) -> bool:
