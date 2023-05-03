@@ -798,7 +798,7 @@ class Battery(ABC):
                         (float(temp1) + float(temp2)) / 2, 2
                     )
                 )
-        except:
+        except TypeError:
             return None
 
     def get_min_temp(self) -> Union[float, None]:
@@ -806,7 +806,7 @@ class Battery(ABC):
             return self.extract_from_temp_values(
                 extractor=lambda temp1, temp2: min(temp1, temp2)
             )
-        except:
+        except TypeError:
             return None
 
     def get_min_temp_id(self) -> Union[str, None]:
@@ -815,7 +815,7 @@ class Battery(ABC):
                 return utils.TEMP_1_NAME
             else:
                 return utils.TEMP_2_NAME
-        except:
+        except TypeError:
             return None
 
     def get_max_temp(self) -> Union[float, None]:
@@ -823,7 +823,7 @@ class Battery(ABC):
             return self.extract_from_temp_values(
                 extractor=lambda temp1, temp2: max(temp1, temp2)
             )
-        except:
+        except TypeError:
             return None
 
     def get_max_temp_id(self) -> Union[str, None]:
@@ -832,16 +832,13 @@ class Battery(ABC):
                 return utils.TEMP_1_NAME
             else:
                 return utils.TEMP_2_NAME
-        except:
+        except TypeError:
             return None
 
     def get_mos_temp(self) -> Union[float, None]:
-        try:
-            if self.temp_mos is not None:
-                return self.temp_mos
-            else:
-                return None
-        except:
+        if self.temp_mos is not None:
+            return self.temp_mos
+        else:
             return None
 
     def log_cell_data(self) -> bool:
