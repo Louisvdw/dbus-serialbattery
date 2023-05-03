@@ -33,18 +33,33 @@ cd /tmp
 # clean already extracted folder
 rm -rf /tmp/dbus-serialbattery-$branch
 
+# download driver
 wget -O $branch.zip https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
-unzip $branch.zip
 
+# extract archive
+unzip -q $branch.zip
+
+# backup config.ini
+if [ -f "/data/etc/dbus-serialbattery/config.ini" ]; then
+    mv /data/etc/dbus-serialbattery/config.ini /data/etc/config.ini
+fi
+
+# remove old driver
+rm -rf /data/etc/dbus-serialbattery
+
+# copy driver
 cp -rf /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
 
+# restore config.ini
+if [ -f "/data/etc/config.ini" ]; then
+    mv /data/etc/config.ini /data/etc/dbus-serialbattery/config.ini
+fi
+
+# set permissions
 chmod +x /data/etc/dbus-serialbattery/*.sh
 chmod +x /data/etc/dbus-serialbattery/*.py
 chmod +x /data/etc/dbus-serialbattery/service/run
 chmod +x /data/etc/dbus-serialbattery/service/log/run
 
-bash /data/etc/dbus-serialbattery/reinstalllocal.sh
-
-#if [[ $branch == "jkbms_ble" ]]; then
-#    nano /data/etc/dbus-serialbattery/installble.sh
-#fi
+# run install script
+bash /data/etc/dbus-serialbattery/reinstall-local.sh

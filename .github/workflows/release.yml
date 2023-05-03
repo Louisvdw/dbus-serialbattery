@@ -19,12 +19,10 @@ jobs:
           find . -type f -name "run" -exec chmod +x {} \;
           tar -czvf venus-data.tar.gz \
             --mode='a+rwX' \
-            --exclude battery_template.py \
             --exclude __pycache__ \
-            --exclude restartservice.sh \
-            --exclude revov.py \
-            --exclude test_max17853.py \
-            --exclude util_max17853.py \
+            --exclude bms/battery_template.py \
+            --exclude bms/revov.py \
+            --exclude bms/test_max17853.py \
             etc/dbus-serialbattery/
 
       - name: Release

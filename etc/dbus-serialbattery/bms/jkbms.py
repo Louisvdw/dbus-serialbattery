@@ -31,8 +31,6 @@ class Jkbms(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
@@ -84,17 +82,18 @@ class Jkbms(Battery):
                     unpack_from(">xH", celldata, c * 3 + 1)[0] / 1000
                 )
 
+        # MOSFET temperature
+        offset = cellbyte_count + 3
+        temp_mos = unpack_from(">H", self.get_data(status_data, b"\x80", offset, 2))[0]
+        self.to_temp(0, temp_mos if temp_mos < 99 else (100 - temp_mos))
+
+        # Temperature sensors
         offset = cellbyte_count + 6
         temp1 = unpack_from(">H", self.get_data(status_data, b"\x81", offset, 2))[0]
         offset = cellbyte_count + 9
         temp2 = unpack_from(">H", self.get_data(status_data, b"\x82", offset, 2))[0]
         self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
         self.to_temp(2, temp2 if temp2 < 99 else (100 - temp2))
-
-        # MOSFET temperature
-        offset = cellbyte_count + 3
-        temp_mos = unpack_from(">H", self.get_data(status_data, b"\x80", offset, 2))[0]
-        self.to_temp("mos", temp_mos if temp_mos < 99 else (100 - temp_mos))
 
         offset = cellbyte_count + 12
         voltage = unpack_from(">H", self.get_data(status_data, b"\x83", offset, 2))[0]
@@ -106,6 +105,18 @@ class Jkbms(Battery):
             current / -100
             if current < self.CURRENT_ZERO_CONSTANT
             else (current - self.CURRENT_ZERO_CONSTANT) / 100
+        )
+
+        # Continued discharge current
+        offset = cellbyte_count + 66
+        self.max_battery_discharge_current = float(
+            unpack_from(">H", self.get_data(status_data, b"\x97", offset, 2))[0]
+        )
+
+        # Continued charge current
+        offset = cellbyte_count + 72
+        self.max_battery_charge_current = float(
+            unpack_from(">H", self.get_data(status_data, b"\x99", offset, 2))[0]
         )
 
         offset = cellbyte_count + 18

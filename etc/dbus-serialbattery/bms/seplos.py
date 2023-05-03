@@ -5,12 +5,6 @@ import utils
 import serial
 
 
-def int_from_hex_ascii(to_decode, signed=False):
-    return int.from_bytes(
-        bytes.fromhex(to_decode.decode("ascii")), byteorder="big", signed=signed
-    )
-
-
 class Seplos(Battery):
     def __init__(self, port, baud, address=0x00):
         super(Seplos, self).__init__(port, baud, address)
@@ -93,14 +87,14 @@ class Seplos(Battery):
             return False
 
     def get_settings(self):
-        # After successful  connection get_settings will be call to set up the battery.
+        # After successful connection get_settings will be called to set up the battery.
         # Set the current limits, populate cell count, etc.
         # Return True if success, False for failure
 
-        # Uncomment if BMS does not supply capacity
-        # self.capacity = BATTERY_CAPACITY
+        # BMS does not provide max charge-/discharge, so we have to use hardcoded/config values
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
+
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 

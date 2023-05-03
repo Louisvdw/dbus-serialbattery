@@ -91,6 +91,11 @@ class Jkbms_Ble(Battery):
             return False
 
         logger.info("JK BMS found!")
+
+        # get first data to show in startup log
+        self.get_settings()
+        self.refresh_data()
+
         return True
 
     def get_settings(self):
@@ -147,11 +152,11 @@ class Jkbms_Ble(Battery):
         for c in range(self.cell_count):
             self.cells[c].voltage = st["cell_info"]["voltages"][c]
 
+        self.to_temp(0, st["cell_info"]["temperature_mos"])
         self.to_temp(1, st["cell_info"]["temperature_sensor_1"])
         self.to_temp(2, st["cell_info"]["temperature_sensor_2"])
-        self.to_temp("mos", st["cell_info"]["temperature_mos"])
-        self.current = st["cell_info"]["current"]
-        self.voltage = st["cell_info"]["total_voltage"]
+        self.current = round(st["cell_info"]["current"], 1)
+        self.voltage = round(st["cell_info"]["total_voltage"], 2)
 
         self.soc = st["cell_info"]["battery_soc"]
         self.cycles = st["cell_info"]["cycle_count"]
