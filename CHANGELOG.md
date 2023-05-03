@@ -36,8 +36,8 @@
 * Added: Support for HLPdata BMS4S https://github.com/Louisvdw/dbus-serialbattery/pull/505 by @peterohman
 * Added: Support for Seplos BMS https://github.com/Louisvdw/dbus-serialbattery/pull/530 by @wollew
 * Added: Temperature name for temperature sensor 1 & 2. This allows to see which sensor is low and high (e.g. battery and cable) by @mr-manuel
-* Changed: `reinstalllocal.sh` to recreate `/data/conf/serial-starter.d` if deleted by `disabledriver.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
-* Changed: Added QML to `restoregui.sh` by @mr-manuel
+* Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
+* Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
 * Changed: Default config file by @mr-manuel
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
@@ -57,13 +57,14 @@
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
 * Changed: Logging to get relevant data by @mr-manuel
-* Changed: Moved Bluetooth part to `reinstalllocal.sh` by @mr-manuel
+* Changed: Moved Bluetooth part to `reinstall-local.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
-* Changed: Optimized installation scripts by @mr-manuel
 * Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
 * Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
-* Changed: Serial-Starter file is now created from `reinstalllocal.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
+* Changed: Renamed scripts for better reading #532 by @mr-manuel
+* Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
+* Changed: Serial-Starter file is now created from `reinstall-local.sh`. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/520 by @mr-manuel
 * Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS by @mr-manuel
 * Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY` by @mr-manuel
 * Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go) by @mr-manuel

@@ -23,7 +23,6 @@ jobs:
             --exclude bms/battery_template.py \
             --exclude bms/revov.py \
             --exclude bms/test_max17853.py \
-            --exclude restartservice.sh \
             etc/dbus-serialbattery/
 
       - name: Release

@@ -74,9 +74,9 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 2. Run these commands to install or update to the latest release version.
 
   ```bash
-  wget -O /tmp/installrelease.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/installrelease.sh
+  wget -O /tmp/install-release.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/install-release.sh
 
-  bash /tmp/installrelease.sh
+  bash /tmp/install-release.sh
 
   reboot
   ```
@@ -138,7 +138,7 @@ If you use the cell voltage limits, temperature limits or SoC limits you also ne
 
 ### Settings location/path
 
-💡 After updating the settings reboot the device or run `/data/etc/dbus-serialbattery/reinstalllocal.sh` to apply the changes.
+💡 After updating the settings reboot the device or run `/data/etc/dbus-serialbattery/reinstall-local.sh` to apply the changes.
 
 #### Driver version `<= v0.14.3`
 Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
@@ -204,7 +204,7 @@ Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and uncommented (witho
 You can disable the driver so that it will not be run by the GX device. To do that run the following command in SSH.
 
 ```bash
-bash /data/etc/dbus-serialbattery/disabledriver.sh
+bash /data/etc/dbus-serialbattery/disable.sh
 ```
 
 You also need to configure your MPPTs to run in `Stand alone mode` again. Follow the Victron guide for [Err 67 - BMS Connection lost](https://www.victronenergy.com/live/mppt-error-codes#err_67_-_bms_connection_lost).
@@ -213,7 +213,7 @@ You also need to configure your MPPTs to run in `Stand alone mode` again. Follow
 To enable the driver again you can run the installer.
 
 ```bash
-bash /data/etc/dbus-serialbattery/reinstalllocal.sh
+bash /data/etc/dbus-serialbattery/reinstall-local.sh
 ```
 
 ## Uninstall/remove the driver
@@ -236,11 +236,11 @@ rm -rf /opt/victronenergy/service/dbus-serialbattery
 rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
 rm -rf /opt/victronenergy/dbus-serialbattery
 
-# kill if running
+# kill driver, if running
 pkill -f "python .*/dbus-serialbattery.py"
 
 # remove install-script from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
 ```
 
 > If after the uninstall for some reason several items in the GUI were red, DO NOT reboot your GX device. See [Uninstalling driver bricked my cerbo #576](https://github.com/Louisvdw/dbus-serialbattery/issues/576)
