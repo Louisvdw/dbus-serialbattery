@@ -2,10 +2,12 @@
 
 ## v1.0.0-jkbms_ble
 
+### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
+
+* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Balancing status for JKBMS by @mr-manuel
 * Added: Balancing switch status for JKBMS by @mr-manuel
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
-* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
@@ -25,8 +27,8 @@
 * Added: JKBMS BLE - MOS temperature by @mr-manuel
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: Post install notes by @mr-manuel
-* Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
+* Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
