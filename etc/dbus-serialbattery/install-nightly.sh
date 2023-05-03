@@ -62,4 +62,4 @@ chmod +x /data/etc/dbus-serialbattery/service/run
 chmod +x /data/etc/dbus-serialbattery/service/log/run
 
 # run install script
-bash /data/etc/dbus-serialbattery/reinstalllocal.sh
+bash /data/etc/dbus-serialbattery/reinstall-local.sh

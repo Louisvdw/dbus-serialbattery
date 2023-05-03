@@ -7,4 +7,4 @@
 tar -zxf ./venus-data.tar.gz -C /data
 
 # install driver
-sh /data/etc/dbus-serialbattery/reinstalllocal.sh
+sh /data/etc/dbus-serialbattery/reinstall-local.sh

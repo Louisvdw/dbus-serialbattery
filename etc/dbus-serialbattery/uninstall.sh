@@ -16,4 +16,10 @@ rm -rf /opt/victronenergy/dbus-serialbattery
 pkill -f "python .*/dbus-serialbattery.py"
 
 # remove install-script from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
+
+
+### needed for upgrading from older versions | start ###
+# remove old install script from rc.local
+sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
+### needed for upgrading from older versions | end ###
