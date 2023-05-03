@@ -23,7 +23,7 @@ bash /data/etc/$DRIVERNAME/install-qml.sh
 serialstarter_path="/data/conf/serial-starter.d"
 serialstarter_file="$serialstarter_path/dbus-serialbattery.conf"
 
-# check if folder is a file (older versions of this driver)
+# check if folder is a file (older versions of this driver < v1.0.0))
 if [ -f $serialstarter_path ]; then
     rm -f $serialstarter_path
 fi
@@ -64,13 +64,13 @@ sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
 ### needed for upgrading from older versions | end ###
 
 
-# restart if running
+# kill driver, if running. It gets restarted by the service daemon
 pkill -f "python .*/$DRIVERNAME.py"
 
 # install notes
 echo
 echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
 echo
-echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"config.default.ini\" and add them to \"config.ini\" to persist future driver updates."
-echo
+echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"/data/etc/dbus-serialbattery/config.default.ini\""
+echo "                 and add them to \"/data/etc/dbus-serialbattery/config.ini\" to persist future driver updates."
 echo

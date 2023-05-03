@@ -11,10 +11,10 @@ sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
 # remove files
 rm -f /data/conf/serial-starter.d/$DRIVERNAME.conf
 
-# kill if running
+# kill driver, if running. It gets restarted by the service daemon
 pkill -f "python .*/$DRIVERNAME.py"
 
-# remove install-script from rc.local
+# remove install script from rc.local
 sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstall-local.sh/d" /data/rc.local
 
 
