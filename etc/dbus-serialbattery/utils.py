@@ -36,16 +36,25 @@ def _get_list_from_config(
 
 # Constants - Need to dynamically get them in future
 DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0-jkbms_ble (20230502)"
+DRIVER_SUBVERSION = ".0-jkbms_ble (20230503)"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
-# Battery Current limits
+# --------- Battery Current limits ---------
 MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
 MAX_BATTERY_DISCHARGE_CURRENT = float(
     config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
 )
 
+# --------- Cell Voltages ---------
+# Description: Cell min/max voltages which are used to calculate the min/max battery voltage
+# Example: 16 cells * 3.45V/cell = 55.2V max charge voltage. 16 cells * 2.90V = 46.4V min discharge voltage
+MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
+MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
+# Max voltage can seen as absorption voltage
+FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
+
+# --------- Charge mode ---------
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
 # True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
@@ -75,14 +84,6 @@ LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
 #          to don't stress the batteries. Allow max voltage of 55.2V again if max cell difference is above 0.050V
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
-
-# -- Cell Voltages
-# Description: Cell min/max voltages which are used to calculate the min/max battery voltage
-# Example: 16 cells * 3.45V/cell = 55.2V max charge voltage. 16 cells * 2.90V = 46.4V min discharge voltage
-MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
-MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
-# Max voltage can seen as absorption voltage
-FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
 
 # -- CVL reset based on cell voltage diff (linear mode)
 # Specify cell voltage diff where CVL limit is kept until diff is equal or lower

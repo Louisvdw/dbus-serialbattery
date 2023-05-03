@@ -13,19 +13,25 @@ rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
 rm -rf /opt/victronenergy/dbus-serialbattery
 rm -rf /service/dbus-blebattery.*
 
-# remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
-# can be removed on second release (>1.0.0)
-rm -rf /service/dbus-blebattery-*
-
-# kill if running
-pkill -f "python .*/dbus-serialbattery.py"
-
 # remove install-script from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
+sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
 
 # remove cronjob
 sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
+
+
+### needed for upgrading from older versions | start ###
+# remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
+rm -rf /service/dbus-blebattery-*
+# remove old install script from rc.local
+sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
+# remove old entry from rc.local
+sed -i "/sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
+### needed for upgrading from older versions | end ###
+
+
+# kill driver, if running
+pkill -f "python .*/dbus-serialbattery.py"
 
 # uninstall modules
 read -r -p "Do you also want to uninstall bleak, python3-pip and python3-modules? If you don't know select y. [Y/n] " response
