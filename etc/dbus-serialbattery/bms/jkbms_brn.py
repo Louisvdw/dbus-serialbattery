@@ -79,7 +79,7 @@ TRANSLATE_CELL_INFO = [
 ]
 
 
-class JkBmsBle:
+class Jkbms_Brn:
     # entries for translating the bytearray to py-object via unpack
     # [[py dict entry as list, each entry ] ]
 
@@ -394,7 +394,7 @@ class JkBmsBle:
 
 """
 if __name__ == "__main__":
-    jk = JkBmsBle("C8:47:8C:E4:54:0E")
+    jk = Jkbms_Brn("C8:47:8C:00:00:00")
     jk.start_scraping()
     while True:
         print(jk.get_status())
