@@ -14,7 +14,7 @@ pkill -f "python .*/$DRIVERNAME.py"
 
 
 # get BMS list from config file
-bluetooth_bms=$(awk -F "=" '/BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+bluetooth_bms=$(awk -F "=" '/^BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
 # clear whitespaces
 bluetooth_bms_clean="$(echo $bluetooth_bms | sed 's/\s*,\s*/,/g')"
 # split into array
