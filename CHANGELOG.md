@@ -30,7 +30,7 @@
 * Added: Support for HLPdata BMS4S https://github.com/Louisvdw/dbus-serialbattery/pull/505 by @peterohman
 * Added: Support for Seplos BMS https://github.com/Louisvdw/dbus-serialbattery/pull/530 by @wollew
 * Added: Temperature name for temperature sensor 1 & 2. This allows to see which sensor is low and high (e.g. battery and cable) by @mr-manuel
-* Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d` if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
+* Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
 * Changed: Default config file by @mr-manuel
