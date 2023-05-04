@@ -5,6 +5,7 @@
 ### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
 
 * Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
+* Added: Apply max voltage, if `CVCM_ENABLE` is `False`. Before float voltage was applied by @mr-manuel
 * Added: Balancing status for JKBMS by @mr-manuel
 * Added: Balancing switch status for JKBMS by @mr-manuel
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
@@ -17,8 +18,8 @@
 * Added: Driver uninstall script by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
-* Added: Install needed components automatically after a Venus OS upgrade by @mr-manuel
-* Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @mr-manuel
+* Added: Install needed Bluetooth components automatically after a Venus OS upgrade by @mr-manuel
+* Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
 * Added: JKBMS BLE - Balancing switch status by @mr-manuel
 * Added: JKBMS BLE - Capacity by @mr-manuel
 * Added: JKBMS BLE - Cell imbalance alert by @mr-manuel
@@ -73,4 +74,4 @@
 * Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS by @mr-manuel
 * Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY` by @mr-manuel
 * Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go) by @mr-manuel
-* Changed: Uninstall also installed Bluetooth modules on uninstall. by @mr-manuel
+* Changed: Uninstall also installed Bluetooth modules on uninstall by @mr-manuel

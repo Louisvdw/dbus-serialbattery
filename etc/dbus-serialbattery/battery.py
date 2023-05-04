@@ -165,10 +165,15 @@ class Battery(ABC):
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
-        if utils.LINEAR_LIMITATION_ENABLE:
-            self.manage_charge_voltage_linear()
+        if utils.CVCM_ENABLE:
+            if utils.LINEAR_LIMITATION_ENABLE:
+                self.manage_charge_voltage_linear()
+            else:
+                self.manage_charge_voltage_step()
+        # on CVCM_ENABLE = False apply max voltage
         else:
-            self.manage_charge_voltage_step()
+            self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+            self.charge_mode = "Keep always max voltage"
 
     def manage_charge_voltage_linear(self) -> None:
         """
@@ -268,6 +273,7 @@ class Battery(ABC):
             and voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
         ):
             self.charge_mode += " + Balancing"
+
         self.charge_mode += " (Linear Mode)"
 
     def manage_charge_voltage_step(self) -> None:
