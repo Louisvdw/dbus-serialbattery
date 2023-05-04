@@ -32,7 +32,7 @@
 * Added: Post install notes by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
-* Added: Reset values to None, if battery goes offline (not reachable for 10s) by @transistorgit
+* Added: Reset values to None, if battery goes offline (not reachable for 10s). Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/193 https://github.com/Louisvdw/dbus-serialbattery/issues/64 by @transistorgit
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
