@@ -54,6 +54,14 @@ MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
 # Max voltage can seen as absorption voltage
 FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
 
+# --------- BMS disconnect behaviour ---------
+# Description: Block charge and discharge when the communication to the BMS is lost. If you are removing the
+#              BMS on purpose, then you have to restart the driver/system to reset the block.
+# False: Charge and discharge is not blocked on BMS communication loss
+# True: Charge and discharge is blocked on BMS communication loss, it's unblocked when connection is established
+#       again or the driver/system is restarted
+BLOCK_ON_DISCONNECT = "True" == config["DEFAULT"]["BLOCK_ON_DISCONNECT"]
+
 # --------- Charge mode ---------
 # Choose the mode for voltage / current limitations (True / False)
 # False is a step mode. This is the default with limitations on hard boundary steps
