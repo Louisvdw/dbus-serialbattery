@@ -225,8 +225,10 @@ class Jkbms_Ble(Battery):
         # if self.jk.is_running():
         # self.jk.stop_scraping()
         logger.info("scraping ended, issuing sys-commands")
-        os.system("kill -9 $(pidof bluetoothd)")
-        # os.system("/etc/init.d/bluetooth stop") is not enugh, kill -9 via pid is needed
+        # process kill is needed, since the service/bluetooth driver is probably freezed
+        os.system('pkill -f "bluetoothd"')
+        # stop will not work, if service/bluetooth driver is stuck
+        # os.system("/etc/init.d/bluetooth stop")
         time.sleep(2)
         os.system("rfkill block bluetooth")
         os.system("rfkill unblock bluetooth")

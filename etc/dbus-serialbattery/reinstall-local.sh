@@ -63,7 +63,7 @@ fi
 ### BLUETOOTH PART | START ###
 
 # get BMS list from config file
-bluetooth_bms=$(awk -F "=" '/BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+bluetooth_bms=$(awk -F "=" '/^BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
 #echo $bluetooth_bms
 
 # clear whitespaces
@@ -80,6 +80,9 @@ length=${#bms_array[@]}
 
 # always remove existing blebattery services to cleanup
 rm -rf /service/dbus-blebattery.*
+
+# kill all blebattery processes
+pkill -f "blebattery"
 
 if [ $length -gt 0 ]; then
 

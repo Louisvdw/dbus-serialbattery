@@ -2,21 +2,26 @@
 
 ## v1.0.0-jkbms_ble
 
+### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
+
+* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
+* Added: Alert is triggered, when BMS communication is lost by @mr-manuel
+* Added: Apply max voltage, if `CVCM_ENABLE` is `False`. Before float voltage was applied by @mr-manuel
 * Added: Balancing status for JKBMS by @mr-manuel
 * Added: Balancing switch status for JKBMS by @mr-manuel
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
-* Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
+* Added: Block charge/discharge when BMS communication is lost. Can be enabled trough the config file by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
 * Added: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
-* Added: Daly BMS read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by transistorgit
+* Added: Daly BMS read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by @transistorgit
 * Added: Driver uninstall script by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
-* Added: Install needed components automatically after a Venus OS upgrade by @mr-manuel
-* Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @mr-manuel
+* Added: Install needed Bluetooth components automatically after a Venus OS upgrade by @mr-manuel
+* Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
 * Added: JKBMS BLE - Balancing switch status by @mr-manuel
 * Added: JKBMS BLE - Capacity by @mr-manuel
 * Added: JKBMS BLE - Cell imbalance alert by @mr-manuel
@@ -25,8 +30,9 @@
 * Added: JKBMS BLE - MOS temperature by @mr-manuel
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: Post install notes by @mr-manuel
-* Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
+* Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
+* Added: Reset values to None, if battery goes offline (not reachable for 10s) by @transistorgit
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
@@ -62,7 +68,7 @@
 * Changed: Moved Bluetooth part to `reinstall-local.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
-* Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
+* Changed: Removed all wildcard imports and fixed black lint errors by @mr-manuel
 * Changed: Renamed scripts for better reading #532 by @mr-manuel
 * Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
@@ -70,4 +76,4 @@
 * Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS by @mr-manuel
 * Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY` by @mr-manuel
 * Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go) by @mr-manuel
-* Changed: Uninstall also installed Bluetooth modules on uninstall. by @mr-manuel
+* Changed: Uninstall also installed Bluetooth modules on uninstall by @mr-manuel
