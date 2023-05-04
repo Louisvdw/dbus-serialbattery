@@ -19,6 +19,8 @@ class Daly(Battery):
         self.poll_interval = 1000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
+        self.has_settings = 1
+        self.reset_soc = 0
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -518,3 +520,9 @@ class Daly(Battery):
         except Exception as e:
             logger.error(e)
             return False
+
+    def reset_soc_callback(self, path, value):
+
+        logger.error(f"reset soc {path} {value}")
+        self.reset_soc = 0
+        return True # accept the change

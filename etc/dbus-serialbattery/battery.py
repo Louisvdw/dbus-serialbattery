@@ -67,6 +67,7 @@ class Battery(ABC):
         # max battery charge/discharge current
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
+        self.has_settings = 0
 
         self.init_values()
 
@@ -916,4 +917,8 @@ class Battery(ABC):
             f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
         )
 
+        return
+
+    def reset_soc_callback(self, path, value):
+        #callback for handling reset soc request
         return
