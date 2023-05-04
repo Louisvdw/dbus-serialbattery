@@ -7,8 +7,6 @@ exclude =
           ./etc/dbus-serialbattery/bms/mnb_test_max17853.py,
           ./etc/dbus-serialbattery/bms/mnb_utils_max17853.py,
           ./etc/dbus-serialbattery/bms/revov.py,
-          #./etc/dbus-serialbattery/dbus-serialbattery.py,
-          ./etc/dbus-serialbattery/dbushelper.py,
           ./etc/dbus-serialbattery/minimalmodbus.py,
           ./velib_python
           venv
