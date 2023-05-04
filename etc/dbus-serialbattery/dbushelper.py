@@ -332,6 +332,8 @@ class DbusHelper:
                 # If the battery is offline for more than 10 polls (polled every second for most batteries)
                 if self.error_count >= 10:
                     self.battery.online = False
+                    self.battery.init_values()
+
                 # Has it completely failed
                 if self.error_count >= 60:
                     loop.quit()
@@ -352,11 +354,19 @@ class DbusHelper:
     def publish_dbus(self):
         # Update SOC, DC and System items
         self._dbusservice["/System/NrOfCellsPerBattery"] = self.battery.cell_count
-        self._dbusservice["/Soc"] = round(self.battery.soc, 2)
-        self._dbusservice["/Dc/0/Voltage"] = round(self.battery.voltage, 2)
-        self._dbusservice["/Dc/0/Current"] = round(self.battery.current, 2)
-        self._dbusservice["/Dc/0/Power"] = round(
-            self.battery.voltage * self.battery.current, 2
+        self._dbusservice["/Soc"] = (
+            round(self.battery.soc, 2) if self.battery.soc is not None else None
+        )
+        self._dbusservice["/Dc/0/Voltage"] = (
+            round(self.battery.voltage, 2) if self.battery.voltage is not None else None
+        )
+        self._dbusservice["/Dc/0/Current"] = (
+            round(self.battery.current, 2) if self.battery.current is not None else None
+        )
+        self._dbusservice["/Dc/0/Power"] = (
+            round(self.battery.voltage * self.battery.current, 2)
+            if self.battery.current is not None and self.battery.current is not None
+            else None
         )
         self._dbusservice["/Dc/0/Temperature"] = self.battery.get_temp()
         self._dbusservice["/Capacity"] = self.battery.get_capacity_remain()
@@ -540,5 +550,6 @@ class DbusHelper:
         except:
             pass
 
-        logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
-        self.battery.log_cell_data()
+        if self.battery.soc is not None:
+            logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
+            self.battery.log_cell_data()
