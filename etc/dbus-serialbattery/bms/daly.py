@@ -19,6 +19,7 @@ class Daly(Battery):
         self.poll_interval = 1000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
+        self.prod_date = ""
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -33,6 +34,8 @@ class Daly(Battery):
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
     command_rated_params = b"\x50"
+    command_batt_details = b"\x53"
+
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
     LENGTH_POS = 3
@@ -45,11 +48,10 @@ class Daly(Battery):
         # Return True if success, False for failure
         result = False
         try:
-            ser = open_serial_port(self.port, self.baud_rate)
-            if ser is not None:
+            with open_serial_port(self.port, self.baud_rate) as ser:
+                self.read_production_date(ser)
                 result = self.read_status_data(ser)
                 self.read_soc_data(ser)
-                ser.close()
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
@@ -110,7 +112,9 @@ class Daly(Battery):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
-        self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
+        self.hardware_version = (
+            "DalyBMS " + str(self.cell_count) + " cells " + self.prod_date
+        )
         logger.info(self.hardware_version)
         return True
 
@@ -390,6 +394,17 @@ class Daly(Battery):
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
         self.capacity = capacity / 1000
+        return True
+
+    def read_production_date(self, ser):
+        prod_date = self.read_serial_data_daly(ser, self.command_batt_details)
+        # check if connection success
+        if prod_date is False:
+            logger.warning("read_production_date")
+            return False
+
+        (_, _, year, month, day) = unpack_from(">BBBBB", prod_date)
+        self.prod_date = f"({year + 2000}{month:02d}{day:02d})"
         return True
 
     def generate_command(self, command):
