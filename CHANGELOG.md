@@ -58,7 +58,7 @@
 * Changed: Logging to get relevant data by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
-* Changed: Removed wildcard imports from several BMS drivers and fixed black lint errors by @mr-manuel
+* Changed: Removed all wildcard imports and fixed black lint errors by @mr-manuel
 * Changed: Renamed scripts for better reading #532 by @mr-manuel
 * Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
