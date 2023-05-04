@@ -34,6 +34,7 @@ class DbusHelper:
         self.instance = 1
         self.settings = None
         self.error_count = 0
+        self.block_because_disconnect = False
         self._dbusservice = VeDbusService(
             "com.victronenergy.battery."
             + self.battery.port[self.battery.port.rfind("/") + 1 :],
@@ -264,6 +265,7 @@ class DbusHelper:
         self._dbusservice.add_path("/Alarms/LowChargeTemperature", None, writeable=True)
         self._dbusservice.add_path("/Alarms/HighTemperature", None, writeable=True)
         self._dbusservice.add_path("/Alarms/LowTemperature", None, writeable=True)
+        self._dbusservice.add_path("/Alarms/BmsCable", None, writeable=True)
         self._dbusservice.add_path(
             "/Alarms/HighInternalTemperature", None, writeable=True
         )
@@ -327,12 +329,21 @@ class DbusHelper:
             if success:
                 self.error_count = 0
                 self.battery.online = True
+
+                # unblock charge/discharge, if it was blocked when battery went offline
+                if utils.BLOCK_ON_DISCONNECT:
+                    self.block_because_disconnect = False
+
             else:
                 self.error_count += 1
                 # If the battery is offline for more than 10 polls (polled every second for most batteries)
                 if self.error_count >= 10:
                     self.battery.online = False
                     self.battery.init_values()
+
+                    # block charge/discharge
+                    if utils.BLOCK_ON_DISCONNECT:
+                        self.block_because_disconnect = True
 
                 # Has it completely failed
                 if self.error_count >= 60:
@@ -386,22 +397,34 @@ class DbusHelper:
         self._dbusservice["/History/ChargeCycles"] = self.battery.cycles
         self._dbusservice["/History/TotalAhDrawn"] = self.battery.total_ah_drawn
         self._dbusservice["/Io/AllowToCharge"] = (
-            1 if self.battery.charge_fet and self.battery.control_allow_charge else 0
+            1
+            if self.battery.charge_fet
+            and self.battery.control_allow_charge
+            and self.block_because_disconnect is False
+            else 0
         )
         self._dbusservice["/Io/AllowToDischarge"] = (
             1
-            if self.battery.discharge_fet and self.battery.control_allow_discharge
+            if self.battery.discharge_fet
+            and self.battery.control_allow_discharge
+            and self.block_because_disconnect is False
             else 0
         )
         self._dbusservice["/Io/AllowToBalance"] = 1 if self.battery.balance_fet else 0
         self._dbusservice["/System/NrOfModulesBlockingCharge"] = (
             0
-            if self.battery.charge_fet is None
-            or (self.battery.charge_fet and self.battery.control_allow_charge)
+            if (
+                self.battery.charge_fet is None
+                or (self.battery.charge_fet and self.battery.control_allow_charge)
+            )
+            and self.block_because_disconnect is False
             else 1
         )
         self._dbusservice["/System/NrOfModulesBlockingDischarge"] = (
-            0 if self.battery.discharge_fet is None or self.battery.discharge_fet else 1
+            0
+            if (self.battery.discharge_fet is None or self.battery.discharge_fet)
+            and self.block_because_disconnect is False
+            else 1
         )
         self._dbusservice["/System/NrOfModulesOnline"] = 1 if self.battery.online else 0
         self._dbusservice["/System/NrOfModulesOffline"] = (
@@ -477,6 +500,9 @@ class DbusHelper:
         self._dbusservice[
             "/Alarms/LowTemperature"
         ] = self.battery.protection.temp_low_discharge
+        self._dbusservice["/Alarms/BmsCable"] = (
+            2 if self.block_because_disconnect else 0
+        )
         self._dbusservice[
             "/Alarms/HighInternalTemperature"
         ] = self.battery.protection.temp_high_internal
