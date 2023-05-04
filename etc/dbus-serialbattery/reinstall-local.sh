@@ -81,6 +81,9 @@ length=${#bms_array[@]}
 # always remove existing blebattery services to cleanup
 rm -rf /service/dbus-blebattery.*
 
+# kill all blebattery processes
+pkill -f "blebattery"
+
 if [ $length -gt 0 ]; then
 
     echo "Found $length Bluetooth BMS in the config file!"
