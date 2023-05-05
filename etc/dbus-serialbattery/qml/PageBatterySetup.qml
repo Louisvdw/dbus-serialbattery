@@ -36,7 +36,7 @@ MbPage {
 
     title: service.description + " | Cell Voltages"
 
-    model: VisualItemModel {
+    model: VisibleItemModel {
 
         MbSpinBox {
             description: qsTr("Maximum charge current")

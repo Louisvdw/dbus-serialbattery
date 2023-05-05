@@ -78,7 +78,7 @@ MbPage {
     property string c24: _b24.valid && _b24.text == "1" ? "#ff0000" : "#ddd"
     title: service.description + " | Cell Voltages"
 
-    model: VisualItemModel {
+    model: VisibleItemModel {
 
         MbItemRow {
             description: qsTr("Cells Sum")

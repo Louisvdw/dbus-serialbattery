@@ -5,7 +5,6 @@ from utils import logger
 import utils
 import logging
 import math
-from datetime import timedelta
 from time import time
 from abc import ABC, abstractmethod
 
@@ -15,6 +14,10 @@ class Protection(object):
     This class holds Warning and alarm states for different types of Checks
     They are of type integer, 2 represents an Alarm, 1 a Warning, 0 if everything is fine
     """
+
+    ALARM = 2
+    WARNING = 1
+    OK = 0
 
     def __init__(self):
         self.voltage_high: int = None
@@ -29,6 +32,7 @@ class Protection(object):
         self.temp_low_charge: int = None
         self.temp_high_discharge: int = None
         self.temp_low_discharge: int = None
+        self.temp_high_internal: int = None
 
 
 class Cell:
@@ -58,8 +62,18 @@ class Battery(ABC):
         self.type = "Generic"
         self.poll_interval = 1000
         self.online = True
-
         self.hardware_version = None
+        self.cell_count = None
+        # max battery charge/discharge current
+        self.max_battery_charge_current = None
+        self.max_battery_discharge_current = None
+
+        self.init_values()
+
+        # used to identify a BMS when multiple BMS are connected - planned for future use
+        self.unique_identifier = None
+
+    def init_values(self):
         self.voltage = None
         self.current = None
         self.capacity_remain = None
@@ -70,10 +84,10 @@ class Battery(ABC):
         self.protection = Protection()
         self.version = None
         self.soc = None
+        self.time_to_soc_update = 0
         self.charge_fet = None
         self.discharge_fet = None
         self.balance_fet = None
-        self.cell_count = None
         self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
@@ -84,6 +98,12 @@ class Battery(ABC):
         self.control_charging = None
         self.control_voltage = None
         self.allow_max_voltage = True
+        self.charge_mode = None
+        self.charge_limitation = None
+        self.discharge_limitation = None
+        self.linear_cvl_last_set = 0
+        self.linear_ccl_last_set = 0
+        self.linear_dcl_last_set = 0
         self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
@@ -92,11 +112,6 @@ class Battery(ABC):
         self.control_charge_current = None
         self.control_allow_charge = None
         self.control_allow_discharge = None
-        # max battery charge/discharge current
-        self.max_battery_charge_current = None
-        self.max_battery_discharge_current = None
-
-        self.time_to_soc_update = utils.TIME_TO_SOC_LOOP_CYCLES
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -149,6 +164,8 @@ class Battery(ABC):
         :param value: the sensor value
         :return:
         """
+        if sensor == 0:
+            self.temp_mos = min(max(value, -20), 100)
         if sensor == 1:
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
@@ -157,18 +174,21 @@ class Battery(ABC):
             self.temp3 = min(max(value, -20), 100)
         if sensor == 4:
             self.temp4 = min(max(value, -20), 100)
-        if sensor == 0 or sensor == 'mos':
-            self.temp_mos = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
         """
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
-        if utils.LINEAR_LIMITATION_ENABLE:
-            self.manage_charge_voltage_linear()
+        if utils.CVCM_ENABLE:
+            if utils.LINEAR_LIMITATION_ENABLE:
+                self.manage_charge_voltage_linear()
+            else:
+                self.manage_charge_voltage_step()
+        # on CVCM_ENABLE = False apply max voltage
         else:
-            self.manage_charge_voltage_step()
+            self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+            self.charge_mode = "Keep always max voltage"
 
     def manage_charge_voltage_linear(self) -> None:
         """
@@ -176,31 +196,109 @@ class Battery(ABC):
         :return: None
         """
         foundHighCellVoltage = False
-        if utils.CVCM_ENABLE:
-            currentBatteryVoltage = 0
-            penaltySum = 0
-            for i in range(self.cell_count):
-                cv = self.get_cell_voltage(i)
-                if cv:
-                    currentBatteryVoltage += cv
+        voltageSum = 0
+        penaltySum = 0
+        tDiff = 0
 
-                    if cv >= utils.PENALTY_AT_CELL_VOLTAGE[0]:
-                        foundHighCellVoltage = True
-                        penaltySum += utils.calcLinearRelationship(
-                            cv,
-                            utils.PENALTY_AT_CELL_VOLTAGE,
-                            utils.PENALTY_BATTERY_VOLTAGE,
-                        )
-            self.voltage = currentBatteryVoltage  # for testing
+        try:
+            if utils.CVCM_ENABLE:
+                # calculate battery sum
+                for i in range(self.cell_count):
+                    voltage = self.get_cell_voltage(i)
+                    if voltage:
+                        voltageSum += voltage
 
-        if foundHighCellVoltage:
-            # Keep penalty above min battery voltage
-            self.control_voltage = max(
-                currentBatteryVoltage - penaltySum,
-                utils.MIN_CELL_VOLTAGE * self.cell_count,
-            )
-        else:
-            self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
+                        # calculate penalty sum to prevent single cell overcharge by using current cell voltage
+                        if voltage > utils.MAX_CELL_VOLTAGE:
+                            # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
+                            foundHighCellVoltage = True
+                            penaltySum += voltage - utils.MAX_CELL_VOLTAGE - 0.010
+
+                voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
+
+                if self.max_voltage_start_time is None:
+                    if (
+                        utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                        and voltageDiff
+                        <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+                        and self.allow_max_voltage
+                    ):
+                        self.max_voltage_start_time = time()
+                    elif (
+                        # utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                        voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+                        and not self.allow_max_voltage
+                    ):
+                        self.allow_max_voltage = True
+                else:
+                    tDiff = time() - self.max_voltage_start_time
+                    # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                    # keep max voltage for 300 more seconds
+                    if 300 < tDiff:
+                        self.allow_max_voltage = False
+                        self.max_voltage_start_time = None
+
+            # INFO: battery will only switch to Absorption, if all cells are balanced.
+            #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
+            if foundHighCellVoltage and self.allow_max_voltage:
+                # set CVL only once every LINEAR_RECALCULATION_EVERY seconds
+                if (
+                    int(time()) - self.linear_cvl_last_set
+                    >= utils.LINEAR_RECALCULATION_EVERY
+                ):
+                    self.linear_cvl_last_set = int(time())
+
+                    # Keep penalty above min battery voltage
+                    self.control_voltage = round(
+                        max(
+                            voltageSum - penaltySum,
+                            utils.MIN_CELL_VOLTAGE * self.cell_count,
+                        ),
+                        3,
+                    )
+
+                self.charge_mode = (
+                    "Bulk dynamic"
+                    # + " (vS: "
+                    # + str(round(voltageSum, 2))
+                    # + " - pS: "
+                    # + str(round(penaltySum, 2))
+                    # + ")"
+                    if self.max_voltage_start_time is None
+                    else "Absorption dynamic"
+                    # + "(vS: "
+                    # + str(round(voltageSum, 2))
+                    # + " - pS: "
+                    # + str(round(penaltySum, 2))
+                    # + ")"
+                )
+
+            elif self.allow_max_voltage:
+                self.control_voltage = round(
+                    (utils.MAX_CELL_VOLTAGE * self.cell_count), 3
+                )
+                self.charge_mode = (
+                    "Bulk" if self.max_voltage_start_time is None else "Absorption"
+                )
+
+            else:
+                self.control_voltage = round(
+                    (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3
+                )
+                self.charge_mode = "Float"
+
+            if (
+                self.allow_max_voltage
+                and self.get_balancing()
+                and voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+            ):
+                self.charge_mode += " + Balancing"
+
+            self.charge_mode += " (Linear Mode)"
+
+        except TypeError:
+            self.control_voltage = None
+            self.charge_mode = "--"
 
     def manage_charge_voltage_step(self) -> None:
         """
@@ -208,70 +306,186 @@ class Battery(ABC):
         :return: None
         """
         voltageSum = 0
-        if utils.CVCM_ENABLE:
-            for i in range(self.cell_count):
-                voltage = self.get_cell_voltage(i)
-                if voltage:
-                    voltageSum += voltage
+        tDiff = 0
 
-            if self.max_voltage_start_time is None:
-                if (
-                    utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
-                    and self.allow_max_voltage
-                ):
-                    self.max_voltage_start_time = time()
-                else:
+        try:
+            if utils.CVCM_ENABLE:
+                # calculate battery sum
+                for i in range(self.cell_count):
+                    voltage = self.get_cell_voltage(i)
+                    if voltage:
+                        voltageSum += voltage
+
+                if self.max_voltage_start_time is None:
+                    # check if max voltage is reached and start timer to keep max voltage
                     if (
+                        utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                        and self.allow_max_voltage
+                    ):
+                        # example 2
+                        self.max_voltage_start_time = time()
+
+                    # check if reset soc is greater than battery soc
+                    # this prevents flapping between max and float voltage
+                    elif (
                         utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
                         and not self.allow_max_voltage
                     ):
                         self.allow_max_voltage = True
-            else:
-                tDiff = time() - self.max_voltage_start_time
-                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                    self.max_voltage_start_time = None
-                    self.allow_max_voltage = False
 
-        if self.allow_max_voltage:
-            # Keep penalty above min battery voltage
-            self.control_voltage = max(
-                utils.MAX_CELL_VOLTAGE * self.cell_count,
-                utils.MIN_CELL_VOLTAGE * self.cell_count,
-            )
-        else:
-            self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
+                    # do nothing
+                    else:
+                        pass
+
+                # timer started
+                else:
+                    tDiff = time() - self.max_voltage_start_time
+                    if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                        self.allow_max_voltage = False
+                        self.max_voltage_start_time = None
+
+                    else:
+                        pass
+
+            if self.allow_max_voltage:
+                self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+                self.charge_mode = (
+                    "Bulk" if self.max_voltage_start_time is None else "Absorption"
+                )
+
+            else:
+                self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
+                self.charge_mode = "Float"
+
+            self.charge_mode += " (Step Mode)"
+
+        except TypeError:
+            self.control_voltage = None
+            self.charge_mode = "--"
 
     def manage_charge_current(self) -> None:
         # Manage Charge Current Limitations
-        charge_limits = [self.max_battery_charge_current]
-        if utils.CCCM_SOC_ENABLE:
-            charge_limits.append(self.calcMaxChargeCurrentReferringToSoc())
-        if utils.CCCM_CV_ENABLE:
-            charge_limits.append(self.calcMaxChargeCurrentReferringToCellVoltage())
-        if utils.CCCM_T_ENABLE:
-            charge_limits.append(self.calcMaxChargeCurrentReferringToTemperature())
+        charge_limits = {utils.MAX_BATTERY_CHARGE_CURRENT: "Config Limit"}
 
-        self.control_charge_current = min(charge_limits)
+        # if values are not the same, then the limit was read also from the BMS
+        if utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current:
+            charge_limits.update({self.max_battery_charge_current: "BMS Limit"})
+
+        if utils.CCCM_CV_ENABLE:
+            tmp = self.calcMaxChargeCurrentReferringToCellVoltage()
+            if self.max_battery_charge_current != tmp:
+                if tmp in charge_limits:
+                    charge_limits.update({tmp: charge_limits[tmp] + ", Cell Voltage"})
+                else:
+                    charge_limits.update({tmp: "Cell Voltage"})
+
+        if utils.CCCM_T_ENABLE:
+            tmp = self.calcMaxChargeCurrentReferringToTemperature()
+            if self.max_battery_charge_current != tmp:
+                if tmp in charge_limits:
+                    charge_limits.update({tmp: charge_limits[tmp] + ", Temp"})
+                else:
+                    charge_limits.update({tmp: "Temp"})
+
+        if utils.CCCM_SOC_ENABLE:
+            tmp = self.calcMaxChargeCurrentReferringToSoc()
+            if self.max_battery_charge_current != tmp:
+                if tmp in charge_limits:
+                    charge_limits.update({tmp: charge_limits[tmp] + ", SoC"})
+                else:
+                    charge_limits.update({tmp: "SoC"})
+
+        # do not set CCL immediately, but only
+        # - after LINEAR_RECALCULATION_EVERY passed
+        # - if CCL changes to 0
+        # - if CCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        ccl = round(min(charge_limits), 3)  # gets changed after finished testing
+        diff = (
+            abs(self.control_charge_current - ccl)
+            if self.control_charge_current is not None
+            else 0
+        )
+        if (
+            int(time()) - self.linear_ccl_last_set >= utils.LINEAR_RECALCULATION_EVERY
+            or ccl == 0
+            or (
+                diff
+                >= self.control_charge_current
+                * utils.LINEAR_RECALCULATION_ON_PERC_CHANGE
+                / 100
+            )
+        ):
+            self.linear_ccl_last_set = int(time())
+
+            self.control_charge_current = ccl
+
+            self.charge_limitation = charge_limits[min(charge_limits)]
 
         if self.control_charge_current == 0:
             self.control_allow_charge = False
         else:
             self.control_allow_charge = True
 
-        # Manage Discharge Current Limitations
-        discharge_limits = [self.max_battery_discharge_current]
-        if utils.DCCM_SOC_ENABLE:
-            discharge_limits.append(self.calcMaxDischargeCurrentReferringToSoc())
-        if utils.DCCM_CV_ENABLE:
-            discharge_limits.append(
-                self.calcMaxDischargeCurrentReferringToCellVoltage()
-            )
-        if utils.DCCM_T_ENABLE:
-            discharge_limits.append(
-                self.calcMaxDischargeCurrentReferringToTemperature()
-            )
+        #####
 
-        self.control_discharge_current = min(discharge_limits)
+        # Manage Discharge Current Limitations
+        discharge_limits = {utils.MAX_BATTERY_DISCHARGE_CURRENT: "Config Limit"}
+
+        # if values are not the same, then the limit was read also from the BMS
+        if utils.MAX_BATTERY_DISCHARGE_CURRENT != self.max_battery_discharge_current:
+            discharge_limits.update({self.max_battery_discharge_current: "BMS Limit"})
+
+        if utils.DCCM_CV_ENABLE:
+            tmp = self.calcMaxDischargeCurrentReferringToCellVoltage()
+            if self.max_battery_discharge_current != tmp:
+                if tmp in discharge_limits:
+                    discharge_limits.update(
+                        {tmp: discharge_limits[tmp] + ", Cell Voltage"}
+                    )
+                else:
+                    discharge_limits.update({tmp: "Cell Voltage"})
+
+        if utils.DCCM_T_ENABLE:
+            tmp = self.calcMaxDischargeCurrentReferringToTemperature()
+            if self.max_battery_discharge_current != tmp:
+                if tmp in discharge_limits:
+                    discharge_limits.update({tmp: discharge_limits[tmp] + ", Temp"})
+                else:
+                    discharge_limits.update({tmp: "Temp"})
+
+        if utils.DCCM_SOC_ENABLE:
+            tmp = self.calcMaxDischargeCurrentReferringToSoc()
+            if self.max_battery_discharge_current != tmp:
+                if tmp in discharge_limits:
+                    discharge_limits.update({tmp: discharge_limits[tmp] + ", SoC"})
+                else:
+                    discharge_limits.update({tmp: "SoC"})
+
+        # do not set DCL immediately, but only
+        # - after LINEAR_RECALCULATION_EVERY passed
+        # - if DCL changes to 0
+        # - if DCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        dcl = round(min(discharge_limits), 3)  # gets changed after finished testing
+        diff = (
+            abs(self.control_discharge_current - dcl)
+            if self.control_discharge_current is not None
+            else 0
+        )
+        if (
+            int(time()) - self.linear_dcl_last_set >= utils.LINEAR_RECALCULATION_EVERY
+            or dcl == 0
+            or (
+                diff
+                >= self.control_discharge_current
+                * utils.LINEAR_RECALCULATION_ON_PERC_CHANGE
+                / 100
+            )
+        ):
+            self.linear_dcl_last_set = int(time())
+
+            self.control_discharge_current = dcl
+
+            self.discharge_limitation = discharge_limits[min(discharge_limits)]
 
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False
@@ -464,7 +678,7 @@ class Battery(ABC):
             return self.capacity * self.soc / 100
         return None
 
-    def get_timetosoc(self, socnum, crntPrctPerSec, value_type) -> str:
+    def get_timeToSoc(self, socnum, crntPrctPerSec, onlyNumber=False) -> str:
         if self.current > 0:
             diffSoc = socnum - self.soc
         else:
@@ -475,16 +689,46 @@ class Battery(ABC):
             secondstogo = int(diffSoc / crntPrctPerSec)
             ttgStr = ""
 
-            if value_type & 1:
+            if onlyNumber or utils.TIME_TO_SOC_VALUE_TYPE & 1:
                 ttgStr += str(secondstogo)
-                if value_type & 2:
+                if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
                     ttgStr += " ["
-            if value_type & 2:
-                ttgStr += str(timedelta(seconds=secondstogo))
-                if value_type & 1:
+            if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
+                ttgStr += self.get_secondsToString(secondstogo)
+
+                if utils.TIME_TO_SOC_VALUE_TYPE & 1:
                     ttgStr += "]"
 
         return ttgStr
+
+    def get_secondsToString(self, timespan, precision=3) -> str:
+        """
+        Transforms seconds to a string in the format: 1d 1h 1m 1s (Victron Style)
+        :param precision:
+        0 = 1d
+        1 = 1d 1h
+        2 = 1d 1h 1m
+        3 = 1d 1h 1m 1s
+
+        This was added, since timedelta() returns strange values, if time is negative
+        e.g.: seconds: -70245
+              --> timedelta output: -1 day, 4:29:15
+              --> calculation: -1 day + 4:29:15
+              --> real value -19:30:45
+        """
+        tmp = "" if timespan >= 0 else "-"
+        timespan = abs(timespan)
+
+        m, s = divmod(timespan, 60)
+        h, m = divmod(m, 60)
+        d, h = divmod(h, 24)
+
+        tmp += (str(d) + "d ") if d > 0 else ""
+        tmp += (str(h) + "h ") if precision >= 1 and h > 0 else ""
+        tmp += (str(m) + "m ") if precision >= 2 and m > 0 else ""
+        tmp += (str(s) + "s ") if precision == 3 and s > 0 else ""
+
+        return tmp.rstrip()
 
     def get_min_cell_voltage(self) -> Union[float, None]:
         min_voltage = None
@@ -554,8 +798,10 @@ class Battery(ABC):
             # get the midpoint of the battery
             midpoint = half1voltage + extra
             return (
-                midpoint,
-                (half2voltage - half1voltage) / (half2voltage + half1voltage) * 100,
+                abs(midpoint),
+                abs(
+                    (half2voltage - half1voltage) / (half2voltage + half1voltage) * 100
+                ),
             )
         except ValueError:
             return None, None
@@ -572,12 +818,6 @@ class Battery(ABC):
         if not result:
             return None
 
-    def get_mos_temp(self):
-        if self.temp_mos is not None:
-            return self.temp_mos
-        else:
-            return None
-
     def get_temp(self) -> Union[float, None]:
         temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
         n = len(temps)
@@ -590,29 +830,57 @@ class Battery(ABC):
             i = n // 2
             return (data[i - 1] + data[i]) / 2
 
-    def get_min_temp_cell_desc(self) -> Union[str, None]:
-        temps = [(t, i) for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4]) if t is not None]
-        if not temps:
-            return None
-        return "T" + str(min(temps)[1] + 1)
-
     def get_min_temp(self) -> Union[float, None]:
         temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
         if not temps:
             return None
         return min(temps)
 
-    def get_max_temp_cell_desc(self) -> Union[str, None]:
+    def get_min_temp_id(self) -> Union[str, None]:
         temps = [(t, i) for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4]) if t is not None]
         if not temps:
             return None
-        return "T" + str(max(temps)[1] + 1)
+        id = min(temps)[1]
+        try:
+            if id == 0:
+                return utils.TEMP_1_NAME
+            if id == 1:
+                return utils.TEMP_2_NAME
+            if id == 2:
+                return utils.TEMP_3_NAME
+            if id == 3:
+                return utils.TEMP_4_NAME
+        except TypeError:
+            return None
 
     def get_max_temp(self) -> Union[float, None]:
         temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
         if not temps:
             return None
         return max(temps)
+
+    def get_max_temp_id(self) -> Union[str, None]:
+        temps = [(t, i) for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4]) if t is not None]
+        if not temps:
+            return None
+        id = max(temps)[1]
+        try:
+            if id == 0:
+                return utils.TEMP_1_NAME
+            if id == 1:
+                return utils.TEMP_2_NAME
+            if id == 2:
+                return utils.TEMP_3_NAME
+            if id == 3:
+                return utils.TEMP_4_NAME
+        except TypeError:
+            return None
+
+    def get_mos_temp(self) -> Union[float, None]:
+        if self.temp_mos is not None:
+            return self.temp_mos
+        else:
+            return None
 
     def log_cell_data(self) -> bool:
         if logger.getEffectiveLevel() > logging.INFO and len(self.cells) == 0:
@@ -627,23 +895,45 @@ class Battery(ABC):
         return True
 
     def log_settings(self) -> None:
-
-        logger.info(f"Battery {self.type} connected to dbus from {self.port}")
-        logger.info("=== Settings ===")
         cell_counter = len(self.cells)
+        logger.info(f"Battery {self.type} connected to dbus from {self.port}")
+        logger.info("========== Settings ==========")
         logger.info(
-            f"> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%"
-        )
-        logger.info(f"> Cell count {self.cell_count} | cells populated {cell_counter}")
-        logger.info(
-            f"> CCCM SOC {utils.CCCM_SOC_ENABLE} | DCCM SOC {utils.DCCM_SOC_ENABLE}"
+            f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc}%"
         )
         logger.info(
-            f"> CCCM CV {utils.CCCM_CV_ENABLE} | DCCM CV {utils.DCCM_CV_ENABLE}"
+            f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}"
         )
-        logger.info(f"> CCCM T {utils.CCCM_T_ENABLE} | DCCM T {utils.DCCM_T_ENABLE}")
+        logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
-            f"> MIN_CELL_VOLTAGE {utils.MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {utils.MAX_CELL_VOLTAGE}V"
+            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}A | "
+            + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
+        )
+        if (
+            (
+                utils.MAX_BATTERY_CHARGE_CURRENT != self.max_battery_charge_current
+                or utils.MAX_BATTERY_DISCHARGE_CURRENT
+                != self.max_battery_discharge_current
+            )
+            and self.max_battery_charge_current is not None
+            and self.max_battery_discharge_current is not None
+        ):
+            logger.info(
+                f"> MAX BATTERY CHARGE CURRENT: {self.max_battery_charge_current}A | "
+                + f"MAX BATTERY DISCHARGE CURRENT: {self.max_battery_discharge_current}A (read from BMS)"
+            )
+        logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
+        logger.info(
+            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
+        )
+        logger.info(
+            f"> CCCM CV:  {str(utils.CCCM_CV_ENABLE).ljust(5)} | DCCM CV:  {utils.DCCM_CV_ENABLE}"
+        )
+        logger.info(
+            f"> CCCM T:   {str(utils.CCCM_T_ENABLE).ljust(5)} | DCCM T:   {utils.DCCM_T_ENABLE}"
+        )
+        logger.info(
+            f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
         )
 
         return
