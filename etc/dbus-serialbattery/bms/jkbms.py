@@ -90,6 +90,7 @@ class Jkbms(Battery):
         # Temperature sensors
         offset = cellbyte_count + 6
         temp1 = unpack_from(">H", self.get_data(status_data, b"\x81", offset, 2))[0]
+
         offset = cellbyte_count + 9
         temp2 = unpack_from(">H", self.get_data(status_data, b"\x82", offset, 2))[0]
         self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
@@ -138,23 +139,36 @@ class Jkbms(Battery):
         self.to_protection_bits(
             unpack_from(">H", self.get_data(status_data, b"\x8B", offset, 2))[0]
         )
+
         offset = cellbyte_count + 36
         self.to_fet_bits(
             unpack_from(">H", self.get_data(status_data, b"\x8C", offset, 2))[0]
         )
+
         offset = cellbyte_count + 84
         self.to_balance_bits(
             unpack_from(">B", self.get_data(status_data, b"\x9D", offset, 1))[0]
         )
 
+        # User Private Data filed in APP
         offset = cellbyte_count + 155
-        self.production = unpack_from(
-            ">8s", self.get_data(status_data, b"\xB4", offset, 8)
-        )[0].decode()
+        self.production = (
+            unpack_from(">8s", self.get_data(status_data, b"\xB4", offset, 8))[0]
+            .decode()
+            .replace("\x00", " ")
+        )
+
         offset = cellbyte_count + 174
         self.version = unpack_from(
             ">15s", self.get_data(status_data, b"\xB7", offset, 15)
         )[0].decode()
+
+        offset = cellbyte_count + 197
+        self.unique_identifier = (
+            unpack_from(">24s", self.get_data(status_data, b"\xBA", offset, 24))[0]
+            .decode()
+            .replace("\x00", " ")
+        )
 
         # show wich cells are balancing
         if self.get_min_cell() is not None and self.get_max_cell() is not None:
@@ -290,7 +304,7 @@ class Jkbms(Battery):
         s = sum(data[0:-4])
 
         if start == 0x4E57 and end == 0x68 and s == crc_lo:
-            return data[10 : length - 19]
+            return data[10 : length - 7]
         elif s != crc_lo:
             logger.error(
                 "CRC checksum mismatch: Expected 0x%04x, Got 0x%04x" % (crc_lo, s)

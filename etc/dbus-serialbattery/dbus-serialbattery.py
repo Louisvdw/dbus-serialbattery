@@ -56,6 +56,7 @@ expected_bms_types = [
     if battery_type["bms"].__name__ == utils.BMS_TYPE or utils.BMS_TYPE == ""
 ]
 
+logger.info("")
 logger.info("Starting dbus-serialbattery")
 
 
