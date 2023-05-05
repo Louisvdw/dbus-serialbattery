@@ -915,5 +915,7 @@ class Battery(ABC):
         logger.info(
             f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
         )
+        if self.unique_identifier is not None:
+            logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier}")
 
         return

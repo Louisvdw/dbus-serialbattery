@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
 from utils import logger
-from bms.jkbms_brn import JkBmsBle
+from bms.jkbms_brn import Jkbms_Brn
 from bleak import BleakScanner, BleakError
 import asyncio
 import time
@@ -9,15 +9,18 @@ import os
 
 
 class Jkbms_Ble(Battery):
-    BATTERYTYPE = "Jkbms BLE"
+    BATTERYTYPE = "Jkbms_Ble"
     resetting = False
 
     def __init__(self, port, baud, address):
         super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud, address)
         self.type = self.BATTERYTYPE
-        self.jk = JkBmsBle(address)
+        self.jk = Jkbms_Brn(address)
 
-        logger.info("init of jkbmsble at " + address)
+        logger.info("Init of Jkbms_Ble at " + address)
+
+    def connection_name(self) -> str:
+        return "BLE " + self.address
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -26,13 +29,16 @@ class Jkbms_Ble(Battery):
 
         # check if device with given mac is found, otherwise abort
 
-        logger.info("test of jkbmsble at " + self.jk.address)
+        logger.info("Test of Jkbms_Ble at " + self.jk.address)
         try:
             loop = asyncio.get_event_loop()
             t = loop.create_task(BleakScanner.discover())
             devices = loop.run_until_complete(t)
-        except BleakError as e:
-            logger.error(str(e))
+        except BleakError as err:
+            logger.error(str(err))
+            return False
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
             return False
 
         found = False
@@ -40,7 +46,7 @@ class Jkbms_Ble(Battery):
             if d.address == self.jk.address:
                 found = True
         if not found:
-            logger.error("no BMS found at " + self.jk.address)
+            logger.error("No Jkbms_Ble found at " + self.jk.address)
             return False
 
         """
@@ -90,7 +96,7 @@ class Jkbms_Ble(Battery):
             self.jk.stop_scraping()
             return False
 
-        logger.info("JK BMS found!")
+        logger.info("Jkbms_Ble found!")
 
         # get first data to show in startup log
         self.get_settings()
@@ -108,6 +114,10 @@ class Jkbms_Ble(Battery):
         self.max_battery_discharge_current = st["max_discharge_current"]
         self.max_battery_voltage = st["cell_ovp"] * self.cell_count
         self.min_battery_voltage = st["cell_uvp"] * self.cell_count
+
+        self.production = self.jk.get_status()["device_info"]["production"]
+        self.production = self.production if self.production != "Input Us" else None
+        self.unique_identifier = self.jk.get_status()["device_info"]["serial_number"]
 
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
@@ -136,7 +146,7 @@ class Jkbms_Ble(Battery):
             return False
         if time.time() - st["last_update"] > 30:
             # if data not updated for more than 30s, sth is wrong, then fail
-            logger.info("jkbmsble: bluetooth died")
+            logger.info("Jkbms_Ble: Bluetooth died")
 
             # if the thread is still alive but data too old there is sth
             # wrong with the bt-connection; restart whole stack
@@ -220,11 +230,11 @@ class Jkbms_Ble(Battery):
         return True
 
     def reset_bluetooth(self):
-        logger.info("reset of bluetooth triggered")
+        logger.info("Reset of Bluetooth triggered")
         self.resetting = True
         # if self.jk.is_running():
         # self.jk.stop_scraping()
-        logger.info("scraping ended, issuing sys-commands")
+        logger.info("Scraping ended, issuing sys-commands")
         # process kill is needed, since the service/bluetooth driver is probably freezed
         os.system('pkill -f "bluetoothd"')
         # stop will not work, if service/bluetooth driver is stuck
@@ -233,7 +243,7 @@ class Jkbms_Ble(Battery):
         os.system("rfkill block bluetooth")
         os.system("rfkill unblock bluetooth")
         os.system("/etc/init.d/bluetooth start")
-        logger.info("bluetooth should have been restarted")
+        logger.info("Bluetooth should have been restarted")
 
     def get_balancing(self):
         return 1 if self.balancing else 0
