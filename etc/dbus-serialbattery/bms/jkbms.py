@@ -3,6 +3,7 @@ from battery import Battery, Cell
 from utils import is_bit_set, read_serial_data, logger
 import utils
 from struct import unpack_from
+from re import sub
 
 
 class Jkbms(Battery):
@@ -152,10 +153,14 @@ class Jkbms(Battery):
 
         # User Private Data filed in APP
         offset = cellbyte_count + 155
-        self.production = (
-            unpack_from(">8s", self.get_data(status_data, b"\xB4", offset, 8))[0]
-            .decode()
-            .replace("\x00", " ")
+        self.production = sub(
+            " +",
+            " ",
+            (
+                unpack_from(">8s", self.get_data(status_data, b"\xB4", offset, 8))[0]
+                .decode()
+                .replace("\x00", " ")
+            ),
         )
 
         offset = cellbyte_count + 174
@@ -164,10 +169,15 @@ class Jkbms(Battery):
         )[0].decode()
 
         offset = cellbyte_count + 197
-        self.unique_identifier = (
-            unpack_from(">24s", self.get_data(status_data, b"\xBA", offset, 24))[0]
-            .decode()
-            .replace("\x00", " ")
+        self.unique_identifier = sub(
+            " +",
+            " ",
+            (
+                unpack_from(">24s", self.get_data(status_data, b"\xBA", offset, 24))[0]
+                .decode()
+                .replace("\x00", " ")
+                .replace("Input Userda", "")
+            ),
         )
 
         # show wich cells are balancing
