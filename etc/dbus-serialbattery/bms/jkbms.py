@@ -160,8 +160,10 @@ class Jkbms(Battery):
                 unpack_from(">8s", self.get_data(status_data, b"\xB4", offset, 8))[0]
                 .decode()
                 .replace("\x00", " ")
+                .strip()
             ),
         )
+        self.production = self.production if self.production != "Input Us" else None
 
         offset = cellbyte_count + 174
         self.version = unpack_from(
@@ -177,6 +179,7 @@ class Jkbms(Battery):
                 .decode()
                 .replace("\x00", " ")
                 .replace("Input Userda", "")
+                .strip()
             ),
         )
 

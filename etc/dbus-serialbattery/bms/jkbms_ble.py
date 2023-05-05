@@ -112,6 +112,8 @@ class Jkbms_Ble(Battery):
         self.max_battery_voltage = st["cell_ovp"] * self.cell_count
         self.min_battery_voltage = st["cell_uvp"] * self.cell_count
 
+        self.unique_identifier = self.jk.address
+
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
 
