@@ -7,9 +7,9 @@ from typing import Union, Optional
 
 from bleak import BleakClient, BleakScanner, BLEDevice
 
-from utils import *
-from struct import *
 from lltjbd import LltJbdProtection, LltJbd
+from utils import logger
+from struct import unpack_from
 
 BLE_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
 BLE_CHARACTERISTICS_TX_UUID = "0000ff02-0000-1000-8000-00805f9b34fb"
