@@ -19,7 +19,6 @@ class Daly(Battery):
         self.poll_interval = 1000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
-        self.prod_date = ""
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -64,6 +63,7 @@ class Daly(Battery):
         with open_serial_port(self.port, self.baud_rate) as ser:
             self.read_capacity(ser)
 
+        self.unique_identifier = str(self.production) + "_" + str(self.capacity)
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
@@ -112,9 +112,7 @@ class Daly(Battery):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
-        self.hardware_version = (
-            "DalyBMS " + str(self.cell_count) + " cells " + self.prod_date
-        )
+        self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
         return True
 
@@ -397,14 +395,14 @@ class Daly(Battery):
         return True
 
     def read_production_date(self, ser):
-        prod_date = self.read_serial_data_daly(ser, self.command_batt_details)
+        production = self.read_serial_data_daly(ser, self.command_batt_details)
         # check if connection success
-        if prod_date is False:
+        if production is False:
             logger.warning("read_production_date")
             return False
 
-        (_, _, year, month, day) = unpack_from(">BBBBB", prod_date)
-        self.prod_date = f"({year + 2000}{month:02d}{day:02d})"
+        (_, _, year, month, day) = unpack_from(">BBBBB", production)
+        self.production = f"({year + 2000}{month:02d}{day:02d})"
         return True
 
     def generate_command(self, command):
