@@ -22,6 +22,26 @@ See [this page](../general/install#how-to-change-the-default-limits).
 
 See the Victron Energy documentation how to get [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access).
 
+
+## How to aggregate multiple batteries?
+
+You need an additional driver for that. Here are a few listed:
+
+### [BatteryAggregator](https://github.com/pulquero/BatteryAggregator) by [pulquero](https://github.com/pulquero)
+
+Automatically merges connected batteries. Additional configuration for excluded batteries, total capacity and custom merging possible.
+
+Can be installed through the [SetupHelper](https://github.com/kwindrem/SetupHelper) of [kwindrem](https://github.com/kwindrem).
+
+### [dbus-aggregate-batteries](https://github.com/Dr-Gigavolt/dbus-aggregate-batteries) by [Dr-Gigavolt](https://github.com/Dr-Gigavolt)
+
+Automatically merges connected batteries. Takes consideration of SmartShunt, Multies, Quattros, SmartSolars, BlueSolars and MPPT for current calculation. Additional configuration possible.
+
+### [venus-os_dbus-mqtt-battery](https://github.com/mr-manuel/venus-os_dbus-mqtt-battery) by [mr-manuel](https://github.com/mr-manuel)
+
+Virtual battery that has to be fed over MQTT in case you want to merge your data how you'd like. Venus OS Large with Node-RED recommended.
+
+
 ## Why do I need a BMS for lithium batteries?
 Lithuim cells are great at storing energy, but they can be dangerous. An overcharged cell can cause a fire. A Battery Management System (BMS) first priority is to protect the cells in your battery from any potential hazards.
 
