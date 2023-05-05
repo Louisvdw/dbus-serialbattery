@@ -4,6 +4,7 @@ from utils import open_serial_port, logger
 import utils
 from struct import unpack_from
 from time import sleep
+from re import sub
 
 
 class Daly(Battery):
@@ -427,7 +428,7 @@ class Daly(Battery):
             return False
 
         bufIdx = 0
-        self.unique_identifier = ""
+        battery_code = ""
         # logger.warning("data " + bytes(cells_volts_data).hex())
         while (
             bufIdx <= len(data) - 13
@@ -436,12 +437,26 @@ class Daly(Battery):
             if b1 == 0xA5 and b2 == 0x01 and b3 == 0x57 and b4 == 0x08:
                 _, part, chk = unpack_from(">B7sB", data, bufIdx + 4)
                 if sum(data[bufIdx : bufIdx + 12]) & 0xFF != chk:
-                    logger.warning("bad battery code checksum")  # use string anyhow, just warn
-                self.unique_identifier += part.decode("utf-8")
+                    logger.warning(
+                        "bad battery code checksum"
+                    )  # use string anyhow, just warn
+                battery_code += part.decode("utf-8")
                 bufIdx += 13  # BBBBB7sB -> 13 byte
             else:
                 bufIdx += 1  # step through buffer to find valid start
                 logger.warning("bad battery code header")
+
+        if battery_code != "":
+            self.custom_field = sub(
+                " +",
+                " ",
+                (battery_code.decode().strip()),
+            )
+            self.unique_identifier = self.custom_field.replace(" ", "_")
+        else:
+            self.unique_identifier = (
+                str(self.production) + "_" + str(int(self.capacity))
+            )
         return True
 
     def generate_command(self, command):
