@@ -112,7 +112,12 @@ class Daly(Battery):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
-        self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
+        self.hardware_version = (
+            "DalyBMS "
+            + str(self.cell_count)
+            + " cells"
+            + (" (" + self.production + ")" if self.production else "")
+        )
         logger.info(self.hardware_version)
         return True
 
@@ -402,7 +407,7 @@ class Daly(Battery):
             return False
 
         (_, _, year, month, day) = unpack_from(">BBBBB", production)
-        self.production = f"({year + 2000}{month:02d}{day:02d})"
+        self.production = f"{year + 2000}{month:02d}{day:02d}"
         return True
 
     def generate_command(self, command):

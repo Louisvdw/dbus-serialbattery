@@ -39,7 +39,12 @@ class Jkbms(Battery):
         for _ in range(self.cell_count):
             self.cells.append(Cell(False))
 
-        self.hardware_version = "JKBMS " + str(self.cell_count) + " cells"
+        self.hardware_version = (
+            "JKBMS "
+            + str(self.cell_count)
+            + " cells"
+            + (" (" + self.production + ")" if self.production else "")
+        )
         return True
 
     def refresh_data(self):
@@ -151,9 +156,9 @@ class Jkbms(Battery):
             unpack_from(">B", self.get_data(status_data, b"\x9D", offset, 1))[0]
         )
 
-        # User Private Data filed in APP
+        # "User Private Data" field in APP
         offset = cellbyte_count + 155
-        self.production = sub(
+        tmp = sub(
             " +",
             " ",
             (
@@ -163,7 +168,14 @@ class Jkbms(Battery):
                 .strip()
             ),
         )
-        self.production = self.production if self.production != "Input Us" else None
+        self.custom_field = tmp if tmp != "Input Us" else None
+
+        # production date
+        offset = cellbyte_count + 164
+        tmp = unpack_from(">4s", self.get_data(status_data, b"\xB5", offset, 4))[
+            0
+        ].decode()
+        self.production = "20" + tmp + "01" if tmp and tmp != "" else None
 
         offset = cellbyte_count + 174
         self.version = unpack_from(
