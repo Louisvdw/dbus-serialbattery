@@ -34,6 +34,7 @@ class Daly(Battery):
     command_alarm = b"\x98"
     command_rated_params = b"\x50"
     command_batt_details = b"\x53"
+    command_batt_code = b"\x57"
 
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
@@ -48,7 +49,7 @@ class Daly(Battery):
         result = False
         try:
             with open_serial_port(self.port, self.baud_rate) as ser:
-                self.read_production_date(ser)
+                self.read_battery_code(ser)
                 result = self.read_status_data(ser)
                 self.read_soc_data(ser)
 
@@ -63,7 +64,6 @@ class Daly(Battery):
         with open_serial_port(self.port, self.baud_rate) as ser:
             self.read_capacity(ser)
 
-        self.unique_identifier = str(self.production) + "_" + str(self.capacity)
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
@@ -403,6 +403,40 @@ class Daly(Battery):
 
         (_, _, year, month, day) = unpack_from(">BBBBB", production)
         self.production = f"({year + 2000}{month:02d}{day:02d})"
+        return True
+
+    def read_battery_code(self, ser):
+        lenFixed = (
+            5 * 13
+        )  # batt code field is 35 bytes and we transfer 7 bytes in each telegram
+        data = self.read_serialport_data(
+            ser,
+            self.generate_command(self.command_batt_code),
+            self.LENGTH_POS,
+            0,
+            lenFixed,
+        )
+
+        if data is False:
+            logger.warning("read_battery_code")
+            return False
+
+        bufIdx = 0
+        self.unique_identifier = ""
+        # logger.warning("data " + bytes(cells_volts_data).hex())
+        while (
+            bufIdx <= len(data) - 13
+        ):  # we at least need 13 bytes to extract the identifiers + 8 bytes payload + checksum
+            b1, b2, b3, b4 = unpack_from(">BBBB", data, bufIdx)
+            if b1 == 0xA5 and b2 == 0x01 and b3 == 0x57 and b4 == 0x08:
+                _, part, chk = unpack_from(">B7sB", data, bufIdx + 4)
+                if sum(data[bufIdx : bufIdx + 12]) & 0xFF != chk:
+                    logger.warning("bad battery code checksum")  # use string anyhow, just warn
+                self.unique_identifier += part.decode("utf-8")
+                bufIdx += 13  # BBBBB7sB -> 13 byte
+            else:
+                bufIdx += 1  # step through buffer to find valid start
+                logger.warning("bad battery code header")
         return True
 
     def generate_command(self, command):
