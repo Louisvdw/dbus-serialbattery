@@ -283,6 +283,12 @@ TEMP_1_NAME = config["DEFAULT"]["TEMP_1_NAME"]
 # Temperature sensor 2 name
 TEMP_2_NAME = config["DEFAULT"]["TEMP_2_NAME"]
 
+# Temperature sensor 3 name
+TEMP_3_NAME = config["DEFAULT"]["TEMP_3_NAME"]
+
+# Temperature sensor 2 name
+TEMP_4_NAME = config["DEFAULT"]["TEMP_4_NAME"]
+
 
 # --------- BMS specific settings ---------
 

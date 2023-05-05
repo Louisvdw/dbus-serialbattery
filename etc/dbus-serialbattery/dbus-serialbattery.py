@@ -73,7 +73,7 @@ def main():
             for test in expected_bms_types:
                 logger.info("Testing " + test["bms"].__name__)
                 batteryClass = test["bms"]
-                baud = test.get("baud")
+                baud = test["baud"]
                 battery: Battery = batteryClass(
                     port=_port, baud=baud, address=test.get("address")
                 )
