@@ -145,7 +145,7 @@ class LltJbdBle(LltJbd):
             return False
 
 
-async def testBLE():
+def testBLE():
     import sys
     bat = LltJbdBle("Foo", -1, sys.argv[1])
     if not bat.test_connection():
