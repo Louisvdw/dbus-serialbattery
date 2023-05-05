@@ -35,6 +35,8 @@ TRANSLATE_DEVICE_INFO = [
     [["device_info", "uptime"], 38, "<L"],
     [["device_info", "vendor_id"], 6, "16s"],
     [["device_info", "manufacturing_date"], 78, "8s"],
+    [["device_info", "serial_number"], 86, "10s"],
+    [["device_info", "production"], 102, "8s"],
 ]
 
 TRANSLATE_SETTINGS = [
