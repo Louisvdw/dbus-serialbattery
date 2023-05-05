@@ -15,19 +15,22 @@
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
-* Added: Daly BMS read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by @transistorgit
+* Added: Daly BMS - Read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by @transistorgit
+* Added: Daly BMS - Read production date and build unique identifier by @transistorgit
 * Added: Driver uninstall script by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
 * Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
+* Added: JKBMS - Uniqie identifier and show "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
 * Added: Post install notes by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
-* Added: Reset values to None, if battery goes offline (not reachable for 10s) by @transistorgit
+* Added: Reset values to None, if battery goes offline (not reachable for 10s). Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/193 https://github.com/Louisvdw/dbus-serialbattery/issues/64 by @transistorgit
 * Added: Script to install directly from repository by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
 * Added: Show MOSFET temperature for JKBMS https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
+* Added: Show serial number (used for unique identifier) and device name (custom BMS field) in the remote console/GUI to identify a BMS in a multi battery environment by @mr-manuel
 * Added: Show specific TimeToSoC points in GUI, if 0%, 10%, 20%, 80%, 90% and/or 100% are selected by @mr-manuel
 * Added: Show TimeToGo in GUI only, if enabled by @mr-manuel
 * Added: Support for HLPdata BMS4S https://github.com/Louisvdw/dbus-serialbattery/pull/505 by @peterohman
