@@ -2,8 +2,7 @@
 from battery import Battery, Cell
 from utils import open_serial_port, logger
 import utils
-from struct import unpack_from
-from struct import pack_into
+from struct import unpack_from, pack_into
 from time import sleep
 from datetime import datetime
 from re import sub
@@ -97,7 +96,7 @@ class Daly(Battery):
                 elif self.poll_step == 1:
                     result = result and self.read_cells_volts(ser)
                     result = result and self.read_balance_state(ser)
-                    # else:          # A placeholder to remind this is the last step. Add any additional steps before here
+                    # else:  # A placeholder to remind this is the last step. Add any additional steps before here
                     # This is last step so reset poll_step
                     self.poll_step = -1
 
@@ -648,10 +647,10 @@ class Daly(Battery):
             toread = ser.inWaiting()
             count += 1
             if count > 50:
-                logger.warning(f"write soc: no reply, probably failed")
+                logger.warning("write soc: no reply, probably failed")
                 return False
 
         reply = ser.read(toread)
         if reply[4] != 1:
-            logger.error(f"write soc failed")
+            logger.error("write soc failed")
         return True

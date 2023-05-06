@@ -6,7 +6,7 @@ MbPage {
         id: root
         property string bindPrefix
 
-        model: VisualItemModel {
+        model: VisibleItemModel {
                 MbSubMenu {
                         id: battery
                         description: qsTr("Battery bank")
