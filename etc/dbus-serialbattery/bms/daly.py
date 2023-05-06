@@ -389,17 +389,22 @@ class Daly(Battery):
         self.capacity_remain = capacity_remain / 1000
         return True
 
+    # new
     def read_capacity(self, ser):
         capa_data = self.read_serial_data_daly(ser, self.command_rated_params)
         # check if connection success
         if capa_data is False:
             logger.warning("read_capacity")
-            return False
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
-        self.capacity = capacity / 1000
+        self.capacity = (
+            capacity / 1000
+            if capacity and capacity != "" and capacity > 0
+            else utils.BATTERY_CAPACITY
+        )
         return True
 
+    # new
     def read_production_date(self, ser):
         production = self.read_serial_data_daly(ser, self.command_batt_details)
         # check if connection success
@@ -411,6 +416,7 @@ class Daly(Battery):
         self.production = f"{year + 2000}{month:02d}{day:02d}"
         return True
 
+    # new
     def read_battery_code(self, ser):
         lenFixed = (
             5 * 13
