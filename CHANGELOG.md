@@ -13,16 +13,18 @@
 * Added: Block charge/discharge when BMS communication is lost. Can be enabled trough the config file by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
-* Added: Improved maintainability (flake8, black lint), introduced code checks and automate release build https://github.com/Louisvdw/dbus-serialbattery/pull/386 by @ppuetsch
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
 * Added: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
 * Added: Daly BMS - Read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by @transistorgit
 * Added: Daly BMS - Read production date and build unique identifier by @transistorgit
 * Added: Daly BMS - Set SoC by @transistorgit
+* Added: Daly BMS - Show "battery code" field that can be set in the Daly app by @transistorgit
+* Added: Device name field (found in the GUI -> SerialBattery -> Device), that show a custom string that can be set in some BMS, if available by @mr-manuel
 * Added: Driver uninstall script by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
+* Added: Improved maintainability (flake8, black lint), introduced code checks and automate release build https://github.com/Louisvdw/dbus-serialbattery/pull/386 by @ppuetsch
 * Added: Install needed Bluetooth components automatically after a Venus OS upgrade by @mr-manuel
 * Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
 * Added: JKBMS - Uniqie identifier and show "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
@@ -40,6 +42,7 @@
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
 * Added: Reset values to None, if battery goes offline (not reachable for 10s). Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/193 https://github.com/Louisvdw/dbus-serialbattery/issues/64 by @transistorgit
 * Added: Script to install directly from repository by @mr-manuel
+* Added: Serial number field (found in the GUI -> SerialBattery -> Device), that show the serial number or a unique identifier for the BMS, if available by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
 * Added: Show MOSFET temperature for JKBMS https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
@@ -52,6 +55,7 @@
 * Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
+* Changed: Daly BMS - Improved driver requests by @transistorgit
 * Changed: Default config file by @ppuetsch
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
   * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel
