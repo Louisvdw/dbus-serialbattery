@@ -29,7 +29,6 @@ class Daly(Battery):
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
-    cellvolt_buffer = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x82"
     command_soc = b"\x90"
     command_minmax_cell_volts = b"\x91"
     command_minmax_temp = b"\x92"
@@ -276,9 +275,12 @@ class Daly(Battery):
 
     def read_cells_volts(self, ser):
         if self.cell_count is not None:
-            buffer = bytearray(self.cellvolt_buffer)
+            buffer = bytearray(self.command_base)
             buffer[1] = self.command_address[0]  # Always serial 40 or 80
             buffer[2] = self.command_cell_volts[0]
+            buffer[12] = sum(buffer[:12]) & 0xFF
+
+            # logger.info(f"{bytes(buffer).hex()}")
 
             if (int(self.cell_count) % 3) == 0:
                 maxFrame = int(self.cell_count / 3)
@@ -551,14 +553,13 @@ class Daly(Battery):
                 elif length_size.upper() == "I" or length_size.upper() == "L":
                     length_byte_size = 4
 
-            count = 0
+            start_time = datetime.now()
             toread = ser.inWaiting()
 
             while toread < (length_pos + length_byte_size):
                 sleep(0.005)
                 toread = ser.inWaiting()
-                count += 1
-                if count > 50:
+                if (datetime.now() - start_time).microseconds > 250000:
                     logger.error(">>> ERROR: No reply - returning")
                     return False
 
@@ -575,9 +576,6 @@ class Daly(Battery):
                 length_size = length_size if length_size is not None else "B"
                 length = unpack_from(">" + length_size, res, length_pos)[0]
 
-            # logger.info('serial data length ' + str(length))
-
-            count = 0
             data = bytearray(res)
 
             packetlen = (
@@ -588,10 +586,8 @@ class Daly(Battery):
             while len(data) < packetlen:
                 res = ser.read(packetlen - len(data))
                 data.extend(res)
-                # logger.info('serial data length ' + str(len(data)))
                 sleep(0.005)
-                count += 1
-                if count > 150:
+                if (datetime.now() - start_time).microseconds > 500000:
                     logger.error(
                         ">>> ERROR: No reply - returning [len:"
                         + str(len(data))
