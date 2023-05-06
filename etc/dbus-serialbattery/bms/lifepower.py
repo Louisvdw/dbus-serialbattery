@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import read_serial_data, logger
+import utils
+from struct import unpack_from
 import re
 
 
@@ -24,14 +25,21 @@ class Lifepower(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        return self.read_status_data()
+        result = False
+        try:
+            result = self.read_status_data()
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
+
+        return result
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_current = MAX_BATTERY_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_current = utils.MAX_BATTERY_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         hardware_version = self.read_serial_data_eg4(self.command_hardware_version)
         if hardware_version:
             # I get some characters that I'm not able to figure out the encoding, probably chinese so I discard it
@@ -89,8 +97,8 @@ class Lifepower(Battery):
 
         # Cells
         self.cell_count = len(groups[0])
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.cells = [Cell(True) for _ in range(0, self.cell_count)]
         for i, cell in enumerate(self.cells):

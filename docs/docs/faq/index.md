@@ -27,6 +27,7 @@ See the Victron Energy documentation how to get [root access](https://www.victro
 
 You need an additional driver for that. Here are a few listed:
 
+
 ### [BatteryAggregator](https://github.com/pulquero/BatteryAggregator) by [pulquero](https://github.com/pulquero)
 
 Automatically merges connected batteries. Additional configuration for excluded batteries, total capacity and custom merging possible.

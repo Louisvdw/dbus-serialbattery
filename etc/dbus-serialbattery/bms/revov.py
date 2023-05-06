@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+
+# Deprecate Revov driver - replaced by LifePower
+# https://github.com/Louisvdw/dbus-serialbattery/pull/353/commits/c3ac9558fc86b386e5a6aefb313408165c86d240
+
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
 import struct
-
 
 #    Author: L Sheed
 #    Date: 3 May 2022
@@ -51,8 +54,12 @@ class Revov(Battery):
         result = False
         try:
             result = self.read_gen_data()
-        except:
-            pass
+            # get first data to show in startup log
+            if result:
+                self.refresh_data()
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 

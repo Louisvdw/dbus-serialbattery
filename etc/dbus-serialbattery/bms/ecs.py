@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from utils import logger
+import utils
 import minimalmodbus
 
 
@@ -33,7 +33,7 @@ class Ecs(Battery):
 
         # Trying to find Green Meter ID
         try:
-            mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)
+            mbdev = minimalmodbus.Instrument(self.port, utils.GREENMETER_ADDRESS)
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
             tmpId = mbdev.read_register(0, 0)
             if tmpId in range(self.GREENMETER_ID_500A, self.GREENMETER_ID_125A + 1):
@@ -46,13 +46,18 @@ class Ecs(Battery):
 
                 self.find_LiPro_cells()
 
+                # get first data to show in startup log
+                self.refresh_data()
+
                 return self.get_settings()
         except IOError:
             return False
 
     def find_LiPro_cells(self):
         # test for LiPro cell devices
-        for cell_address in range(LIPRO_START_ADDRESS, LIPRO_END_ADDRESS + 1):
+        for cell_address in range(
+            utils.LIPRO_START_ADDRESS, utils.LIPRO_END_ADDRESS + 1
+        ):
             try:
                 mbdev = minimalmodbus.Instrument(self.port, cell_address)
                 mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
@@ -74,11 +79,11 @@ class Ecs(Battery):
         # Return True if success, False for failure
 
         # Uncomment if BMS does not supply capacity
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.cell_count = LIPRO_CELL_COUNT
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
+        self.cell_count = utils.LIPRO_CELL_COUNT
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
         self.temp_sensors = 2
 
         return self.read_status_data()
@@ -94,7 +99,7 @@ class Ecs(Battery):
 
     def read_status_data(self):
         try:
-            mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)
+            mbdev = minimalmodbus.Instrument(self.port, utils.GREENMETER_ADDRESS)
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
             self.max_battery_discharge_current = abs(
@@ -120,7 +125,7 @@ class Ecs(Battery):
 
     def read_soc_data(self):
         try:
-            mbdev = minimalmodbus.Instrument(self.port, GREENMETER_ADDRESS)
+            mbdev = minimalmodbus.Instrument(self.port, utils.GREENMETER_ADDRESS)
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
             self.voltage = (

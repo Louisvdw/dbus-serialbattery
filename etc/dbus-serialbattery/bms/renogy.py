@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
+from battery import Battery, Cell
+from utils import read_serial_data, unpack_from, logger
+import utils
+from struct import unpack
 import struct
 
 
@@ -16,7 +18,8 @@ class Renogy(Battery):
     LENGTH_CHECK = 4
     LENGTH_POS = 2
 
-    # command bytes [Address field][Function code (03 = Read register)][Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
+    # command bytes [Address field][Function code (03 = Read register)]
+    #                   [Register Address (2 bytes)][Data Length (2 bytes)][CRC (2 bytes little endian)]
     command_read = b"\x03"
     # Core data = voltage, temp, current, soc
     command_cell_count = b"\x13\x88\x00\x01"  # Register  5000
@@ -44,9 +47,12 @@ class Renogy(Battery):
         result = False
         try:
             result = self.read_gen_data()
-        except:
-            logger.exception("Unexpected exception encountered")
-            pass
+            # get first data to show in startup log
+            if result:
+                self.refresh_data()
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
@@ -54,11 +60,11 @@ class Renogy(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
         return True
 
     def refresh_data(self):
@@ -140,12 +146,30 @@ class Renogy(Battery):
         return True
 
     def read_temp_data(self):
-        temp1 = self.read_serial_data_renogy(self.command_bms_temp1)
-        temp2 = self.read_serial_data_renogy(self.command_bms_temp2)
+        # Check to see how many Enviromental Temp Sensors this battery has, it may have none.
+        num_env_temps = self.read_serial_data_renogy(self.command_env_temp_count)
+        logger.info("Number of Enviromental Sensors = %s", num_env_temps)
+
+        if num_env_temps == 0:
+            return False
+
+        if num_env_temps == 1:
+            temp1 = self.read_serial_data_renogy(self.command_env_temp1)
+
         if temp1 is False:
             return False
-        self.temp1 = unpack(">H", temp1)[0] / 10
-        self.temp2 = unpack(">H", temp2)[0] / 10
+        else:
+            self.temp1 = unpack(">H", temp1)[0] / 10
+            logger.info("temp1 = %s °C", temp1)
+
+        if num_env_temps == 2:
+            temp2 = self.read_serial_data_renogy(self.command_env_temp2)
+
+        if temp2 is False:
+            return False
+        else:
+            self.temp2 = unpack(">H", temp2)[0] / 10
+            logger.info("temp2 = %s °C", temp2)
 
         return True
 
@@ -185,7 +209,7 @@ class Renogy(Battery):
             return False
 
         start, flag, length = unpack_from("BBB", data)
-        checksum = unpack_from(">H", data, length + 3)
+        # checksum = unpack_from(">H", data, length + 3)
 
         if flag == 3:
             return data[3 : length + 3]
