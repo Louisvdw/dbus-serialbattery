@@ -66,7 +66,7 @@ fi
 
 # backup config.ini
 if [ -f "/data/etc/dbus-serialbattery/config.ini" ]; then
-    cp -f /data/etc/dbus-serialbattery/config.ini /data/etc/config.ini
+    mv /data/etc/dbus-serialbattery/config.ini /data/etc/dbus-serialbattery_config.ini.backup
 fi
 
 
@@ -81,6 +81,10 @@ if [ "$version" = "latest release (recommended)" ] || [ "$version" = "local tar 
         tar -zxf /tmp/venus-data.tar.gz -C /data
     else
         echo "There is no file in \"venus-data.tar.gz\""
+        # restore config.ini
+        if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
+            mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini
+        fi
         exit
     fi
 
@@ -124,6 +128,10 @@ if [ "$version" = "nightly build" ]; then
     wget -O $branch.zip https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
     if [ $? -ne 0 ]; then
         echo "Error during downloading the TAR file. Please try again."
+        # restore config.ini
+        if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
+            mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini
+        fi
         exit
     fi
 
@@ -146,8 +154,8 @@ fi
 
 
 # restore config.ini
-if [ -f "/data/etc/config.ini" ]; then
-    mv /data/etc/config.ini /data/etc/dbus-serialbattery/config.ini
+if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
+    mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini
 fi
 
 
