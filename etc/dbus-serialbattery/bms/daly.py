@@ -3,7 +3,9 @@ from battery import Battery, Cell
 from utils import open_serial_port, logger
 import utils
 from struct import unpack_from
+from struct import pack_into
 from time import sleep
+from datetime import datetime
 
 
 class Daly(Battery):
@@ -21,6 +23,7 @@ class Daly(Battery):
         self.type = self.BATTERYTYPE
         self.has_settings = 1
         self.reset_soc = 0
+        self.soc_to_set = None
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -35,6 +38,7 @@ class Daly(Battery):
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
     command_rated_params = b"\x50"
+    command_set_soc = b"\x21"
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
     LENGTH_POS = 3
@@ -70,26 +74,28 @@ class Daly(Battery):
 
     def refresh_data(self):
         result = False
-        # Open serial port to be used for all data reads instead of openning multiple times
-        ser = open_serial_port(self.port, self.baud_rate)
-        if ser is not None:
-            result = self.read_soc_data(ser)
-            result = result and self.read_fed_data(ser)
-            result = result and self.read_cell_voltage_range_data(ser)
 
-            if self.poll_step == 0:
-                result = result and self.read_alarm_data(ser)
-                result = result and self.read_temperature_range_data(ser)
-            elif self.poll_step == 1:
-                result = result and self.read_cells_volts(ser)
-                result = result and self.read_balance_state(ser)
-                # else:          # A placeholder to remind this is the last step. Add any additional steps before here
-                # This is last step so reset poll_step
-                self.poll_step = -1
+        # Open serial port to be used for all data reads instead of opening multiple times
+        try:
+            with open_serial_port(self.port, self.baud_rate) as ser:
+                result = self.read_soc_data(ser)
+                result = result and self.read_fed_data(ser)
+                result = result and self.read_cell_voltage_range_data(ser)
+                self.write_soc_and_datetime(ser)
 
-            self.poll_step += 1
+                if self.poll_step == 0:
+                    result = result and self.read_alarm_data(ser)
+                    result = result and self.read_temperature_range_data(ser)
+                elif self.poll_step == 1:
+                    result = result and self.read_cells_volts(ser)
+                    result = result and self.read_balance_state(ser)
+                    # else:          # A placeholder to remind this is the last step. Add any additional steps before here
+                    # This is last step so reset poll_step
+                    self.poll_step = -1
 
-            ser.close()
+                self.poll_step += 1
+        except OSError:
+            logger.warning("Couldn't open serial port")
 
         return result
 
@@ -522,7 +528,54 @@ class Daly(Battery):
             return False
 
     def reset_soc_callback(self, path, value):
-
-        logger.error(f"reset soc {path} {value}")
         self.reset_soc = 0
-        return True # accept the change
+        if value == 1:
+            self.soc_to_set = 100
+        return True
+
+    def write_soc_and_datetime(self, ser):
+        if self.soc_to_set is None:
+            return False
+
+        cmd = bytearray(13)
+        now = datetime.now()
+
+        pack_into(
+            ">BBBBBBBBBBH",
+            cmd,
+            0,
+            0xA5,
+            self.command_address[0],
+            self.command_set_soc[0],
+            8,
+            now.year - 2000,
+            now.month,
+            now.day,
+            now.hour,
+            now.minute,
+            now.second,
+            int(self.soc_to_set * 10),
+        )
+        cmd[12] = sum(cmd[:12]) & 0xFF
+
+        logger.info(f"write soc {self.soc_to_set}%")
+        self.soc_to_set = None  # Reset value, so we will set it only once
+
+        ser.flushOutput()
+        ser.flushInput()
+        ser.write(cmd)
+
+        toread = ser.inWaiting()
+        count = 0
+        while toread < 13:
+            sleep(0.005)
+            toread = ser.inWaiting()
+            count += 1
+            if count > 50:
+                logger.warning(f"write soc: no reply, probably failed")
+                return False
+
+        reply = ser.read(toread)
+        if reply[4] != 1:
+            logger.error(f"write soc failed")
+        return True
