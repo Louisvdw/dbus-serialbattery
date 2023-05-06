@@ -115,8 +115,13 @@ class Jkbms_Ble(Battery):
         self.max_battery_voltage = st["cell_ovp"] * self.cell_count
         self.min_battery_voltage = st["cell_uvp"] * self.cell_count
 
-        self.production = self.jk.get_status()["device_info"]["production"]
-        self.production = self.production if self.production != "Input Us" else None
+        # "User Private Data" field in APP
+        tmp = self.jk.get_status()["device_info"]["production"]
+        self.custom_field = tmp if tmp != "Input Us" else None
+
+        tmp = self.jk.get_status()["device_info"]["manufacturing_date"]
+        self.production = "20" + tmp if tmp and tmp != "" else None
+
         self.unique_identifier = self.jk.get_status()["device_info"]["serial_number"]
 
         for c in range(self.cell_count):
@@ -130,6 +135,7 @@ class Jkbms_Ble(Battery):
             + " "
             + str(self.cell_count)
             + " cells"
+            + (" (" + self.production + ")" if self.production else "")
         )
         logger.info("BAT: " + self.hardware_version)
         return True
