@@ -926,5 +926,5 @@ class Battery(ABC):
         return
 
     def reset_soc_callback(self, path, value):
-        #callback for handling reset soc request
+        # callback for handling reset soc request
         return
