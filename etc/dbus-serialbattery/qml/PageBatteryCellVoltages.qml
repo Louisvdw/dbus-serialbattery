@@ -78,7 +78,7 @@ MbPage {
     property string c24: _b24.valid && _b24.text == "1" ? "#ff0000" : "#ddd"
     title: service.description + " | Cell Voltages"
 
-    model: VisualItemModel {
+    model: VisibleItemModel {
 
         MbItemRow {
             description: qsTr("Cells Sum")
@@ -142,10 +142,10 @@ MbPage {
             height: 22
             show: volt17.valid
             values: [
-                MbTextBlock { item: volt17; width: 70; height: 20; color: c13 },
-                MbTextBlock { item: volt18; width: 70; height: 20; color: c14 },
-                MbTextBlock { item: volt19; width: 70; height: 20; color: c15 },
-                MbTextBlock { item: volt20; width: 70; height: 20; color: c16 }
+                MbTextBlock { item: volt17; width: 70; height: 20; color: c17 },
+                MbTextBlock { item: volt18; width: 70; height: 20; color: c18 },
+                MbTextBlock { item: volt19; width: 70; height: 20; color: c19 },
+                MbTextBlock { item: volt20; width: 70; height: 20; color: c20 }
             ]
         }
         MbItemRow {
@@ -153,10 +153,10 @@ MbPage {
             height: 22
             show: volt21.valid
             values: [
-                MbTextBlock { item: volt21; width: 70; height: 20; color: c13 },
-                MbTextBlock { item: volt22; width: 70; height: 20; color: c14 },
-                MbTextBlock { item: volt23; width: 70; height: 20; color: c15 },
-                MbTextBlock { item: volt24; width: 70; height: 20; color: c16 }
+                MbTextBlock { item: volt21; width: 70; height: 20; color: c21 },
+                MbTextBlock { item: volt22; width: 70; height: 20; color: c22 },
+                MbTextBlock { item: volt23; width: 70; height: 20; color: c23 },
+                MbTextBlock { item: volt24; width: 70; height: 20; color: c24 }
             ]
         }
     }

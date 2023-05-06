@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import open_serial_port, logger
+import utils
+from struct import unpack_from
+from time import sleep
 
 
 class Daly(Battery):
@@ -30,6 +32,9 @@ class Daly(Battery):
     command_temp = b"\x96"
     command_cell_balance = b"\x97"
     command_alarm = b"\x98"
+    command_rated_params = b"\x50"
+    command_batt_details = b"\x53"
+
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
     LENGTH_POS = 3
@@ -37,21 +42,30 @@ class Daly(Battery):
     TEMP_ZERO_CONSTANT = 40
 
     def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
         result = False
         try:
-            ser = open_serial_port(self.port, self.baud_rate)
-            if ser is not None:
+            with open_serial_port(self.port, self.baud_rate) as ser:
+                self.read_production_date(ser)
                 result = self.read_status_data(ser)
-                ser.close()
-        except:
-            pass
+                self.read_soc_data(ser)
+
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
     def get_settings(self):
-        self.capacity = BATTERY_CAPACITY
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.capacity = utils.BATTERY_CAPACITY
+        with open_serial_port(self.port, self.baud_rate) as ser:
+            self.read_capacity(ser)
+
+        self.unique_identifier = str(self.production) + "_" + str(self.capacity)
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
@@ -68,7 +82,7 @@ class Daly(Battery):
                 result = result and self.read_temperature_range_data(ser)
             elif self.poll_step == 1:
                 result = result and self.read_cells_volts(ser)
-
+                result = result and self.read_balance_state(ser)
                 # else:          # A placeholder to remind this is the last step. Add any additional steps before here
                 # This is last step so reset poll_step
                 self.poll_step = -1
@@ -95,8 +109,8 @@ class Daly(Battery):
             self.cycles,
         ) = unpack_from(">bb??bhx", status_data)
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
@@ -104,20 +118,21 @@ class Daly(Battery):
 
     def read_soc_data(self, ser):
         # Ensure data received is valid
-        crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
-        crntMaxValid = MAX_BATTERY_CHARGE_CURRENT * 1.3
+        crntMinValid = -(utils.MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
+        crntMaxValid = utils.MAX_BATTERY_CHARGE_CURRENT * 1.3
         triesValid = 2
         while triesValid > 0:
+            triesValid -= 1
             soc_data = self.read_serial_data_daly(ser, self.command_soc)
             # check if connection success
             if soc_data is False:
-                return False
+                continue
 
             voltage, tmp, current, soc = unpack_from(">hhhh", soc_data)
             current = (
                 (current - self.CURRENT_ZERO_CONSTANT)
                 / -10
-                * INVERT_CURRENT_MEASUREMENT
+                * utils.INVERT_CURRENT_MEASUREMENT
             )
             if crntMinValid < current < crntMaxValid:
                 self.voltage = voltage / 10
@@ -126,8 +141,6 @@ class Daly(Battery):
                 return True
 
             logger.warning("read_soc_data - triesValid " + str(triesValid))
-            triesValid -= 1
-
         return False
 
     def read_alarm_data(self, ser):
@@ -262,7 +275,7 @@ class Daly(Battery):
                 return False
 
             frameCell = [0, 0, 0]
-            lowMin = MIN_CELL_VOLTAGE / 2
+            lowMin = utils.MIN_CELL_VOLTAGE / 2
             frame = 0
             bufIdx = 0
 
@@ -274,9 +287,9 @@ class Daly(Battery):
 
             # logger.warning("data " + bytes(cells_volts_data).hex())
 
-            while (
-                bufIdx < len(cells_volts_data) - 4
-            ):  # we at least need 4 bytes to extract the identifiers
+            while bufIdx <= len(cells_volts_data) - (
+                4 + 8 + 1
+            ):  # we at least need 13 bytes to extract the identifiers + 8 bytes payload + checksum
                 b1, b2, b3, b4 = unpack_from(">BBBB", cells_volts_data, bufIdx)
                 if b1 == 0xA5 and b2 == 0x01 and b3 == 0x95 and b4 == 0x08:
                     (
@@ -289,19 +302,20 @@ class Daly(Battery):
                     ) = unpack_from(">BhhhBB", cells_volts_data, bufIdx + 4)
                     if sum(cells_volts_data[bufIdx : bufIdx + 12]) & 0xFF != chk:
                         logger.warning("bad cell voltages checksum")
-                        return False
-                    for idx in range(3):
-                        cellnum = (
-                            (frame - 1) * 3
-                        ) + idx  # daly is 1 based, driver 0 based
-                        if cellnum >= self.cell_count:
-                            break
-                        cellVoltage = frameCell[idx] / 1000
-                        self.cells[cellnum].voltage = (
-                            None if cellVoltage < lowMin else cellVoltage
-                        )
+                    else:
+                        for idx in range(3):
+                            cellnum = (
+                                (frame - 1) * 3
+                            ) + idx  # daly is 1 based, driver 0 based
+                            if cellnum >= self.cell_count:
+                                break
+                            cellVoltage = frameCell[idx] / 1000
+                            self.cells[cellnum].voltage = (
+                                None if cellVoltage < lowMin else cellVoltage
+                            )
                     bufIdx += 13  # BBBBBhhhBB -> 13 byte
                 else:
+                    bufIdx += 1  # step through buffer to find valid start
                     logger.warning("bad cell voltages header")
         return True
 
@@ -325,6 +339,20 @@ class Daly(Battery):
         self.cell_max_voltage = cell_max_voltage / 1000
         self.cell_min_voltage = cell_min_voltage / 1000
         return True
+
+    def read_balance_state(self, ser):
+        balance_data = self.read_serial_data_daly(ser, self.command_cell_balance)
+        # check if connection success
+        if balance_data is False:
+            logger.debug("read_balance_state")
+            return False
+
+        bitdata = unpack_from(">Q", balance_data)[0]
+
+        mask = 1 << 48
+        for i in range(len(self.cells)):
+            self.cells[i].balance = True if bitdata & mask else False
+            mask >>= 1
 
     def read_temperature_range_data(self, ser):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
@@ -355,6 +383,28 @@ class Daly(Battery):
         self.capacity_remain = capacity_remain / 1000
         return True
 
+    def read_capacity(self, ser):
+        capa_data = self.read_serial_data_daly(ser, self.command_rated_params)
+        # check if connection success
+        if capa_data is False:
+            logger.warning("read_capacity")
+            return False
+
+        (capacity, cell_volt) = unpack_from(">LL", capa_data)
+        self.capacity = capacity / 1000
+        return True
+
+    def read_production_date(self, ser):
+        production = self.read_serial_data_daly(ser, self.command_batt_details)
+        # check if connection success
+        if production is False:
+            logger.warning("read_production_date")
+            return False
+
+        (_, _, year, month, day) = unpack_from(">BBBBB", production)
+        self.production = f"({year + 2000}{month:02d}{day:02d})"
+        return True
+
     def generate_command(self, command):
         buffer = bytearray(self.command_base)
         buffer[1] = self.command_address[0]  # Always serial 40 or 80
@@ -367,15 +417,41 @@ class Daly(Battery):
             ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
+            logger.info("No reply to cmd " + bytes(command).hex())
             return False
 
-        start, flag, command_ret, length = unpack_from("BBBB", data)
-        checksum = sum(data[:-1]) & 0xFF
+        if len(data) <= 12:
+            logger.debug("Too short reply to cmd " + bytes(command).hex())
+            return False
 
-        if start == 165 and length == 8 and len(data) > 12 and checksum == data[12]:
-            return data[4 : length + 4]
+        # search sentence start
+        try:
+            idx = data.index(0xA5)
+        except ValueError:
+            logger.debug(
+                "No Sentence Start found for reply to cmd " + bytes(command).hex()
+            )
+            return False
+
+        if len(data[idx:]) <= 12:
+            logger.debug("Too short reply to cmd " + bytes(command).hex())
+            return False
+
+        if data[12 + idx] != sum(data[idx : 12 + idx]) & 0xFF:
+            logger.debug("Bad checksum in reply to cmd " + bytes(command).hex())
+            return False
+
+        _, _, _, length = unpack_from(">BBBB", data, idx)
+
+        if length == 8:
+            return data[4 + idx : length + 4 + idx]
         else:
-            logger.error(">>> ERROR: Incorrect Reply")
+            logger.debug(
+                ">>> ERROR: Incorrect Reply to CMD "
+                + bytes(command).hex()
+                + ": 0x"
+                + bytes(data).hex()
+            )
             return False
 
     # Read data from previously openned serial port

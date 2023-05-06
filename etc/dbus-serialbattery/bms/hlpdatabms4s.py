@@ -202,7 +202,7 @@ def read_serial_data2(command, port, baud, time, min_len):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.5) as ser:
             ret = read_serialport_data2(ser, command, time, min_len)
-            if not ret is False:
+            if ret is True:
                 return ret
         return False
 

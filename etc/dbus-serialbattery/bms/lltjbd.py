@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from utils import is_bit_set, read_serial_data, logger
+import utils
+from struct import unpack_from
+import struct
 
 
 class LltJbdProtection(Protection):
@@ -59,18 +61,25 @@ class LltJbd(Battery):
     LENGTH_POS = 3
 
     def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
         result = False
         try:
             result = self.read_hardware_data()
-        except:
-            pass
+            # get first data to show in startup log
+            if result:
+                self.refresh_data()
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
     def get_settings(self):
         self.read_gen_data()
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
@@ -79,7 +88,7 @@ class LltJbd(Battery):
         return result
 
     def to_protection_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(13, zero_char)
+        tmp = bin(byte_data)[2:].rjust(13, utils.zero_char)
 
         self.protection.voltage_high = 2 if is_bit_set(tmp[10]) else 0
         self.protection.voltage_low = 2 if is_bit_set(tmp[9]) else 0
@@ -92,7 +101,11 @@ class LltJbd(Battery):
 
         # Software implementations for low soc
         self.protection.soc_low = (
-            2 if self.soc < SOC_LOW_ALARM else 1 if self.soc < SOC_LOW_WARNING else 0
+            2
+            if self.soc < utils.SOC_LOW_ALARM
+            else 1
+            if self.soc < utils.SOC_LOW_WARNING
+            else 0
         )
 
         # extra protection flags for LltJbd
@@ -107,17 +120,17 @@ class LltJbd(Battery):
         for c in self.cells:
             self.cells.remove(c)
         # get up to the first 16 cells
-        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), zero_char)
+        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), utils.zero_char)
         for bit in reversed(tmp):
             self.cells.append(Cell(is_bit_set(bit)))
         # get any cells above 16
         if self.cell_count > 16:
-            tmp = bin(byte_data_high)[2:].rjust(self.cell_count - 16, zero_char)
+            tmp = bin(byte_data_high)[2:].rjust(self.cell_count - 16, utils.zero_char)
             for bit in reversed(tmp):
                 self.cells.append(Cell(is_bit_set(bit)))
 
     def to_fet_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(2, zero_char)
+        tmp = bin(byte_data)[2:].rjust(2, utils.zero_char)
         self.charge_fet = is_bit_set(tmp[1])
         self.discharge_fet = is_bit_set(tmp[0])
 
@@ -145,19 +158,20 @@ class LltJbd(Battery):
         ) = unpack_from(">HhHHHHhHHBBBBB", gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
-        self.soc = 100 * capacity_remain / capacity
+        self.soc = round(100 * capacity_remain / capacity, 2)
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
         self.to_cell_bits(balance, balance2)
         self.version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
+        # 0 = MOS, 1 = temp 1, 2 = temp 2
         for t in range(self.temp_sensors):
             temp1 = unpack_from(">H", gen_data, 23 + (2 * t))[0]
-            self.to_temp(t + 1, kelvin_to_celsius(temp1 / 10))
+            self.to_temp(t, utils.kelvin_to_celsius(temp1 / 10))
 
         return True
 

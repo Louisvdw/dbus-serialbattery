@@ -5,7 +5,6 @@ import utils
 import serial
 
 
-
 class Seplos(Battery):
     def __init__(self, port, baud, address=0x00):
         super(Seplos, self).__init__(port, baud, address)

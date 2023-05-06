@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+
+# disable ANT BMS by default as it causes other issues but can be enabled manually
+# https://github.com/Louisvdw/dbus-serialbattery/issues/479
+
+from battery import Battery
+from utils import read_serial_data, logger
+import utils
+from struct import unpack_from
 
 
 class Ant(Battery):
@@ -25,8 +30,9 @@ class Ant(Battery):
         result = False
         try:
             result = self.read_status_data()
-        except:
-            pass
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
         return result
 
@@ -34,8 +40,8 @@ class Ant(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         self.version = "ANT BMS V2.0"
         logger.info(self.hardware_version)
         return True
@@ -59,8 +65,8 @@ class Ant(Battery):
         self.current = 0.0 if current == 0 else current / -10
 
         self.cell_count = unpack_from(">b", status_data, 123)[0]
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         cell_max_no, cell_max_voltage, cell_min_no, cell_min_voltage = unpack_from(
             ">bhbh", status_data, 115
@@ -95,9 +101,9 @@ class Ant(Battery):
         )
         self.protection.voltage_cell_low = (
             2
-            if self.cell_min_voltage < MIN_CELL_VOLTAGE - 0.1
+            if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE - 0.1
             else 1
-            if self.cell_min_voltage < MIN_CELL_VOLTAGE
+            if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE
             else 0
         )
         self.protection.temp_high_charge = (

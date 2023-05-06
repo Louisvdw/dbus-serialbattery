@@ -39,7 +39,7 @@ MbPage {
         }
     }
 
-    model: VisualItemModel {
+    model: VisibleItemModel {
         MbItemOptions {
             description: qsTr("Switch")
             bind: service.path("/Mode")
@@ -118,7 +118,7 @@ MbPage {
                 displayUnit: user.temperatureUnit
             }
         }
-        
+
         MbItemValue {
             description: qsTr("MOSFET temperature")
             show: item.valid
@@ -187,6 +187,42 @@ MbPage {
         MbItemTimeSpan {
             description: qsTr("Time-to-go")
             item.bind: service.path("/TimeToGo")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 0%")
+            item.bind: service.path("/TimeToSoC/0")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 10%")
+            item.bind: service.path("/TimeToSoC/10")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 20%")
+            item.bind: service.path("/TimeToSoC/20")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 80%")
+            item.bind: service.path("/TimeToSoC/80")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 90%")
+            item.bind: service.path("/TimeToSoC/90")
+            show: item.seen
+        }
+
+        MbItemValue {
+            description: qsTr("Time-to-SoC 100%")
+            item.bind: service.path("/TimeToSoC/100")
             show: item.seen
         }
 
@@ -310,6 +346,7 @@ MbPage {
 
         MbSubMenu {
             property VBusItem allowToCharge: VBusItem { bind: service.path("/Io/AllowToCharge") }
+            property VBusItem allowToBalance: VBusItem { bind: service.path("/Io/AllowToBalance") }
 
             description: qsTr("IO")
             subpage: Component {
@@ -318,7 +355,7 @@ MbPage {
                     bindPrefix: service.path("")
                 }
             }
-            show: allowToCharge.valid
+            show: allowToCharge.valid || allowToBalance.valid
         }
 
         MbSubMenu {
