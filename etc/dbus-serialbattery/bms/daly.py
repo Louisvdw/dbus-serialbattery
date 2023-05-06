@@ -17,10 +17,10 @@ class Daly(Battery):
         self.cell_max_voltage = None
         self.cell_min_no = None
         self.cell_max_no = None
-        # change this vaulue, if a lot of "no reply - returning" are shown after some time
-        self.poll_interval = 2000  # temporary set, original value 1000
+        self.poll_interval = 2000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
+        self.busy = False
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -73,6 +73,11 @@ class Daly(Battery):
 
     def refresh_data(self):
         result = False
+
+        if self.busy:
+            return False
+        self.busy = True
+
         # Open serial port to be used for all data reads instead of openning multiple times
         ser = open_serial_port(self.port, self.baud_rate)
         if ser is not None:
@@ -94,6 +99,7 @@ class Daly(Battery):
 
             ser.close()
 
+        self.busy = False
         return result
 
     def read_status_data(self, ser):
