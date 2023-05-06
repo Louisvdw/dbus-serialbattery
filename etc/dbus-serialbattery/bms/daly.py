@@ -471,7 +471,7 @@ class Daly(Battery):
             self.custom_field = sub(
                 " +",
                 " ",
-                (battery_code.decode().strip()),
+                (battery_code.strip()),
             )
             self.unique_identifier = self.custom_field.replace(" ", "_")
         else:
