@@ -74,9 +74,9 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 2. Run these commands to install or update to the latest release version.
 
   ```bash
-  wget -O /tmp/install-release.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/install-release.sh
+  wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/install.sh
 
-  bash /tmp/install-release.sh
+  bash /tmp/install.sh
 
   reboot
   ```
