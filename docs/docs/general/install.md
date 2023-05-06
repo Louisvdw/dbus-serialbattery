@@ -110,10 +110,10 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 > This version is installed directly from the repository and can contain errors. Not recommended for production environments unless you know what you do.
 
 ```bash
-wget -O /tmp/install-nightly.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/jkbms_ble/etc/dbus-serialbattery/install-nightly.sh && bash /tmp/install-nightly.sh
+wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/jkbms_ble/etc/dbus-serialbattery/install.sh && bash /tmp/install.sh
 ```
 
-Select `2` for `jkbms_ble`.
+Select `2` for `nightly build` and then select the branch you want to install from.
 
 ### BMS specific settings
 
@@ -239,7 +239,7 @@ rm -rf /opt/victronenergy/dbus-serialbattery
 # kill driver, if running
 pkill -f "python .*/dbus-serialbattery.py"
 
-# remove install-script from rc.local
+# remove install script from rc.local
 sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
 ```
 
