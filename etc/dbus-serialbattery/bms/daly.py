@@ -6,6 +6,7 @@ from struct import unpack_from
 from struct import pack_into
 from time import sleep
 from datetime import datetime
+from re import sub
 
 
 class Daly(Battery):
@@ -18,12 +19,13 @@ class Daly(Battery):
         self.cell_max_voltage = None
         self.cell_min_no = None
         self.cell_max_no = None
-        self.poll_interval = 1000
+        self.poll_interval = 500
         self.poll_step = 0
         self.type = self.BATTERYTYPE
         self.has_settings = 1
         self.reset_soc = 0
         self.soc_to_set = None
+        self.busy = False
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -39,6 +41,9 @@ class Daly(Battery):
     command_alarm = b"\x98"
     command_rated_params = b"\x50"
     command_set_soc = b"\x21"
+    command_batt_details = b"\x53"
+    command_batt_code = b"\x57"
+
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
     LENGTH_POS = 3
@@ -51,11 +56,10 @@ class Daly(Battery):
         # Return True if success, False for failure
         result = False
         try:
-            ser = open_serial_port(self.port, self.baud_rate)
-            if ser is not None:
+            with open_serial_port(self.port, self.baud_rate) as ser:
+                self.read_battery_code(ser)
                 result = self.read_status_data(ser)
                 self.read_soc_data(ser)
-                ser.close()
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
@@ -67,6 +71,7 @@ class Daly(Battery):
         self.capacity = utils.BATTERY_CAPACITY
         with open_serial_port(self.port, self.baud_rate) as ser:
             self.read_capacity(ser)
+            self.read_production_date(ser)
 
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
@@ -74,6 +79,10 @@ class Daly(Battery):
 
     def refresh_data(self):
         result = False
+
+        if self.busy:
+            return False
+        self.busy = True
 
         # Open serial port to be used for all data reads instead of opening multiple times
         try:
@@ -97,13 +106,14 @@ class Daly(Battery):
         except OSError:
             logger.warning("Couldn't open serial port")
 
+        self.busy = False
         return result
 
     def read_status_data(self, ser):
         status_data = self.read_serial_data_daly(ser, self.command_status)
         # check if connection success
         if status_data is False:
-            logger.debug("read_status_data")
+            logger.warning("No data received in read_status_data()")
             return False
 
         (
@@ -118,7 +128,12 @@ class Daly(Battery):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
-        self.hardware_version = "DalyBMS " + str(self.cell_count) + " cells"
+        self.hardware_version = (
+            "DalyBMS "
+            + str(self.cell_count)
+            + " cells"
+            + (" (" + self.production + ")" if self.production else "")
+        )
         logger.info(self.hardware_version)
         return True
 
@@ -153,7 +168,7 @@ class Daly(Battery):
         alarm_data = self.read_serial_data_daly(ser, self.command_alarm)
         # check if connection success
         if alarm_data is False:
-            logger.warning("read_alarm_data")
+            logger.warning("No data received in read_alarm_data()")
             return False
 
         (
@@ -277,7 +292,7 @@ class Daly(Battery):
                 ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
-                logger.warning("read_cells_volts")
+                logger.warning("No data received in read_cells_volts()")
                 return False
 
             frameCell = [0, 0, 0]
@@ -329,7 +344,7 @@ class Daly(Battery):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_cell_volts)
         # check if connection success
         if minmax_data is False:
-            logger.warning("read_cell_voltage_range_data")
+            logger.warning("No data received in read_cell_voltage_range_data()")
             return False
 
         (
@@ -350,7 +365,7 @@ class Daly(Battery):
         balance_data = self.read_serial_data_daly(ser, self.command_cell_balance)
         # check if connection success
         if balance_data is False:
-            logger.debug("read_balance_state")
+            logger.debug("No data received in read_balance_state()")
             return False
 
         bitdata = unpack_from(">Q", balance_data)[0]
@@ -364,7 +379,7 @@ class Daly(Battery):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
         # check if connection success
         if minmax_data is False:
-            logger.debug("read_temperature_range_data")
+            logger.debug("No data received in read_temperature_range_data()")
             return False
 
         max_temp, max_no, min_temp, min_no = unpack_from(">bbbb", minmax_data)
@@ -376,7 +391,7 @@ class Daly(Battery):
         fed_data = self.read_serial_data_daly(ser, self.command_fet)
         # check if connection success
         if fed_data is False:
-            logger.debug("read_fed_data")
+            logger.debug("No data received in read_fed_data()")
             return False
 
         (
@@ -389,15 +404,80 @@ class Daly(Battery):
         self.capacity_remain = capacity_remain / 1000
         return True
 
+    # new
     def read_capacity(self, ser):
         capa_data = self.read_serial_data_daly(ser, self.command_rated_params)
         # check if connection success
         if capa_data is False:
-            logger.warning("read_capacity")
-            return False
+            logger.warning("No data received in read_capacity()")
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
-        self.capacity = capacity / 1000
+        self.capacity = (
+            capacity / 1000
+            if capacity and capacity != "" and capacity > 0
+            else utils.BATTERY_CAPACITY
+        )
+        return True
+
+    # new
+    def read_production_date(self, ser):
+        production = self.read_serial_data_daly(ser, self.command_batt_details)
+        # check if connection success
+        if production is False:
+            logger.warning("No data received in read_production_date()")
+            return False
+
+        (_, _, year, month, day) = unpack_from(">BBBBB", production)
+        self.production = f"{year + 2000}{month:02d}{day:02d}"
+        return True
+
+    # new
+    def read_battery_code(self, ser):
+        lenFixed = (
+            5 * 13
+        )  # batt code field is 35 bytes and we transfer 7 bytes in each telegram
+        data = self.read_serialport_data(
+            ser,
+            self.generate_command(self.command_batt_code),
+            self.LENGTH_POS,
+            0,
+            lenFixed,
+        )
+
+        if data is False:
+            logger.warning("No data received in read_battery_code()")
+            return False
+
+        bufIdx = 0
+        battery_code = ""
+        # logger.warning("data " + bytes(cells_volts_data).hex())
+        while (
+            bufIdx <= len(data) - 13
+        ):  # we at least need 13 bytes to extract the identifiers + 8 bytes payload + checksum
+            b1, b2, b3, b4 = unpack_from(">BBBB", data, bufIdx)
+            if b1 == 0xA5 and b2 == 0x01 and b3 == 0x57 and b4 == 0x08:
+                _, part, chk = unpack_from(">B7sB", data, bufIdx + 4)
+                if sum(data[bufIdx : bufIdx + 12]) & 0xFF != chk:
+                    logger.warning(
+                        "bad battery code checksum"
+                    )  # use string anyhow, just warn
+                battery_code += part.decode("utf-8")
+                bufIdx += 13  # BBBBB7sB -> 13 byte
+            else:
+                bufIdx += 1  # step through buffer to find valid start
+                logger.warning("bad battery code header")
+
+        if battery_code != "":
+            self.custom_field = sub(
+                " +",
+                " ",
+                (battery_code.decode().strip()),
+            )
+            self.unique_identifier = self.custom_field.replace(" ", "_")
+        else:
+            self.unique_identifier = (
+                str(self.production) + "_" + str(int(self.capacity))
+            )
         return True
 
     def generate_command(self, command):
