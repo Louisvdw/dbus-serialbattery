@@ -17,7 +17,8 @@ class Daly(Battery):
         self.cell_max_voltage = None
         self.cell_min_no = None
         self.cell_max_no = None
-        self.poll_interval = 1000
+        # change this vaulue, if a lot of "no reply - returning" are shown after some time
+        self.poll_interval = 2000  # temporary set, original value 1000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
 
@@ -64,6 +65,7 @@ class Daly(Battery):
         self.capacity = utils.BATTERY_CAPACITY
         with open_serial_port(self.port, self.baud_rate) as ser:
             self.read_capacity(ser)
+            self.read_production_date(ser)
 
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
@@ -98,7 +100,7 @@ class Daly(Battery):
         status_data = self.read_serial_data_daly(ser, self.command_status)
         # check if connection success
         if status_data is False:
-            logger.debug("read_status_data")
+            logger.warning("No data received in read_status_data()")
             return False
 
         (
@@ -153,7 +155,7 @@ class Daly(Battery):
         alarm_data = self.read_serial_data_daly(ser, self.command_alarm)
         # check if connection success
         if alarm_data is False:
-            logger.warning("read_alarm_data")
+            logger.warning("No data received in read_alarm_data()")
             return False
 
         (
@@ -277,7 +279,7 @@ class Daly(Battery):
                 ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
-                logger.warning("read_cells_volts")
+                logger.warning("No data received in read_cells_volts()")
                 return False
 
             frameCell = [0, 0, 0]
@@ -329,7 +331,7 @@ class Daly(Battery):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_cell_volts)
         # check if connection success
         if minmax_data is False:
-            logger.warning("read_cell_voltage_range_data")
+            logger.warning("No data received in read_cell_voltage_range_data()")
             return False
 
         (
@@ -350,7 +352,7 @@ class Daly(Battery):
         balance_data = self.read_serial_data_daly(ser, self.command_cell_balance)
         # check if connection success
         if balance_data is False:
-            logger.debug("read_balance_state")
+            logger.debug("No data received in read_balance_state()")
             return False
 
         bitdata = unpack_from(">Q", balance_data)[0]
@@ -364,7 +366,7 @@ class Daly(Battery):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
         # check if connection success
         if minmax_data is False:
-            logger.debug("read_temperature_range_data")
+            logger.debug("No data received in read_temperature_range_data()")
             return False
 
         max_temp, max_no, min_temp, min_no = unpack_from(">bbbb", minmax_data)
@@ -376,7 +378,7 @@ class Daly(Battery):
         fed_data = self.read_serial_data_daly(ser, self.command_fet)
         # check if connection success
         if fed_data is False:
-            logger.debug("read_fed_data")
+            logger.debug("No data received in read_fed_data()")
             return False
 
         (
@@ -394,7 +396,7 @@ class Daly(Battery):
         capa_data = self.read_serial_data_daly(ser, self.command_rated_params)
         # check if connection success
         if capa_data is False:
-            logger.warning("read_capacity")
+            logger.warning("No data received in read_capacity()")
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
         self.capacity = (
@@ -409,7 +411,7 @@ class Daly(Battery):
         production = self.read_serial_data_daly(ser, self.command_batt_details)
         # check if connection success
         if production is False:
-            logger.warning("read_production_date")
+            logger.warning("No data received in read_production_date()")
             return False
 
         (_, _, year, month, day) = unpack_from(">BBBBB", production)
@@ -430,7 +432,7 @@ class Daly(Battery):
         )
 
         if data is False:
-            logger.warning("read_battery_code")
+            logger.warning("No data received in read_battery_code()")
             return False
 
         bufIdx = 0
