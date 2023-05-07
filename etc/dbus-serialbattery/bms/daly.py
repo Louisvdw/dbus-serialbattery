@@ -18,7 +18,7 @@ class Daly(Battery):
         self.cell_max_voltage = None
         self.cell_min_no = None
         self.cell_max_no = None
-        self.poll_interval = 500
+        self.poll_interval = 1000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
         self.has_settings = 1
@@ -53,49 +53,83 @@ class Daly(Battery):
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         result = False
+        logger.info("> test_connection: start")
         try:
+            logger.info("> test_connection: open_serial_port")
             with open_serial_port(self.port, self.baud_rate) as ser:
+                logger.info("> test_connection: read_battery_code")
                 self.read_battery_code(ser)
+
+                logger.info("> test_connection: read_status_data")
                 result = self.read_status_data(ser)
+
+                logger.info("> test_connection: read_soc_data")
                 self.read_soc_data(ser)
+
+                logger.info("> test_connection: read_soc_data")
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
 
+        logger.info("> test_connection: end")
         return result
 
     def get_settings(self):
+        logger.info("> get_settings: start")
         self.capacity = utils.BATTERY_CAPACITY
+        logger.info("> get_settings: open_serial_port")
         with open_serial_port(self.port, self.baud_rate) as ser:
+            logger.info("> get_settings: read_capacity")
             self.read_capacity(ser)
+
+            logger.info("> get_settings: read_production_date")
             self.read_production_date(ser)
 
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
+        logger.info("> get_settings: end")
         return True
 
     def refresh_data(self):
+        logger.info("> refresh_data: start")
         result = False
 
         if self.busy:
+            logger.info("> refresh_data: CURRENTLY BUSY!")
             return False
         self.busy = True
 
         # Open serial port to be used for all data reads instead of opening multiple times
         try:
+            logger.info("> refresh_data: open_serial_port")
             with open_serial_port(self.port, self.baud_rate) as ser:
+                logger.info("> refresh_data: read_soc_data")
                 result = self.read_soc_data(ser)
+
+                logger.info("> refresh_data: read_fed_data")
                 result = result and self.read_fed_data(ser)
+
+                logger.info("> refresh_data: read_cell_voltage_range_data")
                 result = result and self.read_cell_voltage_range_data(ser)
+
+                logger.info("> refresh_data: write_soc_and_datetime")
                 self.write_soc_and_datetime(ser)
 
                 if self.poll_step == 0:
+                    logger.info("> refresh_data: read_alarm_data")
                     result = result and self.read_alarm_data(ser)
+
+                    logger.info("> refresh_data: read_temperature_range_data")
                     result = result and self.read_temperature_range_data(ser)
+
                 elif self.poll_step == 1:
+                    logger.info("> refresh_data: read_cells_volts")
                     result = result and self.read_cells_volts(ser)
+
+                    logger.info("> refresh_data: read_balance_state")
                     result = result and self.read_balance_state(ser)
+
                     # else:  # A placeholder to remind this is the last step. Add any additional steps before here
                     # This is last step so reset poll_step
                     self.poll_step = -1
@@ -105,6 +139,7 @@ class Daly(Battery):
             logger.warning("Couldn't open serial port")
 
         self.busy = False
+        logger.info("> refresh_data: end")
         return result
 
     def read_status_data(self, ser):
@@ -411,6 +446,7 @@ class Daly(Battery):
         # check if connection success
         if capa_data is False:
             logger.warning("No data received in read_capacity()")
+            return False
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
         self.capacity = (
