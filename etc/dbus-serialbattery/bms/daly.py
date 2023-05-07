@@ -3,7 +3,7 @@ from battery import Battery, Cell
 from utils import open_serial_port, logger
 import utils
 from struct import unpack_from, pack_into
-from time import sleep
+from time import sleep, time
 from datetime import datetime
 from re import sub
 
@@ -18,7 +18,7 @@ class Daly(Battery):
         self.cell_max_voltage = None
         self.cell_min_no = None
         self.cell_max_no = None
-        self.poll_interval = 1000
+        self.poll_interval = 2000  # TEST
         self.poll_step = 0
         self.type = self.BATTERYTYPE
         self.has_settings = 1
@@ -95,43 +95,56 @@ class Daly(Battery):
         return True
 
     def refresh_data(self):
-        logger.info("> refresh_data: start")
+        logger.info("refresh_data: start")
         result = False
 
         if self.busy:
-            logger.info("> refresh_data: CURRENTLY BUSY!")
+            logger.info("refresh_data: CURRENTLY BUSY!")
             return False
         self.busy = True
 
         # Open serial port to be used for all data reads instead of opening multiple times
         try:
-            logger.info("> refresh_data: open_serial_port")
             with open_serial_port(self.port, self.baud_rate) as ser:
-                logger.info("> refresh_data: read_soc_data")
                 result = self.read_soc_data(ser)
+                logger.info("  |- refresh_data: read_soc_data - result: " + str(result))
 
-                logger.info("> refresh_data: read_fed_data")
                 result = result and self.read_fed_data(ser)
+                logger.info("  |- refresh_data: read_fed_data - result: " + str(result))
 
-                logger.info("> refresh_data: read_cell_voltage_range_data")
                 result = result and self.read_cell_voltage_range_data(ser)
+                logger.info(
+                    "  |- refresh_data: read_cell_voltage_range_data - result: "
+                    + str(result)
+                )
 
-                logger.info("> refresh_data: write_soc_and_datetime")
                 self.write_soc_and_datetime(ser)
+                logger.info(
+                    "  |- refresh_data: write_soc_and_datetime - result: " + str(result)
+                )
 
                 if self.poll_step == 0:
-                    logger.info("> refresh_data: read_alarm_data")
                     result = result and self.read_alarm_data(ser)
+                    logger.info(
+                        "  |- refresh_data: read_alarm_data - result: " + str(result)
+                    )
 
-                    logger.info("> refresh_data: read_temperature_range_data")
                     result = result and self.read_temperature_range_data(ser)
+                    logger.info(
+                        "  |- refresh_data: read_temperature_range_data - result: "
+                        + str(result)
+                    )
 
                 elif self.poll_step == 1:
-                    logger.info("> refresh_data: read_cells_volts")
                     result = result and self.read_cells_volts(ser)
+                    logger.info(
+                        "  |- refresh_data: read_cells_volts - result: " + str(result)
+                    )
 
-                    logger.info("> refresh_data: read_balance_state")
                     result = result and self.read_balance_state(ser)
+                    logger.info(
+                        "  |- refresh_data: read_balance_state - result: " + str(result)
+                    )
 
                     # else:  # A placeholder to remind this is the last step. Add any additional steps before here
                     # This is last step so reset poll_step
@@ -142,7 +155,7 @@ class Daly(Battery):
             logger.warning("Couldn't open serial port")
 
         self.busy = False
-        logger.info("> refresh_data: end")
+        logger.info("refresh_data: end - result: " + str(result))
         return result
 
     def read_status_data(self, ser):
@@ -582,6 +595,7 @@ class Daly(Battery):
         length_size=None,
     ):
         try:
+            time_start = time()
             ser.flushOutput()
             ser.flushInput()
             ser.write(command)
@@ -599,7 +613,8 @@ class Daly(Battery):
             while toread < (length_pos + length_byte_size):
                 sleep(0.005)
                 toread = ser.inWaiting()
-                if (datetime.now() - start_time).microseconds > 250000:
+                if (datetime.now() - start_time).microseconds > (950 * 1000):  # TEST
+                    logger.info("  Request time: " + str(time() - time_start))
                     logger.error(">>> ERROR: No reply - returning")
                     return False
 
@@ -637,6 +652,7 @@ class Daly(Battery):
                     )
                     return False
 
+            logger.info("  Request time: " + str(time() - time_start))
             return data
 
         except Exception as e:
