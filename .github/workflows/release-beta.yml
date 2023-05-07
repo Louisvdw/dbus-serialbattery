@@ -3,9 +3,12 @@ name: Pre-release
 on:
   push:
     tags:
-      # only match alpha and beta release
-      - "v*.*.*alpha*"
-      - "v*.*.*beta*"
+      # only match pre release
+      # matches:
+      # v1.0.0alpha20230507
+      # v1.0.0-beta20230507
+      # v1.0.0-development-20230507
+      - "v*.*.[0-9]+-?[a-zA-Z]*"
 
 jobs:
   build:
@@ -30,6 +33,5 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          prerelease: true
           files: venus-data.tar.gz
           prerelease: true
