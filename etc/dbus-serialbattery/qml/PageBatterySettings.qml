@@ -57,16 +57,17 @@ MbPage {
                         show: valid
                 }
 
-                MbItemOptions {
-                        description: qsTr("Reset SOC to 100%")
-                        bind: Utils.path(root.bindPrefix, "/Settings/ResetSoc")
-                        text: qsTr("Press to reset")
-                        show: valid
-                        possibleValues: [
-                                MbOption { description: qsTr("Cancel"); value: 0 },
-                                MbOption { description: qsTr("Reset"); value: 1 }
-                        ]
+        
+                MbSpinBox {
+                        description: "Reset SoC to"
+                        item.bind: Utils.path(bindPrefix, "/Settings/ResetSoc")
+                        item.min: 0
+                        item.max: 100
+                        item.step: 1
                 }
+
+
+
 
         }
 }

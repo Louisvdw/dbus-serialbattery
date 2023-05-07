@@ -77,6 +77,7 @@ if (( $venusVersionNumber < $versionNumber )); then
     fileList="$qmlDir/PageBattery.qml"
     fileList+=" $qmlDir/PageBatteryCellVoltages.qml"
     fileList+=" $qmlDir/PageBatteryParameters.qml"
+    fileList+=" $qmlDir/PageBatterySettings.qml"
     fileList+=" $qmlDir/PageBatterySetup.qml"
     fileList+=" $qmlDir/PageLynxIonIo.qml"
     for file in $fileList ; do

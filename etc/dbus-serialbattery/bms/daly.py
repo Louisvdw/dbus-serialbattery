@@ -58,6 +58,9 @@ class Daly(Battery):
                 self.read_battery_code(ser)
                 result = self.read_status_data(ser)
                 self.read_soc_data(ser)
+                self.reset_soc = (
+                    self.soc
+                )  # set to meaningful value as preset for the GUI
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
@@ -603,9 +606,14 @@ class Daly(Battery):
             return False
 
     def reset_soc_callback(self, path, value):
-        self.reset_soc = 0
-        if value == 1:
-            self.soc_to_set = 100
+        if value is None:
+            return False
+
+        if value < 0 or value > 100:
+            return False
+
+        self.reset_soc = value
+        self.soc_to_set = value
         return True
 
     def write_soc_and_datetime(self, ser):
