@@ -414,14 +414,14 @@ class Daly(Battery):
         # check if connection success
         if capa_data is False:
             logger.warning("No data received in read_capacity()")
+            return False
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
-        self.capacity = (
-            capacity / 1000
-            if capacity and capacity != "" and capacity > 0
-            else utils.BATTERY_CAPACITY
-        )
-        return True
+        if capacity and capacity > 0:
+            self.capacity = capacity / 1000
+            return True
+        else:
+            return False
 
     # new
     def read_production_date(self, ser):
