@@ -28,19 +28,19 @@ class Daly(Battery):
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
+    command_set_soc = b"\x21"
+    command_rated_params = b"\x50"
+    command_batt_details = b"\x53"
+    command_batt_code = b"\x57"
     command_soc = b"\x90"
-    command_minmax_cell_volts = b"\x91"
-    command_minmax_temp = b"\x92"
-    command_fet = b"\x93"
+    command_minmax_cell_volts = b"\x91"  # no reply
+    command_minmax_temp = b"\x92"  # no reply
+    command_fet = b"\x93"  # no reply
     command_status = b"\x94"
     command_cell_volts = b"\x95"
     command_temp = b"\x96"
-    command_cell_balance = b"\x97"
-    command_alarm = b"\x98"
-    command_rated_params = b"\x50"
-    command_set_soc = b"\x21"
-    command_batt_details = b"\x53"
-    command_batt_code = b"\x57"
+    command_cell_balance = b"\x97"  # no reply
+    command_alarm = b"\x98"  # no reply
 
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
