@@ -65,6 +65,9 @@ class Daly(Battery):
 
                 logger.info("> test_connection: read_soc_data")
                 self.read_soc_data(ser)
+                self.reset_soc = (
+                    self.soc
+                )  # set to meaningful value as preset for the GUI
 
                 logger.info("> test_connection: read_soc_data")
 
@@ -639,9 +642,14 @@ class Daly(Battery):
             return False
 
     def reset_soc_callback(self, path, value):
-        self.reset_soc = 0
-        if value == 1:
-            self.soc_to_set = 100
+        if value is None:
+            return False
+
+        if value < 0 or value > 100:
+            return False
+
+        self.reset_soc = value
+        self.soc_to_set = value
         return True
 
     def write_soc_and_datetime(self, ser):
