@@ -414,6 +414,8 @@ class Daly(Battery):
             self.cells[i].balance = True if bitdata & mask else False
             mask >>= 1
 
+        return True
+
     def read_temperature_range_data(self, ser):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
         # check if connection success
