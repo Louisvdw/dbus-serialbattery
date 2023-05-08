@@ -37,6 +37,7 @@
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: JKBMS BLE - Show serial number and "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
 * Added: JKBMS BLE driver by @baranator
+* Added: Possibility to add `config.ini` to the root of a USB flash drive on install via the USB method by @mr-manuel
 * Added: Post install notes by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
@@ -55,7 +56,7 @@
 * Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
-* Changed: Daly BMS - Improved driver stability by @transistorgit
+* Changed: Daly BMS - Improved driver stability by @transistorgit & @mr-manuel
 * Changed: Default config file by @ppuetsch
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
   * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel
@@ -75,6 +76,7 @@
 * Changed: Fixed black lint errors by @mr-manuel
 * Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
+* Changed: Improved install workflow via USB flash drive by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
 * Changed: Logging to get relevant data by @mr-manuel
 * Changed: Many code improvements https://github.com/Louisvdw/dbus-serialbattery/pull/393 by @ppuetsch

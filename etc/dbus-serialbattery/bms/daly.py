@@ -3,7 +3,7 @@ from battery import Battery, Cell
 from utils import open_serial_port, logger
 import utils
 from struct import unpack_from, pack_into
-from time import sleep
+from time import sleep, time
 from datetime import datetime
 from re import sub
 
@@ -19,12 +19,11 @@ class Daly(Battery):
         self.cell_min_no = None
         self.cell_max_no = None
         self.poll_interval = 1000
-        self.poll_step = 0
         self.type = self.BATTERYTYPE
         self.has_settings = 1
         self.reset_soc = 0
         self.soc_to_set = None
-        self.busy = False
+        self.runtime = 0  # TROUBLESHOOTING for no reply errors
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -53,96 +52,122 @@ class Daly(Battery):
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         result = False
-        logger.info("> test_connection: start")
         try:
-            logger.info("> test_connection: open_serial_port")
             with open_serial_port(self.port, self.baud_rate) as ser:
-                logger.info("> test_connection: read_battery_code")
-                self.read_battery_code(ser)
-
-                logger.info("> test_connection: read_status_data")
                 result = self.read_status_data(ser)
-
-                logger.info("> test_connection: read_soc_data")
                 self.read_soc_data(ser)
+                self.read_battery_code(ser)
                 self.reset_soc = (
                     self.soc
                 )  # set to meaningful value as preset for the GUI
-
-                logger.info("> test_connection: read_soc_data")
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
 
-        logger.info("> test_connection: end")
         return result
 
     def get_settings(self):
-        logger.info("> get_settings: start")
         self.capacity = utils.BATTERY_CAPACITY
-        logger.info("> get_settings: open_serial_port")
         with open_serial_port(self.port, self.baud_rate) as ser:
-            logger.info("> get_settings: read_capacity")
             self.read_capacity(ser)
-
-            logger.info("> get_settings: read_production_date")
             self.read_production_date(ser)
 
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
-        logger.info("> get_settings: end")
         return True
 
     def refresh_data(self):
-        logger.info("> refresh_data: start")
         result = False
-
-        if self.busy:
-            logger.info("> refresh_data: CURRENTLY BUSY!")
-            return False
-        self.busy = True
 
         # Open serial port to be used for all data reads instead of opening multiple times
         try:
-            logger.info("> refresh_data: open_serial_port")
             with open_serial_port(self.port, self.baud_rate) as ser:
-                logger.info("> refresh_data: read_soc_data")
                 result = self.read_soc_data(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_soc_data - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                logger.info("> refresh_data: read_fed_data")
                 result = result and self.read_fed_data(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_fed_data - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                logger.info("> refresh_data: read_cell_voltage_range_data")
                 result = result and self.read_cell_voltage_range_data(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_cell_voltage_range_data - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                logger.info("> refresh_data: write_soc_and_datetime")
                 self.write_soc_and_datetime(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: write_soc_and_datetime - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                if self.poll_step == 0:
-                    logger.info("> refresh_data: read_alarm_data")
-                    result = result and self.read_alarm_data(ser)
+                result = result and self.read_alarm_data(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_alarm_data - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                    logger.info("> refresh_data: read_temperature_range_data")
-                    result = result and self.read_temperature_range_data(ser)
+                result = result and self.read_temperature_range_data(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_temperature_range_data - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                elif self.poll_step == 1:
-                    logger.info("> refresh_data: read_cells_volts")
-                    result = result and self.read_cells_volts(ser)
+                result = result and self.read_cells_volts(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_cells_volts - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                    logger.info("> refresh_data: read_balance_state")
-                    result = result and self.read_balance_state(ser)
+                result = result and self.read_balance_state(ser)
+                if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
+                    logger.info(
+                        "  |- refresh_data: read_balance_state - result: "
+                        + str(result)
+                        + " - runtime: "
+                        + str(self.runtime)
+                        + "s"
+                    )
 
-                    # else:  # A placeholder to remind this is the last step. Add any additional steps before here
-                    # This is last step so reset poll_step
-                    self.poll_step = -1
-
-                self.poll_step += 1
         except OSError:
             logger.warning("Couldn't open serial port")
 
-        self.busy = False
-        logger.info("> refresh_data: end")
+        if not result:  # TROUBLESHOOTING for no reply errors
+            logger.info("refresh_data: result: " + str(result))
         return result
 
     def read_status_data(self, ser):
@@ -414,6 +439,8 @@ class Daly(Battery):
             self.cells[i].balance = True if bitdata & mask else False
             mask >>= 1
 
+        return True
+
     def read_temperature_range_data(self, ser):
         minmax_data = self.read_serial_data_daly(ser, self.command_minmax_temp)
         # check if connection success
@@ -452,12 +479,11 @@ class Daly(Battery):
             return False
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
-        self.capacity = (
-            capacity / 1000
-            if capacity and capacity != "" and capacity > 0
-            else utils.BATTERY_CAPACITY
-        )
-        return True
+        if capacity and capacity > 0:
+            self.capacity = capacity / 1000
+            return True
+        else:
+            return False
 
     # new
     def read_production_date(self, ser):
@@ -580,6 +606,11 @@ class Daly(Battery):
         length_size=None,
     ):
         try:
+            # wait shortly, else the Daly is not ready and throws a lot of no reply errors
+            # if you see a lot of errors, try to increase in steps of 0.005
+            sleep(0.020)
+
+            time_start = time()
             ser.flushOutput()
             ser.flushInput()
             ser.write(command)
@@ -591,13 +622,14 @@ class Daly(Battery):
                 elif length_size.upper() == "I" or length_size.upper() == "L":
                     length_byte_size = 4
 
-            start_time = datetime.now()
             toread = ser.inWaiting()
 
             while toread < (length_pos + length_byte_size):
                 sleep(0.005)
                 toread = ser.inWaiting()
-                if (datetime.now() - start_time).microseconds > 250000:
+                time_run = time() - time_start
+                if time_run > 0.500:
+                    self.runtime = time_run
                     logger.error(">>> ERROR: No reply - returning")
                     return False
 
@@ -625,7 +657,9 @@ class Daly(Battery):
                 res = ser.read(packetlen - len(data))
                 data.extend(res)
                 sleep(0.005)
-                if (datetime.now() - start_time).microseconds > 500000:
+                time_run = time() - time_start
+                if time_run > 0.500:
+                    self.runtime = time_run
                     logger.error(
                         ">>> ERROR: No reply - returning [len:"
                         + str(len(data))
@@ -635,6 +669,7 @@ class Daly(Battery):
                     )
                     return False
 
+            self.runtime = time_run
             return data
 
         except Exception as e:
@@ -680,17 +715,17 @@ class Daly(Battery):
         logger.info(f"write soc {self.soc_to_set}%")
         self.soc_to_set = None  # Reset value, so we will set it only once
 
+        time_start = time()
         ser.flushOutput()
         ser.flushInput()
         ser.write(cmd)
 
         toread = ser.inWaiting()
-        count = 0
         while toread < 13:
             sleep(0.005)
             toread = ser.inWaiting()
-            count += 1
-            if count > 50:
+            time_run = time() - time_start
+            if time_run > 0.500:
                 logger.warning("write soc: no reply, probably failed")
                 return False
 
