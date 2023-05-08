@@ -96,7 +96,7 @@ if [ "$version" = "nightly build" ]; then
 
     PS3="Select the branch from wich you want to install the current code (possible bugs included): "
 
-    select branch in master jkbms_ble quit
+    select branch in master dev quit
     do
         case $branch in
             master)
@@ -104,7 +104,7 @@ if [ "$version" = "nightly build" ]; then
                 #echo "Selected number: $REPLY"
                 break
                 ;;
-            jkbms_ble)
+            dev)
                 echo "Selected branch: $branch"
                 #echo "Selected number: $REPLY"
                 break
