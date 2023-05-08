@@ -143,20 +143,20 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_cells_volts(ser)
+                result = result and self.read_balance_state(ser)
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
-                        "  |- refresh_data: read_cells_volts - result: "
+                        "  |- refresh_data: read_balance_state - result: "
                         + str(result)
                         + " - runtime: "
                         + str(self.runtime)
                         + "s"
                     )
 
-                result = result and self.read_balance_state(ser)
+                result = result and self.read_cells_volts(ser)
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
-                        "  |- refresh_data: read_balance_state - result: "
+                        "  |- refresh_data: read_cells_volts - result: "
                         + str(result)
                         + " - runtime: "
                         + str(self.runtime)
@@ -356,7 +356,9 @@ class Daly(Battery):
                 ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
-                logger.warning("No data received in read_cells_volts()")
+                logger.debug(
+                    "No data received in read_cells_volts()"
+                )  # just debug level, as there are DALY BMS that send broken packages occasionally
                 return False
 
             frameCell = [0, 0, 0]
@@ -595,7 +597,7 @@ class Daly(Battery):
             )
             return False
 
-    # Read data from previously openned serial port
+    # Read data from previously opened serial port
     def read_serialport_data(
         self,
         ser,
@@ -610,6 +612,7 @@ class Daly(Battery):
             # if you see a lot of errors, try to increase in steps of 0.005
             sleep(0.020)
 
+            time_run = 0
             time_start = time()
             ser.flushOutput()
             ser.flushInput()
@@ -630,7 +633,7 @@ class Daly(Battery):
                 time_run = time() - time_start
                 if time_run > 0.500:
                     self.runtime = time_run
-                    logger.error(">>> ERROR: No reply - returning")
+                    logger.warning(">>> ERROR: No reply - returning")
                     return False
 
             # logger.info('serial data toread ' + str(toread))
@@ -660,13 +663,13 @@ class Daly(Battery):
                 time_run = time() - time_start
                 if time_run > 0.500:
                     self.runtime = time_run
-                    logger.error(
-                        ">>> ERROR: No reply - returning [len:"
+                    logger.warning(
+                        "No reply - returning [len:"
                         + str(len(data))
                         + "/"
                         + str(length + length_check)
                         + "]"
-                    )
+                    )  # just a warning, as there are DALY BMS that send broken packages occasionally
                     return False
 
             self.runtime = time_run
