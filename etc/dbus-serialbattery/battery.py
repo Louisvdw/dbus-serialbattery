@@ -74,6 +74,10 @@ class Battery(ABC):
         # used to identify a BMS when multiple BMS are connected - planned for future use
         self.unique_identifier = None
 
+        # fetched from the BMS from a field where the user can input a custom string
+        # only if available
+        self.custom_field = None
+
     def init_values(self):
         self.voltage = None
         self.current = None

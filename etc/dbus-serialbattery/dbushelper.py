@@ -133,7 +133,7 @@ class DbusHelper:
             "/Serial", self.battery.unique_identifier, writeable=True
         )
         self._dbusservice.add_path(
-            "/DeviceName", self.battery.production, writeable=True
+            "/DeviceName", self.battery.custom_field, writeable=True
         )
 
         # Create static battery info
