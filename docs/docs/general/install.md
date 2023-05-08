@@ -50,7 +50,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 ## Install or update
 
-### Installation video
+### Installation video (`<= v0.14.3`)
 
 [![dbus-serialbattery install](https://img.youtube.com/vi/Juht6XGLcu0/0.jpg)](https://www.youtube.com/watch?v=Juht6XGLcu0)
 
@@ -75,49 +75,46 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
-2. Run these commands to install or update to the latest release version.
+2. Run these commands to start the installer. You can then choos, if you want to install the [latest release (recommended)](#latest-release-recommended), a [specific version](#specific-versiontroubleshooting-option), the [nightly build](#nightly-build) (from `master` or `dev`), a [local tar file](#local-tar-file) or quit.
 
   ```bash
   wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/install.sh
 
   bash /tmp/install.sh
-
-  reboot
   ```
 
+#### Latest release (recommended)
 
-### Install over SSH: specific version/testing option
+Run the [install script ](../general/install#install-over-ssh) and select `1`.
 
-> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
+💡 Reboot the system after the installation finished with `reboot`.
 
-1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
+#### Specific version/troubleshooting option
 
-2. Download [the version you need](https://github.com/Louisvdw/dbus-serialbattery/releases) using the command below replacing the URL with the link to the `venus-data.tar.gz` version you need.
+Run the [install script ](../general/install#install-over-ssh) and select `2`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
 
-  ```bash
-  wget REPLACE_WITH_URL_TO_VENUS_DATA_TAR_GZ
-  ```
+💡 Reboot the system after the installation finished with `reboot`.
 
-3. Run this script command to install the update from the same location.
+#### Nightly build
 
-  ```bash
-  tar -zxf venus-data.tar.gz -C /data
+> Not recommended in production environment, unless you know what you do. Testers are very welcome!
 
-  reboot
-  ```
+Run the [install script ](../general/install#install-over-ssh) and select `3`.
 
+Then select `1` if you want to install from the `master` branch or select `2` if you want to install from the `dev` branch.
 
-### Install over SSH: nightly version/beta test
+The `master` branch can be seen as alpha version prior a pre-release or release is created.
 
-> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
+The `dev` branch can be seen as most recent version, but also as the most unstable.  It could be that everything works as expected, but it can also brick your system and you have to reinstall from zero.
 
-> This version is installed directly from the repository and can contain errors. Not recommended for production environments unless you know what you do.
+💡 Reboot the system after the installation finished with `reboot`.
 
-```bash
-wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/jkbms_ble/etc/dbus-serialbattery/install.sh && bash /tmp/install.sh
-```
+#### Local tar file
 
-Select `2` for `nightly build` and then select the branch you want to install from.
+Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script ](../general/install#install-over-ssh) and select `3`.
+
+💡 Reboot the system after the installation finished with `reboot`.
+
 
 ### BMS specific settings
 
