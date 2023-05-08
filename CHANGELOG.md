@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0-jkbms_ble
+## v1.0.0
 
 ### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
 
