@@ -15,6 +15,7 @@
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
+* Added: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
 * Added: Daly BMS - Read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by @transistorgit
 * Added: Daly BMS - Read production date and build unique identifier by @transistorgit
 * Added: Daly BMS - Set SoC by @transistorgit
@@ -24,8 +25,18 @@
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
 * Added: Improved maintainability (flake8, black lint), introduced code checks and automate release build https://github.com/Louisvdw/dbus-serialbattery/pull/386 by @ppuetsch
+* Added: Install needed Bluetooth components automatically after a Venus OS upgrade by @mr-manuel
 * Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
 * Added: JKBMS - Uniqie identifier and show "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
+* Added: JKBMS BLE - Balancing switch status by @mr-manuel
+* Added: JKBMS BLE - Capacity by @mr-manuel
+* Added: JKBMS BLE - Cell imbalance alert by @mr-manuel
+* Added: JKBMS BLE - Charging switch status by @mr-manuel
+* Added: JKBMS BLE - Discharging switch status by @mr-manuel
+* Added: JKBMS BLE - MOS temperature by @mr-manuel
+* Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
+* Added: JKBMS BLE - Show serial number and "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
+* Added: JKBMS BLE driver by @baranator
 * Added: Possibility to add `config.ini` to the root of a USB flash drive on install via the USB method by @mr-manuel
 * Added: Post install notes by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
@@ -55,6 +66,7 @@
 * Changed: Default FLOAT_CELL_VOLTAGE from 3.350 V to 3.375 V by @mr-manuel
 * Changed: Default LINEAR_LIMITATION_ENABLE from False to True by @mr-manuel
 * Changed: Disabled ANT BMS by default https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
+* Changed: Driver can now also start without serial adapter attached for Bluetooth BMS by @seidler2547
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
@@ -68,6 +80,7 @@
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
 * Changed: Logging to get relevant data by @mr-manuel
 * Changed: Many code improvements https://github.com/Louisvdw/dbus-serialbattery/pull/393 by @ppuetsch
+* Changed: Moved Bluetooth part to `reinstall-local.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Removed all wildcard imports and fixed black lint errors by @mr-manuel
 * Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
@@ -78,3 +91,4 @@
 * Changed: Temperature alarm changed in order to not trigger all in the same condition for JKBMS by @mr-manuel
 * Changed: Time-To-Soc repetition from cycles to seconds. Minimum value is every 5 seconds. This prevents CPU overload and ensures system stability. Renamed `TIME_TO_SOC_LOOP_CYCLES` to `TIME_TO_SOC_RECALCULATE_EVERY` by @mr-manuel
 * Changed: Time-To-Soc string from `days, HR:MN:SC` to `<days>d <hours>h <minutes>m <seconds>s` (same as Time-To-Go) by @mr-manuel
+* Changed: Uninstall also installed Bluetooth modules on uninstall by @mr-manuel
