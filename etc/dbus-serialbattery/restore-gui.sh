@@ -14,6 +14,11 @@ if [ -f /opt/victronenergy/gui/qml/PageBatteryParameters.qml.backup ]; then
     echo "PageBatteryParameters.qml was restored."
 fi
 # restore original backup
+if [ -f /opt/victronenergy/gui/qml/PageBatterySettings.qml.backup ]; then
+    cp -f /opt/victronenergy/gui/qml/PageBatterySettings.qml.backup /opt/victronenergy/gui/qml/PageBatterySettings.qml
+    echo "PageBatterySettings.qml was restored."
+fi
+# restore original backup
 if [ -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
     cp -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup /opt/victronenergy/gui/qml/PageLynxIonIo.qml
     echo "PageLynxIonIo.qml was restored."
