@@ -28,7 +28,8 @@ jobs:
             --exclude bms/battery_template.py \
             --exclude bms/revov.py \
             --exclude bms/test_max17853.py \
-            etc/dbus-serialbattery/
+            etc/dbus-serialbattery/ \
+            rc/
 
       - name: Release
         uses: softprops/action-gh-release@v1
