@@ -67,11 +67,16 @@ class Battery(ABC):
         # max battery charge/discharge current
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
+        self.has_settings = 0
 
         self.init_values()
 
         # used to identify a BMS when multiple BMS are connected - planned for future use
         self.unique_identifier = None
+
+        # fetched from the BMS from a field where the user can input a custom string
+        # only if available
+        self.custom_field = None
 
     def init_values(self):
         self.voltage = None
@@ -918,4 +923,8 @@ class Battery(ABC):
         if self.unique_identifier is not None:
             logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier}")
 
+        return
+
+    def reset_soc_callback(self, path, value):
+        # callback for handling reset soc request
         return

@@ -133,7 +133,7 @@ class DbusHelper:
             "/Serial", self.battery.unique_identifier, writeable=True
         )
         self._dbusservice.add_path(
-            "/DeviceName", self.battery.production, writeable=True
+            "/DeviceName", self.battery.custom_field, writeable=True
         )
 
         # Create static battery info
@@ -324,6 +324,15 @@ class DbusHelper:
         logger.info(f"publish config values = {utils.PUBLISH_CONFIG_VALUES}")
         if utils.PUBLISH_CONFIG_VALUES == 1:
             publish_config_variables(self._dbusservice)
+
+        if self.battery.has_settings:
+            self._dbusservice.add_path("/Settings/HasSettings", 1, writeable=False)
+            self._dbusservice.add_path(
+                "/Settings/ResetSoc",
+                0,
+                writeable=True,
+                onchangecallback=self.battery.reset_soc_callback,
+            )
 
         return True
 
@@ -587,3 +596,6 @@ class DbusHelper:
         if self.battery.soc is not None:
             logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
             self.battery.log_cell_data()
+
+        if self.battery.has_settings:
+            self._dbusservice["/Settings/ResetSoc"] = self.battery.reset_soc
