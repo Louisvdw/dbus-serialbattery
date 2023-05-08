@@ -46,7 +46,7 @@ if [ ! -f $filename ]; then
     echo "#!/bin/bash" >> $filename
     chmod 755 $filename
 fi
-grep -qxF "sh /data/etc/$DRIVERNAME/reinstall-local.sh" $filename || echo "sh /data/etc/$DRIVERNAME/reinstall-local.sh" >> $filename
+grep -qxF "bash /data/etc/$DRIVERNAME/reinstall-local.sh" $filename || echo "bash /data/etc/$DRIVERNAME/reinstall-local.sh" >> $filename
 
 # add empty config.ini, if it does not exist to make it easier for users to add custom settings
 filename=/data/etc/$DRIVERNAME/config.ini

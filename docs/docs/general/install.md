@@ -60,9 +60,13 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
-2. Plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.
+2. OPTIONAL: Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
 
-3. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`).
+   > If you put a `config.ini` in the root of the USB flash drive, then an existing `config.ini` will be overwritten.
+
+3. Plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.
+
+4. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`).
 
 
 ### Install over SSH
