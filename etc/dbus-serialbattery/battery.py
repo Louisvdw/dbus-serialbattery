@@ -67,6 +67,7 @@ class Battery(ABC):
         # max battery charge/discharge current
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
+        self.has_settings = 0
 
         self.init_values()
 
@@ -918,4 +919,8 @@ class Battery(ABC):
         if self.unique_identifier is not None:
             logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier}")
 
+        return
+
+    def reset_soc_callback(self, path, value):
+        # callback for handling reset soc request
         return
