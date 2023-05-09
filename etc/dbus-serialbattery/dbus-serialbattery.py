@@ -98,7 +98,7 @@ def main():
             return "/dev/tty/USB9"
 
     logger.info(
-        "dbus-serialbattery v" + str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
+        "dbus-serialbattery v" + str(utils.DRIVER_VERSION)
     )
 
     port = get_port()
