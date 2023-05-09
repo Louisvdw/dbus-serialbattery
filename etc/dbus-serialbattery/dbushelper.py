@@ -122,7 +122,7 @@ class DbusHelper:
             "/ProductName", "SerialBattery(" + self.battery.type + ")"
         )
         self._dbusservice.add_path(
-            "/FirmwareVersion", str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
+            "/FirmwareVersion", str(utils.DRIVER_VERSION)
         )
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
