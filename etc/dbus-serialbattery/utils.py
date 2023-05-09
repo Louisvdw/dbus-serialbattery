@@ -304,6 +304,21 @@ LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
 
+# --------- Battery monitor specific settings ---------
+# If you are using a SmartShunt or something else as a battery monitor, the battery voltage reported
+# from the BMS and SmartShunt could differ. This causes, that the driver never goapplies the float voltage,
+# since max voltage is never reached.
+# Example:
+#     cell count: 16
+#     MAX_CELL_VOLTAGE = 3.45
+#     max voltage calculated = 16 * 3.45 = 55.20
+#     CVL is set to 55.20 and the battery is now charged until the SmartShunt measures 55.20 V. The BMS
+#     now measures 55.05 V since there is a voltage drop of 0.15 V. Since the dbus-serialbattery measures
+#     55.05 V the max voltage is never reached for the driver and max voltage is kept forever.
+#     Set VOLTAGE_DROP to 0.15
+VOLTAGE_DROP = float(config["DEFAULT"]["VOLTAGE_DROP"])
+
+
 # --------- Functions ---------
 def constrain(val, min_val, max_val):
     if min_val > max_val:

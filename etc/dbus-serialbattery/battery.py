@@ -208,7 +208,7 @@ class Battery(ABC):
 
                 if self.max_voltage_start_time is None:
                     if (
-                        utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                        (utils.MAX_CELL_VOLTAGE * self.cell_count) - utils.VOLTAGE_DROP <= voltageSum
                         and voltageDiff
                         <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                         and self.allow_max_voltage
@@ -309,7 +309,7 @@ class Battery(ABC):
                 if self.max_voltage_start_time is None:
                     # check if max voltage is reached and start timer to keep max voltage
                     if (
-                        utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                        (utils.MAX_CELL_VOLTAGE * self.cell_count) - utils.VOLTAGE_DROP <= voltageSum
                         and self.allow_max_voltage
                     ):
                         # example 2
