@@ -98,7 +98,7 @@ INFO:SerialBattery:com.victronenergy.battery.BMS_MAC_ADDRESS
 
 ```bash
 INFO:SerialBattery:Starting dbus-serialbattery
-INFO:SerialBattery:dbus-serialbattery v1.0.0-jkbms_ble
+INFO:SerialBattery:dbus-serialbattery v1.0.0
 INFO:SerialBattery:init of BMS_NAME at BMS_MAC_ADDRESS
 INFO:SerialBattery:test of BMS_NAME at BMS_MAC_ADDRESS
 ERROR:SerialBattery:no BMS found at BMS_MAC_ADDRESS
