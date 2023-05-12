@@ -560,8 +560,16 @@ class Daly(Battery):
             ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
-            logger.info("No reply to cmd " + bytes(command).hex())
-            return False
+            # sleep 100 ms and retry.
+            sleep(0.100)
+            data = self.read_serialport_data(
+                ser, self.generate_command(command), self.LENGTH_POS, self.LENGTH_CHECK
+            )
+            if data is False:
+                logger.info("No reply to cmd " + bytes(command).hex())
+                return False
+            else:
+                logger.info("       |- Error cleared, received data after one retry.")
 
         if len(data) <= 12:
             logger.debug("Too short reply to cmd " + bytes(command).hex())
