@@ -22,6 +22,7 @@
 * Added: Daly BMS - Show "battery code" field that can be set in the Daly app by @transistorgit
 * Added: Device name field (found in the GUI -> SerialBattery -> Device), that show a custom string that can be set in some BMS, if available by @mr-manuel
 * Added: Driver uninstall script by @mr-manuel
+* Added: Rename TAR file after USB/SD card install to not overwrite the data on every reboot https://github.com/Louisvdw/dbus-serialbattery/issues/638 by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
 * Added: Improved maintainability (flake8, black lint), introduced code checks and automate release build https://github.com/Louisvdw/dbus-serialbattery/pull/386 by @ppuetsch
@@ -77,6 +78,7 @@
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/450 by @mr-manuel
 * Changed: Fixed black lint errors by @mr-manuel
 * Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
+* Changed: Fixed cell balancing display for JBD/LLT BMS https://github.com/Louisvdw/dbus-serialbattery/issues/359 by @mr-manuel
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
 * Changed: Improved install workflow via USB flash drive by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
