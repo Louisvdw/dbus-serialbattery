@@ -60,7 +60,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
-2. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
+2. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
 
    > If you put a `config.ini` in the root of the USB flash drive, then an existing `config.ini` will be overwritten.
 
@@ -145,7 +145,7 @@ If you use the cell voltage limits, temperature limits or SoC limits you also ne
 Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
 
 #### Driver version `>= v1.0.0`
-Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini).
+Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
 
 ## How to edit `utils.py` or `config.ini`
 
