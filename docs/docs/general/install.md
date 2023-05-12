@@ -54,9 +54,9 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 [![dbus-serialbattery install](https://img.youtube.com/vi/Juht6XGLcu0/0.jpg)](https://www.youtube.com/watch?v=Juht6XGLcu0)
 
-### Install automatically with flash drive/SD
+### Install automatically with USB/SD card
 
-> CerboGX users cannot use the the automatic installer. Use SSH option instead.
+> It might be, that this doesn't work on older CerboGX devices. In this case use SSH option instead.
 
 1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
