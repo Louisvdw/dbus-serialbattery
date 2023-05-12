@@ -35,7 +35,7 @@ def _get_list_from_config(
 # if not specified: baud = 9600
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230509dev"
+DRIVER_VERSION = "1.0.20230512dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -63,9 +63,10 @@ BLOCK_ON_DISCONNECT = "True" == config["DEFAULT"]["BLOCK_ON_DISCONNECT"]
 
 # --------- Charge mode ---------
 # Choose the mode for voltage / current limitations (True / False)
-# False is a step mode. This is the default with limitations on hard boundary steps
-# True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
-#                        For CVL max battery voltage is calculated dynamically in order that the max cell voltage is not exceeded
+# False is a step mode: This is the default with limitations on hard boundary steps
+# True is a linear mode:
+#     For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
+#     For CVL max battery voltage is calculated dynamically in order that the max cell voltage is not exceeded
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
 # Specify in seconds how often the penalty should be recalculated
@@ -78,17 +79,26 @@ LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
 
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
-# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count), switch from max voltage to float voltage (FLOAT_CELL_VOLTAGE * cell count) and back
-#     Step mode: After max voltage is reached for MAX_VOLTAGE_TIME_SEC it switches to float voltage. After SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT it
-#                switches back to max voltage.
-#     Linear mode: After max voltage is reachend and cell voltage difference is smaller or equal to CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL it switches to
-#                  float voltage after 300 (fixed) additional seconds. After cell voltage difference is greater or equal to CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
-#                  it switches back to max voltage.
-# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float voltage of 53.6V to don't stress the batteries.
-#          Allow max voltage of 55.2V again, if SoC is once below 90%
+# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count), switch from max voltage to float
+#              voltage (FLOAT_CELL_VOLTAGE * cell count) and back
+#     False: Max charging voltage is always kept
+#     True: Max charging voltage is reduced based on charge mode
+#         Step mode: After max voltage is reached for MAX_VOLTAGE_TIME_SEC it switches to float voltage. After
+#                    SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT it switches back to max voltage.
+#         Linear mode: After max voltage is reachend and cell voltage difference is smaller or equal to
+#                      CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL it switches to float voltage after 300 (fixed)
+#                      additional seconds.
+#                      After cell voltage difference is greater or equal to CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+#                      OR
+#                      SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT
+#                      it switches back to max voltage.
+# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to
+#          float voltage of 53.6V to don't stress the batteries. Allow max voltage of 55.2V again, if SoC is
+#          once below 90%
 #          OR
-#          The battery reached max voltage of 55.2V and the max cell difference is 0.010V, then switch to float voltage of 53.6V after 300 additional seconds
-#          to don't stress the batteries. Allow max voltage of 55.2V again if max cell difference is above 0.050V
+#          The battery reached max voltage of 55.2V and the max cell difference is 0.010V, then switch to float
+#          voltage of 53.6V after 300 additional seconds to don't stress the batteries. Allow max voltage of
+#          55.2V again if max cell difference is above 0.080V or SoC below 90%.
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 
@@ -98,14 +108,16 @@ CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL"]
 )
 # Specify cell voltage diff where CVL limit is reset to max voltage, if value get above
+# the cells are considered as imbalanced, if the cell diff exceeds 5% of the nominal cell voltage
+# e.g. 3.2 V * 5 / 100 = 0.160 V
 CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
 
 # -- CVL Reset based on SoC option
-# Reset max voltage after
+# Specify how long the max voltage should be kept, if reached then switch to float voltage
 MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
-# Specify SoC where CVL limit is reset to max voltage
+# Specify SoC where CVL limit is reset to max voltage, if value gets below
 SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
