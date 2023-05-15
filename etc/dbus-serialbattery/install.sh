@@ -6,10 +6,15 @@
 echo ""
 PS3="Select which version you want to install and enter the corresponding number [1]: "
 
-select version in "latest release (recommended)" "nightly build" "local tar file" "specific version" "quit"
+select version in "latest release (recommended)" "specific version" "nightly build" "local tar file" "quit"
 do
     case $version in
         "latest release (recommended)")
+            echo "Selected: $version"
+            #echo "Selected number: $REPLY"
+            break
+            ;;
+        "specific version")
             echo "Selected: $version"
             #echo "Selected number: $REPLY"
             break
@@ -20,11 +25,6 @@ do
             break
             ;;
         "local tar file")
-            echo "Selected: $version"
-            #echo "Selected number: $REPLY"
-            break
-            ;;
-        "specific version")
             echo "Selected: $version"
             #echo "Selected number: $REPLY"
             break
@@ -46,11 +46,6 @@ if [ "$version" = "latest release (recommended)" ]; then
     curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/latest | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/venus-data.tar.gz -qi -
 fi
 
-## local tar file
-if [ "$version" = "local tar file" ]; then
-    echo "Make sure the file is available at \"/var/volatile/tmp/venus-data.tar.gz\""
-fi
-
 ## specific version
 if [ "$version" = "specific version" ]; then
     # read the url
@@ -62,7 +57,10 @@ if [ "$version" = "specific version" ]; then
     fi
 fi
 
-
+## local tar file
+if [ "$version" = "local tar file" ]; then
+    echo "Make sure the file is available at \"/var/volatile/tmp/venus-data.tar.gz\""
+fi
 
 # backup config.ini
 if [ -f "/data/etc/dbus-serialbattery/config.ini" ]; then
@@ -72,7 +70,7 @@ fi
 
 
 ## extract the tar file
-if [ "$version" = "latest release (recommended)" ] || [ "$version" = "local tar file" ] || [ "$version" = "specific version" ]; then
+if [ "$version" = "latest release (recommended)" ] || [ "$version" = "specific version" ] || [ "$version" = "local tar file" ]; then
 
     # extract driver
     if [ -f "/tmp/venus-data.tar.gz" ]; then
@@ -96,7 +94,7 @@ if [ "$version" = "nightly build" ]; then
 
     PS3="Select the branch from wich you want to install the current code (possible bugs included): "
 
-    select branch in master jkbms_ble quit
+    select branch in master dev quit
     do
         case $branch in
             master)
@@ -104,7 +102,7 @@ if [ "$version" = "nightly build" ]; then
                 #echo "Selected number: $REPLY"
                 break
                 ;;
-            jkbms_ble)
+            dev)
                 echo "Selected branch: $branch"
                 #echo "Selected number: $REPLY"
                 break

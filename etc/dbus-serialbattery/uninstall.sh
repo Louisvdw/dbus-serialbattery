@@ -4,7 +4,7 @@
 #set -x
 
 # handle read only mounts
-sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
+bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # remove files, don't use variables here, since on an error the whole /opt/victronenergy gets deleted
 rm -f /data/conf/serial-starter.d/dbus-serialbattery.conf
@@ -39,6 +39,11 @@ pkill -f "/opt/victronenergy/serial-starter/serial-starter.sh"
 pkill -f "serialbattery"
 pkill -f "blebattery"
 
+
+# restore GUI changes
+/data/etc/dbus-serialbattery/restore-gui.sh
+
+
 # uninstall modules
 read -r -p "Do you also want to uninstall bleak, python3-pip and python3-modules? If you don't know select y. [Y/n] " response
 echo
@@ -50,3 +55,7 @@ if [[ $response =~ ^(y| ) ]] || [[ -z $response ]]; then
     echo "done."
     echo
 fi
+
+
+echo "The driver was uninstalled. To delete also the install files run \"rm -rf /data/etc/dbus-serialbattery\" now."
+echo

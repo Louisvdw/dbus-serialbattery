@@ -356,9 +356,7 @@ class Daly(Battery):
                 ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
-                logger.debug(
-                    "No data received in read_cells_volts()"
-                )  # just debug level, as there are DALY BMS that send broken packages occasionally
+                logger.warning("No data received in read_cells_volts()")
                 return False
 
             frameCell = [0, 0, 0]
@@ -633,7 +631,7 @@ class Daly(Battery):
                 time_run = time() - time_start
                 if time_run > 0.500:
                     self.runtime = time_run
-                    logger.warning(">>> ERROR: No reply - returning")
+                    logger.error(">>> ERROR: No reply - returning")
                     return False
 
             # logger.info('serial data toread ' + str(toread))
@@ -663,13 +661,13 @@ class Daly(Battery):
                 time_run = time() - time_start
                 if time_run > 0.500:
                     self.runtime = time_run
-                    logger.warning(
-                        "No reply - returning [len:"
+                    logger.error(
+                        ">>> ERROR: No reply - returning [len:"
                         + str(len(data))
                         + "/"
                         + str(length + length_check)
                         + "]"
-                    )  # just a warning, as there are DALY BMS that send broken packages occasionally
+                    )
                     return False
 
             self.runtime = time_run

@@ -60,7 +60,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
-2. OPTIONAL: Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
+2. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
 
    > If you put a `config.ini` in the root of the USB flash drive, then an existing `config.ini` will be overwritten.
 
@@ -222,13 +222,15 @@ bash /data/etc/dbus-serialbattery/reinstall-local.sh
 
 ## Uninstall/remove the driver
 
-To uninstall/remove the driver run the uninstall script. The script is included from driver version `> v0.14.3`.
+To uninstall the driver run the uninstall script. The script is included from driver version `>= v1.0.0`.
 
 ```bash
 bash /data/etc/dbus-serialbattery/uninstall.sh
 ```
 
-To uninstall/remove previous driver versions `<= v0.14.3` run this commands.
+To uninstall previous driver versions `<= v0.14.3` run this commands:
+
+**Uninstall**
 
 ```bash
 # handle read only mounts
@@ -244,7 +246,18 @@ rm -rf /opt/victronenergy/dbus-serialbattery
 pkill -f "python .*/dbus-serialbattery.py"
 
 # remove install script from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
+sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
+
+# restore GUI changes
+bash /data/etc/dbus-serialbattery/restore-gui.sh
 ```
 
 > If after the uninstall for some reason several items in the GUI were red, DO NOT reboot your GX device. See [Uninstalling driver bricked my cerbo #576](https://github.com/Louisvdw/dbus-serialbattery/issues/576)
+
+**Remove**
+
+If you want to remove also the install files of the driver run this after you run the uninstall script/commands:
+
+```bash
+rm -rf /data/etc/dbus-serialbattery
+```
