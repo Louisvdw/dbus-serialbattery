@@ -24,8 +24,8 @@ class Daly(Battery):
         self.reset_soc = 0
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
-        self.trigger_force_disable_discharge = False
-        self.trigger_force_disable_charge = False
+        self.trigger_force_disable_discharge = None
+        self.trigger_force_disable_charge = None
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -42,6 +42,8 @@ class Daly(Battery):
     command_temp = b"\x96"
     command_cell_balance = b"\x97"  # no reply
     command_alarm = b"\x98"  # no reply
+    command_disable_discharge_mos = b"\xD9"
+    command_disable_charge_mos = b"\xDA"
 
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
@@ -164,6 +166,8 @@ class Daly(Battery):
                         + str(self.runtime)
                         + "s"
                     )
+
+                self.write_charge_discharge_mos(ser)
 
         except OSError:
             logger.warning("Couldn't open serial port")
@@ -747,7 +751,6 @@ class Daly(Battery):
 
         if value == 1:
             self.trigger_force_disable_charge = True
-            logger.info("force disable charge")
             return True
 
         return False
@@ -762,7 +765,55 @@ class Daly(Battery):
 
         if value == 1:
             self.trigger_force_disable_discharge = True
-            logger.info("force disable discharge")
             return True
 
         return False
+
+    def write_charge_discharge_mos(self, ser):
+        if (
+            self.trigger_force_disable_charge is None
+            and self.trigger_force_disable_discharge is None
+        ):
+            return False
+
+        cmd = bytearray(self.command_base)
+
+        if self.trigger_force_disable_charge is not None:
+            cmd[2] = self.command_disable_charge_mos[0]
+            cmd[4] = 0 if self.trigger_force_disable_charge else 1
+            cmd[12] = sum(cmd[:12]) & 0xFF
+            logger.info(
+                f"write force disable charging: {'true' if self.trigger_force_disable_charge else 'false'}"
+            )
+            self.trigger_force_disable_charge = None
+
+        if self.trigger_force_disable_discharge is not None:
+            cmd[2] = self.command_disable_discharge_mos[0]
+            cmd[4] = 0 if self.trigger_force_disable_discharge else 1
+            cmd[12] = sum(cmd[:12]) & 0xFF
+            logger.info(
+                f"write force disable discharging: {'true' if self.trigger_force_disable_discharge else 'false'}"
+            )
+            self.trigger_force_disable_discharge = None
+
+        time_start = time()
+        ser.flushOutput()
+        ser.flushInput()
+        ser.write(cmd)
+
+        toread = ser.inWaiting()
+        while toread < 13:
+            sleep(0.005)
+            toread = ser.inWaiting()
+            time_run = time() - time_start
+            if time_run > 0.500:
+                logger.warning(
+                    "write disable charge/discharge: no reply, probably failed"
+                )
+                return False
+
+        reply = ser.read(toread)
+        if reply[4] != cmd[4]:
+            logger.error("write force disable charge/discharge failed")
+            return False
+        return True
