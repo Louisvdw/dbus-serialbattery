@@ -253,6 +253,18 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
+        self._dbusservice.add_path(
+            "/Io/ForceDisableDischarge",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_disable_discharge_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/ForceDisableCharge",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_disable_charge_callback,
+        )
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms

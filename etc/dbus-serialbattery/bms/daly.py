@@ -24,6 +24,8 @@ class Daly(Battery):
         self.reset_soc = 0
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
+        self.trigger_force_disable_discharge = False
+        self.trigger_force_disable_charge = False
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -734,3 +736,33 @@ class Daly(Battery):
         if reply[4] != 1:
             logger.error("write soc failed")
         return True
+
+    def force_disable_charge_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_force_disable_charge = False
+            return True
+
+        if value == 1:
+            self.trigger_force_disable_charge = True
+            logger.info("force disable charge")
+            return True
+
+        return False
+
+    def force_disable_discharge_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_force_disable_discharge = False
+            return True
+
+        if value == 1:
+            self.trigger_force_disable_discharge = True
+            logger.info("force disable discharge")
+            return True
+
+        return False

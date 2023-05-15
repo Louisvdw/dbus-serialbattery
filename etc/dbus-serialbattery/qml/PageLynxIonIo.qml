@@ -74,13 +74,13 @@ MbPage {
 		MbSwitch {
       id: forceDisableChargingSwitch
       name: qsTr("Force disable charging")
-			bind: Utils.path(bindPrefix, "/Io/ForceDisableCharging")
+			bind: Utils.path(bindPrefix, "/Io/ForceDisableCharge")
 		}
 
 		MbSwitch {
       id: forceDisableDischargingSwitch
       name: qsTr("Force disable discharging")
-			bind: Utils.path(bindPrefix, "/Io/ForceDisableDischarging")
+			bind: Utils.path(bindPrefix, "/Io/ForceDisableDischarge")
 		}
 	}
 }
