@@ -21,7 +21,7 @@ class Daly(Battery):
         self.poll_interval = 1000
         self.type = self.BATTERYTYPE
         self.has_settings = 1
-        self.reset_soc = 0
+        self.reset_soc = 100
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
         self.trigger_force_disable_discharge = None
@@ -61,9 +61,6 @@ class Daly(Battery):
                 result = self.read_status_data(ser)
                 self.read_soc_data(ser)
                 self.read_battery_code(ser)
-                self.reset_soc = (
-                    self.soc
-                )  # set to meaningful value as preset for the GUI
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
