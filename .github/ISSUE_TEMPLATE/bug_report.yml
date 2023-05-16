@@ -119,6 +119,7 @@ body:
         - Please select
         - Serial USB adapter to TTL
         - Serial USB adapter to RS485
+        - Raspberry Pi RS485 HAT
         - Bluetooth
     validations:
       required: true
