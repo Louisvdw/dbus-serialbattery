@@ -719,21 +719,8 @@ class Daly(Battery):
         logger.info(f"write soc {self.soc_to_set}%")
         self.soc_to_set = None  # Reset value, so we will set it only once
 
-        time_start = time()
-        ser.flushOutput()
-        ser.flushInput()
-        ser.write(cmd)
+        reply = self.read_serialport_data(ser, cmd, self.LENGTH_POS, self.LENGTH_CHECK)
 
-        toread = ser.inWaiting()
-        while toread < 13:
-            sleep(0.005)
-            toread = ser.inWaiting()
-            time_run = time() - time_start
-            if time_run > 0.500:
-                logger.warning("write soc: no reply, probably failed")
-                return False
-
-        reply = ser.read(toread)
         if reply[4] != 1:
             logger.error("write soc failed")
         return True
