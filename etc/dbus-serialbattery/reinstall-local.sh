@@ -141,9 +141,10 @@ fi
 # remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
 rm -rf /service/dbus-blebattery-*
 # remove old install script from rc.local
-sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/^sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/^sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
 # remove old entry from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
+sed -i "/^sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
 ### needed for upgrading from older versions | end ###
 
 

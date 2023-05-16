@@ -116,6 +116,43 @@ class LltJbd(Battery):
         self.protection.set_short = is_bit_set(tmp[2])
 
     def to_cell_bits(self, byte_data, byte_data_high):
+        # init the cell array once
+        if len(self.cells) == 0:
+            for _ in range(self.cell_count):
+                print("#" + str(_))
+                self.cells.append(Cell(False))
+
+        # get up to the first 16 cells
+        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), utils.zero_char)
+        # 4 cells
+        # tmp = 0101
+        # 16 cells
+        # tmp = 0101010101010101
+
+        tmp_reversed = list(reversed(tmp))
+        # print(tmp_reversed) --> ['1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0']
+        # [cell1, cell2, cell3, ...]
+
+        if self.cell_count > 16:
+            tmp2 = bin(byte_data_high)[2:].rjust(self.cell_count - 16, utils.zero_char)
+            # tmp = 1100110011001100
+            tmp_reversed = tmp_reversed + list(reversed(tmp2))
+            # print(tmp_reversed) --> [
+            # '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0',
+            # '0', '0', '1', '1', '0', '0', '1', '1', '0', '0', '1', '1', '0', '0', '1', '1'
+            # ]
+            # [
+            # cell1, cell2, ..., cell16,
+            # cell17, cell18, ..., cell32
+            # ]
+
+        for c in range(self.cell_count):
+            if is_bit_set(tmp_reversed[c]):
+                self.cells[c].balance = True
+            else:
+                self.cells[c].balance = False
+
+        """
         # clear the list
         for c in self.cells:
             self.cells.remove(c)
@@ -128,6 +165,7 @@ class LltJbd(Battery):
             tmp = bin(byte_data_high)[2:].rjust(self.cell_count - 16, utils.zero_char)
             for bit in reversed(tmp):
                 self.cells.append(Cell(is_bit_set(bit)))
+        """
 
     def to_fet_bits(self, byte_data):
         tmp = bin(byte_data)[2:].rjust(2, utils.zero_char)

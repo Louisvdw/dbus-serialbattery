@@ -22,6 +22,7 @@
 * Added: Daly BMS - Show "battery code" field that can be set in the Daly app by @transistorgit
 * Added: Device name field (found in the GUI -> SerialBattery -> Device), that show a custom string that can be set in some BMS, if available by @mr-manuel
 * Added: Driver uninstall script by @mr-manuel
+* Added: Rename TAR file after USB/SD card install to not overwrite the data on every reboot https://github.com/Louisvdw/dbus-serialbattery/issues/638 by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
 * Added: Improved maintainability (flake8, black lint), introduced code checks and automate release build https://github.com/Louisvdw/dbus-serialbattery/pull/386 by @ppuetsch
@@ -38,6 +39,7 @@
 * Added: JKBMS BLE - Show serial number and "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
 * Added: JKBMS BLE driver by @baranator
 * Added: Possibility to add `config.ini` to the root of a USB flash drive on install via the USB method by @mr-manuel
+* Added: Possibility to configure a `VOLTAGE_DROP` voltage, if you are using a SmartShunt as battery monitor as there is a little voltage difference https://github.com/Louisvdw/dbus-serialbattery/discussions/632 by @mr-manuel
 * Added: Post install notes by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
@@ -56,6 +58,7 @@
 * Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
+* Changed: Daly BMS - Fixed BMS alerts by @mr-manuel
 * Changed: Daly BMS - Improved driver stability by @transistorgit & @mr-manuel
 * Changed: Default config file by @ppuetsch
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
@@ -75,6 +78,7 @@
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/450 by @mr-manuel
 * Changed: Fixed black lint errors by @mr-manuel
 * Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
+* Changed: Fixed cell balancing display for JBD/LLT BMS https://github.com/Louisvdw/dbus-serialbattery/issues/359 by @mr-manuel
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
 * Changed: Improved install workflow via USB flash drive by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
@@ -83,7 +87,7 @@
 * Changed: Moved Bluetooth part to `reinstall-local.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Removed all wildcard imports and fixed black lint errors by @mr-manuel
-* Changed: Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced by @mr-manuel
+* Changed: CVL calculation improvement. Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced or SoC is below threshold by @mr-manuel
 * Changed: Renamed scripts for better reading #532 by @mr-manuel
 * Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel
