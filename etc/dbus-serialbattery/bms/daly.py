@@ -784,6 +784,13 @@ class Daly(Battery):
             )
             self.trigger_force_disable_charge = None
 
+            reply = self.read_serialport_data(
+                ser, cmd, self.LENGTH_POS, self.LENGTH_CHECK
+            )
+            if reply is False or reply[4] != cmd[4]:
+                logger.error("write force disable charge/discharge failed")
+                return False
+
         if self.trigger_force_disable_discharge is not None:
             cmd[2] = self.command_disable_discharge_mos[0]
             cmd[4] = 0 if self.trigger_force_disable_discharge else 1
@@ -793,24 +800,10 @@ class Daly(Battery):
             )
             self.trigger_force_disable_discharge = None
 
-        time_start = time()
-        ser.flushOutput()
-        ser.flushInput()
-        ser.write(cmd)
-
-        toread = ser.inWaiting()
-        while toread < 13:
-            sleep(0.005)
-            toread = ser.inWaiting()
-            time_run = time() - time_start
-            if time_run > 0.500:
-                logger.warning(
-                    "write disable charge/discharge: no reply, probably failed"
-                )
+            reply = self.read_serialport_data(
+                ser, cmd, self.LENGTH_POS, self.LENGTH_CHECK
+            )
+            if reply is False or reply[4] != cmd[4]:
+                logger.error("write force disable charge/discharge failed")
                 return False
-
-        reply = ser.read(toread)
-        if reply[4] != cmd[4]:
-            logger.error("write force disable charge/discharge failed")
-            return False
         return True
