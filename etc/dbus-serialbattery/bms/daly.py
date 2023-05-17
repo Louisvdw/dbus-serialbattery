@@ -94,7 +94,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_fed_data(ser)
+                result = self.read_fed_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_fed_data - result: "
@@ -104,7 +104,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_cell_voltage_range_data(ser)
+                result = self.read_cell_voltage_range_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_cell_voltage_range_data - result: "
@@ -124,7 +124,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_alarm_data(ser)
+                result = self.read_alarm_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_alarm_data - result: "
@@ -134,7 +134,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_temperature_range_data(ser)
+                result = self.read_temperature_range_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_temperature_range_data - result: "
@@ -144,7 +144,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_balance_state(ser)
+                result = self.read_balance_state(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_balance_state - result: "
@@ -154,7 +154,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_cells_volts(ser)
+                result = self.read_cells_volts(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_cells_volts - result: "
