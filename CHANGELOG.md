@@ -77,6 +77,7 @@
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/397 by @transistorgit
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/421 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/450 by @mr-manuel
+* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/648 by @mr-manuel
 * Changed: Fixed black lint errors by @mr-manuel
 * Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
 * Changed: Fixed cell balancing display for JBD/LLT BMS https://github.com/Louisvdw/dbus-serialbattery/issues/359 by @mr-manuel
