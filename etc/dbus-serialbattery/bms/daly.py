@@ -733,7 +733,7 @@ class Daly(Battery):
             logger.error("write soc failed")
         return True
 
-    def force_disable_charge_callback(self, path, value):
+    def force_charging_off_callback(self, path, value):
         if value is None:
             return False
 
@@ -747,7 +747,7 @@ class Daly(Battery):
 
         return False
 
-    def force_disable_discharge_callback(self, path, value):
+    def force_discharging_off_callback(self, path, value):
         if value is None:
             return False
 

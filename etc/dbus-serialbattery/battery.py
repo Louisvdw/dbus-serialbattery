@@ -931,8 +931,11 @@ class Battery(ABC):
         # callback for handling reset soc request
         return
 
-    def force_disable_charge_callback(self, path, value):
+    def force_charging_off_callback(self, path, value):
         return
 
-    def force_disable_discharge_callback(self, path, value):
+    def force_discharging_off_callback(self, path, value):
+        return
+
+    def turn_balancing_off_callback(self, path, value):
         return

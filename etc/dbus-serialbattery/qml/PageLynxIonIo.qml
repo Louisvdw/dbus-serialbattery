@@ -49,6 +49,24 @@ MbPage {
 			]
 		}
 
+		MbSwitch {
+			name: qsTr("Force charging off")
+			bind: Utils.path(bindPrefix, "/Io/ForceChargingOff")
+			show: item.valid
+		}
+
+		MbSwitch {
+			name: qsTr("Force discharging off")
+			bind: Utils.path(bindPrefix, "/Io/ForceDischargingOff")
+			show: item.valid
+		}
+
+		MbSwitch {
+			name: qsTr("Turn balancing off")
+			bind: Utils.path(bindPrefix, "/Io/TurnBalancingOff")
+			show: item.valid
+		}
+
 		MbItemOptions {
 			description: qsTr("External relay")
 			bind: Utils.path(bindPrefix, "/Io/ExternalRelay")
@@ -70,23 +88,5 @@ MbPage {
 				MbOption{description: qsTr("Active"); value: 1}
 			]
 		}
-
-		MbSwitch {
-      name: qsTr("Force disable charging")
-			bind: Utils.path(bindPrefix, "/Io/ForceDisableCharge")
-      show: item.valid
-		}
-
-		MbSwitch {
-      name: qsTr("Force disable discharging")
-			bind: Utils.path(bindPrefix, "/Io/ForceDisableDischarge")
-      show: item.valid
-		}
-
-		MbSwitch {
-      name: qsTr("Turn balancing off")
-      bind: Utils.path(bindPrefix, "/Io/TurnBalancingOff")
-      show: item.valid
-    }
 	}
 }

@@ -252,16 +252,22 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
         self._dbusservice.add_path(
-            "/Io/ForceDisableDischarge",
+            "/Io/ForceChargingOff",
             0,
             writeable=True,
-            onchangecallback=self.battery.force_disable_discharge_callback,
+            onchangecallback=self.battery.force_charging_off_callback,
         )
         self._dbusservice.add_path(
-            "/Io/ForceDisableCharge",
+            "/Io/ForceDischargingOff",
             0,
             writeable=True,
-            onchangecallback=self.battery.force_disable_charge_callback,
+            onchangecallback=self.battery.force_discharging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/TurnBalancingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.turn_balancing_off_callback,
         )
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 

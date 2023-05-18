@@ -18,11 +18,6 @@ rm -rf /opt/victronenergy/dbus-serialbattery
 /data/etc/dbus-serialbattery/restore-gui.sh
 
 
-
-# restore GUI changes
-/data/etc/dbus-serialbattery/restore-gui.sh
-
-
 # uninstall modules
 read -r -p "Do you want to uninstall bleak, python3-pip and python3-modules? If you don't know just press enter. [y/N] " response
 echo
