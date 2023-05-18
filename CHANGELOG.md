@@ -20,6 +20,7 @@
 * Added: Daly BMS - Read production date and build unique identifier by @transistorgit
 * Added: Daly BMS - Set SoC by @transistorgit
 * Added: Daly BMS - Show "battery code" field that can be set in the Daly app by @transistorgit
+* Added: Daly BMS - Discharge / Charge Mosfet switching over remote console/GUI https://github.com/Louisvdw/dbus-serialbattery/issues/26 by @transistorgit
 * Added: Device name field (found in the GUI -> SerialBattery -> Device), that show a custom string that can be set in some BMS, if available by @mr-manuel
 * Added: Driver uninstall script by @mr-manuel
 * Added: Rename TAR file after USB/SD card install to not overwrite the data on every reboot https://github.com/Louisvdw/dbus-serialbattery/issues/638 by @mr-manuel
