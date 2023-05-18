@@ -930,3 +930,9 @@ class Battery(ABC):
     def reset_soc_callback(self, path, value):
         # callback for handling reset soc request
         return
+
+    def force_disable_charge_callback(self, path, value):
+        return
+
+    def force_disable_discharge_callback(self, path, value):
+        return

@@ -70,5 +70,23 @@ MbPage {
 				MbOption{description: qsTr("Active"); value: 1}
 			]
 		}
+
+		MbSwitch {
+      name: qsTr("Force disable charging")
+			bind: Utils.path(bindPrefix, "/Io/ForceDisableCharge")
+      show: item.valid
+		}
+
+		MbSwitch {
+      name: qsTr("Force disable discharging")
+			bind: Utils.path(bindPrefix, "/Io/ForceDisableDischarge")
+      show: item.valid
+		}
+
+		MbSwitch {
+      name: qsTr("Turn balancing off")
+      bind: Utils.path(bindPrefix, "/Io/TurnBalancingOff")
+      show: item.valid
+    }
 	}
 }

@@ -21,9 +21,11 @@ class Daly(Battery):
         self.poll_interval = 1000
         self.type = self.BATTERYTYPE
         self.has_settings = 1
-        self.reset_soc = 0
+        self.reset_soc = 100
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
+        self.trigger_force_disable_discharge = None
+        self.trigger_force_disable_charge = None
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -40,6 +42,8 @@ class Daly(Battery):
     command_temp = b"\x96"
     command_cell_balance = b"\x97"  # no reply
     command_alarm = b"\x98"  # no reply
+    command_disable_discharge_mos = b"\xD9"
+    command_disable_charge_mos = b"\xDA"
 
     BATTERYTYPE = "Daly"
     LENGTH_CHECK = 1
@@ -57,9 +61,6 @@ class Daly(Battery):
                 result = self.read_status_data(ser)
                 self.read_soc_data(ser)
                 self.read_battery_code(ser)
-                self.reset_soc = (
-                    self.soc
-                )  # set to meaningful value as preset for the GUI
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
@@ -93,7 +94,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_fed_data(ser)
+                result = self.read_fed_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_fed_data - result: "
@@ -103,7 +104,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_cell_voltage_range_data(ser)
+                result = self.read_cell_voltage_range_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_cell_voltage_range_data - result: "
@@ -123,7 +124,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_alarm_data(ser)
+                result = self.read_alarm_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_alarm_data - result: "
@@ -133,7 +134,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_temperature_range_data(ser)
+                result = self.read_temperature_range_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_temperature_range_data - result: "
@@ -143,7 +144,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_balance_state(ser)
+                result = self.read_balance_state(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_balance_state - result: "
@@ -153,7 +154,7 @@ class Daly(Battery):
                         + "s"
                     )
 
-                result = result and self.read_cells_volts(ser)
+                result = self.read_cells_volts(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
                     logger.info(
                         "  |- refresh_data: read_cells_volts - result: "
@@ -162,6 +163,8 @@ class Daly(Battery):
                         + str(self.runtime)
                         + "s"
                     )
+
+                self.write_charge_discharge_mos(ser)
 
         except OSError:
             logger.warning("Couldn't open serial port")
@@ -356,9 +359,7 @@ class Daly(Battery):
                 ser, buffer, self.LENGTH_POS, 0, lenFixed
             )
             if cells_volts_data is False:
-                logger.debug(
-                    "No data received in read_cells_volts()"
-                )  # just debug level, as there are DALY BMS that send broken packages occasionally
+                logger.warning("No data received in read_cells_volts()")
                 return False
 
             frameCell = [0, 0, 0]
@@ -641,7 +642,7 @@ class Daly(Battery):
                 time_run = time() - time_start
                 if time_run > 0.500:
                     self.runtime = time_run
-                    logger.warning(">>> ERROR: No reply - returning")
+                    logger.error(">>> ERROR: No reply - returning")
                     return False
 
             # logger.info('serial data toread ' + str(toread))
@@ -671,13 +672,13 @@ class Daly(Battery):
                 time_run = time() - time_start
                 if time_run > 0.500:
                     self.runtime = time_run
-                    logger.warning(
-                        "No reply - returning [len:"
+                    logger.error(
+                        ">>> ERROR: No reply - returning [len:"
                         + str(len(data))
                         + "/"
                         + str(length + length_check)
                         + "]"
-                    )  # just a warning, as there are DALY BMS that send broken packages occasionally
+                    )
                     return False
 
             self.runtime = time_run
@@ -726,21 +727,78 @@ class Daly(Battery):
         logger.info(f"write soc {self.soc_to_set}%")
         self.soc_to_set = None  # Reset value, so we will set it only once
 
-        time_start = time()
-        ser.flushOutput()
-        ser.flushInput()
-        ser.write(cmd)
+        reply = self.read_serialport_data(ser, cmd, self.LENGTH_POS, self.LENGTH_CHECK)
 
-        toread = ser.inWaiting()
-        while toread < 13:
-            sleep(0.005)
-            toread = ser.inWaiting()
-            time_run = time() - time_start
-            if time_run > 0.500:
-                logger.warning("write soc: no reply, probably failed")
-                return False
-
-        reply = ser.read(toread)
         if reply[4] != 1:
             logger.error("write soc failed")
+        return True
+
+    def force_disable_charge_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_force_disable_charge = False
+            return True
+
+        if value == 1:
+            self.trigger_force_disable_charge = True
+            return True
+
+        return False
+
+    def force_disable_discharge_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_force_disable_discharge = False
+            return True
+
+        if value == 1:
+            self.trigger_force_disable_discharge = True
+            return True
+
+        return False
+
+    def write_charge_discharge_mos(self, ser):
+        if (
+            self.trigger_force_disable_charge is None
+            and self.trigger_force_disable_discharge is None
+        ):
+            return False
+
+        cmd = bytearray(self.command_base)
+
+        if self.trigger_force_disable_charge is not None:
+            cmd[2] = self.command_disable_charge_mos[0]
+            cmd[4] = 0 if self.trigger_force_disable_charge else 1
+            cmd[12] = sum(cmd[:12]) & 0xFF
+            logger.info(
+                f"write force disable charging: {'true' if self.trigger_force_disable_charge else 'false'}"
+            )
+            self.trigger_force_disable_charge = None
+
+            reply = self.read_serialport_data(
+                ser, cmd, self.LENGTH_POS, self.LENGTH_CHECK
+            )
+            if reply is False or reply[4] != cmd[4]:
+                logger.error("write force disable charge/discharge failed")
+                return False
+
+        if self.trigger_force_disable_discharge is not None:
+            cmd[2] = self.command_disable_discharge_mos[0]
+            cmd[4] = 0 if self.trigger_force_disable_discharge else 1
+            cmd[12] = sum(cmd[:12]) & 0xFF
+            logger.info(
+                f"write force disable discharging: {'true' if self.trigger_force_disable_discharge else 'false'}"
+            )
+            self.trigger_force_disable_discharge = None
+
+            reply = self.read_serialport_data(
+                ser, cmd, self.LENGTH_POS, self.LENGTH_CHECK
+            )
+            if reply is False or reply[4] != cmd[4]:
+                logger.error("write force disable charge/discharge failed")
+                return False
         return True
