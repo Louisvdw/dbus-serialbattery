@@ -137,9 +137,9 @@ REG_CTRL_BALANCE = 0xE2
 REG_RESET = 0xE3
 
 # Protocol commands
-CMD_ENTER_FACTORY_MODE = b'\x56\x78'
-CMD_EXIT_FACTORY_MODE = b'\x00\x00'
-CMD_EXIT_AND_SAVE_FACTORY_MODE = b'\x28\x28'
+CMD_ENTER_FACTORY_MODE = b"\x56\x78"
+CMD_EXIT_FACTORY_MODE = b"\x00\x00"
+CMD_EXIT_AND_SAVE_FACTORY_MODE = b"\x28\x28"
 
 
 def checksum(payload):
@@ -150,7 +150,7 @@ def cmd(op, reg, data):
     payload = [reg, len(data)] + list(data)
     chksum = checksum(payload)
     data = [0xDD, op] + payload + [chksum, 0x77]
-    format = f'>BB{len(payload)}BHB'
+    format = f">BB{len(payload)}BHB"
     return struct.pack(format, *data)
 
 
@@ -253,10 +253,14 @@ class LltJbd(Battery):
         with self.eeprom(writable=False):
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
-                self.max_battery_charge_current = float(unpack_from(">h", charge_over_current)[0] / 100.0)
+                self.max_battery_charge_current = float(
+                    unpack_from(">h", charge_over_current)[0] / 100.0
+                )
             discharge_over_current = self.read_serial_data_llt(readCmd(REG_DSGOC))
             if discharge_over_current:
-                self.max_battery_discharge_current = float(unpack_from(">h", discharge_over_current)[0] / -100.0)
+                self.max_battery_discharge_current = float(
+                    unpack_from(">h", discharge_over_current)[0] / -100.0
+                )
 
         return True
 
@@ -400,7 +404,9 @@ class LltJbd(Battery):
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
         self.to_cell_bits(balance, balance2)
-        self.hardware_version = float(str(version >> 4 & 0x0F) + "." + str(version & 0x0F))
+        self.hardware_version = float(
+            str(version >> 4 & 0x0F) + "." + str(version & 0x0F)
+        )
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
@@ -450,23 +456,31 @@ class LltJbd(Battery):
 
         start, op, status, payload_length = unpack_from("BBBB", data)
         if start != 0xDD:
-            logger.error(">>> ERROR: Invalid response packet. Expected begin packet character 0xDD")
+            logger.error(
+                ">>> ERROR: Invalid response packet. Expected begin packet character 0xDD"
+            )
         if status != 0x0:
             logger.warn(">>> WARN: BMS rejected request. Status " + status)
             return False
         if len(data) != payload_length + 7:
-            logger.error(">>> ERROR: BMS send insufficient data. Received " + str(len(data)) + " expected " + str(
-                payload_length + 7))
+            logger.error(
+                ">>> ERROR: BMS send insufficient data. Received "
+                + str(len(data))
+                + " expected "
+                + str(payload_length + 7)
+            )
             return False
         chk_sum, end = unpack_from(">HB", data, payload_length + 4)
         if end != 0x77:
-            logger.error(">>> ERROR: Incorrect Reply. Expected end packet character 0x77")
+            logger.error(
+                ">>> ERROR: Incorrect Reply. Expected end packet character 0x77"
+            )
             return False
         if chk_sum != checksum(data[2:-3]):
             logger.error(">>> ERROR: Invalid checksum.")
             return False
 
-        payload = data[4: payload_length + 4]
+        payload = data[4 : payload_length + 4]
 
         return payload
 
@@ -477,11 +491,15 @@ class LltJbd(Battery):
         return self.validate_packet(data)
 
     def __enter__(self):
-        if self.read_serial_data_llt(writeCmd(REG_ENTER_FACTORY, CMD_ENTER_FACTORY_MODE)):
+        if self.read_serial_data_llt(
+            writeCmd(REG_ENTER_FACTORY, CMD_ENTER_FACTORY_MODE)
+        ):
             self.factory_mode = True
 
     def __exit__(self, type, value, traceback):
-        cmd_value = CMD_EXIT_AND_SAVE_FACTORY_MODE if self.writable else CMD_EXIT_FACTORY_MODE
+        cmd_value = (
+            CMD_EXIT_AND_SAVE_FACTORY_MODE if self.writable else CMD_EXIT_FACTORY_MODE
+        )
         if self.factory_mode:
             if not self.read_serial_data_llt(writeCmd(REG_EXIT_FACTORY, cmd_value)):
                 logger.error(">>> ERROR: Unable to exit factory mode.")
@@ -492,4 +510,3 @@ class LltJbd(Battery):
     def eeprom(self, writable=False):
         self.writable = writable
         return self
-

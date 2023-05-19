@@ -836,7 +836,11 @@ class Battery(ABC):
             elif utils.TEMP_BATTERY == 4:
                 return self.temp4
             else:
-                temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
+                temps = [
+                    t
+                    for t in [self.temp1, self.temp2, self.temp3, self.temp4]
+                    if t is not None
+                ]
                 n = len(temps)
                 if not temps or n == 0:
                     return None
@@ -851,7 +855,11 @@ class Battery(ABC):
 
     def get_min_temp(self) -> Union[float, None]:
         try:
-            temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
+            temps = [
+                t
+                for t in [self.temp1, self.temp2, self.temp3, self.temp4]
+                if t is not None
+            ]
             if not temps:
                 return None
             return min(temps)
@@ -860,7 +868,11 @@ class Battery(ABC):
 
     def get_min_temp_id(self) -> Union[str, None]:
         try:
-            temps = [(t, i) for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4]) if t is not None]
+            temps = [
+                (t, i)
+                for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4])
+                if t is not None
+            ]
             if not temps:
                 return None
             index = min(temps)[1]
@@ -877,7 +889,11 @@ class Battery(ABC):
 
     def get_max_temp(self) -> Union[float, None]:
         try:
-            temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
+            temps = [
+                t
+                for t in [self.temp1, self.temp2, self.temp3, self.temp4]
+                if t is not None
+            ]
             if not temps:
                 return None
             return max(temps)
@@ -886,7 +902,11 @@ class Battery(ABC):
 
     def get_max_temp_id(self) -> Union[str, None]:
         try:
-            temps = [(t, i) for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4]) if t is not None]
+            temps = [
+                (t, i)
+                for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4])
+                if t is not None
+            ]
             if not temps:
                 return None
             index = max(temps)[1]
