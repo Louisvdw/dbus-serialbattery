@@ -5,9 +5,8 @@ import functools
 import threading
 from typing import Union, Optional
 from utils import logger
-from struct import unpack_from
 from bleak import BleakClient, BleakScanner, BLEDevice
-from bms.lltjbd import LltJbdProtection, LltJbd, checksum
+from bms.lltjbd import LltJbdProtection, LltJbd
 
 BLE_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
 BLE_CHARACTERISTICS_TX_UUID = "0000ff02-0000-1000-8000-00805f9b34fb"
