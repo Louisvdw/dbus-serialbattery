@@ -121,13 +121,17 @@ class DbusHelper:
         self._dbusservice.add_path(
             "/ProductName", self.battery.product_name()
         )
-        self._dbusservice.add_path(
-            "/FirmwareVersion", str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
-        )
+        self._dbusservice.add_path("/FirmwareVersion", str(utils.DRIVER_VERSION))
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
             "/CustomName", self.battery.custom_name(), writeable=True
+        )
+        self._dbusservice.add_path(
+            "/Serial", self.battery.unique_identifier, writeable=True
+        )
+        self._dbusservice.add_path(
+            "/DeviceName", self.battery.custom_field, writeable=True
         )
 
         # Create static battery info
@@ -251,6 +255,24 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
+        self._dbusservice.add_path(
+            "/Io/ForceChargingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_charging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/ForceDischargingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_discharging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/TurnBalancingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.turn_balancing_off_callback,
+        )
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
@@ -322,6 +344,15 @@ class DbusHelper:
         logger.info(f"publish config values = {utils.PUBLISH_CONFIG_VALUES}")
         if utils.PUBLISH_CONFIG_VALUES == 1:
             publish_config_variables(self._dbusservice)
+
+        if self.battery.has_settings:
+            self._dbusservice.add_path("/Settings/HasSettings", 1, writeable=False)
+            self._dbusservice.add_path(
+                "/Settings/ResetSoc",
+                0,
+                writeable=True,
+                onchangecallback=self.battery.reset_soc_callback,
+            )
 
         return True
 
@@ -589,3 +620,6 @@ class DbusHelper:
         if self.battery.soc is not None:
             logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
             self.battery.log_cell_data()
+
+        if self.battery.has_settings:
+            self._dbusservice["/Settings/ResetSoc"] = self.battery.reset_soc

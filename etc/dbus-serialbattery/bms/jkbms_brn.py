@@ -35,6 +35,8 @@ TRANSLATE_DEVICE_INFO = [
     [["device_info", "uptime"], 38, "<L"],
     [["device_info", "vendor_id"], 6, "16s"],
     [["device_info", "manufacturing_date"], 78, "8s"],
+    [["device_info", "serial_number"], 86, "10s"],
+    [["device_info", "production"], 102, "8s"],
 ]
 
 TRANSLATE_SETTINGS = [
@@ -79,7 +81,7 @@ TRANSLATE_CELL_INFO = [
 ]
 
 
-class JkBmsBle:
+class Jkbms_Brn:
     # entries for translating the bytearray to py-object via unpack
     # [[py dict entry as list, each entry ] ]
 
@@ -394,7 +396,7 @@ class JkBmsBle:
 
 """
 if __name__ == "__main__":
-    jk = JkBmsBle("C8:47:8C:E4:54:0E")
+    jk = Jkbms_Brn("C8:47:8C:00:00:00")
     jk.start_scraping()
     while True:
         print(jk.get_status())

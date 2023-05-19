@@ -3,44 +3,43 @@
 # remove comment for easier troubleshooting
 #set -x
 
-# handle read only mounts
-sh /opt/victronenergy/swupdate-scripts/remount-rw.sh
+# disable driver
+bash /data/etc/dbus-serialbattery/disable.sh
 
-# remove files, don't use variables here, since on an error the whole /opt/victronenergy gets deleted
-rm -f /data/conf/serial-starter.d/dbus-serialbattery.conf
+
+# remove files in Victron directory. Don't use variables here,
+# since on an error the whole /opt/victronenergy gets deleted
 rm -rf /opt/victronenergy/service/dbus-serialbattery
 rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
 rm -rf /opt/victronenergy/dbus-serialbattery
-rm -rf /service/dbus-blebattery.*
-
-# remove install-script from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
-
-# remove cronjob
-sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
 
 
-### needed for upgrading from older versions | start ###
-# remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
-rm -rf /service/dbus-blebattery-*
-# remove old install script from rc.local
-sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
-# remove old entry from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
-### needed for upgrading from older versions | end ###
+# restore GUI changes
+/data/etc/dbus-serialbattery/restore-gui.sh
 
-
-# kill driver, if running
-pkill -f "python .*/dbus-serialbattery.py"
 
 # uninstall modules
-read -r -p "Do you also want to uninstall bleak, python3-pip and python3-modules? If you don't know select y. [Y/n] " response
+read -r -p "Do you want to uninstall bleak, python3-pip and python3-modules? If you don't know just press enter. [y/N] " response
 echo
 response=${response,,} # tolower
-if [[ $response =~ ^(y| ) ]] || [[ -z $response ]]; then
+if [[ $response =~ ^(y) ]]; then
     echo "Uninstalling modules..."
     pip3 uninstall bleak
     opkg remove python3-pip python3-modules
     echo "done."
     echo
 fi
+
+
+read -r -p "Do you want to delete the install and configuration files in \"/data/etc/dbus-serialbattery\"? If you don't know just press enter. [y/N] " response
+echo
+response=${response,,} # tolower
+if [[ $response =~ ^(y) ]]; then
+    rm -rf /data/etc/dbus-serialbattery
+    echo "The folder \"/data/etc/dbus-serialbattery\" was removed."
+    echo
+fi
+
+
+echo "The dbus-serialbattery driver was uninstalled. Please reboot."
+echo

@@ -4,12 +4,11 @@ import atexit
 import functools
 import threading
 from typing import Union, Optional
-
-from bleak import BleakClient, BleakScanner, BLEDevice
-
-from lltjbd import LltJbdProtection, LltJbd
 from utils import logger
 from struct import unpack_from
+from bleak import BleakClient, BleakScanner, BLEDevice
+from bms.lltjbd import LltJbdProtection, LltJbd
+
 
 BLE_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
 BLE_CHARACTERISTICS_TX_UUID = "0000ff02-0000-1000-8000-00805f9b34fb"
@@ -17,10 +16,12 @@ BLE_CHARACTERISTICS_RX_UUID = "0000ff01-0000-1000-8000-00805f9b34fb"
 MIN_RESPONSE_SIZE = 6
 MAX_RESPONSE_SIZE = 256
 
-class LltJbdBle(LltJbd):
 
-    def __init__(self, port: str, baud: Optional[int], address: Optional[str]):
-        super(LltJbdBle, self).__init__(port, -1, address)
+class LltJbd_Ble(LltJbd):
+    BATTERYTYPE = "LltJbd_Ble"
+
+    def __init__(self, port: Optional[str], baud: Optional[int], address: str):
+        super(LltJbd_Ble, self).__init__(address.replace(":", "").lower(), -1, address)
 
         self.address = address
         self.protection = LltJbdProtection()
@@ -28,12 +29,16 @@ class LltJbdBle(LltJbd):
         self.main_thread = threading.current_thread()
         self.data: bytearray = bytearray()
         self.run = True
-        self.bt_thread = threading.Thread(name="BLELoop", target=self.background_loop, daemon=True)
+        self.bt_thread = threading.Thread(
+            name="LltJbd_Ble_Loop", target=self.background_loop, daemon=True
+        )
         self.bt_loop: Optional[asyncio.AbstractEventLoop] = None
         self.bt_client: Optional[BleakClient] = None
         self.device: Optional[BLEDevice] = None
         self.response_queue: Optional[asyncio.Queue] = None
         self.ready_event: Optional[asyncio.Event] = None
+
+        logger.info("Init of LltJbd_Ble at " + address)
 
     def connection_name(self) -> str:
         return "BLE " + self.address
@@ -53,7 +58,9 @@ class LltJbdBle(LltJbd):
             self.run = False
             return
 
-        async with BleakClient(self.device, disconnected_callback=self.on_disconnect) as client:
+        async with BleakClient(
+            self.device, disconnected_callback=self.on_disconnect
+        ) as client:
             self.bt_client = client
             self.bt_loop = asyncio.get_event_loop()
             self.response_queue = asyncio.Queue()
@@ -83,12 +90,25 @@ class LltJbdBle(LltJbd):
             return False
 
     def test_connection(self):
-        if not self.address:
-            return False
+        # call a function that will connect to the battery, send a command and retrieve the result.
+        # The result or call should be unique to this BMS. Battery name or version, etc.
+        # Return True if success, False for failure
+        result = False
+        logger.info("Test of LltJbd_Ble at " + self.address)
+        try:
+            if self.address:
+                result = True
+            if result and asyncio.run(self.async_test_connection()):
+                result = True
+            if result:
+                result = super().test_connection()
+            if not result:
+                logger.error("No BMS found at " + self.address)
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
 
-        if not asyncio.run(self.async_test_connection()):
-            return False
-        return super().test_connection()
+        return result
 
     async def send_command(self, command) -> Union[bytearray, bool]:
         if not self.bt_client:
@@ -110,7 +130,9 @@ class LltJbdBle(LltJbd):
 
         rx_collector = functools.partial(rx_callback, fut, bytearray())
         await self.bt_client.start_notify(BLE_CHARACTERISTICS_RX_UUID, rx_collector)
-        await self.bt_client.write_gatt_char(BLE_CHARACTERISTICS_TX_UUID, command, False)
+        await self.bt_client.write_gatt_char(
+            BLE_CHARACTERISTICS_TX_UUID, command, False
+        )
         result = await fut
         await self.bt_client.stop_notify(BLE_CHARACTERISTICS_RX_UUID)
 
@@ -118,7 +140,9 @@ class LltJbdBle(LltJbd):
 
     async def async_read_serial_data_llt(self, command):
         try:
-            bt_task = asyncio.run_coroutine_threadsafe(self.send_command(command), self.bt_loop)
+            bt_task = asyncio.run_coroutine_threadsafe(
+                self.send_command(command), self.bt_loop
+            )
             result = await asyncio.wait_for(asyncio.wrap_future(bt_task), 20)
             return result
         except asyncio.TimeoutError:
@@ -135,19 +159,21 @@ class LltJbdBle(LltJbd):
         if not data:
             return False
 
-        start, flag, command_ret, length = unpack_from('BBBB', data)
-        checksum, end = unpack_from('HB', data, length + 4)
+        start, flag, command_ret, length = unpack_from("BBBB", data)
+        checksum, end = unpack_from("HB", data, length + 4)
 
         if end == 119:
-            return data[4:length + 4]
+            return data[4 : length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
 
 
-def testBLE():
+"""
+async def test_LltJbd_Ble():
     import sys
-    bat = LltJbdBle("Foo", -1, sys.argv[1])
+
+    bat = LltJbd_Ble("Foo", -1, sys.argv[1])
     if not bat.test_connection():
         logger.error(">>> ERROR: Unable to connect")
     else:
@@ -155,5 +181,5 @@ def testBLE():
 
 
 if __name__ == "__main__":
-    testBLE()
-
+    test_LltJbd_Ble()
+"""

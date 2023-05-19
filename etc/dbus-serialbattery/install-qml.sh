@@ -40,6 +40,10 @@ fi
 if [ ! -f /opt/victronenergy/gui/qml/PageBatteryParameters.qml.backup ]; then
     cp /opt/victronenergy/gui/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/PageBatteryParameters.qml.backup
 fi
+# backup old PageBatterySettings.qml once. New firmware upgrade will remove the backup
+if [ ! -f /opt/victronenergy/gui/qml/PageBatterySettings.qml.backup ]; then
+    cp /opt/victronenergy/gui/qml/PageBatterySettings.qml /opt/victronenergy/gui/qml/PageBatterySettings.qml.backup
+fi
 # backup old PageLynxIonIo.qml once. New firmware upgrade will remove the backup
 if [ ! -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
     cp /opt/victronenergy/gui/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup
@@ -50,6 +54,8 @@ cp /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/
 cp /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/
 # copy new PageBatteryParameters.qml
 cp /data/etc/dbus-serialbattery/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/
+# copy new PageBatterySettings.qml
+cp /data/etc/dbus-serialbattery/qml/PageBatterySettings.qml /opt/victronenergy/gui/qml/
 # copy new PageBatterySetup
 cp /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/
 # copy new PageLynxIonIo.qml
@@ -71,6 +77,7 @@ if (( $venusVersionNumber < $versionNumber )); then
     fileList="$qmlDir/PageBattery.qml"
     fileList+=" $qmlDir/PageBatteryCellVoltages.qml"
     fileList+=" $qmlDir/PageBatteryParameters.qml"
+    fileList+=" $qmlDir/PageBatterySettings.qml"
     fileList+=" $qmlDir/PageBatterySetup.qml"
     fileList+=" $qmlDir/PageLynxIonIo.qml"
     for file in $fileList ; do

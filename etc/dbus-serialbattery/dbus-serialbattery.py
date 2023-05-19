@@ -56,6 +56,7 @@ expected_bms_types = [
     if battery_type["bms"].__name__ == utils.BMS_TYPE or utils.BMS_TYPE == ""
 ]
 
+logger.info("")
 logger.info("Starting dbus-serialbattery")
 
 
@@ -96,9 +97,7 @@ def main():
             logger.info("No Port needed")
             return "/dev/tty/USB9"
 
-    logger.info(
-        "dbus-serialbattery v" + str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
-    )
+    logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION))
 
     port = get_port()
     battery = None
@@ -110,9 +109,10 @@ def main():
         if port == "Jkbms_Ble":
             # noqa: F401 --> ignore flake "imported but unused" error
             from bms.jkbms_ble import Jkbms_Ble  # noqa: F401
-        if port == "LltJbdBle":
+
+        if port == "LltJbd_Ble":
             # noqa: F401 --> ignore flake "imported but unused" error
-            from bms.lltjbd_ble import LltJbdBle
+            from bms.lltjbd_ble import LltJbd_Ble  # noqa: F401
 
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
