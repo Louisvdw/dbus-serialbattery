@@ -75,7 +75,7 @@ REG_CAP_70 = 0x43
 REG_CAP_50 = 0x44
 REG_CAP_30 = 0x45
 REG_CAP_10 = 0x46
-REG_CAP2_100 = 0x47
+# REG_CAP2_100 = 0x47
 
 # [0x48, 0x9F] - 87 registers
 
@@ -212,6 +212,9 @@ class LltJbd(Battery):
         self.protection = LltJbdProtection()
         self.type = self.BATTERYTYPE
         self._product_name: str = ""
+        self.has_settings = 0
+        self.reset_soc = 100
+        self.soc_to_set = None
         self.factory_mode = False
         self.writable = False
 
@@ -256,6 +259,28 @@ class LltJbd(Battery):
                 self.max_battery_discharge_current = float(unpack_from(">h", discharge_over_current)[0] / -100.0)
 
         return True
+
+    def reset_soc_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value < 0 or value > 100:
+            return False
+
+        self.reset_soc = value
+        self.soc_to_set = value
+        return True
+
+    def write_soc(self):
+        if self.soc_to_set is None or self.soc_to_set != 100 or not self.voltage:
+            return False
+        logger.info(f"write soc {self.soc_to_set}%")
+        self.soc_to_set = None  # Reset value, so we will set it only once
+        # TODO implement logic to map current pack readings into
+        # REG_CAP_100, REG_CAP_90, REG_CAP_80, REG_CAP_70, REG_CAP_60, ...
+        with self.eeprom(writable=True):
+            pack_voltage = struct.pack(">H", int(self.voltage * 10))
+            self.read_serial_data_llt(writeCmd(REG_CAP_100, pack_voltage))
 
     def refresh_data(self):
         result = self.read_gen_data()
