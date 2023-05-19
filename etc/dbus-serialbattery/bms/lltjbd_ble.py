@@ -19,7 +19,9 @@ class LltJbd_Ble(LltJbd):
     BATTERYTYPE = "LltJbd_Ble"
 
     def __init__(self, port: Optional[str], baud: Optional[int], address: str):
-        super(LltJbd_Ble, self).__init__("ble" + address.replace(":", "").lower(), -1, address)
+        super(LltJbd_Ble, self).__init__(
+            "ble" + address.replace(":", "").lower(), -1, address
+        )
 
         self.address = address
         self.protection = LltJbdProtection()
