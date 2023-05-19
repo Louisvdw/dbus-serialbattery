@@ -827,16 +827,25 @@ class Battery(ABC):
 
     def get_temp(self) -> Union[float, None]:
         try:
-            temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
-            n = len(temps)
-            if not temps or n == 0:
-                return None
-            data = sorted(temps)
-            if n % 2 == 1:
-                return data[n // 2]
+            if utils.TEMP_BATTERY == 1:
+                return self.temp1
+            elif utils.TEMP_BATTERY == 2:
+                return self.temp2
+            elif utils.TEMP_BATTERY == 3:
+                return self.temp3
+            elif utils.TEMP_BATTERY == 4:
+                return self.temp4
             else:
-                i = n // 2
-                return (data[i - 1] + data[i]) / 2
+                temps = [t for t in [self.temp1, self.temp2, self.temp3, self.temp4] if t is not None]
+                n = len(temps)
+                if not temps or n == 0:
+                    return None
+                data = sorted(temps)
+                if n % 2 == 1:
+                    return data[n // 2]
+                else:
+                    i = n // 2
+                    return (data[i - 1] + data[i]) / 2
         except TypeError:
             return None
 
