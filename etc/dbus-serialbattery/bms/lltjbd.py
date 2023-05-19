@@ -233,10 +233,12 @@ class LltJbd(Battery):
         # Return True if success, False for failure
         result = False
         try:
-            result = self.read_hardware_data()
+            result = self.get_settings()
+            if result:
+                result = result and self.read_hardware_data()
             # get first data to show in startup log
             if result:
-                self.refresh_data()
+                result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -247,7 +249,8 @@ class LltJbd(Battery):
         return self._product_name
 
     def get_settings(self):
-        self.read_gen_data()
+        if not self.read_gen_data():
+            return False
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         with self.eeprom(writable=False):
