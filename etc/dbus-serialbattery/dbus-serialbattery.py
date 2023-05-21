@@ -30,6 +30,7 @@ from bms.lifepower import Lifepower
 from bms.lltjbd import LltJbd
 from bms.renogy import Renogy
 from bms.seplos import Seplos
+from bms.heltecmodbus import HeltecModbus
 
 # from bms.ant import Ant
 # from bms.mnb import MNB
@@ -46,6 +47,9 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
+    # {"bms" : HeltecModbus, "baud" : 9600, "address" : 2},
+    # {"bms" : HeltecModbus, "baud" : 9600, "address" : 1},
+    {"bms" : HeltecModbus, "baud" : 9600, "address" : 0},
     # {"bms": Ant, "baud": 19200},
     # {"bms": MNB, "baud": 9600},
     # {"bms": Sinowealth},
