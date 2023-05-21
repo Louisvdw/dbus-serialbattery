@@ -61,6 +61,7 @@
 * Changed: Bash output by @mr-manuel
 * Changed: Daly BMS - Fixed BMS alerts by @mr-manuel
 * Changed: Daly BMS - Improved driver stability by @transistorgit & @mr-manuel
+* Changed: Daly BMS - Reworked serial parser by @transistorgit
 * Changed: Default config file by @ppuetsch
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
   * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel
