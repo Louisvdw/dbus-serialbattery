@@ -13,12 +13,13 @@ import minimalmodbus
 from typing import Dict
 import threading
 
-RETRYCNT = 10 # the Heltec BMS is not always as responsive as it should, so let's try it up to (RETRYCNT - 1) times to talk to it
+RETRYCNT = 10  # the Heltec BMS is not always as responsive as it should, so let's try it up to (RETRYCNT - 1) times to talk to it
     
-SLPTIME = 0.02 # the wait time after a communication - normally this should be as defined by modbus RTU and handled in minimalmodbus, but yeah, it seems we need it for the Heltec BMS
+SLPTIME = 0.02  # the wait time after a communication - normally this should be as defined by modbus RTU and handled in minimalmodbus, but yeah, it seems we need it for the Heltec BMS
 
 mbdevs: Dict[int, minimalmodbus.Instrument] = {}
 locks: Dict[int, any] = {}
+
 
 class HeltecModbus(Battery):
     def __init__(self, port, baud, address):
@@ -35,29 +36,63 @@ class HeltecModbus(Battery):
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         logger.info("Testing on slave address " + str(self.address))
+        found = False
         if not self.address in locks:
             locks[self.address] = threading.Lock()
 
         with locks[self.address]:
-            mbdev = minimalmodbus.Instrument(self.port, slaveaddress=self.address, mode="rtu", close_port_after_each_call=True, debug=False)
+            mbdev = minimalmodbus.Instrument(
+                self.port,
+                slaveaddress=self.address,
+                mode="rtu",
+                close_port_after_each_call=True,
+                debug=False,
+            )
             mbdev.serial.parity = minimalmodbus.serial.PARITY_NONE
             mbdev.serial.stopbits = serial.STOPBITS_ONE
             mbdev.serial.baudrate = 9600
-            mbdev.serial.timeout = 0.4 # yes, 400ms is long but the BMS is sometimes really slow in responding, so this seems a good compromize
+            mbdev.serial.timeout = 0.4  # yes, 400ms is long but the BMS is sometimes really slow in responding, so this seems a good compromize
             mbdevs[self.address] = mbdev
- 
+
             for n in range(1, RETRYCNT):
                 try:
                     string = mbdev.read_string(7, 13)
                     time.sleep(SLPTIME)
-                    result = True
-                    logger.info("found in try " + str(n) + "/" + str(RETRYCNT) + " for " + self.port + "(" + str(self.address) + "): " + string)
+                    found = True
+                    logger.info(
+                        "found in try "
+                        + str(n)
+                        + "/"
+                        + str(RETRYCNT)
+                        + " for "
+                        + self.port
+                        + "("
+                        + str(self.address)
+                        + "): "
+                        + string
+                    )
                 except Exception as e:
-                    logger.warn("testing failed (" + str(e) + ") " + str(n) + "/" + str(RETRYCNT) + " for " + self.port + "(" + str(self.address) + ")")
+                    logger.warn(
+                        "testing failed ("
+                        + str(e)
+                        + ") "
+                        + str(n)
+                        + "/"
+                        + str(RETRYCNT)
+                        + " for "
+                        + self.port
+                        + "("
+                        + str(self.address)
+                        + ")")
                     continue
                 break
             
-        return result and self.read_status_data() and self.get_settings() and self.refresh_data()
+        return (
+            found
+            and self.read_status_data()
+            and self.get_settings()
+            and self.refresh_data()
+        )
         
     def get_settings(self):
         self.max_battery_voltage = self.max_cell_voltage * self.cell_count
@@ -65,13 +100,11 @@ class HeltecModbus(Battery):
 
         return True
 
-
     def refresh_data(self):
         # call all functions that will refresh the battery data.
         # This will be called for every iteration (1 second)
         # Return True if success, False for failure
         return self.read_soc_data() and self.read_cell_data()
-
 
     def read_status_data(self):
         mbdev = mbdevs[self.address]
@@ -80,31 +113,43 @@ class HeltecModbus(Battery):
             for n in range(1, RETRYCNT):
                 try:
                     ccur = mbdev.read_register(191, 0, 3, False)
-                    self.max_battery_charge_current = ((int)(((ccur & 0xff) << 8) | ((ccur >> 8) & 0xff))) / 100
+                    self.max_battery_charge_current = (
+                        (int)(((ccur & 0xFF) << 8) | ((ccur >> 8) & 0xFF))
+                    ) / 100
                     time.sleep(SLPTIME)
 
                     dc = mbdev.read_register(194, 0, 3, False)
-                    self.max_battery_discharge_current = (((dc & 0xff) << 8) | ((dc >> 8) & 0xff)) / 100
+                    self.max_battery_discharge_current = (
+                        ((dc & 0xFF) << 8) | ((dc >> 8) & 0xFF)
+                    ) / 100
                     time.sleep(SLPTIME)
 
                     cap = mbdev.read_register(118, 0, 3, False)
-                    self.capacity = (((cap & 0xff) << 8) | ((cap >> 8) & 0xff)) / 10
+                    self.capacity = (((cap & 0xFF) << 8) | ((cap >> 8) & 0xFF)) / 10
                     time.sleep(SLPTIME)
 
                     cap = mbdev.read_register(119, 0, 3, False)
-                    self.actual_capacity = (((cap & 0xff) << 8) | ((cap >> 8) & 0xff)) / 10
+                    self.actual_capacity = (
+                        ((cap & 0xFF) << 8) | ((cap >> 8) & 0xFF)
+                    ) / 10
                     time.sleep(SLPTIME)
 
                     cap = mbdev.read_register(126, 0, 3, False)
-                    self.learned_capacity = (((cap & 0xff) << 8) | ((cap >> 8) & 0xff)) / 10
+                    self.learned_capacity = (
+                        ((cap & 0xFF) << 8) | ((cap >> 8) & 0xFF)
+                    ) / 10
                     time.sleep(SLPTIME)
 
                     volt = mbdev.read_register(169, 0, 3, False)
-                    self.max_cell_voltage = (((volt & 0xff) << 8) | ((volt >> 8) & 0xff)) / 1000
+                    self.max_cell_voltage = (
+                        ((volt & 0xFF) << 8) | ((volt >> 8) & 0xFF)
+                    ) / 1000
                     time.sleep(SLPTIME)
 
                     volt = mbdev.read_register(172, 0, 3, False)
-                    self.min_cell_voltage = (((volt & 0xff) << 8) | ((volt >> 8) & 0xff)) / 1000
+                    self.min_cell_voltage = (
+                        ((volt & 0xFF) << 8) | ((volt >> 8) & 0xFF)
+                    ) / 1000
                     time.sleep(SLPTIME)
 
                     string = mbdev.read_string(7, 13)
@@ -116,17 +161,20 @@ class HeltecModbus(Battery):
                     time.sleep(SLPTIME)
 
                     serial1 = mbdev.read_registers(2, number_of_registers=4)
-                    self.unique_identifier = '-'.join('{:04x}'.format(x) for x in serial1)
+                    self.unique_identifier = '-'.join(
+                        '{:04x}'.format(x) for x in serial1
+                    )
                     time.sleep(SLPTIME)
 
                     self.pw = mbdev.read_string(47, 2)
                     time.sleep(SLPTIME)
 
                     tmp = mbdev.read_register(75)
-                    #h: batterytype: 0: Ternery Lithium, 1: Iron Lithium, 2: Lithium Titanat
-                    #l: #of cells
-                    self.cell_count = (tmp>>8) & 0xff
-                    tmp = tmp & 0xff
+                    # h: batterytype: 0: Ternery Lithium, 1: Iron Lithium, 2: Lithium Titanat
+                    # l: #of cells
+                    
+                    self.cell_count = (tmp >> 8) & 0xFF
+                    tmp = tmp & 0xFF
                     if tmp == 0:
                         self.cellType = "Ternary Lithium"
                     elif tmp == 1:
@@ -137,11 +185,22 @@ class HeltecModbus(Battery):
                         self.cellType = "unknown"
                     time.sleep(SLPTIME)
 
-                    self.hardware_version = self.devName + "(" + str((mbdev.read_register(38)>>8) & 0xff) + ")"
+                    self.hardware_version = (
+                        self.devName
+                        + "("
+                        + str((mbdev.read_register(38) >> 8) & 0xFF)
+                        + ")"
+                    )
                     time.sleep(SLPTIME)
 
                     date = mbdev.read_long(39, 3, True, minimalmodbus.BYTEORDER_LITTLE)
-                    self.production_date = str(date & 0xffff) + "-" + str((date >> 24) & 0xff) + "-" + str((date >> 16) & 0xff)
+                    self.production_date = (
+                        str(date & 0xFFFF)
+                        + "-"
+                        + str((date >> 24) & 0xFF)
+                        + "-"
+                        + str((date >> 16) & 0xFF)
+                    )
                     time.sleep(SLPTIME)
                     
                     # we finished all readings without trouble, so let's break from the retry loop
@@ -171,13 +230,21 @@ class HeltecModbus(Battery):
             for n in range(1, RETRYCNT):
                 try:
 
-                    self.voltage = mbdev.read_long(76, 3, True, minimalmodbus.BYTEORDER_LITTLE) / 1000
+                    self.voltage = (
+                        mbdev.read_long(76, 3, True, minimalmodbus.BYTEORDER_LITTLE)
+                        / 1000
+                    )
                     time.sleep(SLPTIME)
 
-                    self.current = mbdev.read_long(78, 3, True, minimalmodbus.BYTEORDER_LITTLE) / 100
+                    self.current = (
+                        mbdev.read_long(78, 3, True, minimalmodbus.BYTEORDER_LITTLE)
+                        / 100
+                    )
                     time.sleep(SLPTIME)
 
-                    runState1 = mbdev.read_long(152, 3, True, minimalmodbus.BYTEORDER_LITTLE)
+                    runState1 = mbdev.read_long(
+                        152, 3, True, minimalmodbus.BYTEORDER_LITTLE
+                    )
                     time.sleep(SLPTIME)
 
                     # bit 29 is discharge protection
@@ -192,15 +259,19 @@ class HeltecModbus(Battery):
                     else:
                         self.charge_fet = False
 
-                    warnings = mbdev.read_long(156, 3, True, minimalmodbus.BYTEORDER_LITTLE)
-                    if (warnings & (1 << 3)) or (warnings & (1 << 15)): # 15 is full protection, 3 is total overvoltage
+                    warnings = mbdev.read_long(
+                        156, 3, True, minimalmodbus.BYTEORDER_LITTLE
+                    )
+                    if (warnings & (1 << 3)) or (
+                        warnings & (1 << 15)
+                    ): # 15 is full protection, 3 is total overvoltage
                         self.voltage_high = 2
                     else:
                         self.voltage_high = 0
 
                     if warnings & (1 << 0):
                         self.protection.voltage_cell_high = 2
-                        self.protection.voltage_high = 1 # we handle a single cell OV as total OV, as long as cell_high is not explicitly handled
+                        self.protection.voltage_high = 1  # we handle a single cell OV as total OV, as long as cell_high is not explicitly handled
                     else:
                         self.protection.voltage_cell_high = 0
 
@@ -208,7 +279,7 @@ class HeltecModbus(Battery):
                         self.protection.voltage_cell_low = 2
                     else:
                         self.protection.voltage_cell_low = 0
-                    
+
                     if warnings & (1 << 4):
                         self.protection.voltage_low = 2
                     else:
@@ -226,7 +297,7 @@ class HeltecModbus(Battery):
                     else:
                         self.protection.current_under = 0
 
-                    if warnings & (1 << 8): # this is a short circuit
+                    if warnings & (1 << 8):  # this is a short circuit
                         self.protection.current_over = 2
                     
                     if warnings & (1 << 9):
@@ -249,39 +320,39 @@ class HeltecModbus(Battery):
                     else:
                         self.protection.temp_low_discharge = 0
 
-                    if warnings & (1 << 13): # MOS overtemp
+                    if warnings & (1 << 13):  # MOS overtemp
                         self.protection.temp_high_internal = 2
                     else:
                         self.protection.temp_high_internal = 0
 
-                    if warnings & (1 << 14): # SOC low
+                    if warnings & (1 << 14):  # SOC low
                         self.protection.soc_low = 2
                     else:
                         self.protection.soc_low = 0
 
-                    if warnings & (0xffff0000): # any other fault
+                    if warnings & (0xFFFF0000):  # any other fault
                         self.protection.internal_failure = 2
                     else:
                         self.protection.internal_failure = 0
 
                     socsoh = mbdev.read_register(120, 0, 3, False)
-                    self.soh = socsoh & 0xff
-                    self.soc = (socsoh >> 8) & 0xff
+                    self.soh = socsoh & 0xFF
+                    self.soc = (socsoh >> 8) & 0xFF
                     time.sleep(SLPTIME)
 
-    # we could read min and max temperature, here, but I have a BMS with only 2 sensors, so I couldn't test the logic and read therefore only the first two temperatures
-    #                tminmax = mbdev.read_register(117, 0, 3, False)
-    #                nmin = (tminmax & 0xff)
-    #                nmax = ((tminmax >> 8) & 0xff)
+                    # we could read min and max temperature, here, but I have a BMS with only 2 sensors, so I couldn't test the logic and read therefore only the first two temperatures
+                    # tminmax = mbdev.read_register(117, 0, 3, False)
+                    # nmin = (tminmax & 0xFF)
+                    # nmax = ((tminmax >> 8) & 0xFF)
 
                     temps = mbdev.read_register(113, 0, 3, False)
-                    self.temp1 = (temps & 0xff) - 40
-                    self.temp2 = ((temps >> 8) & 0xff) - 40
+                    self.temp1 = (temps & 0xFF) - 40
+                    self.temp2 = ((temps >> 8) & 0xFF) - 40
                     time.sleep(SLPTIME)
 
                     temps = mbdev.read_register(112, 0, 3, False)
-                    most = (temps & 0xff) - 40
-                    balt = ((temps >> 8) & 0xff) - 40
+                    most = (temps & 0xFF) - 40
+                    balt = ((temps >> 8) & 0xFF) - 40
                     # balancer temperature is not handled separately, so let's display the max of both temperatures inside the BMS as mos temperature
                     self.temp_mos = max(most, balt)
                     time.sleep(SLPTIME)
@@ -289,7 +360,14 @@ class HeltecModbus(Battery):
                     return True
 
                 except Exception as e:
-                    logger.warn("Error reading SOC, retry (" + str(n) + "/" + str(RETRYCNT) + ") " + str(e))
+                    logger.warn(
+                        "Error reading SOC, retry ("
+                        + str(n)
+                        + "/"
+                        + str(RETRYCNT)
+                        + ") "
+                        + str(e)
+                    )
                     continue
                 break
             logger.warn("Error reading SOC, failed")
@@ -303,14 +381,26 @@ class HeltecModbus(Battery):
             for n in range(1, RETRYCNT):
                 try:
 
-                    cells = mbdev.read_registers(81, number_of_registers=self.cell_count)
+                    cells = mbdev.read_registers(
+                        81, number_of_registers=self.cell_count
+                    )
                     time.sleep(SLPTIME)
-                    balancing = mbdev.read_long(139, 3, signed=False, byteorder=minimalmodbus.BYTEORDER_LITTLE)
+                    
+                    balancing = mbdev.read_long(
+                        139, 3, signed=False, byteorder=minimalmodbus.BYTEORDER_LITTLE
+                    )
                     time.sleep(SLPTIME)
 
                     result = True
                 except Exception as e:
-                    logger.warn("read_cell_data() failed (" + str(e) + ") " + str(n) + "/" + str(RETRYCNT))
+                    logger.warn(
+                        "read_cell_data() failed ("
+                        + str(e)
+                        + ") "
+                        + str(n)
+                        + "/"
+                        + str(RETRYCNT)
+                    )
                     continue
                 break
             if result == False:
@@ -323,9 +413,9 @@ class HeltecModbus(Battery):
 
             i = 0
             for cell in cells:
-                cellV = ((cell & 0xff) << 8) | ((cell >> 8) & 0xff)
+                cellV = ((cell & 0xFF) << 8) | ((cell >> 8) & 0xFF)
                 self.cells[i].voltage = cellV / 1000
-                self.cells[i].balance = ((balancing & (1 << i)) != 0)
+                self.cells[i].balance = (balancing & (1 << i) != 0)
 
                 i = i + 1
 
