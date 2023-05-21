@@ -49,7 +49,7 @@ supported_bms_types = [
     {"bms": Seplos, "baud": 19200},
     # {"bms": HeltecModbus, "baud" : 9600, "address" : 3},
     # {"bms": HeltecModbus, "baud" : 9600, "address" : 2},
-    {"bms": HeltecModbus, "baud" : 9600, "address" : 1},
+    {"bms": HeltecModbus, "baud": 9600, "address" : 1},
     # {"bms": Ant, "baud": 19200},
     # {"bms": MNB, "baud": 9600},
     # {"bms": Sinowealth},

@@ -14,7 +14,7 @@ from typing import Dict
 import threading
 
 RETRYCNT = 10  # the Heltec BMS is not always as responsive as it should, so let's try it up to (RETRYCNT - 1) times to talk to it
-    
+
 SLPTIME = 0.02  # the wait time after a communication - normally this should be as defined by modbus RTU and handled in minimalmodbus, but yeah, it seems we need it for the Heltec BMS
 
 mbdevs: Dict[int, minimalmodbus.Instrument] = {}
@@ -83,7 +83,8 @@ class HeltecModbus(Battery):
                         + self.port
                         + "("
                         + str(self.address)
-                        + ")")
+                        + ")"
+                    )
                     continue
                 break
             
@@ -93,7 +94,7 @@ class HeltecModbus(Battery):
             and self.get_settings()
             and self.refresh_data()
         )
-        
+
     def get_settings(self):
         self.max_battery_voltage = self.max_cell_voltage * self.cell_count
         self.min_battery_voltage = self.min_cell_voltage * self.cell_count
@@ -162,7 +163,7 @@ class HeltecModbus(Battery):
 
                     serial1 = mbdev.read_registers(2, number_of_registers=4)
                     self.unique_identifier = '-'.join(
-                        '{:04x}'.format(x) for x in serial1
+                        "{:04x}".format(x) for x in serial1
                     )
                     time.sleep(SLPTIME)
 
@@ -172,7 +173,7 @@ class HeltecModbus(Battery):
                     tmp = mbdev.read_register(75)
                     # h: batterytype: 0: Ternery Lithium, 1: Iron Lithium, 2: Lithium Titanat
                     # l: #of cells
-                    
+
                     self.cell_count = (tmp >> 8) & 0xFF
                     tmp = tmp & 0xFF
                     if tmp == 0:
@@ -206,7 +207,14 @@ class HeltecModbus(Battery):
                     # we finished all readings without trouble, so let's break from the retry loop
                     break
                 except Exception as e:
-                    logger.warn("Error reading settings from BMS, retry (" + str(n) + "/" + str(RETRYCNT) + "): " + str(e))
+                    logger.warn(
+                        "Error reading settings from BMS, retry ("
+                        + str(n)
+                        + "/"
+                        + str(RETRYCNT)
+                        + "): "
+                        + str(e)
+                    )
                     continue
 
             logger.info(self.hardware_version)
@@ -229,7 +237,6 @@ class HeltecModbus(Battery):
         with locks[self.address]:
             for n in range(1, RETRYCNT):
                 try:
-
                     self.voltage = (
                         mbdev.read_long(76, 3, True, minimalmodbus.BYTEORDER_LITTLE)
                         / 1000
@@ -264,7 +271,7 @@ class HeltecModbus(Battery):
                     )
                     if (warnings & (1 << 3)) or (
                         warnings & (1 << 15)
-                    ): # 15 is full protection, 3 is total overvoltage
+                    ):  # 15 is full protection, 3 is total overvoltage
                         self.voltage_high = 2
                     else:
                         self.voltage_high = 0
@@ -299,7 +306,7 @@ class HeltecModbus(Battery):
 
                     if warnings & (1 << 8):  # this is a short circuit
                         self.protection.current_over = 2
-                    
+
                     if warnings & (1 << 9):
                         self.protection.temp_high_charge = 2
                     else:
@@ -380,12 +387,11 @@ class HeltecModbus(Battery):
         with locks[self.address]:
             for n in range(1, RETRYCNT):
                 try:
-
                     cells = mbdev.read_registers(
                         81, number_of_registers=self.cell_count
                     )
                     time.sleep(SLPTIME)
-                    
+
                     balancing = mbdev.read_long(
                         139, 3, signed=False, byteorder=minimalmodbus.BYTEORDER_LITTLE
                     )
@@ -415,7 +421,7 @@ class HeltecModbus(Battery):
             for cell in cells:
                 cellV = ((cell & 0xFF) << 8) | ((cell >> 8) & 0xFF)
                 self.cells[i].voltage = cellV / 1000
-                self.cells[i].balance = (balancing & (1 << i) != 0)
+                self.cells[i].balance = balancing & (1 << i) != 0
 
                 i = i + 1
 
