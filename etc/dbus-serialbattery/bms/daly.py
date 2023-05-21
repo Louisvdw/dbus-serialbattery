@@ -552,7 +552,6 @@ class Daly(Battery):
         logger.info(f"write soc {self.soc_to_set}%")
         self.soc_to_set = None  # Reset value, so we will set it only once
 
-        time_start = time()
         ser.flushOutput()
         ser.flushInput()
         ser.write(cmd)
