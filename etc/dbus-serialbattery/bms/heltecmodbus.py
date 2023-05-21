@@ -87,7 +87,7 @@ class HeltecModbus(Battery):
                     )
                     continue
                 break
-            
+
         return (
             found
             and self.read_status_data()
@@ -162,7 +162,7 @@ class HeltecModbus(Battery):
                     time.sleep(SLPTIME)
 
                     serial1 = mbdev.read_registers(2, number_of_registers=4)
-                    self.unique_identifier = '-'.join(
+                    self.unique_identifier = "-".join(
                         "{:04x}".format(x) for x in serial1
                     )
                     time.sleep(SLPTIME)
@@ -203,7 +203,7 @@ class HeltecModbus(Battery):
                         + str((date >> 16) & 0xFF)
                     )
                     time.sleep(SLPTIME)
-                    
+
                     # we finished all readings without trouble, so let's break from the retry loop
                     break
                 except Exception as e:
