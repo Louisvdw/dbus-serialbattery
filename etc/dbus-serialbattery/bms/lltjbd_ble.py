@@ -50,9 +50,14 @@ class LltJbd_Ble(LltJbd):
         logger.info("BLE client disconnected")
 
     async def bt_main_loop(self):
-        self.device = await BleakScanner.find_device_by_address(
-            self.address, cb=dict(use_bdaddr=True)
-        )
+        try:
+            self.device = await BleakScanner.find_device_by_address(
+                self.address, cb=dict(use_bdaddr=True)
+            )
+        except Exception as e:
+            logger.error(">>> ERROR: Bluetooth stack failed.", e)
+            self.device = None
+            await asyncio.sleep(0.5)
 
         if not self.device:
             self.run = False
@@ -155,8 +160,12 @@ class LltJbd_Ble(LltJbd):
     def read_serial_data_llt(self, command):
         if not self.bt_loop:
             return False
-        data = asyncio.run(self.async_read_serial_data_llt(command))
-        return self.validate_packet(data)
+        try:
+            data = asyncio.run(self.async_read_serial_data_llt(command))
+            return self.validate_packet(data)
+        except Exception as e:
+            logger.error(">>> ERROR: No reply - returning", e)
+            return False
 
 
 if __name__ == "__main__":
