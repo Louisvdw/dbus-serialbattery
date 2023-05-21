@@ -16,6 +16,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Replace version string
+        run: |
+          echo $GITHUB_REF_NAME
+          VERSION=$(echo $GITHUB_REF_NAME | sed 's/^v//')
+          echo $VERSION
+          echo
+          head -n 39 etc/dbus-serialbattery/utils.py | tail -n 3
+          sed -i --regexp-extended --expression="s/[0-9]+\.[0-9]+\.[0-9a-z\_\-]+/$VERSION/" "etc/dbus-serialbattery/utils.py"
+          head -n 39 etc/dbus-serialbattery/utils.py | tail -n 3
+
       - name: build release archive
         run: |
           find . -type f -name "*.py" -exec chmod +x {} \;
