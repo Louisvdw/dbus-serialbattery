@@ -83,7 +83,7 @@ CCCM limits the charge/discharge current depending on the highest/lowest cell vo
 * between `2.8V - 2.9V` &rarr; `5A `discharge
 * below `<= 2.70V` &rarr; `0A` discharge
 
-### Temprature
+### Temperature
 
 * `CCCM_T_ENABLE = True/False`
 * `DCCM_T_ENABLE = True/False`
