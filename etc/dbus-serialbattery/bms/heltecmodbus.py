@@ -2,10 +2,11 @@
 # known limitations:
 #   - only BMS variants with 2 cell temperature sensors supported
 #   - some "interesting" datapoints are not read (e. g. registers 52: switch type, 62: bootloader and firmware version)
-#   - SOC not yet resettable from Venus (similary to Daly for support of writing SOC), but modbus write to 120 should be fairly possible)
+#   - SOC not yet resettable from Venus (similary to Daly for support of writing SOC), but modbus write to 120 should be
+#     fairly possible)
 
 
-from battery import Protection, Battery, Cell
+from battery import Battery, Cell
 from utils import logger
 import utils
 import serial
@@ -14,9 +15,12 @@ import minimalmodbus
 from typing import Dict
 import threading
 
-RETRYCNT = 10  # the Heltec BMS is not always as responsive as it should, so let's try it up to (RETRYCNT - 1) times to talk to it
+# the Heltec BMS is not always as responsive as it should, so let's try it up to (RETRYCNT - 1) times to talk to it
+RETRYCNT = 10
 
-SLPTIME = 0.02  # the wait time after a communication - normally this should be as defined by modbus RTU and handled in minimalmodbus, but yeah, it seems we need it for the Heltec BMS
+# the wait time after a communication - normally this should be as defined by modbus RTU and handled in minimalmodbus,
+# but yeah, it seems we need it for the Heltec BMS
+SLPTIME = 0.03
 
 mbdevs: Dict[int, minimalmodbus.Instrument] = {}
 locks: Dict[int, any] = {}
@@ -39,7 +43,7 @@ class HeltecModbus(Battery):
         for self.address in utils.HELTEC_MODBUS_ADDR:
             logger.info("Testing on slave address " + str(self.address))
             found = False
-            if not self.address in locks:
+            if self.address not in locks:
                 locks[self.address] = threading.Lock()
 # TODO: we need to lock not only based on the address, but based on the port, so the port will be enough
 
@@ -54,7 +58,8 @@ class HeltecModbus(Battery):
                 mbdev.serial.parity = minimalmodbus.serial.PARITY_NONE
                 mbdev.serial.stopbits = serial.STOPBITS_ONE
                 mbdev.serial.baudrate = 9600
-                mbdev.serial.timeout = 0.4  # yes, 400ms is long but the BMS is sometimes really slow in responding, so this seems a good compromize
+                # yes, 400ms is long but the BMS is sometimes really slow in responding, so this is a good compromise
+                mbdev.serial.timeout = 0.4
                 mbdevs[self.address] = mbdev
 
                 for n in range(1, RETRYCNT):
@@ -282,7 +287,8 @@ class HeltecModbus(Battery):
 
                     if warnings & (1 << 0):
                         self.protection.voltage_cell_high = 2
-                        self.protection.voltage_high = 1  # we handle a single cell OV as total OV, as long as cell_high is not explicitly handled
+                        # we handle a single cell OV as total OV, as long as cell_high is not explicitly handled
+                        self.protection.voltage_high = 1
                     else:
                         self.protection.voltage_cell_high = 0
 
@@ -351,10 +357,11 @@ class HeltecModbus(Battery):
                     self.soc = (socsoh >> 8) & 0xFF
                     time.sleep(SLPTIME)
 
-                    # we could read min and max temperature, here, but I have a BMS with only 2 sensors, so I couldn't test the logic and read therefore only the first two temperatures
-                    # tminmax = mbdev.read_register(117, 0, 3, False)
-                    # nmin = (tminmax & 0xFF)
-                    # nmax = ((tminmax >> 8) & 0xFF)
+                    # we could read min and max temperature, here, but I have a BMS with only 2 sensors,
+                    # so I couldn't test the logic and read therefore only the first two temperatures
+                    #   tminmax = mbdev.read_register(117, 0, 3, False)
+                    #   nmin = (tminmax & 0xFF)
+                    #   nmax = ((tminmax >> 8) & 0xFF)
 
                     temps = mbdev.read_register(113, 0, 3, False)
                     self.temp1 = (temps & 0xFF) - 40
@@ -364,7 +371,8 @@ class HeltecModbus(Battery):
                     temps = mbdev.read_register(112, 0, 3, False)
                     most = (temps & 0xFF) - 40
                     balt = ((temps >> 8) & 0xFF) - 40
-                    # balancer temperature is not handled separately, so let's display the max of both temperatures inside the BMS as mos temperature
+                    # balancer temperature is not handled separately in dbus-serialbattery,
+                    # so let's display the max of both temperatures inside the BMS as mos temperature
                     self.temp_mos = max(most, balt)
                     time.sleep(SLPTIME)
 
@@ -413,7 +421,7 @@ class HeltecModbus(Battery):
                     )
                     continue
                 break
-            if result == False:
+            if result is False:
                 return False
 
             if len(self.cells) != self.cell_count:
