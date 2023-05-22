@@ -45,7 +45,7 @@ class HeltecModbus(Battery):
             found = False
             if self.address not in locks:
                 locks[self.address] = threading.Lock()
-                
+
             # TODO: We need to lock not only based on the address, but based on the port as soon as multiple BMSs
             # are supported on the same serial interface. Then locking on the port will be enough.
 
