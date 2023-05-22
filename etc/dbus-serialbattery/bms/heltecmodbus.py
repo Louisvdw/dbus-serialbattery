@@ -28,13 +28,8 @@ locks: Dict[int, any] = {}
 
 class HeltecModbus(Battery):
     def __init__(self, port, baud, address):
-        self.address = address
         super(HeltecModbus, self).__init__(port, baud, address)
-        if address != 0:
-            type = "#" + str(address) + "_"
-        else:
-            type = ""
-        self.type = type + "Heltec_Smart"
+        self.type = "Heltec_Smart"
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -98,6 +93,7 @@ class HeltecModbus(Battery):
                         continue
                     break
                 if found:
+                    self.type = "#" + str(self.address) + "_Heltec_Smart"
                     break
 
         return (
