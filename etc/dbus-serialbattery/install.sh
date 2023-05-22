@@ -49,8 +49,8 @@ fi
 ## specific version
 if [ "$version" = "specific version" ]; then
     # read the url
-    read -p "Enter the url of the \"venus-data.tar.gz\" you want to install: " tar_url
-    wget -O /tmp/venus-data.tar.gz $tar_url
+    read -r -p "Enter the url of the \"venus-data.tar.gz\" you want to install: " tar_url
+    wget -O /tmp/venus-data.tar.gz "$tar_url"
     if [ $? -ne 0 ]; then
         echo "Error during downloading the TAR file. Please check, if the URL is correct."
         exit

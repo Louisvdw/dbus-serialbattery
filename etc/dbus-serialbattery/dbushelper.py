@@ -121,9 +121,7 @@ class DbusHelper:
         self._dbusservice.add_path(
             "/ProductName", "SerialBattery(" + self.battery.type + ")"
         )
-        self._dbusservice.add_path(
-            "/FirmwareVersion", str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
-        )
+        self._dbusservice.add_path("/FirmwareVersion", str(utils.DRIVER_VERSION))
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
@@ -253,6 +251,24 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
+        self._dbusservice.add_path(
+            "/Io/ForceChargingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_charging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/ForceDischargingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_discharging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/TurnBalancingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.turn_balancing_off_callback,
+        )
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
