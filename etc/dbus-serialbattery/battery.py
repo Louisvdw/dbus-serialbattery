@@ -253,7 +253,6 @@ class Battery(ABC):
                         3,
                     )
 
-
                 self.charge_mode = (
                     "Bulk dynamic"
                     # + " (vS: "
