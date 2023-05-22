@@ -304,6 +304,10 @@ LIPRO_START_ADDRESS = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
 LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
+# -- HeltecModbus device settings
+HELTEC_MODBUS_ADDR = _get_list_from_config(
+    "DEFAULT", "HELTEC_MODBUS_ADDR", lambda v: int(v)
+)
 
 # --------- Functions ---------
 def constrain(val, min_val, max_val):

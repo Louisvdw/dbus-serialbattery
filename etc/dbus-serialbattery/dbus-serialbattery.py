@@ -24,13 +24,13 @@ from battery import Battery
 # import battery classes
 from bms.daly import Daly
 from bms.ecs import Ecs
+from bms.heltecmodbus import HeltecModbus
 from bms.hlpdatabms4s import HLPdataBMS4S
 from bms.jkbms import Jkbms
 from bms.lifepower import Lifepower
 from bms.lltjbd import LltJbd
 from bms.renogy import Renogy
 from bms.seplos import Seplos
-from bms.heltecmodbus import HeltecModbus
 
 # from bms.ant import Ant
 # from bms.mnb import MNB
@@ -40,6 +40,7 @@ supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
     {"bms": Ecs, "baud": 19200},
+    {"bms": HeltecModbus, "baud": 9600},
     {"bms": HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
     {"bms": Lifepower, "baud": 9600},
@@ -47,9 +48,6 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
-    # {"bms": HeltecModbus, "baud": 9600, "address": 3},
-    # {"bms": HeltecModbus, "baud": 9600, "address": 2},
-    {"bms": HeltecModbus, "baud": 9600, "address": 1},
     # {"bms": Ant, "baud": 19200},
     # {"bms": MNB, "baud": 9600},
     # {"bms": Sinowealth},

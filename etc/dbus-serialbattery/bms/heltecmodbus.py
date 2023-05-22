@@ -6,8 +6,9 @@
 
 
 from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from utils import logger
+import utils
+import serial
 import time
 import minimalmodbus
 from typing import Dict
@@ -35,58 +36,61 @@ class HeltecModbus(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        logger.info("Testing on slave address " + str(self.address))
-        found = False
-        if not self.address in locks:
-            locks[self.address] = threading.Lock()
+        for self.address in utils.HELTEC_MODBUS_ADDR:
+            logger.info("Testing on slave address " + str(self.address))
+            found = False
+            if not self.address in locks:
+                locks[self.address] = threading.Lock()
+# TODO: we need to lock not only based on the address, but based on the port, so the port will be enough
 
-        with locks[self.address]:
-            mbdev = minimalmodbus.Instrument(
-                self.port,
-                slaveaddress=self.address,
-                mode="rtu",
-                close_port_after_each_call=True,
-                debug=False,
-            )
-            mbdev.serial.parity = minimalmodbus.serial.PARITY_NONE
-            mbdev.serial.stopbits = serial.STOPBITS_ONE
-            mbdev.serial.baudrate = 9600
-            mbdev.serial.timeout = 0.4  # yes, 400ms is long but the BMS is sometimes really slow in responding, so this seems a good compromize
-            mbdevs[self.address] = mbdev
+            with locks[self.address]:
+                mbdev = minimalmodbus.Instrument(
+                    self.port,
+                    slaveaddress=self.address,
+                    mode="rtu",
+                    close_port_after_each_call=True,
+                    debug=False,
+                )
+                mbdev.serial.parity = minimalmodbus.serial.PARITY_NONE
+                mbdev.serial.stopbits = serial.STOPBITS_ONE
+                mbdev.serial.baudrate = 9600
+                mbdev.serial.timeout = 0.4  # yes, 400ms is long but the BMS is sometimes really slow in responding, so this seems a good compromize
+                mbdevs[self.address] = mbdev
 
-            for n in range(1, RETRYCNT):
-                try:
-                    string = mbdev.read_string(7, 13)
-                    time.sleep(SLPTIME)
-                    found = True
-                    logger.info(
-                        "found in try "
-                        + str(n)
-                        + "/"
-                        + str(RETRYCNT)
-                        + " for "
-                        + self.port
-                        + "("
-                        + str(self.address)
-                        + "): "
-                        + string
-                    )
-                except Exception as e:
-                    logger.warn(
-                        "testing failed ("
-                        + str(e)
-                        + ") "
-                        + str(n)
-                        + "/"
-                        + str(RETRYCNT)
-                        + " for "
-                        + self.port
-                        + "("
-                        + str(self.address)
-                        + ")"
-                    )
-                    continue
-                break
+                for n in range(1, RETRYCNT):
+                    try:
+                        string = mbdev.read_string(7, 13)
+                        time.sleep(SLPTIME)
+                        found = True
+                        logger.info(
+                            "found in try "
+                            + str(n)
+                            + "/"
+                            + str(RETRYCNT)
+                            + " for "
+                            + self.port
+                            + "("
+                            + str(self.address)
+                            + "): "
+                            + string
+                        )
+                    except Exception as e:
+                        logger.warn(
+                            "testing failed ("
+                            + str(e)
+                            + ") "
+                            + str(n)
+                            + "/"
+                            + str(RETRYCNT)
+                            + " for "
+                            + self.port
+                            + "("
+                            + str(self.address)
+                            + ")"
+                        )
+                        continue
+                    break
+                if found: break
 
         return (
             found

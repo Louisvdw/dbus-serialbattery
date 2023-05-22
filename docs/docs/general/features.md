@@ -141,7 +141,7 @@ If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` 
 | History of charge cycles                 | Yes   | Yes   | No                 | No     | No           | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes                       |
 | Get CCL/DCL from the BMS                 | No    | No    | No                 | Yes    | No           | Yes    | No              | No      | No                 | No     | No     | No                        |
 | Charge current control management (CCCM) | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
-| Set battery parameters (DVCC)            | Calc  | Calc  | Yes                | ?      | Yes          | Calc   | Calc            | Calc    | Yes                | Calc   | Calc   | Calc                      |
+| Set battery parameters (DVCC)            | Calc  | Calc  | Yes                | Calc   | Yes          | Calc   | Calc            | Calc    | Yes                | Calc   | Calc   | Calc                      |
 
 
 `Calc` means that the value is calculated by the driver.
