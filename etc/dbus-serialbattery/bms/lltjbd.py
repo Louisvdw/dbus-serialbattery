@@ -164,6 +164,7 @@ FUNC_GPS_EN = 0x0100
 # Enable onboard buzzer / GPS protection board buzzer?
 FUNC_BUZZER_EN = 0x0200
 
+
 def checksum(payload):
     return (0x10000 - sum(payload)) % 0x10000
 
@@ -291,7 +292,6 @@ class LltJbd(Battery):
                 )
             func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
 
-
         return True
 
     def reset_soc_callback(self, path, value):
@@ -359,7 +359,9 @@ class LltJbd(Battery):
             )
             self.trigger_force_disable_charge = None
 
-        discharge_disabled = 0 if self.discharge_fet and self.control_allow_discharge else 1
+        discharge_disabled = (
+            0 if self.discharge_fet and self.control_allow_discharge else 1
+        )
         if self.trigger_force_disable_discharge is not None:
             discharge_disabled = 1
             logger.info(
@@ -408,19 +410,21 @@ class LltJbd(Battery):
                 config = unpack_from(">H", func_config)[0]
                 balancer_enabled = config & FUNC_BALANCE_EN
                 # Balance is enabled, force disable OR balancer is disabled and disable force disable
-                if (balancer_enabled and disable_balancer) or (not balancer_enabled and not disable_balancer):
+                if (balancer_enabled and disable_balancer) or (
+                    not balancer_enabled and not disable_balancer
+                ):
                     new_func_config = config ^ FUNC_BALANCE_EN
 
         if new_func_config:
             with self.eeprom(writable=True):
-                reply = self.read_serial_data_llt(writeCmd(REG_FUNC_CONFIG, new_func_config))
+                reply = self.read_serial_data_llt(
+                    writeCmd(REG_FUNC_CONFIG, new_func_config)
+                )
                 if reply is False:
                     logger.error("write force disable balancer failed")
                     return False
 
         return True
-
-
 
     def refresh_data(self):
         result = self.read_gen_data()
