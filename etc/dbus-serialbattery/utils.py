@@ -309,6 +309,7 @@ HELTEC_MODBUS_ADDR = _get_list_from_config(
     "DEFAULT", "HELTEC_MODBUS_ADDR", lambda v: int(v)
 )
 
+
 # --------- Functions ---------
 def constrain(val, min_val, max_val):
     if min_val > max_val:

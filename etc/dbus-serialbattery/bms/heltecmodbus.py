@@ -45,7 +45,9 @@ class HeltecModbus(Battery):
             found = False
             if self.address not in locks:
                 locks[self.address] = threading.Lock()
-# TODO: we need to lock not only based on the address, but based on the port, so the port will be enough
+                
+            # TODO: We need to lock not only based on the address, but based on the port as soon as multiple BMSs
+            # are supported on the same serial interface. Then locking on the port will be enough.
 
             with locks[self.address]:
                 mbdev = minimalmodbus.Instrument(
@@ -95,7 +97,8 @@ class HeltecModbus(Battery):
                         )
                         continue
                     break
-                if found: break
+                if found:
+                    break
 
         return (
             found
