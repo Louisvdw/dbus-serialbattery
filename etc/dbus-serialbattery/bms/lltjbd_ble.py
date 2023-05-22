@@ -3,6 +3,7 @@ import asyncio
 import atexit
 import functools
 import threading
+from asyncio import CancelledError
 from typing import Union, Optional
 from utils import logger
 from bleak import BleakClient, BleakScanner, BLEDevice
@@ -163,6 +164,9 @@ class LltJbd_Ble(LltJbd):
         try:
             data = asyncio.run(self.async_read_serial_data_llt(command))
             return self.validate_packet(data)
+        except CancelledError as e:
+            logger.error(">>> ERROR: No reply - canceled - returning", e)
+            return False
         except Exception as e:
             logger.error(">>> ERROR: No reply - returning", e)
             return False
