@@ -169,9 +169,9 @@ class MNB(Battery):
 
         # Change depending on the cell_min_voltage values
         if self.cell_min_voltage < self.V_C_min + 0.05:
-            self.control_allow_dicharge = False
+            self.control_allow_discharge = False
         else:
-            self.control_allow_dicharge = True
+            self.control_allow_discharge = True
 
         if self.cell_min_voltage < self.V_C_min + 0.15:
             b = 10 * (self.cell_min_voltage - self.V_C_min - 0.05)
