@@ -62,7 +62,7 @@ Fork the repository and use the [`battery_template.py`](https://github.com/Louis
 
 Here is a short checklist that should help you:
 
-  - [ ] Add your battery class and battery class import in alphabetical order in the [`etc/dbus-serialbattery/battery.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/battery.py)
+  - [ ] Add your battery class and battery class import in alphabetical order in the [`etc/dbus-serialbattery/dbus-serialbattery.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/dbus-serialbattery.py)
   - [ ] Add your BMS to the [BMS feature comparison](https://louisvdw.github.io/dbus-serialbattery/general/features#bms-feature-comparison) page by editing [`docs/docs/general/features.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/docs/docs/general/features.md)
   - [ ] Add your BMS to the [Supported BMS](https://louisvdw.github.io/dbus-serialbattery/general/supported-bms) page by editing [`docs/docs/general/supported-bms.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/docs/docs/general/supported-bms.md)
   - [ ] Do not import wildcards `*`
