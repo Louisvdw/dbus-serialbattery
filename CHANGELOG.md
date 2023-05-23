@@ -39,6 +39,7 @@
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: JKBMS BLE - Show serial number and "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
 * Added: JKBMS BLE driver by @baranator
+* Added: LLT/JBD BMS BLE driver by @idstein
 * Added: Possibility to add `config.ini` to the root of a USB flash drive on install via the USB method by @mr-manuel
 * Added: Possibility to configure a `VOLTAGE_DROP` voltage, if you are using a SmartShunt as battery monitor as there is a little voltage difference https://github.com/Louisvdw/dbus-serialbattery/discussions/632 by @mr-manuel
 * Added: Post install notes by @mr-manuel
