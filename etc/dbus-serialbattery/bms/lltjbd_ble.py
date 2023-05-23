@@ -3,12 +3,11 @@ import asyncio
 import atexit
 import functools
 import threading
+from asyncio import CancelledError
 from typing import Union, Optional
 from utils import logger
-from struct import unpack_from
 from bleak import BleakClient, BleakScanner, BLEDevice
 from bms.lltjbd import LltJbdProtection, LltJbd
-
 
 BLE_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
 BLE_CHARACTERISTICS_TX_UUID = "0000ff02-0000-1000-8000-00805f9b34fb"
@@ -21,7 +20,9 @@ class LltJbd_Ble(LltJbd):
     BATTERYTYPE = "LltJbd_Ble"
 
     def __init__(self, port: Optional[str], baud: Optional[int], address: str):
-        super(LltJbd_Ble, self).__init__(address.replace(":", "").lower(), -1, address)
+        super(LltJbd_Ble, self).__init__(
+            "ble" + address.replace(":", "").lower(), -1, address
+        )
 
         self.address = address
         self.protection = LltJbdProtection()
@@ -50,9 +51,14 @@ class LltJbd_Ble(LltJbd):
         logger.info("BLE client disconnected")
 
     async def bt_main_loop(self):
-        self.device = await BleakScanner.find_device_by_address(
-            self.address, cb=dict(use_bdaddr=True)
-        )
+        try:
+            self.device = await BleakScanner.find_device_by_address(
+                self.address, cb=dict(use_bdaddr=True)
+            )
+        except Exception as e:
+            logger.error(">>> ERROR: Bluetooth stack failed.", e)
+            self.device = None
+            await asyncio.sleep(0.5)
 
         if not self.device:
             self.run = False
@@ -155,22 +161,18 @@ class LltJbd_Ble(LltJbd):
     def read_serial_data_llt(self, command):
         if not self.bt_loop:
             return False
-        data = asyncio.run(self.async_read_serial_data_llt(command))
-        if not data:
+        try:
+            data = asyncio.run(self.async_read_serial_data_llt(command))
+            return self.validate_packet(data)
+        except CancelledError as e:
+            logger.error(">>> ERROR: No reply - canceled - returning", e)
             return False
-
-        start, flag, command_ret, length = unpack_from("BBBB", data)
-        checksum, end = unpack_from("HB", data, length + 4)
-
-        if end == 119:
-            return data[4 : length + 4]
-        else:
-            logger.error(">>> ERROR: Incorrect Reply")
+        except Exception as e:
+            logger.error(">>> ERROR: No reply - returning", e)
             return False
 
 
-"""
-async def test_LltJbd_Ble():
+if __name__ == "__main__":
     import sys
 
     bat = LltJbd_Ble("Foo", -1, sys.argv[1])
@@ -178,8 +180,4 @@ async def test_LltJbd_Ble():
         logger.error(">>> ERROR: Unable to connect")
     else:
         bat.refresh_data()
-
-
-if __name__ == "__main__":
-    test_LltJbd_Ble()
-"""
+        bat.get_settings()
