@@ -11,11 +11,11 @@ See [this page](../general/install#how-to-change-the-default-limits).
 
 
 ## How to edit `utils.py` or `config.ini`
-See [this page](../general/install#how-to-change-the-default-limits).
+See [this page](../general/install#how-to-edit-utilspy-or-configini).
 
 
 ## How to enable a disabled BMS
-See [this page](../general/install#how-to-change-the-default-limits).
+See [this page](../general/install#how-to-enable-a-disabled-bms).
 
 
 ## What is the username and password of the SSH connection?
