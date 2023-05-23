@@ -39,6 +39,7 @@
 * Added: JKBMS BLE - Show if balancing is active and which cells are balancing by @mr-manuel
 * Added: JKBMS BLE - Show serial number and "User Private Data" field that can be set in the JKBMS App to identify the BMS in a multi battery environment by @mr-manuel
 * Added: JKBMS BLE driver by @baranator
+* Added: LLT/JBD BMS BLE driver by @idstein
 * Added: Possibility to add `config.ini` to the root of a USB flash drive on install via the USB method by @mr-manuel
 * Added: Possibility to configure a `VOLTAGE_DROP` voltage, if you are using a SmartShunt as battery monitor as there is a little voltage difference https://github.com/Louisvdw/dbus-serialbattery/discussions/632 by @mr-manuel
 * Added: Post install notes by @mr-manuel
@@ -61,6 +62,7 @@
 * Changed: Bash output by @mr-manuel
 * Changed: Daly BMS - Fixed BMS alerts by @mr-manuel
 * Changed: Daly BMS - Improved driver stability by @transistorgit & @mr-manuel
+* Changed: Daly BMS - Reworked serial parser by @transistorgit
 * Changed: Default config file by @ppuetsch
   * Added missing descriptions to make it much clearer to understand by @mr-manuel
   * Changed name from `default_config.ini` to `config.default.ini` https://github.com/Louisvdw/dbus-serialbattery/pull/412#issuecomment-1434287942 by @mr-manuel

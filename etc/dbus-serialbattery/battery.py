@@ -263,11 +263,10 @@ class Battery(ABC):
                                 voltageSum - penaltySum,
                                 utils.MIN_CELL_VOLTAGE * self.cell_count,
                             ),
-                            utils.MAX_CELL_VOLTAGE * self.cell_count
+                            utils.MAX_CELL_VOLTAGE * self.cell_count,
                         ),
                         3,
                     )
-
 
                 self.charge_mode = (
                     "Bulk dynamic"
