@@ -122,7 +122,7 @@ Select `2` for `nightly build` and then select the branch you want to install fr
 ### BMS specific settings
 
 * ECS BMS &rarr; https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313
-* HeltecModbus &rarr; set INVERT_CURRENT_MEASUREMENT = -1 and in case the modbus slave address of the BMS was adjusted from the factory default, configure the slave addresses to query in config.ini:HELTEC_MODBUS_ADDR. As always the battery settings shall be configured in the BMS already via app or computer.
+* HeltecModbus &rarr; in case the modbus slave address of the BMS was adjusted from the factory default, configure the slave addresses to query in config.ini:HELTEC_MODBUS_ADDR. As always the battery settings shall be configured in the BMS already via app or computer.
 
 ## How to change the default limits
 

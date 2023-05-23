@@ -251,7 +251,7 @@ class HeltecModbus(Battery):
                     )
                     time.sleep(SLPTIME)
 
-                    self.current = (
+                    self.current = -(
                         mbdev.read_long(78, 3, True, minimalmodbus.BYTEORDER_LITTLE)
                         / 100
                     )
