@@ -7,7 +7,7 @@ DRIVERNAME=dbus-serialbattery
 
 
 # check if minimum required Venus OS is installed | start
-versionRequired="v2.91"
+versionRequired="v2.90"
 
 # elaborate version string for better comparing
 # https://github.com/kwindrem/SetupHelper/blob/ebaa65fcf23e2bea6797f99c1c41174143c1153c/updateFileSets#L56-L81
@@ -112,13 +112,16 @@ filename="/data/etc/$DRIVERNAME/config.ini"
 if [ ! -f "$filename" ]; then
     {
         echo "[DEFAULT]"
-        echo ""
-        echo "; If you want to add custom settings, then check the settings you want to change in \"config.default.ini\""
-        echo "; and add them below to persist future driver updates."
-        echo ""
-        echo "MAX_BATTERY_CURRENT = 50.0"
-        echo "MAX_BATTERY_DISCHARGE_CURRENT = 60.0"
-    } > "$filename"
+        echo
+        echo "; If you want to add custom values/settings, then check the values/settings you want to change in \"config.default.ini\""
+        echo "; and insert them below to persist future driver updates."
+        echo
+        echo "; Example (remove the semicolon \";\" to uncomment and activate the value/setting):"
+        echo "; MAX_BATTERY_CURRENT = 50.0"
+        echo "; MAX_BATTERY_DISCHARGE_CURRENT = 60.0"
+        echo
+        echo
+    } > $filename
 fi
 
 
