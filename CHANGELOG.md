@@ -12,6 +12,7 @@
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
 * Added: Block charge/discharge when BMS communication is lost. Can be enabled trough the config file by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
+* Added: Check minimum required Venus OS version before installing by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
