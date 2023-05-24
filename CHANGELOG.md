@@ -12,20 +12,22 @@
 * Added: Balancing switch status to the GUI -> SerialBattery -> IO by @mr-manuel
 * Added: Block charge/discharge when BMS communication is lost. Can be enabled trough the config file by @mr-manuel
 * Added: Charge Mode display by @mr-manuel
+* Added: Check minimum required Venus OS version before installing by @mr-manuel
 * Added: Choose how battery temperature is assembled (mean temp 1 & 2, only temp 1 or only temp 2) by @mr-manuel
 * Added: Config file by @ppuetsch
 * Added: Create empty `config.ini` for easier user usage by @mr-manuel
 * Added: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
+* Added: Daly BMS - Discharge / Charge Mosfet switching over remote console/GUI https://github.com/Louisvdw/dbus-serialbattery/issues/26 by @transistorgit
 * Added: Daly BMS - Read capacity https://github.com/Louisvdw/dbus-serialbattery/pull/594 by @transistorgit
 * Added: Daly BMS - Read production date and build unique identifier by @transistorgit
 * Added: Daly BMS - Set SoC by @transistorgit
 * Added: Daly BMS - Show "battery code" field that can be set in the Daly app by @transistorgit
-* Added: Daly BMS - Discharge / Charge Mosfet switching over remote console/GUI https://github.com/Louisvdw/dbus-serialbattery/issues/26 by @transistorgit
 * Added: Device name field (found in the GUI -> SerialBattery -> Device), that show a custom string that can be set in some BMS, if available by @mr-manuel
 * Added: Driver uninstall script by @mr-manuel
-* Added: Rename TAR file after USB/SD card install to not overwrite the data on every reboot https://github.com/Louisvdw/dbus-serialbattery/issues/638 by @mr-manuel
 * Added: Fix for Venus OS >= v3.00~14 showing unused items https://github.com/Louisvdw/dbus-serialbattery/issues/469 by @mr-manuel
+* Added: HeltecSmartBMS driver by @ramack
 * Added: HighInternalTemperature alarm (MOSFET) for JKBMS by @mr-manuel
+* Added: HLPdata BMS driver by @ peterohman
 * Added: Improved maintainability (flake8, black lint), introduced code checks and automate release build https://github.com/Louisvdw/dbus-serialbattery/pull/386 by @ppuetsch
 * Added: Install needed Bluetooth components automatically after a Venus OS upgrade by @mr-manuel
 * Added: JKBMS - MOS temperature https://github.com/Louisvdw/dbus-serialbattery/pull/440 by @baphomett
@@ -45,8 +47,10 @@
 * Added: Post install notes by @mr-manuel
 * Added: Read charge/discharge limits from JKBMS by @mr-manuel
 * Added: Recalculation interval in linear mode for CVL, CCL and DCL by @mr-manuel
+* Added: Rename TAR file after USB/SD card install to not overwrite the data on every reboot https://github.com/Louisvdw/dbus-serialbattery/issues/638 by @mr-manuel
 * Added: Reset values to None, if battery goes offline (not reachable for 10s). Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/193 https://github.com/Louisvdw/dbus-serialbattery/issues/64 by @transistorgit
 * Added: Script to install directly from repository by @mr-manuel
+* Added: Seplos BMS driver by @wollew
 * Added: Serial number field (found in the GUI -> SerialBattery -> Device), that show the serial number or a unique identifier for the BMS, if available by @mr-manuel
 * Added: Show charge mode (absorption, bulk, ...) in Parameters page by @mr-manuel
 * Added: Show charge/discharge limitation reason by @mr-manuel
