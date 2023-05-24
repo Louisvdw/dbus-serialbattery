@@ -13,19 +13,32 @@ toc_max_heading_level: 4
 
 > The driver does not do any setup of your BMS/battery. You need to have a working battery before you start.
 
-> From the driver release `v0.12` you need to be running Venus OS `v2.80` or higher.
+> It is always recommended to use the latest Venus OS version with the latest driver version. To avoid a [white screen](../faq/#fix-white-screen-after-install) after install check the compatibility matrix below.
 
-> Note! The current version require Venus OS `v2.91` or `v2.92`. Else you will see a white screen after the install. I will remove this note when that issue is fixed.
+## Compatibility Matrix
+
+| &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0 |
+| ---                                              | :---:    | :---:    | :---:                | :---:  |
+| v2.80 - v2.84                                    | x        | x        |                      |        |
+| v2.85 - v2.89                                    | x        | x        |                      |        |
+| v2.90 - v2.94                                    | untested | x        | x                    | x      |
+| v3.00~1 - v3.00~13                               | untested | untested | x                    | x      |
+| v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x      |
+
+1) Partially supported. Empty values/pages are not hidden in the GUI
+
+## Default hard limits
 
 The driver currently implement some hard limits. Make sure your device is set up correctly and can handle these limits before you install.
 
- * `50A` charge (to change this see [How to change the default limits](#how-to-change-the-default-limits))
- * `60A` discharge (to change this see [How to change the default limits](#how-to-change-the-default-limits))
+ * `50A` charge
+ * `60A` discharge
  * `2.9V` min cell voltage
  * `3.45V` max cell voltage
 
-The cell voltages is used along with the cell count to set the battery voltage (e.g. for 16cells your battery min voltage will be `3.1 * 16 = 49.6V` and max coltage `3.45 * 16 = 55.2V`
+The cell voltages is used along with the cell count to set the battery voltage (e.g. for 16 cells your battery min voltage will be `3.1 * 16 = 49.6V` and max coltage `3.45 * 16 = 55.2V`)
 
+This limits can be changed in the settings. See [How to change the default limits](#how-to-change-the-default-limits) and [Settings location/path](#settings-locationpath).
 
 ## Settings for your BMS/battery
 
@@ -118,34 +131,42 @@ Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/u
 
 ### BMS specific settings
 
-* ECS BMS &rarr; https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313
+* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted)
+* ECS BMS &rarr; Check [#254 ECS BMS (comment)](https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313)
 
+Since driver version `>= v1.0.0` you can also get an overview of the BMS specific settings be checking the end of the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
 
 ## How to change the default limits
 
-The driver currently use a fixed upper current limit for the BMS:
+The driver currently uses a fixed upper current limit for the BMS:
 
 * `50A` charge
 * `60A` discharge
 
-If you require more current and your battery can handle that, you can make changes to the source code for that (note that any updates will override this change with driver version `<= v0.14.3`)
+Should you require more current and your battery can handle that, than you can change it in the settings. The values to change are:
 
 ```ini
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
-If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../faq/#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+See [Settings location/path](#settings-locationpath).
 
-### Settings location/path
+If you use the cell voltage limits, temperature limits and/or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also [Why is the charging/discharging current limit (CCL/DCL) smaller than the set one?](../faq/#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+
+## Settings location/path
 
 💡 After updating the settings reboot the device or run `/data/etc/dbus-serialbattery/reinstall-local.sh` to apply the changes.
 
-#### Driver version `<= v0.14.3`
-Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
+The path of the settings file depends on you driver version. If you don't know which driver version you have installed see [Which version do I have installed?](../faq/#which-version-do-i-have-installed)
 
-#### Driver version `>= v1.0.0`
-Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
+### Driver version `<= v0.14.3` (`utils.py`)
+Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants. Note that any updates will override this change.
+
+### Driver version `>= v1.0.0` (`config.ini`)
+Copy the values you want to change from `/data/etc/dbus-serialbattery/config.default.ini` and insert in the `/data/etc/dbus-serialbattery/config.ini`.
+
+All available options can also be found [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
 
 ## How to edit `utils.py` or `config.ini`
 

@@ -23,6 +23,10 @@ See [this page](../general/install#how-to-enable-a-disabled-bms).
 See the Victron Energy documentation how to get [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access).
 
 
+## Which version do I have installed?
+
+You check check the installed version in the [driver log files](../troubleshoot/#driver-log-files) or in the remote console/GUI under SerialBattery -> Device -> Firmware version
+
 ## How to aggregate multiple batteries?
 
 You need an additional driver for that. Here are a few listed:
@@ -210,7 +214,7 @@ Balancing works when ever 1 cell go above the balance threshold, so you are tryi
 
 
 ## Why is the battery current inverted?
-Some Daly BMS send the current as inverted value. This can be corrected by setting `INVERT_CURRENT_MEASUREMENT` to `-1` in the `utils.py` or `config.ini`. See [How to edit `utils.py` or `config.ini`](../general/install#how-to-edit-utilspy-or-configini).
+Some Daly BMS send the current as inverted value. This can be corrected by setting `INVERT_CURRENT_MEASUREMENT` to `-1` in the `utils.py` or `config.ini` (depending on the installed driver version). See [How to edit `utils.py` or `config.ini`](../general/install#how-to-edit-utilspy-or-configini).
 
 
 ## What can I do, if the BMS communication is unstable?
@@ -235,17 +239,39 @@ You can remove the GUI changes or update your GX firmware to solve this.
 
 
 ### Remove GUI changes
+
+Execute the command (matching your driver version) below to restore the GUI.
+
+If you don't know which version of the driver you have installed then try first the option for `>= v1.0.0`. If you get the error `bash: /data/etc/dbus-serialbattery/restore-gui.sh: No such file or directory` try the option for `<= v0.14.3`.
+
+#### Driver version `<= v0.14.3`
 ```bash
+# restore original qml
 cp -f /opt/victronenergy/gui/qml/PageBattery.qml.backup /opt/victronenergy/gui/qml/PageBattery.qml
-reboot
+# restart gui
+svc -d /service/gui && sleep 1 && svc -u /service/gui
 ```
 
+#### Driver version `>= v1.0.0`
+```bash
+bash /data/etc/dbus-serialbattery/restore-gui.sh
+```
 
 ### Update to the latest firmware
+If the removal of the GUI changes did not help, you can force a reinstall/update of the firmware. This takes about 5-15 minutes depending on your device and internet connection.
+
 ```bash
 /opt/victronenergy/swupdate-scripts/check-updates.sh -update -force
 ```
 
+If this also did not help then execute this command to prevent any driver to auto install after firmware update.
+
+```bash
+mv /data/rc.local /data/rc.local.backup
+mv /data/rcS.local /data/rcS.local.backup
+```
+
+Now run again the reinstall/update of the firmware.
 
 ## How many USB to serial adapters can I connect?
 It seems that the Victron GX device has a limit of maximum 8 USB to serial adapters. See [Serial battery driver not found if other VE.direct-USB devices are present](https://github.com/Louisvdw/dbus-serialbattery/issues/422)
