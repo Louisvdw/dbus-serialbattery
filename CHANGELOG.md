@@ -60,6 +60,7 @@
 * Added: Show TimeToGo in GUI only, if enabled by @mr-manuel
 * Added: Support for HLPdata BMS4S https://github.com/Louisvdw/dbus-serialbattery/pull/505 by @peterohman
 * Added: Support for Seplos BMS https://github.com/Louisvdw/dbus-serialbattery/pull/530 by @wollew
+* Added: Temperature 1-4 are now also available on the dbus and MQTT by @idstein
 * Added: Temperature name for temperature sensor 1 & 2. This allows to see which sensor is low and high (e.g. battery and cable) by @mr-manuel
 * Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
