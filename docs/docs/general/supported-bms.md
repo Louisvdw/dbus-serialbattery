@@ -22,6 +22,9 @@ Disabled by default since driver version `v0.14.0` as it causes other issues. Se
 
 ### &bull; ECS GreenMeter with LiPro
 
+### &bull; HeltecModbus SmartBMS (YanYang BMS)
+Communication to the Heltec SmartBMS (which is a rebranded YYBMS) via Modbus/RS485.
+
 ### &bull; HLPdataBMS4S
 
 ### &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS

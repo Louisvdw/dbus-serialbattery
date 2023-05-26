@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 # NOTES
-# Please also update the feature comparison table, if you are adding a new BMS
-# https://louisvdw.github.io/dbus-serialbattery/general/features/#bms-feature-comparison
+# Please see "Add/Request a new BMS" https://louisvdw.github.io/dbus-serialbattery/general/supported-bms#add-by-opening-a-pull-request
+# in the documentation for a checklist what you have to do, when adding a new BMS
 
+# avoid importing wildcards
 from battery import Protection, Battery, Cell
 from utils import is_bit_set, read_serial_data, logger
 import utils

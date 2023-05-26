@@ -256,11 +256,14 @@ class Battery(ABC):
                 ):
                     self.linear_cvl_last_set = int(time())
 
-                    # Keep penalty above min battery voltage
+                    # Keep penalty above min battery voltage and below max battery voltage
                     self.control_voltage = round(
-                        max(
-                            voltageSum - penaltySum,
-                            utils.MIN_CELL_VOLTAGE * self.cell_count,
+                        min(
+                            max(
+                                voltageSum - penaltySum,
+                                utils.MIN_CELL_VOLTAGE * self.cell_count,
+                            ),
+                            utils.MAX_CELL_VOLTAGE * self.cell_count,
                         ),
                         3,
                     )
