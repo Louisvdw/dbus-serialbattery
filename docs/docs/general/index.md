@@ -11,11 +11,21 @@ This is a driver for Venus OS devices (any GX device sold by Victron or a Raspbe
 
 The driver will communicate with a Battery Management System (BMS) that support serial communication (RS232, RS485 or TTL UART) and publish this data to the Venus OS system. The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter.
 
-## Supporting this project
+### Supporting this project
+If you find this driver helpful please considder supporting this project. You can buy me a Ko-Fi or get in contact if you would like to donate hardware.
 
-If you find this driver helpful please consider supporting this project. You can buy me a Ko-Fi or get in contact, if you would like to donate hardware.
+### Support [Louisvdw](https://github.com/Louisvdw)
+* Main developer
+* Added most of the BMS drivers
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
+
+### Support [mr-manuel](https://github.com/mr-manuel)
+* Added a lot of features, optimizations and improvements with `v1.0.x`
+* Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
+* Introduced the new documentation page of the driver and reworked a great part of it for easier understanding
+
+[<img src="https://github.md0.eu/uploads/donate-button.svg" height="38">](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
 
 ## Requirements
 
