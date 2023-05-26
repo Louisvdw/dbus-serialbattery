@@ -26,6 +26,7 @@ class Daly(Battery):
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
         self.trigger_force_disable_discharge = None
         self.trigger_force_disable_charge = None
+        self.cells_volts_data_lastreadbad = False
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -355,11 +356,20 @@ class Daly(Battery):
             ser, self.command_cell_volts, sentences_to_receive=sentences_expected
         )
 
-        if cells_volts_data is False:
-            logger.debug(
-                "No or invalid data has been received in read_cells_volts()"
-            )  # just debug level, as there are DALY BMS that send broken packages occasionally
+        if cells_volts_data is False and self.cells_volts_data_lastreadbad is True:
+            # if this read out and the last one were bad, report error.
+            # (we don't report single errors, as current daly firmware sends corrupted cells volts data occassionally)
+            logger.warning(
+                "No or invalid data has been received repeatedly in read_cells_volts()"
+            )
             return False
+        elif cells_volts_data is False:
+            # memorize that this read was bad and bail out, ignoring it
+            self.cells_volts_data_lastreadbad = True
+            return True
+        else:
+            # this read was good, so reset error flag
+            self.cells_volts_data_lastreadbad = False
 
         frameCell = [0, 0, 0]
         lowMin = utils.MIN_CELL_VOLTAGE / 2
@@ -655,7 +665,7 @@ class Daly(Battery):
         for i in range(sentences_to_receive):
             next = self.read_sentence(ser, command)
             if not next:
-                logger.info(f"request_data: bad reply no. {i}")
+                logger.debug(f"request_data: bad reply no. {i}")
                 return False
             reply += next
         self.runtime = time() - time_start
@@ -697,9 +707,7 @@ class Daly(Battery):
 
         chk = unpack_from(">B", reply, 12)[0]
         if sum(reply[:12]) & 0xFF != chk:
-            logger.warning(
-                f"read_sentence {bytes(expected_reply).hex()}: wrong checksum"
-            )
+            logger.debug(f"read_sentence {bytes(expected_reply).hex()}: wrong checksum")
             return False
 
         return reply[4:12]
