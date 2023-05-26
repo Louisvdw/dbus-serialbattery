@@ -35,7 +35,7 @@ def _get_list_from_config(
 # if not specified: baud = 9600
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230525dev"
+DRIVER_VERSION = "1.0.20230526dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -264,8 +264,12 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 
 # --------- Additional settings ---------
-# Specify only one BMS type to load else leave empty to try to load all availabe
-# LltJbd, Ant, Daly, Daly, Jkbms, Lifepower, Renogy, Renogy, Ecs
+# Specify only one BMS type to load else leave empty to try to load all available
+# -- Available BMS:
+# Daly, Ecs, HeltecModbus, HLPdataBMS4S, Jkbms, Lifepower, LltJbd, Renogy, Seplos
+# -- Available BMS, but disabled by default:
+# https://louisvdw.github.io/dbus-serialbattery/general/install#how-to-enable-a-disabled-bms
+# Ant, MNB, Sinowealth
 BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
 
 # Publish the config settings to the dbus path "/Info/Config/"
