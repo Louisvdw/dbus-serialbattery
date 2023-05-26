@@ -24,7 +24,8 @@ Disabled by default since driver version `v0.14.0` as it causes other issues. Se
 
 ### &bull; HLPdataBMS4S
 
-### &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS
+### &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS <img src="../img/bluetooth.svg" className="h-1em" />
+Bluetooth connection supported
 
 ### &bull; Life/Tian Power
 Including:
@@ -39,7 +40,9 @@ Disabled by default as it requires additional manual steps to install.
 ### &bull; Seplos
 So far only tested on version `16E`.
 
-### &bull; Smart BMS
+### &bull; Smart BMS <img src="../img/bluetooth.svg" className="h-1em" />
+Bluetooth connection supported
+
 Including:
 #### - [LLT Power](https://www.lithiumbatterypcb.com/product-instructionev-battery-pcb-boardev-battery-pcb-board/ev-battery-pcb-board/smart-bms-of-power-battery/)
 #### - [Jiabaida JDB BMS](https://dgjbd.en.alibaba.com/)
