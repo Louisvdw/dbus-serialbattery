@@ -25,7 +25,7 @@ If you find this driver helpful please considder supporting this project. You ca
 * Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
 * Introduced the new documentation page of the driver and reworked a great part of it for easier understanding
 
-[<img src="https://github.md0.eu/uploads/donate-button.svg" height="38">](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
+[<img src="https://github.md0.eu/uploads/donate-button.svg" width="178" />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
 
 ## Requirements
 
