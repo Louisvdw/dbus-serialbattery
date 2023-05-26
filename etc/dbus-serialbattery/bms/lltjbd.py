@@ -445,7 +445,7 @@ class LltJbd(Battery):
 
         self._product_name = unpack_from(
             ">" + str(len(hardware_data)) + "s", hardware_data
-        )[0].decode()
+        )[0].decode("ascii", errors="ignore")
         logger.debug(self._product_name)
         return True
 
