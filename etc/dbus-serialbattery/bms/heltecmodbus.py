@@ -119,7 +119,7 @@ class HeltecModbus(Battery):
         mbdev = mbdevs[self.address]
 
         with locks[self.address]:
-            for n in range(1, RETRYCNT):
+            for n in range(1, RETRYCNT + 1):
                 try:
                     ccur = mbdev.read_register(191, 0, 3, False)
                     self.max_battery_charge_current = (
@@ -223,6 +223,8 @@ class HeltecModbus(Battery):
                         + "): "
                         + str(e)
                     )
+                    if n == RETRYCNT:
+                        return False
                     continue
 
             logger.info(self.hardware_version)

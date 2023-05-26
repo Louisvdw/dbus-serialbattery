@@ -74,17 +74,24 @@ def main():
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in expected_bms_types:
-                logger.info("Testing " + test["bms"].__name__)
-                batteryClass = test["bms"]
-                baud = test["baud"]
-                battery: Battery = batteryClass(
-                    port=_port, baud=baud, address=test.get("address")
-                )
-                if battery.test_connection():
-                    logger.info(
-                        "Connection established to " + battery.__class__.__name__
+                # noinspection PyBroadException
+                try:
+                    logger.info("Testing " + test["bms"].__name__)
+                    batteryClass = test["bms"]
+                    baud = test["baud"]
+                    battery: Battery = batteryClass(
+                        port=_port, baud=baud, address=test.get("address")
                     )
-                    return battery
+                    if battery.test_connection():
+                        logger.info(
+                            "Connection established to " + battery.__class__.__name__
+                        )
+                        return battery
+                except KeyboardInterrupt:
+                    return None
+                except Exception:
+                    # Ignore any malfunction test_function()
+                    pass
             count -= 1
             sleep(0.5)
 
