@@ -36,7 +36,7 @@ class HeltecModbus(Battery):
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         for self.address in utils.HELTEC_MODBUS_ADDR:
-            logger.info("Testing on slave address " + str(self.address))
+            logger.debug("Testing on slave address " + str(self.address))
             found = False
             if self.address not in locks:
                 locks[self.address] = threading.Lock()
@@ -64,7 +64,7 @@ class HeltecModbus(Battery):
                         string = mbdev.read_string(7, 13)
                         time.sleep(SLPTIME)
                         found = True
-                        logger.info(
+                        logger.debug(
                             "found in try "
                             + str(n)
                             + "/"
@@ -77,7 +77,7 @@ class HeltecModbus(Battery):
                             + string
                         )
                     except Exception as e:
-                        logger.warn(
+                        logger.debug(
                             "testing failed ("
                             + str(e)
                             + ") "
@@ -95,6 +95,10 @@ class HeltecModbus(Battery):
                 if found:
                     self.type = "#" + str(self.address) + "_Heltec_Smart"
                     break
+
+        # give the user a feedback that no BMS was found
+        if not found:
+            logger.error(">>> ERROR: No reply - returning")
 
         return (
             found

@@ -159,7 +159,7 @@ class Lifepower(Battery):
             self.LENGTH_FIXED,
         )
         if data is False:
-            logger.error(">>> ERROR: Incorrect Data")
+            logger.debug(">>> ERROR: Incorrect Data")
             return False
 
         # 0x0D always terminates the response

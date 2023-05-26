@@ -234,11 +234,10 @@ class LltJbd(Battery):
         result = False
         try:
             result = self.get_settings()
+            # get first data to show in startup log, only if result is true
             if result:
-                result = result and self.read_hardware_data()
-            # get first data to show in startup log
-            if result:
-                result = result and self.refresh_data()
+                self.read_hardware_data()
+                self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False

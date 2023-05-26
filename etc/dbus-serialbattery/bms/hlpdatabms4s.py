@@ -24,6 +24,10 @@ class HLPdataBMS4S(Battery):
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
 
+        # give the user a feedback that no BMS was found
+        if not result:
+            logger.error(">>> ERROR: No reply - returning")
+
         return result
 
     def get_settings(self):
@@ -208,6 +212,9 @@ def read_serial_data2(command, port, baud, time, min_len):
 
     except serial.SerialException as e:
         logger.error(e)
+        return False
+
+    except Exception:
         return False
 
 
