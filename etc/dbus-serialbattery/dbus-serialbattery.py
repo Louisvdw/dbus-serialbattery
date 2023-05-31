@@ -24,6 +24,7 @@ from battery import Battery
 # import battery classes
 from bms.daly import Daly
 from bms.ecs import Ecs
+from bms.heltecmodbus import HeltecModbus
 from bms.hlpdatabms4s import HLPdataBMS4S
 from bms.jkbms import Jkbms
 from bms.lifepower import Lifepower
@@ -39,6 +40,7 @@ supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
     {"bms": Ecs, "baud": 19200},
+    {"bms": HeltecModbus, "baud": 9600},
     {"bms": HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
     {"bms": Lifepower, "baud": 9600},
@@ -56,7 +58,7 @@ expected_bms_types = [
     if battery_type["bms"].__name__ == utils.BMS_TYPE or utils.BMS_TYPE == ""
 ]
 
-logger.info("")
+print("")
 logger.info("Starting dbus-serialbattery")
 
 
@@ -72,17 +74,24 @@ def main():
         while count > 0:
             # create a new battery object that can read the battery and run connection test
             for test in expected_bms_types:
-                logger.info("Testing " + test["bms"].__name__)
-                batteryClass = test["bms"]
-                baud = test["baud"]
-                battery: Battery = batteryClass(
-                    port=_port, baud=baud, address=test.get("address")
-                )
-                if battery.test_connection():
-                    logger.info(
-                        "Connection established to " + battery.__class__.__name__
+                # noinspection PyBroadException
+                try:
+                    logger.info("Testing " + test["bms"].__name__)
+                    batteryClass = test["bms"]
+                    baud = test["baud"]
+                    battery: Battery = batteryClass(
+                        port=_port, baud=baud, address=test.get("address")
                     )
-                    return battery
+                    if battery.test_connection():
+                        logger.info(
+                            "Connection established to " + battery.__class__.__name__
+                        )
+                        return battery
+                except KeyboardInterrupt:
+                    return None
+                except Exception:
+                    # Ignore any malfunction test_function()
+                    pass
             count -= 1
             sleep(0.5)
 
@@ -97,9 +106,7 @@ def main():
             logger.info("No Port needed")
             return "/dev/tty/USB9"
 
-    logger.info(
-        "dbus-serialbattery v" + str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
-    )
+    logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION))
 
     port = get_port()
     battery = None

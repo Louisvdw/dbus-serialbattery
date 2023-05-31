@@ -96,6 +96,8 @@ class Battery(ABC):
         self.temp_sensors = None
         self.temp1 = None
         self.temp2 = None
+        self.temp3 = None
+        self.temp4 = None
         self.temp_mos = None
         self.cells: List[Cell] = []
         self.control_charging = None
@@ -126,6 +128,15 @@ class Battery(ABC):
         # Each driver must override this function to test if a connection can be made
         # return false when failed, true if successful
         return False
+
+    def connection_name(self) -> str:
+        return "Serial " + self.port
+
+    def custom_name(self) -> str:
+        return "SerialBattery(" + self.type + ")"
+
+    def product_name(self) -> str:
+        return "SerialBattery(" + self.type + ")"
 
     @abstractmethod
     def get_settings(self) -> bool:
@@ -164,6 +175,10 @@ class Battery(ABC):
             self.temp1 = min(max(value, -20), 100)
         if sensor == 2:
             self.temp2 = min(max(value, -20), 100)
+        if sensor == 3:
+            self.temp3 = min(max(value, -20), 100)
+        if sensor == 4:
+            self.temp4 = min(max(value, -20), 100)
 
     def manage_charge_voltage(self) -> None:
         """
@@ -207,18 +222,21 @@ class Battery(ABC):
                 voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
                 if self.max_voltage_start_time is None:
+                    # start timer, if max voltage is reached and cells are balanced
                     if (
-                        utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
+                        (utils.MAX_CELL_VOLTAGE * self.cell_count) - utils.VOLTAGE_DROP
+                        <= voltageSum
                         and voltageDiff
                         <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                         and self.allow_max_voltage
                     ):
                         self.max_voltage_start_time = time()
+
+                    # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                     elif (
-                        # utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
-                        voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
-                        and not self.allow_max_voltage
-                    ):
+                        utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                        or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+                    ) and not self.allow_max_voltage:
                         self.allow_max_voltage = True
                 else:
                     tDiff = time() - self.max_voltage_start_time
@@ -238,11 +256,14 @@ class Battery(ABC):
                 ):
                     self.linear_cvl_last_set = int(time())
 
-                    # Keep penalty above min battery voltage
+                    # Keep penalty above min battery voltage and below max battery voltage
                     self.control_voltage = round(
-                        max(
-                            voltageSum - penaltySum,
-                            utils.MIN_CELL_VOLTAGE * self.cell_count,
+                        min(
+                            max(
+                                voltageSum - penaltySum,
+                                utils.MIN_CELL_VOLTAGE * self.cell_count,
+                            ),
+                            utils.MAX_CELL_VOLTAGE * self.cell_count,
                         ),
                         3,
                     )
@@ -309,9 +330,8 @@ class Battery(ABC):
                 if self.max_voltage_start_time is None:
                     # check if max voltage is reached and start timer to keep max voltage
                     if (
-                        utils.MAX_CELL_VOLTAGE * self.cell_count <= voltageSum
-                        and self.allow_max_voltage
-                    ):
+                        utils.MAX_CELL_VOLTAGE * self.cell_count
+                    ) - utils.VOLTAGE_DROP <= voltageSum and self.allow_max_voltage:
                         # example 2
                         self.max_voltage_start_time = time()
 
@@ -802,14 +822,10 @@ class Battery(ABC):
                 return 1
         return 0
 
-    def extract_from_temp_values(self, extractor) -> Union[float, None]:
-        if self.temp1 is not None and self.temp2 is not None:
-            return extractor(self.temp1, self.temp2)
-        if self.temp1 is not None and self.temp2 is None:
-            return self.temp1
-        if self.temp1 is None and self.temp2 is not None:
-            return self.temp2
-        else:
+    def get_temperatures(self) -> Union[List[float], None]:
+        temperatures = [self.temp1, self.temp2, self.temp3, self.temp4]
+        result = [(t, i) for (t, i) in enumerate(temperatures) if t is not None]
+        if not result:
             return None
 
     def get_temp(self) -> Union[float, None]:
@@ -818,46 +834,93 @@ class Battery(ABC):
                 return self.temp1
             elif utils.TEMP_BATTERY == 2:
                 return self.temp2
+            elif utils.TEMP_BATTERY == 3:
+                return self.temp3
+            elif utils.TEMP_BATTERY == 4:
+                return self.temp4
             else:
-                return self.extract_from_temp_values(
-                    extractor=lambda temp1, temp2: round(
-                        (float(temp1) + float(temp2)) / 2, 2
-                    )
-                )
+                temps = [
+                    t
+                    for t in [self.temp1, self.temp2, self.temp3, self.temp4]
+                    if t is not None
+                ]
+                n = len(temps)
+                if not temps or n == 0:
+                    return None
+                data = sorted(temps)
+                if n % 2 == 1:
+                    return data[n // 2]
+                else:
+                    i = n // 2
+                    return (data[i - 1] + data[i]) / 2
         except TypeError:
             return None
 
     def get_min_temp(self) -> Union[float, None]:
         try:
-            return self.extract_from_temp_values(
-                extractor=lambda temp1, temp2: min(temp1, temp2)
-            )
+            temps = [
+                t
+                for t in [self.temp1, self.temp2, self.temp3, self.temp4]
+                if t is not None
+            ]
+            if not temps:
+                return None
+            return min(temps)
         except TypeError:
             return None
 
     def get_min_temp_id(self) -> Union[str, None]:
         try:
-            if self.temp1 < self.temp2:
+            temps = [
+                (t, i)
+                for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4])
+                if t is not None
+            ]
+            if not temps:
+                return None
+            index = min(temps)[1]
+            if index == 0:
                 return utils.TEMP_1_NAME
-            else:
+            if index == 1:
                 return utils.TEMP_2_NAME
+            if index == 2:
+                return utils.TEMP_3_NAME
+            if index == 3:
+                return utils.TEMP_4_NAME
         except TypeError:
             return None
 
     def get_max_temp(self) -> Union[float, None]:
         try:
-            return self.extract_from_temp_values(
-                extractor=lambda temp1, temp2: max(temp1, temp2)
-            )
+            temps = [
+                t
+                for t in [self.temp1, self.temp2, self.temp3, self.temp4]
+                if t is not None
+            ]
+            if not temps:
+                return None
+            return max(temps)
         except TypeError:
             return None
 
     def get_max_temp_id(self) -> Union[str, None]:
         try:
-            if self.temp1 > self.temp2:
+            temps = [
+                (t, i)
+                for i, t in enumerate([self.temp1, self.temp2, self.temp3, self.temp4])
+                if t is not None
+            ]
+            if not temps:
+                return None
+            index = max(temps)[1]
+            if index == 0:
                 return utils.TEMP_1_NAME
-            else:
+            if index == 1:
                 return utils.TEMP_2_NAME
+            if index == 2:
+                return utils.TEMP_3_NAME
+            if index == 3:
+                return utils.TEMP_4_NAME
         except TypeError:
             return None
 
@@ -927,4 +990,13 @@ class Battery(ABC):
 
     def reset_soc_callback(self, path, value):
         # callback for handling reset soc request
+        return
+
+    def force_charging_off_callback(self, path, value):
+        return
+
+    def force_discharging_off_callback(self, path, value):
+        return
+
+    def turn_balancing_off_callback(self, path, value):
         return

@@ -79,12 +79,18 @@ class Seplos(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-
+        result = False
         try:
-            return self.read_status_data()
+            result = self.read_status_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
-            return False
+            result = False
+
+        # give the user a feedback that no BMS was found
+        if not result:
+            logger.error(">>> ERROR: No reply - returning")
+
+        return result
 
     def get_settings(self):
         # After successful connection get_settings will be called to set up the battery.
@@ -254,7 +260,7 @@ class Seplos(Battery):
         * not checked: lchksum
         """
         if len(data) < 18:
-            logger.warning("short read, data={}".format(data))
+            logger.debug("short read, data={}".format(data))
             return False
 
         chksum = Seplos.get_checksum(data[1:-5])

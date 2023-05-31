@@ -5,6 +5,63 @@
 
 DRIVERNAME=dbus-serialbattery
 
+
+# check if minimum required Venus OS is installed | start
+versionRequired="v2.90"
+
+# elaborate version string for better comparing
+# https://github.com/kwindrem/SetupHelper/blob/ebaa65fcf23e2bea6797f99c1c41174143c1153c/updateFileSets#L56-L81
+function versionStringToNumber ()
+{
+    local p4="" ; local p5="" ; local p5=""
+    local major=""; local minor=""
+
+	# first character should be 'v' so first awk parameter will be empty and is not prited into the read command
+	#
+	# version number formats: v2.40, v2.40~6, v2.40-large-7, v2.40~6-large-7
+	# so we must adjust how we use paramters read from the version string
+	# and parsed by awk
+	# if no beta make sure release is greater than any beta (i.e., a beta portion of 999)
+
+    read major minor p4 p5 p6 <<< $(echo $1 | awk -v FS='[v.~-]' '{print $2, $3, $4, $5, $6}')
+	((versionNumber = major * 1000000000 + minor * 1000000))
+	if [ -z $p4 ] || [ $p4 = "large" ]; then
+        ((versionNumber += 999))
+	else
+		((versionNumber += p4))
+    fi
+	if [ ! -z $p4 ] && [ $p4 = "large" ]; then
+		((versionNumber += p5 * 1000))
+		large=$p5
+	elif [ ! -z $p6 ]; then
+		((versionNumber += p6 * 1000))
+	fi
+}
+
+# get current Venus OS version
+versionStringToNumber "$(head -n 1 /opt/victronenergy/version)"
+venusVersionNumber="$versionNumber"
+
+# minimum required version to install the driver
+versionStringToNumber "$versionRequired"
+
+if (( $venusVersionNumber < $versionNumber )); then
+    echo
+    echo
+    echo "Minimum required Venus OS version \"$versionRequired\" not met. Currently version \"$(head -n 1 /opt/victronenergy/version)\" is installed."
+    echo
+    echo "Please update via \"Remote Console/GUI -> Settings -> Firmware -> Online Update\""
+    echo "OR"
+    echo "by executing \"/opt/victronenergy/swupdate-scripts/check-updates.sh -update -force\""
+    echo
+    echo "Install the driver again after Venus OS was updated."
+    echo
+    echo
+    exit 1
+fi
+# check if minimum required Venus OS is installed | end
+
+
 # handle read only mounts
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
@@ -24,38 +81,47 @@ serialstarter_path="/data/conf/serial-starter.d"
 serialstarter_file="$serialstarter_path/dbus-serialbattery.conf"
 
 # check if folder is a file (older versions of this driver < v1.0.0)
-if [ -f $serialstarter_path ]; then
-    rm -f $serialstarter_path
+if [ -f "$serialstarter_path" ]; then
+    rm -f "$serialstarter_path"
 fi
 
 # check if folder exists
-if [ ! -d $serialstarter_path ]; then
-    mkdir $serialstarter_path
+if [ ! -d "$serialstarter_path" ]; then
+    mkdir "$serialstarter_path"
 fi
 
 # check if file exists
-if [ ! -f $serialstarter_file ]; then
-    echo "service sbattery        dbus-serialbattery" >> $serialstarter_file
-    echo "alias default gps:vedirect:sbattery" >> $serialstarter_file
-    echo "alias rs485 cgwacs:fzsonick:imt:modbus:sbattery" >> $serialstarter_file
+if [ ! -f "$serialstarter_file" ]; then
+    {
+        echo "service sbattery        dbus-serialbattery"
+        echo "alias default gps:vedirect:sbattery"
+        echo "alias rs485 cgwacs:fzsonick:imt:modbus:sbattery"
+    } > "$serialstarter_file"
 fi
 
 # add install-script to rc.local to be ready for firmware update
 filename=/data/rc.local
-if [ ! -f $filename ]; then
-    echo "#!/bin/bash" >> $filename
-    chmod 755 $filename
+if [ ! -f "$filename" ]; then
+    echo "#!/bin/bash" > "$filename"
+    chmod 755 "$filename"
 fi
 grep -qxF "bash /data/etc/$DRIVERNAME/reinstall-local.sh" $filename || echo "bash /data/etc/$DRIVERNAME/reinstall-local.sh" >> $filename
 
 # add empty config.ini, if it does not exist to make it easier for users to add custom settings
-filename=/data/etc/$DRIVERNAME/config.ini
-if [ ! -f $filename ]; then
-    echo "[DEFAULT]" > $filename
-    echo "" >> $filename
-    echo "; If you want to add custom settings, then check the settings you want to change in \"config.default.ini\"" >> $filename
-    echo "; and add them below to persist future driver updates." >> $filename
-    echo "" >> $filename
+filename="/data/etc/$DRIVERNAME/config.ini"
+if [ ! -f "$filename" ]; then
+    {
+        echo "[DEFAULT]"
+        echo
+        echo "; If you want to add custom values/settings, then check the values/settings you want to change in \"config.default.ini\""
+        echo "; and insert them below to persist future driver updates."
+        echo
+        echo "; Example (remove the semicolon \";\" to uncomment and activate the value/setting):"
+        echo "; MAX_BATTERY_CURRENT = 50.0"
+        echo "; MAX_BATTERY_DISCHARGE_CURRENT = 60.0"
+        echo
+        echo
+    } > $filename
 fi
 
 
@@ -84,7 +150,7 @@ rm -rf /service/dbus-blebattery.*
 # kill all blebattery processes
 pkill -f "blebattery"
 
-if [ $length -gt 0 ]; then
+if [ "$length" -gt 0 ]; then
 
     echo "Found $length Bluetooth BMS in the config file!"
     echo ""
@@ -101,16 +167,20 @@ if [ $length -gt 0 ]; then
 
     # function to install ble battery
     install_blebattery_service() {
-        mkdir -p /service/dbus-blebattery.$1/log
-        echo "#!/bin/sh" > /service/dbus-blebattery.$1/log/run
-        echo "exec multilog t s25000 n4 /var/log/dbus-blebattery.$1" >> /service/dbus-blebattery.$1/log/run
-        chmod 755 /service/dbus-blebattery.$1/log/run
+        mkdir -p "/service/dbus-blebattery.$1/log"
+        {
+            echo "#!/bin/sh"
+            echo "exec multilog t s25000 n4 /var/log/dbus-blebattery.$1"
+        } > "/service/dbus-blebattery.$1/log/run"
+        chmod 755 "/service/dbus-blebattery.$1/log/run"
 
-        echo "#!/bin/sh" > /service/dbus-blebattery.$1/run
-        echo "exec 2>&1" >> /service/dbus-blebattery.$1/run
-        echo "bluetoothctl disconnect $3" >> /service/dbus-blebattery.$1/run
-        echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3" >> /service/dbus-blebattery.$1/run
-        chmod 755 /service/dbus-blebattery.$1/run
+        {
+            echo "#!/bin/sh"
+            echo "exec 2>&1"
+            echo "bluetoothctl disconnect $3"
+            echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3"
+        } > "/service/dbus-blebattery.$1/run"
+        chmod 755 "/service/dbus-blebattery.$1/run"
     }
 
     echo "Packages installed."
@@ -119,7 +189,7 @@ if [ $length -gt 0 ]; then
     # install_blebattery_service 0 Jkbms_Ble C8:47:8C:00:00:00
     # install_blebattery_service 1 Jkbms_Ble C8:47:8C:00:00:11
 
-    for (( i=0; i<${length}; i++ ));
+    for (( i=0; i<length; i++ ));
     do
         echo "Installing ${bms_array[$i]} as dbus-blebattery.$i"
         install_blebattery_service $i "${bms_array[$i]}"
@@ -141,9 +211,10 @@ fi
 # remove old drivers before changing from dbus-blebattery-$1 to dbus-blebattery.$1
 rm -rf /service/dbus-blebattery-*
 # remove old install script from rc.local
-sed -i "/sh \/data\/etc\/$DRIVERNAME\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/^sh \/data\/etc\/dbus-serialbattery\/reinstalllocal.sh/d" /data/rc.local
+sed -i "/^sh \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
 # remove old entry from rc.local
-sed -i "/sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
+sed -i "/^sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
 ### needed for upgrading from older versions | end ###
 
 
@@ -151,7 +222,7 @@ sed -i "/sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
 pkill -f "python .*/$DRIVERNAME.py"
 
 # restart bluetooth service, if Bluetooth BMS configured
-if [ $length -gt 0 ]; then
+if [ "$length" -gt 0 ]; then
     /etc/init.d/bluetooth restart
 fi
 

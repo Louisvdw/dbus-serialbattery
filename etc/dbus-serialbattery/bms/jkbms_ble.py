@@ -14,6 +14,7 @@ class Jkbms_Ble(Battery):
 
     def __init__(self, port, baud, address):
         super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud, address)
+        self.address = address
         self.type = self.BATTERYTYPE
         self.jk = Jkbms_Brn(address)
 
