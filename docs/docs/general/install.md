@@ -13,32 +13,19 @@ toc_max_heading_level: 4
 
 > The driver does not do any setup of your BMS/battery. You need to have a working battery before you start.
 
-> It is always recommended to use the latest Venus OS version with the latest driver version. To avoid a [white screen](../faq/#fix-white-screen-after-install) after install check the compatibility matrix below.
+> From the driver release `v0.12` you need to be running Venus OS `v2.80` or higher.
 
-## Compatibility Matrix
-
-| &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0 |
-| ---                                              | :---:    | :---:    | :---:                | :---:  |
-| v2.80 - v2.84                                    | x        | x        |                      |        |
-| v2.85 - v2.89                                    | x        | x        |                      |        |
-| v2.90 - v2.94                                    | untested | x        | x                    | x      |
-| v3.00~1 - v3.00~13                               | untested | untested | x                    | x      |
-| v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x      |
-
-1) Partially supported. Empty values/pages are not hidden in the GUI
-
-## Default hard limits
+> Note! The current version require Venus OS `v2.91` or `v2.92`. Else you will see a white screen after the install. I will remove this note when that issue is fixed.
 
 The driver currently implement some hard limits. Make sure your device is set up correctly and can handle these limits before you install.
 
- * `50A` charge
- * `60A` discharge
+ * `50A` charge (to change this see [How to change the default limits](#how-to-change-the-default-limits))
+ * `60A` discharge (to change this see [How to change the default limits](#how-to-change-the-default-limits))
  * `2.9V` min cell voltage
  * `3.45V` max cell voltage
 
-The cell voltages is used along with the cell count to set the battery voltage (e.g. for 16 cells your battery min voltage will be `3.1 * 16 = 49.6V` and max coltage `3.45 * 16 = 55.2V`)
+The cell voltages is used along with the cell count to set the battery voltage (e.g. for 16cells your battery min voltage will be `3.1 * 16 = 49.6V` and max coltage `3.45 * 16 = 55.2V`
 
-This limits can be changed in the settings. See [How to change the default limits](#how-to-change-the-default-limits) and [Settings location/path](#settings-locationpath).
 
 ## Settings for your BMS/battery
 
@@ -63,17 +50,17 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 ## Install or update
 
-### Installation video (`<= v0.14.3`)
+### Installation video
 
 [![dbus-serialbattery install](https://img.youtube.com/vi/Juht6XGLcu0/0.jpg)](https://www.youtube.com/watch?v=Juht6XGLcu0)
 
-### Install automatically with USB/SD card
+### Install automatically with flash drive/SD
 
-> It might be, that this doesn't work on older CerboGX devices. In this case use SSH option instead.
+> CerboGX users cannot use the the automatic installer. Use SSH option instead.
 
 1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
-2. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
+2. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
 
    > If you put a `config.ini` in the root of the USB flash drive, then an existing `config.ini` will be overwritten.
 
@@ -88,85 +75,80 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
-2. Run these commands to start the installer. You can then choos, if you want to install the [latest release (recommended)](#latest-release-recommended), a [specific version](#specific-versiontroubleshooting-option), the [nightly build](#nightly-build) (from `master` or `dev`), a [local tar file](#local-tar-file) or quit.
+2. Run these commands to install or update to the latest release version.
 
   ```bash
   wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/install.sh
 
   bash /tmp/install.sh
+
+  reboot
   ```
 
-#### Latest release (recommended)
 
-Run the [install script ](../general/install#install-over-ssh) and select `1`.
+### Install over SSH: specific version/testing option
 
-💡 Reboot the system after the installation finished with `reboot`.
+> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
-#### Specific version/troubleshooting option
+1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
-Run the [install script ](../general/install#install-over-ssh) and select `2`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
+2. Download [the version you need](https://github.com/Louisvdw/dbus-serialbattery/releases) using the command below replacing the URL with the link to the `venus-data.tar.gz` version you need.
 
-💡 Reboot the system after the installation finished with `reboot`.
+  ```bash
+  wget REPLACE_WITH_URL_TO_VENUS_DATA_TAR_GZ
+  ```
 
-#### Nightly build
+3. Run this script command to install the update from the same location.
 
-> Not recommended in production environment, unless you know what you do. Testers are very welcome!
+  ```bash
+  tar -zxf venus-data.tar.gz -C /data
 
-Run the [install script ](../general/install#install-over-ssh) and select `3`.
+  reboot
+  ```
 
-Then select `1` if you want to install from the `master` branch or select `2` if you want to install from the `dev` branch.
 
-The `master` branch can be seen as alpha version prior a pre-release or release is created.
+### Install over SSH: nightly version/beta test
 
-The `dev` branch can be seen as most recent version, but also as the most unstable.  It could be that everything works as expected, but it can also brick your system and you have to reinstall from zero.
+> Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
-💡 Reboot the system after the installation finished with `reboot`.
+> This version is installed directly from the repository and can contain errors. Not recommended for production environments unless you know what you do.
 
-#### Local tar file
+```bash
+wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/jkbms_ble/etc/dbus-serialbattery/install.sh && bash /tmp/install.sh
+```
 
-Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script ](../general/install#install-over-ssh) and select `3`.
-
-💡 Reboot the system after the installation finished with `reboot`.
-
+Select `2` for `nightly build` and then select the branch you want to install from.
 
 ### BMS specific settings
 
-* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted)
-* ECS BMS &rarr; Check [#254 ECS BMS (comment)](https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313)
-
-Since driver version `>= v1.0.0` you can also get an overview of the BMS specific settings be checking the end of the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
+* ECS BMS &rarr; https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313
+* HeltecModbus &rarr; in case the modbus slave address of the BMS was adjusted from the factory default, configure the slave addresses to query in config.ini:HELTEC_MODBUS_ADDR. As always the battery settings shall be configured in the BMS already via app or computer.
 
 ## How to change the default limits
 
-The driver currently uses a fixed upper current limit for the BMS:
+The driver currently use a fixed upper current limit for the BMS:
 
 * `50A` charge
 * `60A` discharge
 
-Should you require more current and your battery can handle that, than you can change it in the settings. The values to change are:
+If you require more current and your battery can handle that, you can make changes to the source code for that (note that any updates will override this change with driver version `<= v0.14.3`)
 
 ```ini
 MAX_BATTERY_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
-See [Settings location/path](#settings-locationpath).
+If you use the cell voltage limits, temperature limits or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also in the [FAQ](../faq/#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
-If you use the cell voltage limits, temperature limits and/or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also [Why is the charging/discharging current limit (CCL/DCL) smaller than the set one?](../faq/#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
-
-## Settings location/path
+### Settings location/path
 
 💡 After updating the settings reboot the device or run `/data/etc/dbus-serialbattery/reinstall-local.sh` to apply the changes.
 
-The path of the settings file depends on you driver version. If you don't know which driver version you have installed see [Which version do I have installed?](../faq/#which-version-do-i-have-installed)
+#### Driver version `<= v0.14.3`
+Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants.
 
-### Driver version `<= v0.14.3` (`utils.py`)
-Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants. Note that any updates will override this change.
-
-### Driver version `>= v1.0.0` (`config.ini`)
-Copy the values you want to change from `/data/etc/dbus-serialbattery/config.default.ini` and insert in the `/data/etc/dbus-serialbattery/config.ini`.
-
-All available options can also be found [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
+#### Driver version `>= v1.0.0`
+Copy the values from `/data/etc/dbus-serialbattery/config.default.ini` to `/data/etc/dbus-serialbattery/config.ini` you want to change. All options can also be copied from [here](https://github.com/Louisvdw/dbus-serialbattery/blob/jkbms_ble/etc/dbus-serialbattery/config.default.ini).
 
 ## How to edit `utils.py` or `config.ini`
 
