@@ -26,6 +26,7 @@ class Daly(Battery):
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
         self.trigger_force_disable_discharge = None
         self.trigger_force_disable_charge = None
+        self.cells_volts_data_lastreadbad = False
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -59,12 +60,18 @@ class Daly(Battery):
         try:
             with open_serial_port(self.port, self.baud_rate) as ser:
                 result = self.read_status_data(ser)
-                self.read_soc_data(ser)
-                self.read_battery_code(ser)
+                # get first data to show in startup log, only if result is true
+                if result:
+                    self.read_soc_data(ser)
+                    self.read_battery_code(ser)
 
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
+
+        # give the user a feedback that no BMS was found
+        if not result:
+            logger.error(">>> ERROR: No reply - returning")
 
         return result
 
@@ -178,7 +185,7 @@ class Daly(Battery):
         status_data = self.request_data(ser, self.command_status)
         # check if connection success
         if status_data is False:
-            logger.warning("No data received in read_status_data()")
+            logger.debug("No data received in read_status_data()")
             return False
 
         (
@@ -199,7 +206,7 @@ class Daly(Battery):
             + " cells"
             + (" (" + self.production + ")" if self.production else "")
         )
-        logger.info(self.hardware_version)
+        logger.debug(self.hardware_version)
         return True
 
     def read_soc_data(self, ser):
@@ -355,11 +362,20 @@ class Daly(Battery):
             ser, self.command_cell_volts, sentences_to_receive=sentences_expected
         )
 
-        if cells_volts_data is False:
+        if cells_volts_data is False and self.cells_volts_data_lastreadbad is True:
+            # if this read out and the last one were bad, report error.
+            # (we don't report single errors, as current daly firmware sends corrupted cells volts data occassionally)
             logger.debug(
-                "No or invalid data has been received in read_cells_volts()"
-            )  # just debug level, as there are DALY BMS that send broken packages occasionally
+                "No or invalid data has been received repeatedly in read_cells_volts()"
+            )
             return False
+        elif cells_volts_data is False:
+            # memorize that this read was bad and bail out, ignoring it
+            self.cells_volts_data_lastreadbad = True
+            return True
+        else:
+            # this read was good, so reset error flag
+            self.cells_volts_data_lastreadbad = False
 
         frameCell = [0, 0, 0]
         lowMin = utils.MIN_CELL_VOLTAGE / 2
@@ -395,7 +411,7 @@ class Daly(Battery):
         minmax_data = self.request_data(ser, self.command_minmax_cell_volts)
         # check if connection success
         if minmax_data is False:
-            logger.warning("No data received in read_cell_voltage_range_data()")
+            logger.debug("No data received in read_cell_voltage_range_data()")
             return False
 
         (
@@ -462,7 +478,7 @@ class Daly(Battery):
         capa_data = self.request_data(ser, self.command_rated_params)
         # check if connection success
         if capa_data is False:
-            logger.warning("No data received in read_capacity()")
+            logger.debug("No data received in read_capacity()")
             return False
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
@@ -477,7 +493,7 @@ class Daly(Battery):
         production = self.request_data(ser, self.command_batt_details)
         # check if connection success
         if production is False:
-            logger.warning("No data received in read_production_date()")
+            logger.debug("No data received in read_production_date()")
             return False
 
         (_, _, year, month, day) = unpack_from(">BBBBB", production)
@@ -489,7 +505,7 @@ class Daly(Battery):
         data = self.request_data(ser, self.command_batt_code, sentences_to_receive=5)
 
         if data is False:
-            logger.warning("No data received in read_battery_code()")
+            logger.debug("No data received in read_battery_code()")
             return False
 
         battery_code = ""
@@ -497,7 +513,7 @@ class Daly(Battery):
         for i in range(5):
             nr, part = unpack_from(">B7s", data, i * 8)
             if nr != i + 1:
-                logger.warning("bad battery code index")  # use string anyhow, just warn
+                logger.debug("bad battery code index")  # use string anyhow, just warn
             battery_code += part.decode("utf-8")
 
         if battery_code != "":
@@ -655,7 +671,7 @@ class Daly(Battery):
         for i in range(sentences_to_receive):
             next = self.read_sentence(ser, command)
             if not next:
-                logger.info(f"request_data: bad reply no. {i}")
+                logger.debug(f"request_data: bad reply no. {i}")
                 return False
             reply += next
         self.runtime = time() - time_start
@@ -670,7 +686,7 @@ class Daly(Battery):
 
         reply = ser.read_until(b"\xA5")
         if not reply or b"\xA5" not in reply:
-            logger.error(
+            logger.debug(
                 f"read_sentence {bytes(expected_reply).hex()}: no sentence start received"
             )
             return False
@@ -683,7 +699,7 @@ class Daly(Battery):
             toread = ser.inWaiting()
             time_run = time() - time_start
             if time_run > timeout:
-                logger.warning(f"read_sentence {bytes(expected_reply).hex()}: timeout")
+                logger.debug(f"read_sentence {bytes(expected_reply).hex()}: timeout")
                 return False
 
         reply += ser.read(12)
@@ -692,14 +708,12 @@ class Daly(Battery):
         # logger.info(f"reply: {bytes(reply).hex()}")  # debug
 
         if id != 1 or length != 8 or cmd != expected_reply[0]:
-            logger.error(f"read_sentence {bytes(expected_reply).hex()}: wrong header")
+            logger.debug(f"read_sentence {bytes(expected_reply).hex()}: wrong header")
             return False
 
         chk = unpack_from(">B", reply, 12)[0]
         if sum(reply[:12]) & 0xFF != chk:
-            logger.warning(
-                f"read_sentence {bytes(expected_reply).hex()}: wrong checksum"
-            )
+            logger.debug(f"read_sentence {bytes(expected_reply).hex()}: wrong checksum")
             return False
 
         return reply[4:12]

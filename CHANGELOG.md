@@ -65,6 +65,7 @@
 * Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
+* Changed: CVL calculation improvement. Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced or SoC is below threshold by @mr-manuel
 * Changed: Daly BMS - Fixed BMS alerts by @mr-manuel
 * Changed: Daly BMS - Improved driver stability by @transistorgit & @mr-manuel
 * Changed: Daly BMS - Reworked serial parser by @transistorgit
@@ -78,6 +79,7 @@
 * Changed: Default LINEAR_LIMITATION_ENABLE from False to True by @mr-manuel
 * Changed: Disabled ANT BMS by default https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: Driver can now also start without serial adapter attached for Bluetooth BMS by @seidler2547
+* Changed: Feedback from BMS driver to know, if BMS is found or not by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
@@ -96,7 +98,6 @@
 * Changed: Moved Bluetooth part to `reinstall-local.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Removed all wildcard imports and fixed black lint errors by @mr-manuel
-* Changed: CVL calculation improvement. Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced or SoC is below threshold by @mr-manuel
 * Changed: Renamed scripts for better reading #532 by @mr-manuel
 * Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel

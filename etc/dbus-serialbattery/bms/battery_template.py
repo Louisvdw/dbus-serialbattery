@@ -27,7 +27,7 @@ class BatteryTemplate(Battery):
         result = False
         try:
             result = self.read_status_data()
-            # get first data to show in startup log
+            # get first data to show in startup log, only if result is true
             if result:
                 self.refresh_data()
         except Exception as err:
@@ -105,6 +105,7 @@ class BatteryTemplate(Battery):
             command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
+            logger.error(">>> ERROR: No reply - returning")
             return False
 
         start, flag, command_ret, length = unpack_from("BBBB", data)

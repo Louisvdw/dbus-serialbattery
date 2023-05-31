@@ -13,7 +13,7 @@ versionRequired="v2.90"
 # https://github.com/kwindrem/SetupHelper/blob/ebaa65fcf23e2bea6797f99c1c41174143c1153c/updateFileSets#L56-L81
 function versionStringToNumber ()
 {
-    local local p4="" ; local p5="" ; local p5=""
+    local p4="" ; local p5="" ; local p5=""
     local major=""; local minor=""
 
 	# first character should be 'v' so first awk parameter will be empty and is not prited into the read command

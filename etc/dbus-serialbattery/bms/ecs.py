@@ -32,6 +32,7 @@ class Ecs(Battery):
         # Return True if success, False for failure
 
         # Trying to find Green Meter ID
+        result = False
         try:
             mbdev = minimalmodbus.Instrument(self.port, utils.GREENMETER_ADDRESS)
             mbdev.serial.parity = minimalmodbus.serial.PARITY_EVEN
@@ -44,14 +45,28 @@ class Ecs(Battery):
                 if tmpId == self.GREENMETER_ID_125A:
                     self.METER_SIZE = "125A"
 
+                # TODO
+                # has this to be true?
+                # if yes then self.get_settings() should only be called, if this is true
                 self.find_LiPro_cells()
 
-                # get first data to show in startup log
-                self.refresh_data()
+                result = self.get_settings()
 
-                return self.get_settings()
+                # get first data to show in startup log, only if result is true
+                if result:
+                    self.refresh_data()
+
         except IOError:
-            return False
+            result = False
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
+
+        # give the user a feedback that no BMS was found
+        if not result:
+            logger.error(">>> ERROR: No reply - returning")
+
+        return result
 
     def find_LiPro_cells(self):
         # test for LiPro cell devices
