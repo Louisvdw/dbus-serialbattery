@@ -113,21 +113,17 @@ class DbusHelper:
         self._dbusservice.add_path(
             "/Mgmt/ProcessVersion", "Python " + platform.python_version()
         )
-        self._dbusservice.add_path("/Mgmt/Connection", "Serial " + self.battery.port)
+        self._dbusservice.add_path("/Mgmt/Connection", self.battery.connection_name())
 
         # Create the mandatory objects
         self._dbusservice.add_path("/DeviceInstance", self.instance)
         self._dbusservice.add_path("/ProductId", 0x0)
-        self._dbusservice.add_path(
-            "/ProductName", "SerialBattery(" + self.battery.type + ")"
-        )
-        self._dbusservice.add_path(
-            "/FirmwareVersion", str(utils.DRIVER_VERSION) + utils.DRIVER_SUBVERSION
-        )
+        self._dbusservice.add_path("/ProductName", self.battery.product_name())
+        self._dbusservice.add_path("/FirmwareVersion", str(utils.DRIVER_VERSION))
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
-            "/CustomName", "SerialBattery(" + self.battery.type + ")", writeable=True
+            "/CustomName", self.battery.custom_name(), writeable=True
         )
         self._dbusservice.add_path(
             "/Serial", self.battery.unique_identifier, writeable=True
@@ -233,6 +229,10 @@ class DbusHelper:
         self._dbusservice.add_path("/System/MaxCellTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature1", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature2", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature3", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature4", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -253,6 +253,24 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToCharge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToDischarge", 0, writeable=True)
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
+        self._dbusservice.add_path(
+            "/Io/ForceChargingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_charging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/ForceDischargingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.force_discharging_off_callback,
+        )
+        self._dbusservice.add_path(
+            "/Io/TurnBalancingOff",
+            0,
+            writeable=True,
+            onchangecallback=self.battery.turn_balancing_off_callback,
+        )
         # self._dbusservice.add_path('/SystemSwitch', 1, writeable=True)
 
         # Create the alarms
@@ -454,6 +472,10 @@ class DbusHelper:
             "/System/MaxTemperatureCellId"
         ] = self.battery.get_max_temp_id()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
+        self._dbusservice["/System/Temperature1"] = self.battery.temp1
+        self._dbusservice["/System/Temperature2"] = self.battery.temp2
+        self._dbusservice["/System/Temperature3"] = self.battery.temp3
+        self._dbusservice["/System/Temperature4"] = self.battery.temp4
 
         # Voltage control
         self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage

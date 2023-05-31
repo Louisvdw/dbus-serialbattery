@@ -4,6 +4,8 @@ import com.victron.velib 1.0
 MbPage {
     id: root
     property string bindPrefix
+	property MbStyle style: MbStyle{}
+
     property VBusItem _b1: VBusItem { bind: service.path("/Balances/Cell1") }
     property VBusItem _b2: VBusItem { bind: service.path("/Balances/Cell2") }
     property VBusItem _b3: VBusItem { bind: service.path("/Balances/Cell3") }
@@ -52,30 +54,30 @@ MbPage {
     property VBusItem volt22: VBusItem { bind: service.path("/Voltages/Cell22") }
     property VBusItem volt23: VBusItem { bind: service.path("/Voltages/Cell23") }
     property VBusItem volt24: VBusItem { bind: service.path("/Voltages/Cell24") }
-    property string c1: _b1.valid && _b1.text == "1" ? "#ff0000" : "#ddd"
-    property string c2: _b2.valid && _b2.text == "1" ? "#ff0000" : "#ddd"
-    property string c3: _b3.valid && _b3.text == "1" ? "#ff0000" : "#ddd"
-    property string c4: _b4.valid && _b4.text == "1" ? "#ff0000" : "#ddd"
-    property string c5: _b5.valid && _b5.text == "1" ? "#ff0000" : "#ddd"
-    property string c6: _b6.valid && _b6.text == "1" ? "#ff0000" : "#ddd"
-    property string c7: _b7.valid && _b7.text == "1" ? "#ff0000" : "#ddd"
-    property string c8: _b8.valid && _b8.text == "1" ? "#ff0000" : "#ddd"
-    property string c9: _b9.valid && _b9.text == "1" ? "#ff0000" : "#ddd"
-    property string c10: _b10.valid && _b10.text == "1" ? "#ff0000" : "#ddd"
-    property string c11: _b11.valid && _b11.text == "1" ? "#ff0000" : "#ddd"
-    property string c12: _b12.valid && _b12.text == "1" ? "#ff0000" : "#ddd"
-    property string c13: _b13.valid && _b13.text == "1" ? "#ff0000" : "#ddd"
-    property string c14: _b14.valid && _b14.text == "1" ? "#ff0000" : "#ddd"
-    property string c15: _b15.valid && _b15.text == "1" ? "#ff0000" : "#ddd"
-    property string c16: _b16.valid && _b16.text == "1" ? "#ff0000" : "#ddd"
-    property string c17: _b17.valid && _b17.text == "1" ? "#ff0000" : "#ddd"
-    property string c18: _b18.valid && _b18.text == "1" ? "#ff0000" : "#ddd"
-    property string c19: _b19.valid && _b19.text == "1" ? "#ff0000" : "#ddd"
-    property string c20: _b20.valid && _b20.text == "1" ? "#ff0000" : "#ddd"
-    property string c21: _b21.valid && _b21.text == "1" ? "#ff0000" : "#ddd"
-    property string c22: _b22.valid && _b22.text == "1" ? "#ff0000" : "#ddd"
-    property string c23: _b23.valid && _b23.text == "1" ? "#ff0000" : "#ddd"
-    property string c24: _b24.valid && _b24.text == "1" ? "#ff0000" : "#ddd"
+    property string c1: _b1.valid && _b1.text == "1" ? "#ff0000" : style.borderColor
+    property string c2: _b2.valid && _b2.text == "1" ? "#ff0000" : style.borderColor
+    property string c3: _b3.valid && _b3.text == "1" ? "#ff0000" : style.borderColor
+    property string c4: _b4.valid && _b4.text == "1" ? "#ff0000" : style.borderColor
+    property string c5: _b5.valid && _b5.text == "1" ? "#ff0000" : style.borderColor
+    property string c6: _b6.valid && _b6.text == "1" ? "#ff0000" : style.borderColor
+    property string c7: _b7.valid && _b7.text == "1" ? "#ff0000" : style.borderColor
+    property string c8: _b8.valid && _b8.text == "1" ? "#ff0000" : style.borderColor
+    property string c9: _b9.valid && _b9.text == "1" ? "#ff0000" : style.borderColor
+    property string c10: _b10.valid && _b10.text == "1" ? "#ff0000" : style.borderColor
+    property string c11: _b11.valid && _b11.text == "1" ? "#ff0000" : style.borderColor
+    property string c12: _b12.valid && _b12.text == "1" ? "#ff0000" : style.borderColor
+    property string c13: _b13.valid && _b13.text == "1" ? "#ff0000" : style.borderColor
+    property string c14: _b14.valid && _b14.text == "1" ? "#ff0000" : style.borderColor
+    property string c15: _b15.valid && _b15.text == "1" ? "#ff0000" : style.borderColor
+    property string c16: _b16.valid && _b16.text == "1" ? "#ff0000" : style.borderColor
+    property string c17: _b17.valid && _b17.text == "1" ? "#ff0000" : style.borderColor
+    property string c18: _b18.valid && _b18.text == "1" ? "#ff0000" : style.borderColor
+    property string c19: _b19.valid && _b19.text == "1" ? "#ff0000" : style.borderColor
+    property string c20: _b20.valid && _b20.text == "1" ? "#ff0000" : style.borderColor
+    property string c21: _b21.valid && _b21.text == "1" ? "#ff0000" : style.borderColor
+    property string c22: _b22.valid && _b22.text == "1" ? "#ff0000" : style.borderColor
+    property string c23: _b23.valid && _b23.text == "1" ? "#ff0000" : style.borderColor
+    property string c24: _b24.valid && _b24.text == "1" ? "#ff0000" : style.borderColor
     title: service.description + " | Cell Voltages"
 
     model: VisibleItemModel {

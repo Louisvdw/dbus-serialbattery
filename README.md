@@ -1,24 +1,43 @@
 # dbus-serialbattery
 This is a driver for Venus OS devices (any GX device sold by Victron or a Raspberry Pi running the Venus OS image).
 
-The driver will communicate with a Battery Management System (BMS) that support serial communication (RS232, RS485 or TTL UART) and publish this data to the Venus OS system. The main purpose is to act as a Battery Monitor in your GX and supply State Of Charge (SOC) and other values to the inverter.
+The driver will communicate with a Battery Management System (BMS) that support serial (RS232, RS485 or TTL UART) and Bluetooth communication (see [BMS feature comparison](https://louisvdw.github.io/dbus-serialbattery/general/features#bms-feature-comparison) for details). The data is then published to the Venus OS system (dbus). The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter/charger.
 
- * [BMS Types supported](https://github.com/Louisvdw/dbus-serialbattery/wiki/BMS-types-supported)
- * [FAQ](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ)
- * [Features](https://github.com/Louisvdw/dbus-serialbattery/wiki/Features)
- * [How to install](https://github.com/Louisvdw/dbus-serialbattery/wiki/How-to-install)
- * [Troubleshoot](https://github.com/Louisvdw/dbus-serialbattery/wiki/Troubleshoot)
+## Documentation
 
-### Supporting this project:
-If you find this driver helpful please considder supporting this project. You can buy me a Ko-Fi or get in contact if you would like to donate hardware.
+* [Introduction](https://louisvdw.github.io/dbus-serialbattery/)
+* [Features](https://louisvdw.github.io/dbus-serialbattery/general/features)
+* [Supported BMS](https://louisvdw.github.io/dbus-serialbattery/general/supported-bms)
+* [How to install, update, disable, enable and uninstall](https://louisvdw.github.io/dbus-serialbattery/general/install)
+* [How to troubleshoot](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/)
+* [FAQ](https://louisvdw.github.io/dbus-serialbattery/faq/)
+
+### Supporting this project
+If you find this driver helpful please consider supporting this project. You can buy me a Ko-Fi or get in contact, if you would like to donate hardware for development.
+
+### Support [Louisvdw](https://github.com/Louisvdw)
+* Main developer
+* Added most of the BMS drivers
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
+
+### Support [mr-manuel](https://github.com/mr-manuel)
+* Added a lot of features, optimizations and improvements with `v1.0.x`
+* Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
+* Introduced the new documentation page of the driver and reworked a great part of it for easier understanding
+
+[<img src="https://github.md0.eu/uploads/donate-button.svg" height="38">](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
+
 
 ### Developer Remarks
 To develop this project, install the requirements. This project makes use of velib_python which is pre-installed on
 Venus-OS Devices under `/opt/victronenergy/dbus-systemcalc-py/ext/velib_python`. To use the python files locally,
 `git clone` the [velib_python](https://github.com/victronenergy/velib_python) project to velib_python and add
 velib_python to the `PYTHONPATH` environment variable.
+
+Make sure the GitHub Actions run fine in your repository. In order to make the GitHub Actions run please select in your repository settings under `Actions` -> `General` -> `Actions permissions` the option `Allow all actions and reusable workflows`. Check also in your repository settings under `Actions` -> `General` -> `Workflow permissions` if `Read and write permissions` are selected. This will check your code for Flake8 and Black Lint errors. [Here](https://py-vscode.readthedocs.io/en/latest/files/linting.html) is a short instruction on how to set up Flake8 and Black Lint checks in VS Code. This will save you a lot of time.
+
+See this checklist, if you want to [add a new BMS](https://louisvdw.github.io/dbus-serialbattery/general/supported-bms#add-by-opening-a-pull-request)
 
 #### How it works
 * Each supported BMS needs to implement the abstract base class `Battery` from `battery.py`.

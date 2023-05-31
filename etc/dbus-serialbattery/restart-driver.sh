@@ -10,7 +10,7 @@ cp -f /data/etc/dbus-serialbattery/config.ini /opt/victronenergy/dbus-serialbatt
 # svc -d -u /service/dbus-serialbattery
 
 # kill driver, if running. It gets restarted by the service daemon
-pkill -f "python .*/$DRIVERNAME.py"
+pkill -f "python .*/dbus-serialbattery.py"
 
 
 # get BMS list from config file

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 # NOTES
-# Please also update the feature comparison table, if you are adding a new BMS
-# https://louisvdw.github.io/dbus-serialbattery/general/features/#bms-feature-comparison
+# Please see "Add/Request a new BMS" https://louisvdw.github.io/dbus-serialbattery/general/supported-bms#add-by-opening-a-pull-request
+# in the documentation for a checklist what you have to do, when adding a new BMS
 
+# avoid importing wildcards
 from battery import Protection, Battery, Cell
 from utils import is_bit_set, read_serial_data, logger
 import utils
@@ -26,7 +27,7 @@ class BatteryTemplate(Battery):
         result = False
         try:
             result = self.read_status_data()
-            # get first data to show in startup log
+            # get first data to show in startup log, only if result is true
             if result:
                 self.refresh_data()
         except Exception as err:
@@ -104,6 +105,7 @@ class BatteryTemplate(Battery):
             command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
+            logger.error(">>> ERROR: No reply - returning")
             return False
 
         start, flag, command_ret, length = unpack_from("BBBB", data)

@@ -35,8 +35,7 @@ def _get_list_from_config(
 # if not specified: baud = 9600
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0"
-DRIVER_SUBVERSION = ".0 (20230508)"
+DRIVER_VERSION = "1.0.20230531"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -64,9 +63,10 @@ BLOCK_ON_DISCONNECT = "True" == config["DEFAULT"]["BLOCK_ON_DISCONNECT"]
 
 # --------- Charge mode ---------
 # Choose the mode for voltage / current limitations (True / False)
-# False is a step mode. This is the default with limitations on hard boundary steps
-# True is a linear mode. For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
-#                        For CVL max battery voltage is calculated dynamically in order that the max cell voltage is not exceeded
+# False is a step mode: This is the default with limitations on hard boundary steps
+# True is a linear mode:
+#     For CCL and DCL the values between the steps are calculated for smoother values (by WaldemarFech)
+#     For CVL max battery voltage is calculated dynamically in order that the max cell voltage is not exceeded
 LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
 
 # Specify in seconds how often the penalty should be recalculated
@@ -79,17 +79,26 @@ LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
 
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
-# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count), switch from max voltage to float voltage (FLOAT_CELL_VOLTAGE * cell count) and back
-#     Step mode: After max voltage is reached for MAX_VOLTAGE_TIME_SEC it switches to float voltage. After SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT it
-#                switches back to max voltage.
-#     Linear mode: After max voltage is reachend and cell voltage difference is smaller or equal to CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL it switches to
-#                  float voltage after 300 (fixed) additional seconds. After cell voltage difference is greater or equal to CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
-#                  it switches back to max voltage.
-# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to float voltage of 53.6V to don't stress the batteries.
-#          Allow max voltage of 55.2V again, if SoC is once below 90%
+# Description: Limit max charging voltage (MAX_CELL_VOLTAGE * cell count), switch from max voltage to float
+#              voltage (FLOAT_CELL_VOLTAGE * cell count) and back
+#     False: Max charging voltage is always kept
+#     True: Max charging voltage is reduced based on charge mode
+#         Step mode: After max voltage is reached for MAX_VOLTAGE_TIME_SEC it switches to float voltage. After
+#                    SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT it switches back to max voltage.
+#         Linear mode: After max voltage is reachend and cell voltage difference is smaller or equal to
+#                      CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL it switches to float voltage after 300 (fixed)
+#                      additional seconds.
+#                      After cell voltage difference is greater or equal to CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+#                      OR
+#                      SoC is below SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT
+#                      it switches back to max voltage.
+# Example: The battery reached max voltage of 55.2V and hold it for 900 seconds, the the CVL is switched to
+#          float voltage of 53.6V to don't stress the batteries. Allow max voltage of 55.2V again, if SoC is
+#          once below 90%
 #          OR
-#          The battery reached max voltage of 55.2V and the max cell difference is 0.010V, then switch to float voltage of 53.6V after 300 additional seconds
-#          to don't stress the batteries. Allow max voltage of 55.2V again if max cell difference is above 0.050V
+#          The battery reached max voltage of 55.2V and the max cell difference is 0.010V, then switch to float
+#          voltage of 53.6V after 300 additional seconds to don't stress the batteries. Allow max voltage of
+#          55.2V again if max cell difference is above 0.080V or SoC below 90%.
 # Charge voltage control management enable (True/False).
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 
@@ -99,14 +108,16 @@ CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL"]
 )
 # Specify cell voltage diff where CVL limit is reset to max voltage, if value get above
+# the cells are considered as imbalanced, if the cell diff exceeds 5% of the nominal cell voltage
+# e.g. 3.2 V * 5 / 100 = 0.160 V
 CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
 
 # -- CVL Reset based on SoC option
-# Reset max voltage after
+# Specify how long the max voltage should be kept, if reached then switch to float voltage
 MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
-# Specify SoC where CVL limit is reset to max voltage
+# Specify SoC where CVL limit is reset to max voltage, if value gets below
 SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
@@ -253,8 +264,12 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 
 # --------- Additional settings ---------
-# Specify only one BMS type to load else leave empty to try to load all availabe
-# LltJbd, Ant, Daly, Daly, Jkbms, Lifepower, Renogy, Renogy, Ecs
+# Specify only one BMS type to load else leave empty to try to load all available
+# -- Available BMS:
+# Daly, Ecs, HeltecModbus, HLPdataBMS4S, Jkbms, Lifepower, LltJbd, Renogy, Seplos
+# -- Available BMS, but disabled by default:
+# https://louisvdw.github.io/dbus-serialbattery/general/install#how-to-enable-a-disabled-bms
+# Ant, MNB, Sinowealth
 BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
 
 # Publish the config settings to the dbus path "/Info/Config/"
@@ -283,6 +298,12 @@ TEMP_1_NAME = config["DEFAULT"]["TEMP_1_NAME"]
 # Temperature sensor 2 name
 TEMP_2_NAME = config["DEFAULT"]["TEMP_2_NAME"]
 
+# Temperature sensor 3 name
+TEMP_3_NAME = config["DEFAULT"]["TEMP_3_NAME"]
+
+# Temperature sensor 2 name
+TEMP_4_NAME = config["DEFAULT"]["TEMP_4_NAME"]
+
 
 # --------- BMS specific settings ---------
 
@@ -303,6 +324,26 @@ GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])
 LIPRO_START_ADDRESS = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
 LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
 LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
+
+# -- HeltecModbus device settings
+HELTEC_MODBUS_ADDR = _get_list_from_config(
+    "DEFAULT", "HELTEC_MODBUS_ADDR", lambda v: int(v)
+)
+
+
+# --------- Battery monitor specific settings ---------
+# If you are using a SmartShunt or something else as a battery monitor, the battery voltage reported
+# from the BMS and SmartShunt could differ. This causes, that the driver never goapplies the float voltage,
+# since max voltage is never reached.
+# Example:
+#     cell count: 16
+#     MAX_CELL_VOLTAGE = 3.45
+#     max voltage calculated = 16 * 3.45 = 55.20
+#     CVL is set to 55.20 and the battery is now charged until the SmartShunt measures 55.20 V. The BMS
+#     now measures 55.05 V since there is a voltage drop of 0.15 V. Since the dbus-serialbattery measures
+#     55.05 V the max voltage is never reached for the driver and max voltage is kept forever.
+#     Set VOLTAGE_DROP to 0.15
+VOLTAGE_DROP = float(config["DEFAULT"]["VOLTAGE_DROP"])
 
 
 # --------- Functions ---------
