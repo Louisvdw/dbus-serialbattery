@@ -146,7 +146,7 @@ The driver currently uses a fixed upper current limit for the BMS:
 Should you require more current and your battery can handle that, than you can change it in the settings. The values to change are:
 
 ```ini
-MAX_BATTERY_CURRENT = 50.0
+MAX_BATTERY_CHARGE_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
