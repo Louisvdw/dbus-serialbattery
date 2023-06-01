@@ -117,7 +117,7 @@ if [ ! -f "$filename" ]; then
         echo "; and insert them below to persist future driver updates."
         echo
         echo "; Example (remove the semicolon \";\" to uncomment and activate the value/setting):"
-        echo "; MAX_BATTERY_CURRENT = 50.0"
+        echo "; MAX_BATTERY_CHARGE_CURRENT = 50.0"
         echo "; MAX_BATTERY_DISCHARGE_CURRENT = 60.0"
         echo
         echo
