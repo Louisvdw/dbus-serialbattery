@@ -91,6 +91,8 @@ class Jkbms_Brn:
     waiting_for_response = ""
     last_cell_info = 0
 
+    _new_data_callback = None
+
     def __init__(self, addr):
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
@@ -240,6 +242,9 @@ class Jkbms_Brn:
             if self.waiting_for_response == "device_info":
                 self.waiting_for_response = ""
 
+    def set_callback(self, callback):
+        self._new_data_callback = callback
+
     def assemble_frame(self, data: bytearray):
         if len(self.frame_buffer) > MAX_RESPONSE_SIZE:
             info("data dropped because it alone was longer than max frame length")
@@ -261,6 +266,8 @@ class Jkbms_Brn:
                 debug("great success! frame complete and sane, lets decode")
                 self.decode()
                 self.frame_buffer = []
+                if self._new_data_callback is not None:
+                    self._new_data_callback()
 
     def ncallback(self, sender: int, data: bytearray):
         debug(f"------> NEW PACKAGE!laenge:  {len(data)}")

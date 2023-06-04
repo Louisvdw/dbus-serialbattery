@@ -152,7 +152,8 @@ def main():
         sys.exit(1)
 
     # Poll the battery at INTERVAL and run the main loop
-    gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+    if not battery.use_callback(lambda: poll_battery(mainloop)):
+        gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
     try:
         mainloop.run()
     except KeyboardInterrupt:

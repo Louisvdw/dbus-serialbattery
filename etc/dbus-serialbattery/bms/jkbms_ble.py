@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
+from typing import Callable
 from utils import logger
 from bms.jkbms_brn import Jkbms_Brn
 from bleak import BleakScanner, BleakError
@@ -140,6 +141,10 @@ class Jkbms_Ble(Battery):
         )
         logger.info("BAT: " + self.hardware_version)
         return True
+
+    def use_callback(self, callback: Callable) -> bool:
+        self.jk.set_callback(callback)
+        return callback is not None
 
     def refresh_data(self):
         # call all functions that will refresh the battery data.
