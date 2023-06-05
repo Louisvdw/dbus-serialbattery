@@ -37,8 +37,8 @@ class Revov(Battery):
     command_one = b"\x01\x06\x00\xF8\x0D"  # returns 4 bytes
     command_two = b"\x01\x01\x00\x02\x0D"  # returns a ton of data
 
-     def test_connection(self):
-            # call a function that will connect to the battery, send a command and retrieve the result.
+    def test_connection(self):
+        # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         result = False
@@ -70,7 +70,6 @@ class Revov(Battery):
         result = self.read_cell_data()
         return result
 
-
     def read_gen_data(self):
         model = self.read_serial_data_revov(self.command_get_model)
 
@@ -95,7 +94,6 @@ class Revov(Battery):
         two = self.read_serial_data_revov(self.command_two)
 
         return True
-
 
     def read_cell_data(self):
         status_data = self.read_serial_data_revov(self.command_two)
@@ -164,7 +162,7 @@ class Revov(Battery):
         # 7E for Lifepower
         # 7C for Tianpower BMS (older Revov)
 
-        #better to rewrite this to do length of groups[4] and loop for values.
+        # better to rewrite this to do length of groups[4] and loop for values.
         if (self.command_address[0] == 0x7E):
             # Temperature To Do; current code offsets or sensor counts are incorrect for the TianPower version I have.
             self.temp_sensors = 6
@@ -174,7 +172,8 @@ class Revov(Battery):
             self.temp4 = (groups[4][3] & 0xFF) - 50
             self.temp5 = (groups[4][4] & 0xFF) - 50
             self.temp6 = (groups[4][5] & 0xFF) - 50
-            logger.info(f'Temp Sensors: {self.temp_sensors} T1:{self.temp1} T2:{self.temp2} T3:{self.temp3} T4:{self.temp4} T5:{self.temp5} T6:{self.temp6}')
+            logger.info(
+                f'Temp Sensors: {self.temp_sensors} T1:{self.temp1} T2:{self.temp2} T3:{self.temp3} T4:{self.temp4} T5:{self.temp5} T6:{self.temp6}')
         elif (self.command_address[0] == 0x7C):
             self.temp_sensors = 3
             self.temp1 = (groups[4][0] & 0xFF) - 50
@@ -210,7 +209,6 @@ class Revov(Battery):
     def read_temp_data(self):
         # disabled for now. As mapped in main
         return True
-        
 
     def get_balancing(self):
         return 1 if self.balancing or self.balancing == 2 else 0
@@ -222,7 +220,7 @@ class Revov(Battery):
         buffer = bytearray(self.command_address)
         buffer += command
         return buffer
-    
+
     def read_serial_data_revov(self, command):
         # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
 
@@ -260,5 +258,3 @@ class Revov(Battery):
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
-
-
