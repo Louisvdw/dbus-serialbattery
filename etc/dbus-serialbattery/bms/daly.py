@@ -27,6 +27,7 @@ class Daly(Battery):
         self.trigger_force_disable_discharge = None
         self.trigger_force_disable_charge = None
         self.cells_volts_data_lastreadbad = False
+        self.last_charge_mode = self.charge_mode
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -174,12 +175,24 @@ class Daly(Battery):
 
                 self.write_charge_discharge_mos(ser)
 
+                self.update_soc(ser)
+
         except OSError:
             logger.warning("Couldn't open serial port")
 
         if not result:  # TROUBLESHOOTING for no reply errors
             logger.info("refresh_data: result: " + str(result))
         return result
+
+    def update_soc(self, ser):
+        if self.last_charge_mode is not None and self.charge_mode is not None:
+            if not self.last_charge_mode.startswith(
+                "Float"
+            ) and self.charge_mode.startswith("Float"):
+                # we just entered float mode, so the battery must be full
+                self.soc_to_set = 100
+                self.write_soc_and_datetime(ser)
+        self.last_charge_mode = self.charge_mode
 
     def read_status_data(self, ser):
         status_data = self.request_data(ser, self.command_status)
@@ -229,7 +242,10 @@ class Daly(Battery):
             )
             if crntMinValid < current < crntMaxValid:
                 self.voltage = voltage / 10
-                self.current = current
+                # apply exponential smoothing on the flickering current measurement
+                self.current = (0.1 * current) + (
+                    0.9 * (0 if self.current is None else self.current)
+                )
                 self.soc = soc / 10
                 return True
 
