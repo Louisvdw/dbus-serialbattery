@@ -27,7 +27,10 @@ def _get_list_from_config(
 ) -> List[Any]:
     rawList = config[group][option].split(",")
     return list(
-        map(mapper, [item for item in rawList if item != "" and item is not None])
+        map(
+            mapper,
+            [item.strip() for item in rawList if item != "" and item is not None],
+        )
     )
 
 
@@ -35,7 +38,7 @@ def _get_list_from_config(
 # if not specified: baud = 9600
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230531"
+DRIVER_VERSION = "1.0.20230526dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -271,6 +274,10 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 # https://louisvdw.github.io/dbus-serialbattery/general/install#how-to-enable-a-disabled-bms
 # Ant, MNB, Sinowealth
 BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
+
+EXCLUDED_DEVICES = _get_list_from_config(
+    "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
+)
 
 # Publish the config settings to the dbus path "/Info/Config/"
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])

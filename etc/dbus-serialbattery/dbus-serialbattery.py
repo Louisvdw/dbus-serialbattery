@@ -100,7 +100,17 @@ def main():
     def get_port() -> str:
         # Get the port we need to use from the argument
         if len(sys.argv) > 1:
-            return sys.argv[1]
+            port = sys.argv[1]
+            if port not in utils.EXCLUDED_DEVICES:
+                return port
+            else:
+                logger.info(
+                    "Stopping dbus-serialbattery: "
+                    + str(port)
+                    + " is excluded trough the config file"
+                )
+                sleep(86400)
+                sys.exit(0)
         else:
             # just for MNB-SPI
             logger.info("No Port needed")
