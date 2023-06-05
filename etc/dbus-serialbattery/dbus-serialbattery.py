@@ -151,8 +151,12 @@ def main():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
 
-    # Poll the battery at INTERVAL and run the main loop
-    gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+    # try using active callback on this battery
+    if not battery.use_callback(lambda: poll_battery(mainloop)):
+        # if not possible, poll the battery every poll_interval milliseconds
+        gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+
+    # Run the main loop
     try:
         mainloop.run()
     except KeyboardInterrupt:
