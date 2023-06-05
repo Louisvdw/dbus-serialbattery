@@ -78,7 +78,7 @@ class Revov(Battery):
             return False
 
         self.version = self.BATTERYTYPE + " " + str(model, "utf-8")
-        logger.error(self.version)
+        logger.info(self.version)
 
         version = self.read_serial_data_revov(self.command_get_version)
         if version is False:
@@ -87,11 +87,11 @@ class Revov(Battery):
         self.hardware_version = (
             self.BATTERYTYPE + " ver ( " + str(version, "utf-8") + ")"
         )
-        logger.error(self.hardware_version)
+        logger.info(self.hardware_version)
 
         # At moment run solely for logging purposes so i can compare
-        one = self.read_serial_data_revov(self.command_one)
-        two = self.read_serial_data_revov(self.command_two)
+        # one = self.read_serial_data_revov(self.command_one)
+        # two = self.read_serial_data_revov(self.command_two)
 
         return True
 
@@ -222,7 +222,7 @@ class Revov(Battery):
         return buffer
 
     def read_serial_data_revov(self, command):
-        # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
+        # use the read_serial_data() function to read the data and then do BMS specific checks (crc, start bytes, etc)
 
         if (self.debug):
             logger.info(f'Modbus CMD Address: {hex(self.command_address[0]).upper()}')
