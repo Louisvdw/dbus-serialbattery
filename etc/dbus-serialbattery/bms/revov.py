@@ -1,47 +1,35 @@
 # -*- coding: utf-8 -*-
 
-# Deprecate Revov driver - replaced by LifePower
-# https://github.com/Louisvdw/dbus-serialbattery/pull/353/commits/c3ac9558fc86b386e5a6aefb313408165c86d240
-
+# Undeprecate Revov driver
 from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
 import struct
+import utils
 
-#    Author: L Sheed
-#    Date: 3 May 2022
-#    Version 0.1.3
+#    Author: L Sheed / https://github.com/csloz
+#    Date: 5 Jun 2023
+#    Version 0.2
 #     Cell Voltage Implemented
 #     Hardware Name Implemented
 #     Hardware Revision Implemented
-#     Battery Voltage added (but not correct!)
-#     Added additional binary logging so I can try spot what bits are used for RED errors
-#     To do:
-#     SOC, Error Codes, Other variables
+#     Battery Voltage added (and corrected using bit masks)
 
 
 class Revov(Battery):
     def __init__(self, port, baud, address):
         super(Revov, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
-        self.soc = 100
-        self.voltage = None
-        self.current = None
-        self.cell_min_voltage = None
-        self.cell_max_voltage = None
-        self.cell_min_no = None
-        self.cell_max_no = None
-        self.cell_count = 16
-        self.cells = []
-        self.cycles = None
 
+    debug = False  # Set to true for wordy debugging in logs
+    balancing = 0
     BATTERYTYPE = "Revov"
     LENGTH_CHECK = 0
     LENGTH_POS = 3  # offset starting from 0
     LENGTH_FIXED = -1
 
-    # setup the variables being looked for
-
+    # Modbus uses 7C call vs Lifepower 7E, as return values do not correlate to the Lifepower ones if 7E is used.
+    # at least on my own BMS.
     command_get_version = b"\x7C\x01\x42\x00\x80\x0D"  # Get version number
     command_get_model = b"\x7C\x01\x33\x00\xFE\x0D"  # Get model number
     command_one = b"\x7C\x01\x06\x00\xF8\x0D"  # returns 4 bytes
@@ -65,25 +53,19 @@ class Revov(Battery):
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
-        # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
 
-        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
-        self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
-        # Need to fix to use correct value will do later.  hard coded for now
-        for c in range(self.cell_count):
-            self.cells.append(Cell(False))
+        self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
+        self.poll_interval = 2000
+
         return True
 
     def refresh_data(self):
         # call all functions that will refresh the battery data.
         # This will be called for every iteration (1 second)
         # Return True if success, False for failure
-        result = self.read_soc_data()
-        result = result and self.read_cell_data()
-        # result = result and self.read_temp_data()
+        result = self.read_cell_data()
         return result
 
     def read_gen_data(self):
@@ -111,89 +93,103 @@ class Revov(Battery):
 
         return True
 
-    def read_soc_data(self):
-        # self.soc=70
-        self.voltage = 55
-        self.current = 5
-
-        return True
-
-    # soc_data = self.read_serial_data_revov(self.command_soc)
-    # check if connection success
-    # if soc_data is False:
-    #    return False
-
-    # current, voltage, self.capacity_remain = unpack_from('>hhL', soc_data)
-    # self.current = current / 100
-    # self.voltage = voltage / 10
-    # self.soc = self.capacity_remain / self.capacity * 100
-    # return True
-
     def read_cell_data(self):
-        packet = self.read_serial_data_revov(self.command_two)
+        status_data = self.read_serial_data_revov(self.command_two)
 
-        if packet is False:
+        if status_data is False:
             return False
 
-        # cell_volt_data = self.read_serial_data_revov(self.command_cell_voltages)
-        # cell_temp_data = self.read_serial_data_revov(self.command_cell_temps)
+        groups = []
+        i = 0
+        for j in range(0, 15):
+            # groups are formatted like:
+            # {group number} {length} ...length shorts up to pos 10, then longs after...
+            # So the first group might be (2 byte x 2)
+            # 01 02 0a 0b 0c 0d
+            # Second group might be (4 byte long x 1)
+            # 10 01 00 00 00 00
 
-        self.voltage = unpack_from(">H", packet, 72)[0]
-        if self.voltage > 9999:
-            self.voltage = self.voltage / 1000
-        elif self.voltage > 999:
-            self.voltage = self.voltage / 100
-        logger.warn("Voltage Data: [" + str(self.voltage) + "v]")
+            if (j > 9 and j < 15):
+                byte_size = 4
+            else:
+                byte_size = 2
+            group_len = status_data[i + 1]
+            end = i + 2 + (group_len * byte_size)
+            group_payload = status_data[i + 2: end]
+            groups.append(
+                [
+                    unpack_from(">H", group_payload, i)[0]
+                    for i in range(0, len(group_payload), 2)
+                ]
+            )
+            i = end
+            if (self.debug):
+                logger.info(f'Pos:{i} CMD ID: {j} Len: {group_len} Size: {byte_size}')
 
-        self.cycles = unpack_from(">H", packet, 68)[0]
-        logger.warn("Battery Cycles: [" + str(self.cycles) + "]")
+        # Total Cells
+        self.cell_count = len(groups[0])
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
+        if (self.debug):
+            logger.info(f'Cell Count: {self.cell_count}')
 
-        self.capacity = unpack_from(">H", packet, 44)[0]
-        self.capacity = self.capacity / 100
-        logger.warn("Battery Capacity: [" + str(self.capacity) + "Ah]")
+        # Per Cell Value
+        self.cells = [Cell(True) for _ in range(0, self.cell_count)]
+        for i, cell in enumerate(self.cells):
+            # there is a situation where 2 MSB bit of the high byte may come set
+            # I got that when I got a high voltage alarm from the unit.
+            # make sure that bit is 0, by doing an AND with 32767, 16383 (00111111 1111111)
+            cell.voltage = (groups[0][i] & 32767 & 16383) / 1000
+            if (self.debug):
+                logger.info(f'Cell {i}: {cell.voltage}')
+       # Current
+        self.current = (30000 - groups[1][0]) / 100
+        if (self.debug):
+            logger.info(f'Current: {self.current}')
 
-        # serial returns from offset 4 onwards, so our packet data will start with module #, then cell count.
-        cell_count = unpack_from(">B", packet, 1)[0]
-        self.cell_count = cell_count
+        # State of charge
+        self.soc = groups[2][0] / 100
+        if (self.debug):
+            logger.info(f'SoC: {self.soc}')
 
-        logger.warn("Cell count: [" + str(self.cell_count) + "]")
+        # Full battery capacity
+        self.capacity = groups[3][0] / 100
+        if (self.debug):
+            logger.info(f'Capacity: {self.capacity}')
 
-        cell_volt_data = packet[
-            2 : (self.cell_count * 2) + 2
-        ]  # 16 2 byte values from pos 3 (index 2)
-        logger.warn("Raw Cell Data: [" + str(cell_volt_data.hex(":")).upper() + "]")
+        # Temperature To Do; current code offsets or sensor counts are incorrect for the TianPower version I have.
+        # self.temp_sensors = 6
+        # self.temp1 = (groups[4][0] & 0xFF) - 50
+        # self.temp2 = (groups[4][1] & 0xFF) - 50
+        # self.temp3 = (groups[4][2] & 0xFF) - 50
+        # self.temp4 = (groups[4][3] & 0xFF) - 50
+        # self.temp5 = (groups[4][4] & 0xFF) - 50
+        # self.temp6 = (groups[4][5] & 0xFF) - 50
+        # logger.info (f'Temp Sensors: {self.temp_sensors}')
 
-        # first, second = unpack_from ('>HH',cell_volt_data)
-        # logger.warn ("First Cell: " + str(first) + " Second Cell: " + str(second))
+        # 4th bit: Over Current Protection
+        self.protection.current_over = 2 if (groups[5][1] & 0b00001000) > 0 else 0
+        # 5th bit: Over voltage protection
+        self.protection.voltage_high = 2 if (groups[5][1] & 0b00010000) > 0 else 0
+        # 6th bit: Under voltage protection
+        self.protection.voltage_low = 2 if (groups[5][1] & 0b00100000) > 0 else 0
+        # 7th bit: Charging over temp protection
+        self.protection.temp_high_charge = 2 if (groups[5][1] & 0b01000000) > 0 else 0
+        # 8th bit: Charging under temp protection
+        self.protection.temp_low_charge = 2 if (groups[5][1] & 0b10000000) > 0 else 0
+        if (self.debug):
+            logger.info(f'Protection')
 
-        cell_total = 0
+        # Cycle counter
+        self.cycles = groups[6][0]
+        if (self.debug):
+            logger.info(f'Cycles: {self.cycles}')
 
-        for c in range(self.cell_count):
-            try:
-                cell_volts = unpack_from(">H", cell_volt_data, c * 2)[0]
-                # raw_data = cell_volt_data[c*2:2]
-                # logger.warn ("Cell [" + str(c+1) + "] " + str(cell_volts) +  " " + str(raw_data.hex(':')).upper() )
-                # hacky divisor code
-                if cell_volts > 9999:
-                    self.cells[c].voltage = cell_volts / 10000
-                elif cell_volts > 999:
-                    self.cells[c].voltage = cell_volts / 1000
-                # Show Cell #, Voltage to 4DP, Hex and Binary value
-                logger.warn(
-                    "Cell ["
-                    + "%02d" % (c + 1)
-                    + "] "
-                    + "%.3f" % self.cells[c].voltage
-                    + "v "
-                    + "0x%04X" % cell_volts
-                    + " "
-                    + str(bin(cell_volts))
-                )
-                cell_total = cell_total + self.cells[c].voltage
-            except struct.error:
-                self.cells[c].voltage = 0
+        # Voltage
+        self.voltage = groups[7][0] / 100
+        if (self.debug):
+            logger.info(f'Voltage: {self.voltage}')
 
-        logger.warn("Cell Total: " + "%.2fv" % cell_total)
         return True
 
     def read_temp_data(self):
@@ -208,6 +204,9 @@ class Revov(Battery):
         self.temp2 = unpack(">H", temp2)[0] / 10
 
         return True
+
+    def get_balancing(self):
+        return 1 if self.balancing or self.balancing == 2 else 0
 
     def read_bms_config(self):
         return True
@@ -227,16 +226,17 @@ class Revov(Battery):
             "BBBB", data
         )
 
-        logger.warn("Modbus Address: " + str(modbus_address))
-        logger.warn("Modbus Type   : " + str(modbus_type))
-        logger.warn("Modbus Command: " + str(modbus_cmd))
-        logger.warn("Modbus PackLen: " + str(modbus_packet_length))
-        logger.warn("Modbus Packet : [" + str(data.hex(":")).upper() + "]")
+        if (self.debug):
+            logger.info("Modbus Address: " + str(modbus_address))
+            logger.info("Modbus Type   : " + str(modbus_type))
+            logger.info("Modbus Command: " + str(modbus_cmd))
+            logger.info("Modbus PackLen: " + str(modbus_packet_length))
+            logger.info("Modbus Packet : [" + str(data.hex(":")).upper() + "]")
 
         # If address is correct and the command is correct then its a good packet
-        if modbus_type == 1 and modbus_address == 124:
-            logger.warn("== Modbus packet good ==")
-            return data[4 : modbus_packet_length + 4]
+        if modbus_type == 1 and modbus_address == 0x7C:
+            logger.info("== Modbus packet good ==")
+            return data[4: modbus_packet_length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False

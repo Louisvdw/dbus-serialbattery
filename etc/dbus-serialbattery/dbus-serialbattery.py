@@ -27,7 +27,7 @@ from bms.ecs import Ecs
 from bms.heltecmodbus import HeltecModbus
 from bms.hlpdatabms4s import HLPdataBMS4S
 from bms.jkbms import Jkbms
-from bms.lifepower import Lifepower
+# from bms.lifepower import Lifepower #Deprecate out non working version
 from bms.lltjbd import LltJbd
 from bms.renogy import Renogy
 from bms.seplos import Seplos
@@ -35,6 +35,7 @@ from bms.seplos import Seplos
 # from bms.ant import Ant
 # from bms.mnb import MNB
 # from bms.sinowealth import Sinowealth
+from bms.revov import Revov  # Undeprecate working version
 
 supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
@@ -43,11 +44,12 @@ supported_bms_types = [
     {"bms": HeltecModbus, "baud": 9600},
     {"bms": HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
-    {"bms": Lifepower, "baud": 9600},
+    # {"bms": Lifepower, "baud": 9600},
     {"bms": LltJbd, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
+    {"bms": Revov, "baud": 9600},
     # {"bms": Ant, "baud": 19200},
     # {"bms": MNB, "baud": 9600},
     # {"bms": Sinowealth},
