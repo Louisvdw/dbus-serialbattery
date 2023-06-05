@@ -20,23 +20,25 @@ class Revov(Battery):
     def __init__(self, port, baud, address):
         super(Revov, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
+        self.command_address = address  # 7C on my tianpower...
 
-    debug = False  # Set to true for wordy debugging in logs
+    # Modbus uses 7C call vs Lifepower 7E, as return values do not correlate to the Lifepower ones if 7E is used.
+    # at least on my own BMS.
+    debug = True  # Set to true for wordy debugging in logs
     balancing = 0
     BATTERYTYPE = "Revov"
     LENGTH_CHECK = 0
     LENGTH_POS = 3  # offset starting from 0
     LENGTH_FIXED = -1
 
-    # Modbus uses 7C call vs Lifepower 7E, as return values do not correlate to the Lifepower ones if 7E is used.
-    # at least on my own BMS.
-    command_get_version = b"\x7C\x01\x42\x00\x80\x0D"  # Get version number
-    command_get_model = b"\x7C\x01\x33\x00\xFE\x0D"  # Get model number
-    command_one = b"\x7C\x01\x06\x00\xF8\x0D"  # returns 4 bytes
-    command_two = b"\x7C\x01\x01\x00\x02\x0D"  # returns a ton of data
+    command_address = b"\0x7C"  # Default unless overridden
+    command_get_version = b"\x01\x42\x00\x80\x0D"  # Get version number
+    command_get_model = b"\x01\x33\x00\xFE\x0D"  # Get model number
+    command_one = b"\x01\x06\x00\xF8\x0D"  # returns 4 bytes
+    command_two = b"\x01\x01\x00\x02\x0D"  # returns a ton of data
 
-    def test_connection(self):
-        # call a function that will connect to the battery, send a command and retrieve the result.
+     def test_connection(self):
+            # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         result = False
@@ -68,6 +70,7 @@ class Revov(Battery):
         result = self.read_cell_data()
         return result
 
+
     def read_gen_data(self):
         model = self.read_serial_data_revov(self.command_get_model)
 
@@ -92,6 +95,7 @@ class Revov(Battery):
         two = self.read_serial_data_revov(self.command_two)
 
         return True
+
 
     def read_cell_data(self):
         status_data = self.read_serial_data_revov(self.command_two)
@@ -157,15 +161,26 @@ class Revov(Battery):
         if (self.debug):
             logger.info(f'Capacity: {self.capacity}')
 
-        # Temperature To Do; current code offsets or sensor counts are incorrect for the TianPower version I have.
-        # self.temp_sensors = 6
-        # self.temp1 = (groups[4][0] & 0xFF) - 50
-        # self.temp2 = (groups[4][1] & 0xFF) - 50
-        # self.temp3 = (groups[4][2] & 0xFF) - 50
-        # self.temp4 = (groups[4][3] & 0xFF) - 50
-        # self.temp5 = (groups[4][4] & 0xFF) - 50
-        # self.temp6 = (groups[4][5] & 0xFF) - 50
-        # logger.info (f'Temp Sensors: {self.temp_sensors}')
+        # 7E for Lifepower
+        # 7C for Tianpower BMS (older Revov)
+
+        #better to rewrite this to do length of groups[4] and loop for values.
+        if (self.command_address[0] == 0x7E):
+            # Temperature To Do; current code offsets or sensor counts are incorrect for the TianPower version I have.
+            self.temp_sensors = 6
+            self.temp1 = (groups[4][0] & 0xFF) - 50
+            self.temp2 = (groups[4][1] & 0xFF) - 50
+            self.temp3 = (groups[4][2] & 0xFF) - 50
+            self.temp4 = (groups[4][3] & 0xFF) - 50
+            self.temp5 = (groups[4][4] & 0xFF) - 50
+            self.temp6 = (groups[4][5] & 0xFF) - 50
+            logger.info(f'Temp Sensors: {self.temp_sensors} T1:{self.temp1} T2:{self.temp2} T3:{self.temp3} T4:{self.temp4} T5:{self.temp5} T6:{self.temp6}')
+        elif (self.command_address[0] == 0x7C):
+            self.temp_sensors = 3
+            self.temp1 = (groups[4][0] & 0xFF) - 50
+            self.temp2 = (groups[4][1] & 0xFF) - 50
+            self.temp3 = (groups[4][2] & 0xFF) - 50
+            logger.info(f'Temp Sensors: Total:{self.temp_sensors} T1:{self.temp1} T2:{self.temp2} T3:{self.temp3}')
 
         # 4th bit: Over Current Protection
         self.protection.current_over = 2 if (groups[5][1] & 0b00001000) > 0 else 0
@@ -193,17 +208,9 @@ class Revov(Battery):
         return True
 
     def read_temp_data(self):
+        # disabled for now. As mapped in main
         return True
-        # disabled for now.  I need to find what bytes map to the 2 temp sensors
-
-        temp1 = self.read_serial_data_revov(self.command_bms_temp1)
-        temp2 = self.read_serial_data_revov(self.command_bms_temp2)
-        if temp1 is False:
-            return False
-        self.temp1 = unpack(">H", temp1)[0] / 10
-        self.temp2 = unpack(">H", temp2)[0] / 10
-
-        return True
+        
 
     def get_balancing(self):
         return 1 if self.balancing or self.balancing == 2 else 0
@@ -211,10 +218,23 @@ class Revov(Battery):
     def read_bms_config(self):
         return True
 
+    def generate_command(self, command):
+        buffer = bytearray(self.command_address)
+        buffer += command
+        return buffer
+    
     def read_serial_data_revov(self, command):
         # use the read_serial_data() function to read the data and then do BMS spesific checks (crc, start bytes, etc)
+
+        if (self.debug):
+            logger.info(f'Modbus CMD Address: {hex(self.command_address[0]).upper()}')
+
         data = read_serial_data(
-            command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK
+            self.generate_command(command),
+            self.port,
+            self.baud_rate,
+            self.LENGTH_POS,
+            self.LENGTH_CHECK
         )
 
         if data is False:
@@ -227,16 +247,18 @@ class Revov(Battery):
         )
 
         if (self.debug):
-            logger.info("Modbus Address: " + str(modbus_address))
-            logger.info("Modbus Type   : " + str(modbus_type))
-            logger.info("Modbus Command: " + str(modbus_cmd))
-            logger.info("Modbus PackLen: " + str(modbus_packet_length))
-            logger.info("Modbus Packet : [" + str(data.hex(":")).upper() + "]")
+            logger.info(f'Modbus Address: {modbus_address} [{hex(modbus_address)}]')
+            logger.info(f'Modbus Type   : {modbus_type} [{hex(modbus_type)}]')
+            logger.info(f'Modbus Command: {modbus_cmd} [{hex(modbus_cmd)}]')
+            logger.info(f'Modbus PackLen: {modbus_packet_length} [{hex(modbus_packet_length)}]')
+            logger.info(f'Modbus Packet : [ {data.hex(":").upper()} ]')
 
         # If address is correct and the command is correct then its a good packet
-        if modbus_type == 1 and modbus_address == 0x7C:
+        if modbus_type == 1 and modbus_address == self.command_address[0]:
             logger.info("== Modbus packet good ==")
             return data[4: modbus_packet_length + 4]
         else:
             logger.error(">>> ERROR: Incorrect Reply")
             return False
+
+
