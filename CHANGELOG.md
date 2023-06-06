@@ -1,6 +1,10 @@
 # Changelog
 
-## v1.0.0
+## v1.0.x
+* Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
+* Added: Implement callback function for update by @seidler2547
+
+## v1.0.20230531
 
 ### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
 

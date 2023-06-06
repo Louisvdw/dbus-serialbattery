@@ -102,7 +102,17 @@ def main():
     def get_port() -> str:
         # Get the port we need to use from the argument
         if len(sys.argv) > 1:
-            return sys.argv[1]
+            port = sys.argv[1]
+            if port not in utils.EXCLUDED_DEVICES:
+                return port
+            else:
+                logger.info(
+                    "Stopping dbus-serialbattery: "
+                    + str(port)
+                    + " is excluded trough the config file"
+                )
+                sleep(86400)
+                sys.exit(0)
         else:
             # just for MNB-SPI
             logger.info("No Port needed")
@@ -153,8 +163,12 @@ def main():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
 
-    # Poll the battery at INTERVAL and run the main loop
-    gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+    # try using active callback on this battery
+    if not battery.use_callback(lambda: poll_battery(mainloop)):
+        # if not possible, poll the battery every poll_interval milliseconds
+        gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+
+    # Run the main loop
     try:
         mainloop.run()
     except KeyboardInterrupt:

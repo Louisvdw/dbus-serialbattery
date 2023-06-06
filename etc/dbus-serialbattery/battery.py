@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Callable
 
 from utils import logger
 import utils
@@ -147,6 +147,17 @@ class Battery(ABC):
         MAX_BATTERY_CHARGE_CURRENT, MAX_BATTERY_DISCHARGE_CURRENT, cell_count, capacity
 
         :return: false when fail, true if successful
+        """
+        return False
+
+    def use_callback(self, callback: Callable) -> bool:
+        """
+        Each driver may override this function to indicate whether it is
+        able to provide value updates on its own.
+
+        :return: false when battery cannot provide updates by itself and will be polled
+                 every poll_interval milliseconds for new values
+                 true if callable should be used for updates as they arrive from the battery
         """
         return False
 
