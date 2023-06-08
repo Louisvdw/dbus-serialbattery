@@ -152,21 +152,41 @@ pkill -f "blebattery"
 
 if [ "$length" -gt 0 ]; then
 
+    echo
     echo "Found $length Bluetooth BMS in the config file!"
-    echo ""
+    echo
 
     # install required packages
     # TO DO: Check first if packages are already installed
-    echo "Installing required packages..."
+    echo "Installing required packages to use Bluetooth connection..."
+
     opkg update
     opkg install python3-misc python3-pip
     pip3 install bleak
 
-    # setup cronjob to restart Bluetooth
-    grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+    echo "done."
+    echo
 
     # function to install ble battery
     install_blebattery_service() {
+        if [ -z "$1" ]; then
+            echo "ERROR: BMS unique number is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        if [ -z "$2" ]; then
+            echo "ERROR: BMS type for battery $1 is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        if [ -z "$3" ]; then
+            echo "ERROR: BMS MAC address for battery $1 with BMS type $2 is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+
+        echo "Installing \"$2\" with MAC address \"$3\" as dbus-blebattery.$1"
+
         mkdir -p "/service/dbus-blebattery.$1/log"
         {
             echo "#!/bin/sh"
@@ -177,23 +197,41 @@ if [ "$length" -gt 0 ]; then
         {
             echo "#!/bin/sh"
             echo "exec 2>&1"
+            echo "echo"
+            echo "echo \"INFO:Bluetooth details\""
+            # close all open connections, else the driver can't connect
             echo "bluetoothctl disconnect $3"
+            # enable bluetoothctl scan in background to display signal strength (RSSI), else it's missing
+            echo "bluetoothctl scan on | grep \"$3\" | grep \"RSSI\" &"
+            # with multiple Bluetooth BMS one scan for all would be enough. Check if that can be changed globally, maybe with a cronjob after reboot
+            # echo "bluetoothctl scan on > /dev/null &"
+            # wait 5 seconds to finish the scan
+            echo "sleep 5"
+            # display some Bluetooth device details
+            echo "bluetoothctl info $3 | grep -E \"Device|Alias|Pair|Trusted|Blocked|Connected|RSSI|Power\""
+            echo "echo"
             echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3"
+            echo "pkill -f \"bluetoothctl scan on\""
         } > "/service/dbus-blebattery.$1/run"
         chmod 755 "/service/dbus-blebattery.$1/run"
     }
 
-    echo "Packages installed."
-    echo ""
-
+    # Example
     # install_blebattery_service 0 Jkbms_Ble C8:47:8C:00:00:00
     # install_blebattery_service 1 Jkbms_Ble C8:47:8C:00:00:11
 
     for (( i=0; i<length; i++ ));
     do
-        echo "Installing ${bms_array[$i]} as dbus-blebattery.$i"
-        install_blebattery_service $i "${bms_array[$i]}"
+        # split BMS type and MAC address
+        IFS=' ' read -r -a bms <<< "${bms_array[$i]}"
+        install_blebattery_service $i "${bms[0]}" "${bms[1]}"
     done
+
+    echo
+
+    # setup cronjob to restart Bluetooth
+    # remove if not needed anymore, has to be checked first
+    grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
 
 else
 
@@ -202,6 +240,7 @@ else
 
     echo "No Bluetooth battery configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
     echo "You can ignore this, if you are using only a serial connection."
+    echo
 
 fi
 ### BLUETOOTH PART | END ###
@@ -224,11 +263,11 @@ pkill -f "python .*/$DRIVERNAME.py"
 # restart bluetooth service, if Bluetooth BMS configured
 if [ "$length" -gt 0 ]; then
     /etc/init.d/bluetooth restart
+    echo
 fi
 
 
 # install notes
-echo
 echo
 echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
 echo

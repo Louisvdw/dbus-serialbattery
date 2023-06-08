@@ -25,6 +25,9 @@ class Jkbms_Ble(Battery):
     def connection_name(self) -> str:
         return "BLE " + self.address
 
+    def custom_name(self) -> str:
+        return "SerialBattery(" + self.type + ") " + self.address[-5:]
+
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
@@ -121,13 +124,22 @@ class Jkbms_Ble(Battery):
         if st is None:
             return False
 
-        if time() - st["last_update"] >= 60:
+        last_update = int(time() - st["last_update"])
+        if last_update >= 15 and last_update % 15 == 0:
             # if data not updated for more than 60s, something is wrong, then fail
-            logger.info("Jkbms_Ble: Bluetooth died. Got no fresh data since 60s.")
+            logger.info(
+                f"Jkbms_Ble: Bluetooth died. Got no fresh data since {last_update}s."
+            )
+            bluetoothctl_info = os.popen(
+                "bluetoothctl info "
+                + self.address
+                + ' | grep -i -E "device|name|alias|pair|trusted|blocked|connected|rssi|power"'
+            )
+            logger.info(bluetoothctl_info)
 
             # if the thread is still alive but data too old there is something
             # wrong with the bt-connection; restart whole stack
-            if not self.resetting:
+            if not self.resetting and last_update >= 120:
                 self.reset_bluetooth()
                 self.jk.start_scraping()
                 sleep(2)
