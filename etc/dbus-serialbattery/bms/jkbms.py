@@ -126,6 +126,7 @@ class Jkbms(Battery):
             unpack_from(">H", self.get_data(status_data, b"\x99", offset, 2))[0]
         )
 
+        # the JKBMS resets to 95% SoC, if all cell voltages are above or equal to 3.500 V
         offset = cellbyte_count + 18
         self.soc = unpack_from(">B", self.get_data(status_data, b"\x85", offset, 1))[0]
 

@@ -3,6 +3,8 @@
 ## v1.0.x
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
+* Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
+* Changed: Fixed typo in `config.ini` sample by @hoschult
 
 ## v1.0.20230531
 
