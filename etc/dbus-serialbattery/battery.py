@@ -241,7 +241,7 @@ class Battery(ABC):
                         <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                         and self.allow_max_voltage
                     ):
-                        self.max_voltage_start_time = time()
+                        self.max_voltage_start_time = int(time())
 
                     # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                     elif (
@@ -250,7 +250,7 @@ class Battery(ABC):
                     ) and not self.allow_max_voltage:
                         self.allow_max_voltage = True
                 else:
-                    tDiff = time() - self.max_voltage_start_time
+                    tDiff = int(time()) - self.max_voltage_start_time
                     # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     # keep max voltage for 300 more seconds
                     if 300 < tDiff:
