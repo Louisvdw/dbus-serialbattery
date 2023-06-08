@@ -29,58 +29,9 @@ class Jkbms_Ble(Battery):
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
 
-        # check if device with given mac is found, otherwise abort
-
         logger.info("Test of Jkbms_Ble at " + self.jk.address)
-        try:
-            loop = asyncio.get_event_loop()
-            t = loop.create_task(BleakScanner.discover())
-            devices = loop.run_until_complete(t)
-        except BleakError as err:
-            logger.error(str(err))
-            return False
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
-            return False
-
-        found = False
-        for d in devices:
-            if d.address == self.jk.address:
-                found = True
-        if not found:
-            logger.error("No Jkbms_Ble found at " + self.jk.address)
-            return False
-
-        """
-        # before indipended service, has to be checked
-
-        logger.info("test of jkbmsble")
-        tries = 0
-        while True:
-            try:
-                loop = asyncio.get_event_loop()
-                t = loop.create_task(
-                    BleakScanner.find_device_by_address(self.jk.address)
-                )
-                device = loop.run_until_complete(t)
-
-                if device is None:
-                    logger.info("jkbmsble not found")
-                    if tries > 2:
-                        return False
-                else:
-                    # device found, exit loop and continue test
-                    break
-            except BleakError as e:
-                if tries > 2:
-                    return False
-                # recover from error if tries left
-                logger.error(str(e))
-                self.reset_bluetooth()
-            tries += 1
-        """
-
-        # device was found, presumeably a jkbms so start scraping
+        
+        # start scraping
         self.jk.start_scraping()
         tries = 1
 
