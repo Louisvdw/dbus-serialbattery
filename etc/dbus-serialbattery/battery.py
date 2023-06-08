@@ -290,6 +290,8 @@ class Battery(ABC):
                     else "Absorption dynamic"
                     # + "(vS: "
                     # + str(round(voltageSum, 2))
+                    # + " - tDiff: "
+                    # + str(tDiff)
                     # + " - pS: "
                     # + str(round(penaltySum, 2))
                     # + ")"
