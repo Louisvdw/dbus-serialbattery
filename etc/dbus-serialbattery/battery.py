@@ -217,6 +217,8 @@ class Battery(ABC):
         tDiff = 0
         
         PENALTY_BUFFER = 0.010
+        MAX_BATTERY_VOLTAGE = utils.MAX_CELL_VOLTAGE * self.cell_count
+        MIN_BATTERY_VOLTAGE = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         try:
             if utils.CVCM_ENABLE:
@@ -237,7 +239,7 @@ class Battery(ABC):
                 if self.max_voltage_start_time is None:
                     # start timer, if max voltage is reached and cells are balanced
                     if (
-                        (utils.MAX_CELL_VOLTAGE * self.cell_count) - utils.VOLTAGE_DROP
+                        MAX_BATTERY_VOLTAGE - utils.VOLTAGE_DROP
                         <= voltageSum
                         and voltageDiff
                         <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
@@ -258,6 +260,8 @@ class Battery(ABC):
                     if 300 < tDiff:
                         self.allow_max_voltage = False
                         self.max_voltage_start_time = None
+                    if voltageSum < MAX_BATTERY_VOLTAGE - utils.VOLTAGE_DROP:
+                        self.max_voltage_start_time = None
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
@@ -274,9 +278,9 @@ class Battery(ABC):
                         min(
                             max(
                                 voltageSum - penaltySum,
-                                utils.MIN_CELL_VOLTAGE * self.cell_count,
+                                MIN_BATTERY_VOLTAGE,
                             ),
-                            utils.MAX_CELL_VOLTAGE * self.cell_count,
+                            MAX_BATTERY_VOLTAGE,
                         ),
                         3,
                     )
@@ -292,16 +296,16 @@ class Battery(ABC):
                     else "Absorption dynamic"
                     # + "(vS: "
                     # + str(round(voltageSum, 2))
-                    # + " - tDiff: "
+                    # + " tDiff: "
                     # + str(tDiff)
-                    # + " - pS: "
+                    # + " pS: "
                     # + str(round(penaltySum, 2))
                     # + ")"
                 )
 
             elif self.allow_max_voltage:
                 self.control_voltage = round(
-                    (utils.MAX_CELL_VOLTAGE * self.cell_count), 3
+                    (MAX_BATTERY_VOLTAGE), 3
                 )
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
