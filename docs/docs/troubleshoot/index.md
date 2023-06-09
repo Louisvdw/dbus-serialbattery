@@ -84,7 +84,7 @@ ERROR:SerialBattery:ERROR >>> No battery connection at /dev/ttyUSB0
 ### Bluetooth BMS connection
 
 #### `/data/log/dbus-blebattery.*/current`
-When you are using a Bluetooth connection `*` is the MAC address of your BMS.
+Where `*` is a unique number starting from 0.
 
 **Execute**
 ```bash
@@ -127,35 +127,101 @@ The log file will tell you what the driver did and where it failed.
 #### No log file
 If there is no log folder under `/data/log/dbus-serialbattery.*` then check:
 
-   * Did the install have any error? Reinstall the driver, also trying an alternative method.
+* Did the install have any error? Reinstall the driver, also trying an alternative method.
 
-   * Is the connection picked up by serial-starter? Use the command
+* Is the connection picked up by serial-starter? Use the command
 
-     ```bash
-     tail -f /data/log/serial-starter/current | tai64nlocal
-     ```
+  ```bash
+  tail -f /data/log/serial-starter/current | tai64nlocal
+  ```
 
-     to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `tty` port it uses.
+  to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `tty` port it uses.
 
-   * Check, if your BMS type is found (change to the `ttyUSB*` your device use)
+* Check, if your BMS type is found (change to the `ttyUSB*` your device use)
 
-     ```bash
-     tail -f /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
-     ```
+  - For serial connected BMS
 
-     or
+    ```bash
+    tail -f /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
+    ```
 
-     ```bash
-     tail -f /data/log/dbus-serialbattery.*/current | tai64nlocal
-     ```
+    or
 
-     to check all devices the serialstarter started.
+    ```bash
+    tail -f /data/log/dbus-serialbattery.*/current | tai64nlocal
+    ```
+
+    to check all devices the serialstarter started.
+
+  - For Bluetooth connected BMS
+
+    ```bash
+    tail -f /data/log/dbus-blebattery.0/current | tai64nlocal
+    ```
+
+    or
+
+    ```bash
+    tail -f /data/log/dbus-blebattery.*/current | tai64nlocal
+    ```
+
+    to check all Bluetooth devices.
+
+
 
 #### `No reply` in log file
 
 Check your cable connections, if the log file shows `ERROR: No reply - returning` from the battery.
 
 The RX/TX lights should both flash as data is transfered. If only one flashes then your RX/TX might be swapped.
+
+#### Driver runtime (stability check)
+
+Check for how long the driver is running without restart.
+
+**Execute**
+
+For serial connected BMS
+
+```bash
+svstat /service/dbus-serialbattery.tty*
+```
+
+For Bluetooth connected BMS
+
+```bash
+svstat /service/dbus-blebattery.*
+```
+
+**Output**
+```bash
+root@raspberrypi2:~# svstat /service/dbus-serialbattery.*
+/service/dbus-serialbattery.ttyUSB0: up (pid 8136) 1128725 seconds
+```
+✅ If the seconds (`runtime`) have a high number (e.g. several days; 86400 seconds = 1 day) then this indicates, that your driver is stable.
+
+❌ If the seconds (`runtime`) are low (e.g. 300 seconds) then this means your driver has (re)started 300 seconds ago.
+Check again in a few minutes, if the `pid` changed and if the `runtime` increased or reset.
+If that is the case, your driver is not stable and has a problem.
+
+```bash
+root@raspberrypi2:~# svstat /service/dbus-serialbattery.*
+/service/dbus-serialbattery.ttyUSB0: up (pid 8136) 300 seconds
+```
+
+ Additionally you can check the system uptime.
+
+ **Execute**
+ ```bash
+ uptime
+ ```
+
+**Output**
+```bash
+10:08:14 up 8 days,  3:24,  load average: 1.52, 0.87, 0.79
+```
+
+
 
 ## FAQ (Frequently Asked Questions)
 
