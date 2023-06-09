@@ -205,7 +205,7 @@ class Battery(ABC):
                 self.manage_charge_voltage_step()
         # on CVCM_ENABLE = False apply max voltage
         else:
-            self.control_voltage = round((self.max_battery_voltage), 3)
+            self.control_voltage = round(self.max_battery_voltage, 3)
             self.charge_mode = "Keep always max voltage"
 
     def manage_charge_voltage_linear(self) -> None:
@@ -304,9 +304,7 @@ class Battery(ABC):
                 )
 
             elif self.allow_max_voltage:
-                self.control_voltage = round(
-                    (self.max_battery_voltage), 3
-                )
+                self.control_voltage = round(self.max_battery_voltage, 3)
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
                 )
