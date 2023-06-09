@@ -68,7 +68,9 @@ class Battery(ABC):
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
         self.has_settings = 0
-
+        self.max_battery_voltage = None
+        self.min_battery_voltage = None
+        
         self.init_values()
 
         # used to identify a BMS when multiple BMS are connected - planned for future use
@@ -203,7 +205,7 @@ class Battery(ABC):
                 self.manage_charge_voltage_step()
         # on CVCM_ENABLE = False apply max voltage
         else:
-            self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+            self.control_voltage = round((self.max_battery_voltage), 3)
             self.charge_mode = "Keep always max voltage"
 
     def manage_charge_voltage_linear(self) -> None:
@@ -217,9 +219,7 @@ class Battery(ABC):
         tDiff = 0
         
         PENALTY_BUFFER = 0.010
-        MAX_BATTERY_VOLTAGE = utils.MAX_CELL_VOLTAGE * self.cell_count
-        MIN_BATTERY_VOLTAGE = utils.MIN_CELL_VOLTAGE * self.cell_count
-
+        
         try:
             if utils.CVCM_ENABLE:
                 # calculate battery sum
@@ -239,7 +239,7 @@ class Battery(ABC):
                 if self.max_voltage_start_time is None:
                     # start timer, if max voltage is reached and cells are balanced
                     if (
-                        MAX_BATTERY_VOLTAGE - utils.VOLTAGE_DROP
+                        self.max_battery_voltage - utils.VOLTAGE_DROP
                         <= voltageSum
                         and voltageDiff
                         <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
@@ -260,7 +260,7 @@ class Battery(ABC):
                     if 300 < tDiff:
                         self.allow_max_voltage = False
                         self.max_voltage_start_time = None
-                    if voltageSum < MAX_BATTERY_VOLTAGE - utils.VOLTAGE_DROP:
+                    if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP:
                         self.max_voltage_start_time = None
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
@@ -278,9 +278,9 @@ class Battery(ABC):
                         min(
                             max(
                                 voltageSum - penaltySum,
-                                MIN_BATTERY_VOLTAGE,
+                                self.min_battery_voltage,
                             ),
-                            MAX_BATTERY_VOLTAGE,
+                            self.max_battery_voltage,
                         ),
                         3,
                     )
@@ -305,7 +305,7 @@ class Battery(ABC):
 
             elif self.allow_max_voltage:
                 self.control_voltage = round(
-                    (MAX_BATTERY_VOLTAGE), 3
+                    (self.max_battery_voltage), 3
                 )
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
@@ -348,9 +348,7 @@ class Battery(ABC):
 
                 if self.max_voltage_start_time is None:
                     # check if max voltage is reached and start timer to keep max voltage
-                    if (
-                        utils.MAX_CELL_VOLTAGE * self.cell_count
-                    ) - utils.VOLTAGE_DROP <= voltageSum and self.allow_max_voltage:
+                    if self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum and self.allow_max_voltage:
                         # example 2
                         self.max_voltage_start_time = time()
 
@@ -377,7 +375,7 @@ class Battery(ABC):
                         pass
 
             if self.allow_max_voltage:
-                self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+                self.control_voltage = self.max_battery_voltage
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
                 )
