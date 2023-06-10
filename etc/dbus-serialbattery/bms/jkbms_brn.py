@@ -1,9 +1,8 @@
-import asyncio
-from bleak import BleakScanner, BleakClient
-import time
-from logging import info, debug
-import logging
 from struct import unpack_from, calcsize
+from bleak import BleakScanner, BleakClient
+from time import sleep, time
+import asyncio
+import logging
 import threading
 
 logging.basicConfig(level=logging.INFO)
@@ -100,7 +99,7 @@ class Jkbms_Brn:
     async def scanForDevices(self):
         devices = await BleakScanner.discover()
         for d in devices:
-            print(d)
+            logging.debug(d)
 
     # iterative implementation maybe later due to referencing
     def translate(self, fb, translation, o, f32s=False, i=0):
@@ -191,19 +190,19 @@ class Jkbms_Brn:
         for t in TRANSLATE_CELL_INFO:
             self.translate(fb, t, self.bms_status, f32s=has32s)
         self.decode_warnings(fb)
-        debug(self.bms_status)
+        logging.debug(self.bms_status)
 
     def decode_settings_jk02(self):
         fb = self.frame_buffer
         for t in TRANSLATE_SETTINGS:
             self.translate(fb, t, self.bms_status)
-        debug(self.bms_status)
+        logging.debug(self.bms_status)
 
     def decode(self):
         # check what kind of info the frame contains
         info_type = self.frame_buffer[4]
         if info_type == 0x01:
-            info("Processing frame with settings info")
+            logging.info("Processing frame with settings info")
             if protocol_version == PROTOCOL_VERSION_JK02:
                 self.decode_settings_jk02()
                 # adapt translation table for cell array lengths
@@ -211,18 +210,18 @@ class Jkbms_Brn:
                 for i, t in enumerate(TRANSLATE_CELL_INFO):
                     if t[0][-2] == "voltages" or t[0][-2] == "voltages":
                         TRANSLATE_CELL_INFO[i][0][-1] = ccount
-                self.bms_status["last_update"] = time.time()
+                self.bms_status["last_update"] = time()
 
         elif info_type == 0x02:
             if (
                 CELL_INFO_REFRESH_S == 0
-                or time.time() - self.last_cell_info > CELL_INFO_REFRESH_S
+                or time() - self.last_cell_info > CELL_INFO_REFRESH_S
             ):
-                self.last_cell_info = time.time()
-                info("processing frame with battery cell info")
+                self.last_cell_info = time()
+                logging.info("processing frame with battery cell info")
                 if protocol_version == PROTOCOL_VERSION_JK02:
                     self.decode_cellinfo_jk02()
-                    self.bms_status["last_update"] = time.time()
+                    self.bms_status["last_update"] = time()
                 # power is calculated from voltage x current as
                 # register 122 contains unsigned power-value
                 self.bms_status["cell_info"]["power"] = (
@@ -233,10 +232,10 @@ class Jkbms_Brn:
                     self.waiting_for_response = ""
 
         elif info_type == 0x03:
-            info("processing frame with device info")
+            logging.info("processing frame with device info")
             if protocol_version == PROTOCOL_VERSION_JK02:
                 self.decode_device_info_jk02()
-                self.bms_status["last_update"] = time.time()
+                self.bms_status["last_update"] = time()
             else:
                 return
             if self.waiting_for_response == "device_info":
@@ -247,7 +246,9 @@ class Jkbms_Brn:
 
     def assemble_frame(self, data: bytearray):
         if len(self.frame_buffer) > MAX_RESPONSE_SIZE:
-            info("data dropped because it alone was longer than max frame length")
+            logging.info(
+                "data dropped because it alone was longer than max frame length"
+            )
             self.frame_buffer = []
 
         if data[0] == 0x55 and data[1] == 0xAA and data[2] == 0xEB and data[3] == 0x90:
@@ -261,16 +262,16 @@ class Jkbms_Brn:
             # actual frame-lentgh, so crc up to 299
             ccrc = self.crc(self.frame_buffer, 300 - 1)
             rcrc = self.frame_buffer[300 - 1]
-            debug(f"compair recvd. crc: {rcrc} vs calc. crc: {ccrc}")
+            logging.debug(f"compair recvd. crc: {rcrc} vs calc. crc: {ccrc}")
             if ccrc == rcrc:
-                debug("great success! frame complete and sane, lets decode")
+                logging.debug("great success! frame complete and sane, lets decode")
                 self.decode()
                 self.frame_buffer = []
                 if self._new_data_callback is not None:
                     self._new_data_callback()
 
     def ncallback(self, sender: int, data: bytearray):
-        debug(f"------> NEW PACKAGE!laenge:  {len(data)}")
+        logging.debug(f"--> NEW PACKAGE! lenght:  {len(data)}")
         self.assemble_frame(data)
 
     def crc(self, arr: bytearray, length: int) -> int:
@@ -303,15 +304,15 @@ class Jkbms_Brn:
         frame[17] = 0x00
         frame[18] = 0x00
         frame[19] = self.crc(frame, len(frame) - 1)
-        debug("Write register: ", frame)
+        logging.debug("Write register: ", frame)
         await bleakC.write_gatt_char(CHAR_HANDLE, frame, False)
 
     async def request_bt(self, rtype: str, client):
-        timeout = time.time()
+        timeout = time()
 
-        while self.waiting_for_response != "" and time.time() - timeout < 10:
+        while self.waiting_for_response != "" and time() - timeout < 10:
             await asyncio.sleep(1)
-            print(self.waiting_for_response)
+            logging.debug(self.waiting_for_response)
 
         if rtype == "cell_info":
             cmd = COMMAND_CELL_INFO
@@ -333,14 +334,18 @@ class Jkbms_Brn:
     def connect_and_scrape(self):
         asyncio.run(self.asy_connect_and_scrape())
 
+    # self.bt_thread
     async def asy_connect_and_scrape(self):
-        print("connect and scrape on address: " + self.address)
+        logging.debug(
+            "--> asy_connect_and_scrape(): Connect and scrape on address: "
+            + self.address
+        )
         self.run = True
         while self.run and self.main_thread.is_alive():  # autoreconnect
             client = BleakClient(self.address)
-            print("btloop")
+            logging.debug("--> asy_connect_and_scrape(): btloop")
             try:
-                print("reconnect")
+                logging.debug("--> asy_connect_and_scrape(): reconnect")
                 await client.connect()
                 self.bms_status["model_nbr"] = (
                     await client.read_gatt_char(MODEL_NBR_UUID)
@@ -351,27 +356,33 @@ class Jkbms_Brn:
 
                 await self.request_bt("cell_info", client)
                 # await self.enable_charging(client)
-                # last_dev_info = time.time()
+                # last_dev_info = time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
                     await asyncio.sleep(0.01)
-            except Exception as e:
-                info("error while connecting to bt: " + str(e))
+            except Exception as err:
                 self.run = False
+                logging.info(
+                    f"--> asy_connect_and_scrape(): error while connecting to bt: {err}"
+                )
             finally:
+                self.run = False
                 if client.is_connected:
                     try:
                         await client.disconnect()
-                    except Exception as e:
-                        info("error while disconnecting: " + str(e))
+                    except Exception as err:
+                        logging.info(
+                            f"--> asy_connect_and_scrape(): error while disconnecting: {err}"
+                        )
 
-        print("Exiting bt-loop")
+        logging.info("--> asy_connect_and_scrape(): Exit")
 
     def start_scraping(self):
         self.main_thread = threading.current_thread()
         if self.is_running():
+            logging.info("screaping thread already running")
             return
         self.bt_thread.start()
-        info(
+        logging.info(
             "scraping thread started -> main thread id: "
             + str(self.main_thread.ident)
             + " scraping thread: "
@@ -380,10 +391,10 @@ class Jkbms_Brn:
 
     def stop_scraping(self):
         self.run = False
-        stop = time.time()
+        stop = time()
         while self.is_running():
-            time.sleep(0.1)
-            if time.time() - stop > 10:
+            sleep(0.1)
+            if time() - stop > 10:
                 return False
         return True
 
@@ -401,11 +412,14 @@ class Jkbms_Brn:
         await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
 
 
-"""
 if __name__ == "__main__":
-    jk = Jkbms_Brn("C8:47:8C:00:00:00")
-    jk.start_scraping()
-    while True:
-        print(jk.get_status())
-        time.sleep(5)
-"""
+    import sys
+
+    jk = Jkbms_Brn(sys.argv[1])
+    if not jk.test_connection():
+        logging.error(">>> ERROR: Unable to connect")
+    else:
+        jk.start_scraping()
+        while True:
+            logging.debug(jk.get_status())
+            sleep(5)
