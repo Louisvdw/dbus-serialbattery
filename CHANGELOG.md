@@ -1,7 +1,7 @@
 # Changelog
 
 ## v1.0.x
-* Added: Bluetooth: Show signal strenght of BMS in log by @mr-manuel
+* Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547

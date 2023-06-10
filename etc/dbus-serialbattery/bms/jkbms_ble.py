@@ -138,7 +138,7 @@ class Jkbms_Ble(Battery):
             logger.info(
                 f"Jkbms_Ble: Bluetooth connection interrupted. Got no fresh data since {last_update}s."
             )
-            # show Bluetooth signal strenght (RSSI)
+            # show Bluetooth signal strength (RSSI)
             bluetoothctl_info = os.popen(
                 "bluetoothctl info "
                 + self.address
