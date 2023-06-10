@@ -58,7 +58,7 @@ expected_bms_types = [
     if battery_type["bms"].__name__ == utils.BMS_TYPE or utils.BMS_TYPE == ""
 ]
 
-print("")
+logger.info("")
 logger.info("Starting dbus-serialbattery")
 
 
@@ -114,7 +114,7 @@ def main():
         else:
             # just for MNB-SPI
             logger.info("No Port needed")
-            return "/dev/tty/USB9"
+            return "/dev/ttyUSB9"
 
     logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION))
 

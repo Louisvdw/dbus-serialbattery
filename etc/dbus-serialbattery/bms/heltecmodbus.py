@@ -30,6 +30,7 @@ class HeltecModbus(Battery):
     def __init__(self, port, baud, address):
         super(HeltecModbus, self).__init__(port, baud, address)
         self.type = "Heltec_Smart"
+        self.unique_identifier_tmp = ""
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -174,7 +175,7 @@ class HeltecModbus(Battery):
                     time.sleep(SLPTIME)
 
                     serial1 = mbdev.read_registers(2, number_of_registers=4)
-                    self.unique_identifier = "-".join(
+                    self.unique_identifier_tmp = "-".join(
                         "{:04x}".format(x) for x in serial1
                     )
                     time.sleep(SLPTIME)
@@ -234,7 +235,7 @@ class HeltecModbus(Battery):
             logger.info(self.hardware_version)
             logger.info("Heltec-" + self.hwTypeName)
             logger.info("  Dev name: " + self.devName)
-            logger.info("  Serial: " + self.unique_identifier)
+            logger.info("  Serial: " + self.unique_identifier_tmp)
             logger.info("  Made on: " + self.production_date)
             logger.info("  Cell count: " + str(self.cell_count))
             logger.info("  Cell type: " + self.cellType)
@@ -244,6 +245,12 @@ class HeltecModbus(Battery):
             logger.info("  learned capacity: " + str(self.learned_capacity))
 
         return True
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        """
+        return self.unique_identifier_tmp
 
     def read_soc_data(self):
         mbdev = mbdevs[self.address]

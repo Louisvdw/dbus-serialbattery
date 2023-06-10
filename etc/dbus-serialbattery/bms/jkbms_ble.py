@@ -2,11 +2,12 @@
 from battery import Battery, Cell
 from typing import Callable
 from utils import logger
+from time import sleep, time
 from bms.jkbms_brn import Jkbms_Brn
-from bleak import BleakScanner, BleakError
-import asyncio
-import time
 import os
+
+# from bleak import BleakScanner, BleakError
+# import asyncio
 
 
 class Jkbms_Ble(Battery):
@@ -18,44 +19,60 @@ class Jkbms_Ble(Battery):
         self.address = address
         self.type = self.BATTERYTYPE
         self.jk = Jkbms_Brn(address)
+        self.unique_identifier_tmp = ""
 
         logger.info("Init of Jkbms_Ble at " + address)
 
     def connection_name(self) -> str:
         return "BLE " + self.address
 
+    def custom_name(self) -> str:
+        return "SerialBattery(" + self.type + ") " + self.address[-5:]
+
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
+        result = False
+        logger.info("Test of Jkbms_Ble at " + self.address)
+        try:
+            if self.address and self.address != "":
+                result = True
 
-        logger.info("Test of Jkbms_Ble at " + self.jk.address)
-        
-        # start scraping
-        self.jk.start_scraping()
-        tries = 1
+            if result:
+                # start scraping
+                self.jk.start_scraping()
+                tries = 1
 
-        while self.jk.get_status() is None and tries < 20:
-            time.sleep(0.5)
-            tries += 1
+                while self.jk.get_status() is None and tries < 20:
+                    sleep(0.5)
+                    tries += 1
 
-        # load initial data, from here on get_status has valid values to be served to the dbus
-        status = self.jk.get_status()
-        if status is None:
-            self.jk.stop_scraping()
-            return False
+                # load initial data, from here on get_status has valid values to be served to the dbus
+                status = self.jk.get_status()
 
-        if not status["device_info"]["vendor_id"].startswith(("JK-", "JK_")):
-            self.jk.stop_scraping()
-            return False
+                if status is None:
+                    self.jk.stop_scraping()
+                    result = False
 
-        logger.info("Jkbms_Ble found!")
+                if result and not status["device_info"]["vendor_id"].startswith(
+                    ("JK-", "JK_")
+                ):
+                    self.jk.stop_scraping()
+                    result = False
 
-        # get first data to show in startup log
-        self.get_settings()
-        self.refresh_data()
+                # get first data to show in startup log
+                if result:
+                    self.get_settings()
+                    self.refresh_data()
+            if not result:
+                logger.error("No BMS found at " + self.address)
 
-        return True
+        except Exception as err:
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            result = False
+
+        return result
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -75,7 +92,9 @@ class Jkbms_Ble(Battery):
         tmp = self.jk.get_status()["device_info"]["manufacturing_date"]
         self.production = "20" + tmp if tmp and tmp != "" else None
 
-        self.unique_identifier = self.jk.get_status()["device_info"]["serial_number"]
+        self.unique_identifier_tmp = self.jk.get_status()["device_info"][
+            "serial_number"
+        ]
 
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
@@ -93,6 +112,12 @@ class Jkbms_Ble(Battery):
         logger.info("BAT: " + self.hardware_version)
         return True
 
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        """
+        return self.unique_identifier_tmp
+
     def use_callback(self, callback: Callable) -> bool:
         self.jk.set_callback(callback)
         return callback is not None
@@ -107,16 +132,31 @@ class Jkbms_Ble(Battery):
         st = self.jk.get_status()
         if st is None:
             return False
-        if time.time() - st["last_update"] > 30:
-            # if data not updated for more than 30s, sth is wrong, then fail
-            logger.info("Jkbms_Ble: Bluetooth died")
 
-            # if the thread is still alive but data too old there is sth
+        last_update = int(time() - st["last_update"])
+        if last_update >= 15 and last_update % 15 == 0:
+            logger.info(
+                f"Jkbms_Ble: Bluetooth connection interrupted. Got no fresh data since {last_update}s."
+            )
+            # show Bluetooth signal strenght (RSSI)
+            bluetoothctl_info = os.popen(
+                "bluetoothctl info "
+                + self.address
+                + ' | grep -i -E "device|name|alias|pair|trusted|blocked|connected|rssi|power"'
+            )
+            logger.info(bluetoothctl_info.read())
+            bluetoothctl_info.close()
+
+            # if the thread is still alive but data too old there is something
             # wrong with the bt-connection; restart whole stack
-            if not self.resetting:
+            if not self.resetting and last_update >= 60:
+                logger.error(
+                    "Jkbms_Ble: Bluetooth died. Restarting Bluetooth system driver."
+                )
                 self.reset_bluetooth()
+                sleep(2)
                 self.jk.start_scraping()
-                time.sleep(2)
+                sleep(2)
 
             return False
         else:
@@ -193,20 +233,23 @@ class Jkbms_Ble(Battery):
         return True
 
     def reset_bluetooth(self):
-        logger.info("Reset of Bluetooth triggered")
+        logger.info("Reset of system Bluetooth daemon triggered")
         self.resetting = True
-        # if self.jk.is_running():
-        # self.jk.stop_scraping()
-        logger.info("Scraping ended, issuing sys-commands")
+        if self.jk.is_running():
+            if self.jk.stop_scraping():
+                logger.info("Scraping stopped, issuing sys-commands")
+            else:
+                logger.warning("Scraping was unable to stop, issuing sys-commands")
+
         # process kill is needed, since the service/bluetooth driver is probably freezed
         os.system('pkill -f "bluetoothd"')
         # stop will not work, if service/bluetooth driver is stuck
         # os.system("/etc/init.d/bluetooth stop")
-        time.sleep(2)
+        sleep(2)
         os.system("rfkill block bluetooth")
         os.system("rfkill unblock bluetooth")
         os.system("/etc/init.d/bluetooth start")
-        logger.info("Bluetooth should have been restarted")
+        logger.info("System Bluetooth daemon should have been restarted")
 
     def get_balancing(self):
         return 1 if self.balancing else 0

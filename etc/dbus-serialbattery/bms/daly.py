@@ -522,12 +522,16 @@ class Daly(Battery):
                 " ",
                 (battery_code.strip()),
             )
-            self.unique_identifier = self.custom_field.replace(" ", "_")
-        else:
-            self.unique_identifier = (
-                str(self.production) + "_" + str(int(self.capacity))
-            )
         return True
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        """
+        if self.custom_field != "":
+            return self.custom_field.replace(" ", "_")
+        else:
+            return str(self.production) + "_" + str(int(self.capacity))
 
     def reset_soc_callback(self, path, value):
         if value is None:
