@@ -7,7 +7,9 @@
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
 * Changed: Fixed typo in `config.ini` sample by @hoschult
+* Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
+
 
 ## v1.0.20230531
 

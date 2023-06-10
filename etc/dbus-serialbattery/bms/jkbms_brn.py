@@ -99,7 +99,7 @@ class Jkbms_Brn:
     async def scanForDevices(self):
         devices = await BleakScanner.discover()
         for d in devices:
-            print(d)
+            logging.debug(d)
 
     # iterative implementation maybe later due to referencing
     def translate(self, fb, translation, o, f32s=False, i=0):
@@ -271,7 +271,7 @@ class Jkbms_Brn:
                     self._new_data_callback()
 
     def ncallback(self, sender: int, data: bytearray):
-        logging.debug(f"------> NEW PACKAGE!laenge:  {len(data)}")
+        logging.debug(f"--> NEW PACKAGE! lenght:  {len(data)}")
         self.assemble_frame(data)
 
     def crc(self, arr: bytearray, length: int) -> int:
@@ -312,7 +312,7 @@ class Jkbms_Brn:
 
         while self.waiting_for_response != "" and time() - timeout < 10:
             await asyncio.sleep(1)
-            print(self.waiting_for_response)
+            logging.debug(self.waiting_for_response)
 
         if rtype == "cell_info":
             cmd = COMMAND_CELL_INFO
@@ -334,14 +334,18 @@ class Jkbms_Brn:
     def connect_and_scrape(self):
         asyncio.run(self.asy_connect_and_scrape())
 
+    # self.bt_thread
     async def asy_connect_and_scrape(self):
-        print("connect and scrape on address: " + self.address)
+        logging.debug(
+            "--> asy_connect_and_scrape(): Connect and scrape on address: "
+            + self.address
+        )
         self.run = True
         while self.run and self.main_thread.is_alive():  # autoreconnect
             client = BleakClient(self.address)
-            print("btloop")
+            logging.debug("--> asy_connect_and_scrape(): btloop")
             try:
-                print("reconnect")
+                logging.debug("--> asy_connect_and_scrape(): reconnect")
                 await client.connect()
                 self.bms_status["model_nbr"] = (
                     await client.read_gatt_char(MODEL_NBR_UUID)
@@ -355,21 +359,27 @@ class Jkbms_Brn:
                 # last_dev_info = time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
                     await asyncio.sleep(0.01)
-            except Exception as e:
-                logging.info("error while connecting to bt: " + str(e))
+            except Exception as err:
                 self.run = False
+                logging.info(
+                    f"--> asy_connect_and_scrape(): error while connecting to bt: {err}"
+                )
             finally:
+                self.run = False
                 if client.is_connected:
                     try:
                         await client.disconnect()
-                    except Exception as e:
-                        logging.info("error while disconnecting: " + str(e))
+                    except Exception as err:
+                        logging.info(
+                            f"--> asy_connect_and_scrape(): error while disconnecting: {err}"
+                        )
 
-        print("Exiting bt-loop")
+        logging.info("--> asy_connect_and_scrape(): Exit")
 
     def start_scraping(self):
         self.main_thread = threading.current_thread()
         if self.is_running():
+            logging.info("screaping thread already running")
             return
         self.bt_thread.start()
         logging.info(
@@ -402,11 +412,14 @@ class Jkbms_Brn:
         await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
 
 
-"""
 if __name__ == "__main__":
-    jk = Jkbms_Brn("C8:47:8C:00:00:00")
-    jk.start_scraping()
-    while True:
-        print(jk.get_status())
-        sleep(5)
-"""
+    import sys
+
+    jk = Jkbms_Brn(sys.argv[1])
+    if not jk.test_connection():
+        logging.error(">>> ERROR: Unable to connect")
+    else:
+        jk.start_scraping()
+        while True:
+            logging.debug(jk.get_status())
+            sleep(5)

@@ -126,21 +126,26 @@ class Jkbms_Ble(Battery):
 
         last_update = int(time() - st["last_update"])
         if last_update >= 15 and last_update % 15 == 0:
-            # if data not updated for more than 60s, something is wrong, then fail
             logger.info(
-                f"Jkbms_Ble: Bluetooth died. Got no fresh data since {last_update}s."
+                f"Jkbms_Ble: Bluetooth connection interrupted. Got no fresh data since {last_update}s."
             )
+            # show Bluetooth signal strenght (RSSI)
             bluetoothctl_info = os.popen(
                 "bluetoothctl info "
                 + self.address
                 + ' | grep -i -E "device|name|alias|pair|trusted|blocked|connected|rssi|power"'
             )
-            logger.info(bluetoothctl_info)
+            logger.info(bluetoothctl_info.read())
+            bluetoothctl_info.close()
 
             # if the thread is still alive but data too old there is something
             # wrong with the bt-connection; restart whole stack
-            if not self.resetting and last_update >= 120:
+            if not self.resetting and last_update >= 60:
+                logger.error(
+                    "Jkbms_Ble: Bluetooth died. Restarting Bluetooth system driver."
+                )
                 self.reset_bluetooth()
+                sleep(2)
                 self.jk.start_scraping()
                 sleep(2)
 
@@ -222,9 +227,11 @@ class Jkbms_Ble(Battery):
         logger.info("Reset of system Bluetooth daemon triggered")
         self.resetting = True
         if self.jk.is_running():
-            self.jk.stop_scraping()
+            if self.jk.stop_scraping():
+                logger.info("Scraping stopped, issuing sys-commands")
+            else:
+                logger.warning("Scraping was unable to stop, issuing sys-commands")
 
-        logger.info("Scraping ended, issuing sys-commands")
         # process kill is needed, since the service/bluetooth driver is probably freezed
         os.system('pkill -f "bluetoothd"')
         # stop will not work, if service/bluetooth driver is stuck
