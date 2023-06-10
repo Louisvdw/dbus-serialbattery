@@ -290,3 +290,7 @@ sed -i 's/\r//' /data/etc/dbus-serialbattery/service/log/run
 ```
 
 Now reboot the device. If this doesn't help, then download/unpack and reinstall the driver again.
+
+## `tar: conf/serial-starter.d: Cannot open: File exists`
+
+See [this page](../general/install#downgrade-from--v100-to--v0143).

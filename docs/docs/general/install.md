@@ -17,13 +17,14 @@ toc_max_heading_level: 4
 
 ## Compatibility Matrix
 
-| &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0 |
-| ---                                              | :---:    | :---:    | :---:                | :---:  |
-| v2.80 - v2.84                                    | x        | x        |                      |        |
-| v2.85 - v2.89                                    | x        | x        |                      |        |
-| v2.90 - v2.94                                    | untested | x        | x                    | x      |
-| v3.00~1 - v3.00~13                               | untested | untested | x                    | x      |
-| v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x      |
+| &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0   |
+| ---                                              | :---:    | :---:    | :---:                | :---:    |
+| v2.80 - v2.84                                    | x        | x        | untested             | untested |
+| v2.85 - v2.89                                    | x        | x        | untested             | untested |
+| v2.90 - v2.94                                    | untested | x        | x                    | x        |
+| v3.00~1 - v3.00~13                               | untested | untested | x                    | x        |
+| v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x        |
+| v3.00 - v3.10~7                                  | untested | untested | x<sup>1)</sup>       | x        |
 
 1) Partially supported. Empty values/pages are not hidden in the GUI
 
@@ -279,3 +280,21 @@ If you want to remove also the install files of the driver run this after you ru
 ```bash
 rm -rf /data/etc/dbus-serialbattery
 ```
+
+
+## Downgrade from `>= v1.0.0` to `<= v0.14.3`
+
+With `>= v1.0.0` the serial starter config is created differently and therefore you have to delete the `/data/conf/serial-starter.d` folder before downgrading to `<= v0.14.3`, else you will get an error like this during installation of `<= v0.14.3`:
+
+```bash
+tar: conf/serial-starter.d: Cannot open: File exists
+tar: Exiting with failure status due to previous errors
+```
+
+To solve this proble run
+
+```bash
+rm -rf /data/conf/serial-starter.d
+```
+
+before the install script.

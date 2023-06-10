@@ -132,7 +132,7 @@ If there is no log folder under `/data/log/dbus-serialbattery.*` then check:
 * Is the connection picked up by serial-starter? Use the command
 
   ```bash
-  tail -f /data/log/serial-starter/current | tai64nlocal
+  tail -F /data/log/serial-starter/current | tai64nlocal
   ```
 
   to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `tty` port it uses.
@@ -142,13 +142,13 @@ If there is no log folder under `/data/log/dbus-serialbattery.*` then check:
   - For serial connected BMS
 
     ```bash
-    tail -f /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
+    tail -F /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
     ```
 
     or
 
     ```bash
-    tail -f /data/log/dbus-serialbattery.*/current | tai64nlocal
+    tail -F /data/log/dbus-serialbattery.*/current | tai64nlocal
     ```
 
     to check all devices the serialstarter started.
@@ -156,13 +156,13 @@ If there is no log folder under `/data/log/dbus-serialbattery.*` then check:
   - For Bluetooth connected BMS
 
     ```bash
-    tail -f /data/log/dbus-blebattery.0/current | tai64nlocal
+    tail -F /data/log/dbus-blebattery.0/current | tai64nlocal
     ```
 
     or
 
     ```bash
-    tail -f /data/log/dbus-blebattery.*/current | tai64nlocal
+    tail -F /data/log/dbus-blebattery.*/current | tai64nlocal
     ```
 
     to check all Bluetooth devices.
