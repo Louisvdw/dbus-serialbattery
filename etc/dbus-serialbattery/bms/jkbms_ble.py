@@ -30,7 +30,7 @@ class Jkbms_Ble(Battery):
         # Return True if success, False for failure
 
         logger.info("Test of Jkbms_Ble at " + self.jk.address)
-        
+
         # start scraping
         self.jk.start_scraping()
         tries = 1

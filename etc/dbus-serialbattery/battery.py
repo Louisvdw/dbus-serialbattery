@@ -70,7 +70,7 @@ class Battery(ABC):
         self.has_settings = 0
         self.max_battery_voltage = None
         self.min_battery_voltage = None
-        
+
         self.init_values()
 
         # used to identify a BMS when multiple BMS are connected - planned for future use
@@ -217,9 +217,9 @@ class Battery(ABC):
         voltageSum = 0
         penaltySum = 0
         tDiff = 0
-        
+
         PENALTY_BUFFER = 0.010
-        
+
         try:
             if utils.CVCM_ENABLE:
                 # calculate battery sum
@@ -232,15 +232,16 @@ class Battery(ABC):
                         if voltage > utils.MAX_CELL_VOLTAGE:
                             # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
                             foundHighCellVoltage = True
-                            penaltySum += voltage - utils.MAX_CELL_VOLTAGE + PENALTY_BUFFER
+                            penaltySum += (
+                                voltage - utils.MAX_CELL_VOLTAGE + PENALTY_BUFFER
+                            )
 
                 voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
                 if self.max_voltage_start_time is None:
                     # start timer, if max voltage is reached and cells are balanced
                     if (
-                        self.max_battery_voltage - utils.VOLTAGE_DROP
-                        <= voltageSum
+                        self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
                         and voltageDiff
                         <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                         and self.allow_max_voltage
@@ -306,7 +307,10 @@ class Battery(ABC):
             elif self.allow_max_voltage:
                 self.control_voltage = round(self.max_battery_voltage, 3)
                 self.charge_mode = (
-                    "Bulk" if self.max_voltage_start_time is None else "Absorption"
+                    # "Bulk" if self.max_voltage_start_time is None else "Absorption"
+                    "Bulk"
+                    if self.max_voltage_start_time is None
+                    else "Absorption" + "(tDiff: " + str(tDiff) + ")"
                 )
 
             else:
@@ -346,7 +350,10 @@ class Battery(ABC):
 
                 if self.max_voltage_start_time is None:
                     # check if max voltage is reached and start timer to keep max voltage
-                    if self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum and self.allow_max_voltage:
+                    if (
+                        self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
+                        and self.allow_max_voltage
+                    ):
                         # example 2
                         self.max_voltage_start_time = time()
 
