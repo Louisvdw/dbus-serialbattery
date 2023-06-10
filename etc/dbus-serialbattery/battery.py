@@ -102,8 +102,8 @@ class Battery(ABC):
         self.cells: List[Cell] = []
         self.control_charging = None
         self.control_voltage = None
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
+        self.max_battery_voltage = None
+        self.min_battery_voltage = None
         self.allow_max_voltage = True
         self.max_voltage_start_time = None
         self.charge_mode = None
@@ -198,6 +198,7 @@ class Battery(ABC):
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
+        self.prepare_voltage_management()
         if utils.CVCM_ENABLE:
             if utils.LINEAR_LIMITATION_ENABLE:
                 self.manage_charge_voltage_linear()
@@ -207,6 +208,10 @@ class Battery(ABC):
         else:
             self.control_voltage = round(self.max_battery_voltage, 3)
             self.charge_mode = "Keep always max voltage"
+
+    def prepare_voltage_management(self) -> None:
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_linear(self) -> None:
         """
