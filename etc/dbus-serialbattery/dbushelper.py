@@ -123,7 +123,10 @@ class DbusHelper:
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
-            "/CustomName", self.battery.custom_name(), writeable=True
+            "/CustomName",
+            self.battery.custom_name(),
+            writeable=True,
+            onchangecallback=self.battery.custom_name_callback,
         )
         self._dbusservice.add_path(
             "/Serial", self.battery.unique_identifier, writeable=True

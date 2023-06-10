@@ -7,6 +7,8 @@ import logging
 import math
 from time import time
 from abc import ABC, abstractmethod
+import re
+import sys
 
 
 class Protection(object):
@@ -133,7 +135,16 @@ class Battery(ABC):
         return "Serial " + self.port
 
     def custom_name(self) -> str:
-        return "SerialBattery(" + self.type + ")"
+        """
+        Check if the custom name is present in the config file, else return default name
+        """
+        if len(utils.CUSTOM_BATTERY_NAMES) > 0:
+            for name in utils.CUSTOM_BATTERY_NAMES:
+                tmp = name.split(":")
+                if tmp[0].strip() == self.port:
+                    return tmp[1].strip()
+        else:
+            return "SerialBattery(" + self.type + ")"
 
     def product_name(self) -> str:
         return "SerialBattery(" + self.type + ")"
@@ -998,6 +1009,146 @@ class Battery(ABC):
             logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier}")
 
         return
+
+    # save custom name to config file
+    def custom_name_callback(self, path, value):
+        try:
+            if path == "/CustomName":
+                file = open(
+                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "r"
+                )
+                lines = file.readlines()
+                last = len(lines)
+
+                # remove not allowed characters
+                value = value.replace(":", "").replace("=", "").replace(",", "").strip()
+
+                # empty string to save new config file
+                config_file_new = ""
+
+                # make sure we are in the [DEFAULT] section
+                current_line_in_default_section = False
+                default_section_checked = False
+
+                # check if already exists
+                exists = False
+
+                # count lines
+                i = 0
+                # looping through the file
+                for line in lines:
+                    # increment by one
+                    i += 1
+
+                    # stripping line break
+                    line = line.strip()
+
+                    # check, if current line is after the [DEFAULT] section
+                    if line == "[DEFAULT]":
+                        current_line_in_default_section = True
+
+                    # check, if current line starts a new section
+                    if line != "[DEFAULT]" and re.match(r"^\[.*\]", line):
+                        # set default_section_checked to true, if it was already checked and a new section comes on
+                        if current_line_in_default_section and not exists:
+                            default_section_checked = True
+                        current_line_in_default_section = False
+
+                    # check, if the current line is the last line
+                    if i == last:
+                        default_section_checked = True
+
+                    # insert or replace only in [DEFAULT] section
+                    if current_line_in_default_section and re.match(
+                        r"^CUSTOM_BATTERY_NAMES.*", line
+                    ):
+                        # set that the setting was found, else a new one is created
+                        exists = True
+
+                        # remove setting name
+                        line = re.sub(
+                            "^CUSTOM_BATTERY_NAMES\s*=\s*", "", line  # noqa: W605
+                        )
+
+                        # change only the name of the current BMS
+                        result = []
+                        bms_name_list = line.split(",")
+                        for bms_name_pair in bms_name_list:
+                            tmp = bms_name_pair.split(":")
+                            if tmp[0] == self.port:
+                                result.append(tmp[0] + ":" + value)
+                            else:
+                                result.append(bms_name_pair)
+
+                        new_line = "CUSTOM_BATTERY_NAMES = " + ",".join(result)
+
+                    else:
+                        if default_section_checked and not exists:
+                            exists = True
+
+                            # add before current line
+                            if i != last:
+                                new_line = (
+                                    "CUSTOM_BATTERY_NAMES = "
+                                    + self.port
+                                    + ":"
+                                    + value
+                                    + "\n\n"
+                                    + line
+                                )
+
+                            # add at the end if last line
+                            else:
+                                new_line = (
+                                    line
+                                    + "\n\n"
+                                    + "CUSTOM_BATTERY_NAMES = "
+                                    + self.port
+                                    + ":"
+                                    + value
+                                )
+                        else:
+                            new_line = line
+                    # concatenate the new string and add an end-line break
+                    config_file_new = config_file_new + new_line + "\n"
+
+                # close the file
+                file.close()
+                # Open file in write mode
+                write_file = open(
+                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "w"
+                )
+                # overwriting the old file contents with the new/replaced content
+                write_file.write(config_file_new)
+                # close the file
+                write_file.close()
+
+                # logger.error("value (saved): " + str(value))
+
+                """
+                # this removes all comments and tranfsorm the values to lowercase
+                utils.config.set(
+                    "DEFAULT",
+                    "CUSTOM_BATTERY_NAMES",
+                    self.port + ":" + value,
+                )
+
+                # Writing our configuration file to 'example.ini'
+                with open(
+                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "w"
+                ) as configfile:
+                    type(utils.config.write(configfile))
+                """
+
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
+
+        return value
 
     def reset_soc_callback(self, path, value):
         # callback for handling reset soc request
