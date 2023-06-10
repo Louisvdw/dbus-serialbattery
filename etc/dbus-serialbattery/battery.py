@@ -68,8 +68,6 @@ class Battery(ABC):
         self.max_battery_charge_current = None
         self.max_battery_discharge_current = None
         self.has_settings = 0
-        self.max_battery_voltage = None
-        self.min_battery_voltage = None
 
         self.init_values()
 
@@ -104,14 +102,16 @@ class Battery(ABC):
         self.cells: List[Cell] = []
         self.control_charging = None
         self.control_voltage = None
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
         self.allow_max_voltage = True
+        self.max_voltage_start_time = None
         self.charge_mode = None
         self.charge_limitation = None
         self.discharge_limitation = None
         self.linear_cvl_last_set = 0
         self.linear_ccl_last_set = 0
         self.linear_dcl_last_set = 0
-        self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
         self.control_previous_max = None
@@ -198,8 +198,6 @@ class Battery(ABC):
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
         if utils.CVCM_ENABLE:
             if utils.LINEAR_LIMITATION_ENABLE:
                 self.manage_charge_voltage_linear()
