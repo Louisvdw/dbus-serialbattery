@@ -3,8 +3,6 @@ from battery import Battery, Cell
 from typing import Callable
 from utils import logger
 from bms.jkbms_brn import Jkbms_Brn
-from bleak import BleakScanner, BleakError
-import asyncio
 import time
 import os
 
