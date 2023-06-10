@@ -123,7 +123,7 @@ if [ ! -f "$filename" ]; then
 fi
 
 # kill driver, if running. It gets restarted by the service daemon
-pkill -f "python .*/dbus-serialbattery.py$"
+pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 
 
 
@@ -145,16 +145,18 @@ IFS="," read -r -a bms_array <<< "$bluetooth_bms_clean"
 length=${#bms_array[@]}
 # echo $length
 
-# stop all dbus-blebattery services
-svc -u /service/dbus-blebattery.*
+# stop all dbus-blebattery services, if at least one exists
+if [ -d "/service/dbus-blebattery.0" ]; then
+    svc -u /service/dbus-blebattery.*
 
-# always remove existing blebattery services to cleanup
-rm -rf /service/dbus-blebattery.*
+    # always remove existing blebattery services to cleanup
+    rm -rf /service/dbus-blebattery.*
 
-# kill all blebattery processes that remain
-pkill -f "supervise dbus-blebattery.*"
-pkill -f "multilog .* /var/log/dbus-blebattery.*"
-pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+    # kill all blebattery processes that remain
+    pkill -f "supervise dbus-blebattery.*"
+    pkill -f "multilog .* /var/log/dbus-blebattery.*"
+    pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+fi
 
 
 if [ "$length" -gt 0 ]; then
@@ -247,6 +249,7 @@ else
     # remove cronjob
     sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
 
+    echo
     echo "No Bluetooth battery configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
     echo "You can ignore this, if you are using only a serial connection."
     echo
