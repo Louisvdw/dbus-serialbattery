@@ -2,6 +2,7 @@
 
 ## v1.0.x
 * Added: Bluetooth: Show signal strenght of BMS in log by @mr-manuel
+* Added: Create unique identifier, if not provided from BMS by @mr-manuel
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel

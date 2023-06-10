@@ -129,7 +129,7 @@ class DbusHelper:
             onchangecallback=self.battery.custom_name_callback,
         )
         self._dbusservice.add_path(
-            "/Serial", self.battery.unique_identifier, writeable=True
+            "/Serial", self.battery.unique_identifier(), writeable=True
         )
         self._dbusservice.add_path(
             "/DeviceName", self.battery.custom_field, writeable=True

@@ -19,6 +19,7 @@ class Jkbms_Ble(Battery):
         self.address = address
         self.type = self.BATTERYTYPE
         self.jk = Jkbms_Brn(address)
+        self.unique_identifier_tmp = ""
 
         logger.info("Init of Jkbms_Ble at " + address)
 
@@ -91,7 +92,9 @@ class Jkbms_Ble(Battery):
         tmp = self.jk.get_status()["device_info"]["manufacturing_date"]
         self.production = "20" + tmp if tmp and tmp != "" else None
 
-        self.unique_identifier = self.jk.get_status()["device_info"]["serial_number"]
+        self.unique_identifier_tmp = self.jk.get_status()["device_info"][
+            "serial_number"
+        ]
 
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
@@ -108,6 +111,12 @@ class Jkbms_Ble(Battery):
         )
         logger.info("BAT: " + self.hardware_version)
         return True
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        """
+        return self.unique_identifier_tmp
 
     def use_callback(self, callback: Callable) -> bool:
         self.jk.set_callback(callback)

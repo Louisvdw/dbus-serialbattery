@@ -71,14 +71,11 @@ class Battery(ABC):
         self.max_battery_discharge_current = None
         self.has_settings = 0
 
-        self.init_values()
-
-        # used to identify a BMS when multiple BMS are connected - planned for future use
-        self.unique_identifier = None
-
         # fetched from the BMS from a field where the user can input a custom string
         # only if available
         self.custom_field = None
+
+        self.init_values()
 
     def init_values(self):
         self.voltage = None
@@ -130,6 +127,20 @@ class Battery(ABC):
         # Each driver must override this function to test if a connection can be made
         # return false when failed, true if successful
         return False
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        If not provided by the BMS/driver then the hardware version and capacity is used,
+        since it can be changed by small amounts to make a battery unique.
+        On +/- 5 Ah you can identify 11 batteries
+        """
+        return (
+            "".join(filter(str.isalnum, self.hardware_version))
+            + "_"
+            + str(self.capacity)
+            + "Ah"
+        )
 
     def connection_name(self) -> str:
         return "Serial " + self.port
@@ -1005,8 +1016,7 @@ class Battery(ABC):
         logger.info(
             f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
         )
-        if self.unique_identifier is not None:
-            logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier}")
+        logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier()}")
 
         return
 
