@@ -245,8 +245,6 @@ class Battery(ABC):
         penaltySum = 0
         tDiff = 0
 
-        PENALTY_BUFFER = 0.002
-
         try:
             if utils.CVCM_ENABLE:
                 # calculate battery sum
@@ -259,9 +257,7 @@ class Battery(ABC):
                         if voltage > utils.MAX_CELL_VOLTAGE:
                             # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
                             foundHighCellVoltage = True
-                            penaltySum += (
-                                voltage - utils.MAX_CELL_VOLTAGE + PENALTY_BUFFER
-                            )
+                            penaltySum += voltage - utils.MAX_CELL_VOLTAGE
 
                 voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
