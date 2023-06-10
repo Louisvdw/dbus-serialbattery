@@ -220,7 +220,7 @@ class Battery(ABC):
         penaltySum = 0
         tDiff = 0
 
-        PENALTY_BUFFER = 0.010
+        PENALTY_BUFFER = 0.002
 
         try:
             if utils.CVCM_ENABLE:
