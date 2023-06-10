@@ -198,6 +198,8 @@ class Battery(ABC):
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
         if utils.CVCM_ENABLE:
             if utils.LINEAR_LIMITATION_ENABLE:
                 self.manage_charge_voltage_linear()
