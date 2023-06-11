@@ -577,7 +577,7 @@ class Daly(Battery):
         ser.write(cmd)
 
         reply = self.read_sentence(ser, self.command_set_soc)
-        if reply[0] != 1:
+        if reply is False or reply[0] != 1:
             logger.error("write soc failed")
         return True
 
