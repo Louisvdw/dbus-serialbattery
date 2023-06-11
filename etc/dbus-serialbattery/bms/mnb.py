@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# disable MNB battery by default
+# # MNB is disabled by default
+# can be enabled by specifying it in the BMS_TYPE setting in the "config.ini"
 # https://github.com/Louisvdw/dbus-serialbattery/commit/65241cbff36feb861ff43dbbcfb2b495f14a01ce
 # remove duplicate MNB lines
 # https://github.com/Louisvdw/dbus-serialbattery/commit/23afec33c2fd87fd4d4c53516f0a25f290643c82
