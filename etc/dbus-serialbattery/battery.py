@@ -78,6 +78,9 @@ class Battery(ABC):
         self.init_values()
 
     def init_values(self):
+        """
+        Used to reset values, if battery unexpectly disconnects
+        """
         self.voltage = None
         self.current = None
         self.capacity_remain = None
