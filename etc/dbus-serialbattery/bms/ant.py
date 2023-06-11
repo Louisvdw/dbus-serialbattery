@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# disable ANT BMS by default as it causes other issues but can be enabled manually
+# ANT BMS is disabled by default as it causes issues with other devices
+# can be enabled by specifying it in the BMS_TYPE setting in the "config.ini"
 # https://github.com/Louisvdw/dbus-serialbattery/issues/479
 
 from battery import Battery

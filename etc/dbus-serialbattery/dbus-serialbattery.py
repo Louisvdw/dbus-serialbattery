@@ -32,9 +32,13 @@ from bms.lltjbd import LltJbd
 from bms.renogy import Renogy
 from bms.seplos import Seplos
 
-# from bms.ant import Ant
-# from bms.mnb import MNB
-# from bms.sinowealth import Sinowealth
+# enabled only if explicitly set in config under "BMS_TYPE"
+if "Ant" in utils.BMS_TYPE:
+    from bms.ant import Ant
+if "MNB" in utils.BMS_TYPE:
+    from bms.mnb import MNB
+if "Sinowealth" in utils.BMS_TYPE:
+    from bms.sinowealth import Sinowealth
 
 supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
@@ -48,14 +52,20 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
-    # {"bms": Ant, "baud": 19200},
-    # {"bms": MNB, "baud": 9600},
-    # {"bms": Sinowealth, "baud": 9600},
 ]
+
+# enabled only if explicitly set in config under "BMS_TYPE"
+if "Ant" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": Ant, "baud": 19200})
+if "MNB" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": MNB, "baud": 9600})
+if "Sinowealth" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": Sinowealth, "baud": 9600})
+
 expected_bms_types = [
     battery_type
     for battery_type in supported_bms_types
-    if battery_type["bms"].__name__ == utils.BMS_TYPE or utils.BMS_TYPE == ""
+    if battery_type["bms"].__name__ in utils.BMS_TYPE or len(utils.BMS_TYPE) == 0
 ]
 
 logger.info("")

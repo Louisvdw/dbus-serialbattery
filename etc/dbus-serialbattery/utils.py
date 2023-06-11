@@ -37,11 +37,8 @@ def _get_list_from_config(
     )
 
 
-# battery types
-# if not specified: baud = 9600
-
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230610dev"
+DRIVER_VERSION = "1.0.20230611dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -276,7 +273,7 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 # -- Available BMS, but disabled by default:
 # https://louisvdw.github.io/dbus-serialbattery/general/install#how-to-enable-a-disabled-bms
 # Ant, MNB, Sinowealth
-BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
+BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
 # Exclute this serial devices from the driver startup
 # Example: /dev/ttyUSB2, /dev/ttyUSB4
