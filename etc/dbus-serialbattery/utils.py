@@ -267,12 +267,11 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 
 # --------- Additional settings ---------
-# Specify only one BMS type to load else leave empty to try to load all available
+# Specify one or more BMS types to load else leave empty to try to load all available
 # -- Available BMS:
 # Daly, Ecs, HeltecModbus, HLPdataBMS4S, Jkbms, Lifepower, LltJbd, Renogy, Seplos
-# -- Available BMS, but disabled by default:
-# https://louisvdw.github.io/dbus-serialbattery/general/install#how-to-enable-a-disabled-bms
-# Ant, MNB, Sinowealth
+# -- Available BMS, but disabled by default (just enter one or more below and it will be enabled):
+# ANT, MNB, Sinowealth
 BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
 # Exclute this serial devices from the driver startup

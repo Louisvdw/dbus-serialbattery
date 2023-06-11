@@ -32,8 +32,8 @@ from bms.renogy import Renogy
 from bms.seplos import Seplos
 
 # enabled only if explicitly set in config under "BMS_TYPE"
-if "Ant" in utils.BMS_TYPE:
-    from bms.ant import Ant
+if "ANT" in utils.BMS_TYPE:
+    from bms.ant import ANT
 if "MNB" in utils.BMS_TYPE:
     from bms.mnb import MNB
 if "Sinowealth" in utils.BMS_TYPE:
@@ -54,8 +54,8 @@ supported_bms_types = [
 ]
 
 # enabled only if explicitly set in config under "BMS_TYPE"
-if "Ant" in utils.BMS_TYPE:
-    supported_bms_types.append({"bms": Ant, "baud": 19200})
+if "ANT" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": ANT, "baud": 19200})
 if "MNB" in utils.BMS_TYPE:
     supported_bms_types.append({"bms": MNB, "baud": 9600})
 if "Sinowealth" in utils.BMS_TYPE:

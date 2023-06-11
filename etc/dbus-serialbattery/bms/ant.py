@@ -10,9 +10,9 @@ import utils
 from struct import unpack_from
 
 
-class Ant(Battery):
+class ANT(Battery):
     def __init__(self, port, baud, address):
-        super(Ant, self).__init__(port, baud, address)
+        super(ANT, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     command_general = b"\xDB\xDB\x00\x00\x00\x00"
@@ -31,6 +31,7 @@ class Ant(Battery):
         result = False
         try:
             result = self.read_status_data()
+            result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -62,8 +63,15 @@ class Ant(Battery):
 
         voltage = unpack_from(">H", status_data, 4)
         self.voltage = voltage[0] * 0.1
+        # check if data is in the thresholds, if not it's very likely that it's not an ANT BMS
+        if self.voltage < 0 and self.voltage > 100:
+            return False
+
         current, self.soc = unpack_from(">lB", status_data, 70)
         self.current = 0.0 if current == 0 else current / -10
+        # check if data is in the thresholds, if not it's very likely that it's not an ANT BMS
+        if self.soc < 0 or self.soc > 100 or abs(self.current) > 1000:
+            return False
 
         self.cell_count = unpack_from(">b", status_data, 123)[0]
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
@@ -79,6 +87,9 @@ class Ant(Battery):
 
         capacity = unpack_from(">L", status_data, 75)
         self.capacity = capacity[0] / 1000000
+        # check if data is in the thresholds, if not it's very likely that it's not an ANT BMS
+        if self.capacity < 0 or self.capacity > 1000:
+            return False
 
         capacity_remain = unpack_from(">L", status_data, 79)
         self.capacity_remain = capacity_remain[0] / 1000000
