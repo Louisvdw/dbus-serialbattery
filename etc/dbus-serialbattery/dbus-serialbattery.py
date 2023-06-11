@@ -50,7 +50,7 @@ supported_bms_types = [
     {"bms": Seplos, "baud": 19200},
     # {"bms": Ant, "baud": 19200},
     # {"bms": MNB, "baud": 9600},
-    # {"bms": Sinowealth},
+    # {"bms": Sinowealth, "baud": 9600},
 ]
 expected_bms_types = [
     battery_type
