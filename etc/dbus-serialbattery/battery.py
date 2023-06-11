@@ -284,6 +284,8 @@ class Battery(ABC):
                     if 300 < tDiff:
                         self.allow_max_voltage = False
                         self.max_voltage_start_time = None
+                    # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
+                    # regardless of whether we were in absorption mode or not
                     if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP:
                         self.max_voltage_start_time = None
 
@@ -333,7 +335,7 @@ class Battery(ABC):
                     # "Bulk" if self.max_voltage_start_time is None else "Absorption"
                     "Bulk"
                     if self.max_voltage_start_time is None
-                    else "Absorption" + "(tDiff: " + str(tDiff) + ")"
+                    else "Absorption"
                 )
 
             else:
