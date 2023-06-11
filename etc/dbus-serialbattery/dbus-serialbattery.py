@@ -5,7 +5,6 @@ from typing import Union
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 
-# from threading import Thread  ## removed with https://github.com/Louisvdw/dbus-serialbattery/pull/582
 import sys
 
 if sys.version_info.major == 2:
@@ -80,13 +79,25 @@ def main():
     def get_battery(_port) -> Union[Battery, None]:
         # all the different batteries the driver support and need to test for
         # try to establish communications with the battery 3 times, else exit
-        count = 3
-        while count > 0:
+        retry = 1
+        retries = 3
+        while retry <= retries:
+            logger.info(
+                "-- Testing BMS: " + str(retry) + " of " + str(retries) + " rounds"
+            )
             # create a new battery object that can read the battery and run connection test
             for test in expected_bms_types:
                 # noinspection PyBroadException
                 try:
-                    logger.info("Testing " + test["bms"].__name__)
+                    logger.info(
+                        "Testing "
+                        + test["bms"].__name__
+                        + (
+                            ' at address "' + f"\\x{bytes(test['address']).hex()}" + '"'
+                            if "address" in test
+                            else ""
+                        )
+                    )
                     batteryClass = test["bms"]
                     baud = test["baud"]
                     battery: Battery = batteryClass(
@@ -100,9 +111,19 @@ def main():
                 except KeyboardInterrupt:
                     return None
                 except Exception:
+                    (
+                        exception_type,
+                        exception_object,
+                        exception_traceback,
+                    ) = sys.exc_info()
+                    file = exception_traceback.tb_frame.f_code.co_filename
+                    line = exception_traceback.tb_lineno
+                    logger.error(
+                        f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                    )
                     # Ignore any malfunction test_function()
                     pass
-            count -= 1
+            retry += 1
             sleep(0.5)
 
         return None
