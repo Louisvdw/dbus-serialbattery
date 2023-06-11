@@ -343,9 +343,14 @@ class Battery(ABC):
                 )
 
             else:
-                self.control_voltage = round(
-                    (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3
-                )
+                floatVoltage = round((utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
+                if self.control_voltage:
+                    if self.control_voltage >= (floatVoltage + 0.005):
+                        self.control_voltage -= 0.005
+                    else:
+                        self.control_voltage = floatVoltage
+                else:
+                    self.control_voltage = floatVoltage
                 self.charge_mode = "Float"
 
             if (
