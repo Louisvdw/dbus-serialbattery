@@ -219,8 +219,11 @@ becomes
 
 Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and check, if your BMS is already uncommented (without the `#` as first line character) your BMS.
 
-#### Driver version `>= v1.0.0`
+#### Driver version `>= v1.0.0` and `<= v1.0.20230610beta`
 Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and uncommented (without the `#` as first line character) your BMS twice (`# from ...` and `# {"bms": ...}`).
+
+#### Driver version `>= v1.0.20230611beta`
+Add your BMS to the setting `BMS_TYPE` in the `config.ini`. This way you don't have to enable your BMS after every update.
 
 
 ## Disable the driver
