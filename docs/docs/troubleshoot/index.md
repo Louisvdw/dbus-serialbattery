@@ -139,18 +139,76 @@ The log file will tell you what the driver did and where it failed.
 #### No log file
 If there is no log folder under `/data/log/dbus-serialbattery.*` then check:
 
-* Did the install have any error? Reinstall the driver, also trying an alternative method.
+* Did the install have any error? Reinstall the driver, also trying an alternative method and version.
 
-* Is the connection picked up by serial-starter? Use the command
+* Is the connection picked up by serial-starter?
 
   💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
   You can exit by pressing `CTRL + C`.
+
+  Use the command
 
   ```bash
   tail -F /data/log/serial-starter/current | tai64nlocal
   ```
 
-  to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `tty` port it uses.
+  to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `ttyUSB` port it uses.
+
+  You can also check, which USB port it used by plugging out your USB device, wait some seconds, execute the command below, plug in your USB device, execute the command below again and compare which `ttyUSB` device appeared now.
+
+  **Execute**
+  ```bash
+  ls -l /dev/ttyUSB*
+  ```
+
+  **Example output (USB device unplugged)**
+  ```bash
+  crw-rw----    1 root     dialout   188,   0 Jun 11 17:08 /dev/ttyUSB0
+  ```
+
+  **Example output (USB device plugged)**
+  ```bash
+  crw-rw----    1 root     dialout   188,   0 Jun 11 17:08 /dev/ttyUSB0
+  crw-rw----    1 root     dialout   188,   1 Jun 11 17:08 /dev/ttyUSB1
+  ```
+
+* Did the serial starter correctly assign the USB port to the correct service?
+
+  If the content under `==> /data/var/lib/serial-starter/* <==` shows `sbattery` then this USB port is assigned to the `dbus-serialbattery` driver.
+
+  **Execute**
+  ```bash
+  head /data/var/lib/serial-starter/*
+  ```
+
+  **Output**
+  ```bash
+  ==> /data/var/lib/serial-starter/ttyACM0 <==
+  gps
+
+  ==> /data/var/lib/serial-starter/ttyUSB0 <==
+  vedirect
+
+  ==> /data/var/lib/serial-starter/ttyUSB1 <==
+  sbattery
+
+  ==> /data/var/lib/serial-starter/ttyUSB2 <==
+  vedirect
+  ```
+
+  If the assignment is wrong you can reset all executing this command
+
+  ```bash
+  rm /data/var/lib/serial-starter/*
+  ```
+
+  and then reboot. You can also overwrite an assignment by executing the command below.
+  Change the `#` with the number of your USB port before executing the command. Reboot after the change.
+
+  ```bash
+  echo "sbattery" > /data/var/lib/serial-starter/ttyUSB#
+  ```
+
 
 * Check, if your BMS type is found (change to the `ttyUSB*` your device use)
 
