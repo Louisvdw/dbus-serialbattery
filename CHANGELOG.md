@@ -1,16 +1,23 @@
 # Changelog
 
 ## v1.0.x
-* Added: Bluetooth: Show signal strenght of BMS in log by @mr-manuel
+* Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
+* Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
+* Changed: Fix Sinowealth not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
+* Changed: Fixed that other devices are recognized as ANT BMS by @mr-manuel
+* Changed: Fixed that other devices are recognized as Sinowealth BMS by @mr-manuel
 * Changed: Fixed typo in `config.ini` sample by @hoschult
+* Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
+* Changed: Improved battery error handling on connection loss by @mr-manuel
+* Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
 
 
 ## v1.0.20230531

@@ -78,6 +78,9 @@ class Battery(ABC):
         self.init_values()
 
     def init_values(self):
+        """
+        Used to reset values, if battery unexpectly disconnects
+        """
         self.voltage = None
         self.current = None
         self.capacity_remain = None
@@ -137,12 +140,13 @@ class Battery(ABC):
         since it can be changed by small amounts to make a battery unique.
         On +/- 5 Ah you can identify 11 batteries
         """
-        return (
-            "".join(filter(str.isalnum, self.hardware_version))
-            + "_"
-            + str(self.capacity)
-            + "Ah"
+        string = (
+            "".join(filter(str.isalnum, self.hardware_version)) + "_"
+            if self.hardware_version is not None and self.hardware_version != ""
+            else ""
         )
+        string += str(self.capacity) + "Ah"
+        return string
 
     def connection_name(self) -> str:
         return "Serial " + self.port
