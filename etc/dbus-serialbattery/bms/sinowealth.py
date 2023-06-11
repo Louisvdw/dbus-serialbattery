@@ -67,7 +67,8 @@ class Sinowealth(Battery):
         self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
         logger.debug(self.hardware_version)
 
-        self.read_capacity()
+        if not self.read_capacity():
+            return False
 
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
@@ -147,7 +148,12 @@ class Sinowealth(Battery):
         if soc_data is False:
             return False
         logger.debug(">>> INFO: current SOC: %u", soc_data[1])
-        self.soc = soc_data[1]
+        soc = soc_data[1]
+        # check if data is in the thresholds, if not it's very likely that it's not a Sinowealth BMS
+        if soc < 0 or soc > 100:
+            return False
+
+        self.soc = soc
         return True
 
     def read_cycle_count(self):
@@ -167,6 +173,10 @@ class Sinowealth(Battery):
         pack_voltage = unpack_from(">H", pack_voltage_data[:-1])
         pack_voltage = pack_voltage[0] / 1000
         logger.debug(">>> INFO: current pack voltage: %f", pack_voltage)
+        # check if data is in the thresholds, if not it's very likely that it's not a Sinowealth BMS
+        if pack_voltage < 0 or pack_voltage > 100:
+            return False
+
         self.voltage = pack_voltage
         return True
 
@@ -177,6 +187,10 @@ class Sinowealth(Battery):
         current = unpack_from(">i", current_data[:-1])
         current = current[0] / 1000
         logger.debug(">>> INFO: current pack current: %f", current)
+        # check if data is in the thresholds, if not it's very likely that it's not a Sinowealth BMS
+        if abs(current) > 1000:
+            return False
+
         self.current = current
         return True
 
@@ -198,8 +212,13 @@ class Sinowealth(Battery):
         if capacity_data is False:
             return False
         capacity = unpack_from(">i", capacity_data[:-1])
-        logger.debug(">>> INFO: Battery capacity: %f Ah", capacity[0] / 1000)
-        self.capacity = capacity[0] / 1000
+        capacity = capacity[0] / 1000
+        logger.debug(">>> INFO: Battery capacity: %f Ah", capacity)
+        # check if data is in the thresholds, if not it's very likely that it's not a Sinowealth BMS
+        if capacity < 0 or capacity > 1000:
+            return False
+
+        self.capacity = capacity
         return True
 
     def read_pack_config_data(self):

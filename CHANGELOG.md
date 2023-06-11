@@ -11,6 +11,7 @@
 * Changed: Fix Sinowealth not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
 * Changed: Fixed that other devices are recognized as ANT BMS by @mr-manuel
+* Changed: Fixed that other devices are recognized as Sinowealth BMS by @mr-manuel
 * Changed: Fixed typo in `config.ini` sample by @hoschult
 * Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
