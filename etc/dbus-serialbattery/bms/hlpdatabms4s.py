@@ -196,16 +196,16 @@ class HLPdataBMS4S(Battery):
         self.control_discharge_current = 1000
 
     def read_serial_data_HLPdataBMS4S(self, command, time, min_len):
-        data = read_serial_data2(command, self.port, self.baud_rate, time, min_len)
+        data = read_serial_data(command, self.port, self.baud_rate, time, min_len)
         if data is False:
             return False
         return data
 
 
-def read_serial_data2(command, port, baud, time, min_len):
+def read_serial_data(command, port, baud, time, min_len):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.5) as ser:
-            ret = read_serialport_data2(ser, command, time, min_len)
+            ret = read_serialport_data(ser, command, time, min_len)
             if ret is True:
                 return ret
         return False
@@ -218,7 +218,7 @@ def read_serial_data2(command, port, baud, time, min_len):
         return False
 
 
-def read_serialport_data2(ser, command, time, min_len):
+def read_serialport_data(ser, command, time, min_len):
     try:
         cnt = 0
         while cnt < 3:
