@@ -250,48 +250,46 @@ class Battery(ABC):
         tDiff = 0
 
         try:
-            if utils.CVCM_ENABLE:
-                # calculate battery sum
-                for i in range(self.cell_count):
-                    voltage = self.get_cell_voltage(i)
-                    if voltage:
-                        voltageSum += voltage
+            # calculate battery sum
+            for i in range(self.cell_count):
+                voltage = self.get_cell_voltage(i)
+                if voltage:
+                    voltageSum += voltage
 
-                        # calculate penalty sum to prevent single cell overcharge by using current cell voltage
-                        if voltage > utils.MAX_CELL_VOLTAGE:
-                            # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
-                            foundHighCellVoltage = True
-                            penaltySum += voltage - utils.MAX_CELL_VOLTAGE
+                    # calculate penalty sum to prevent single cell overcharge by using current cell voltage
+                    if voltage > utils.MAX_CELL_VOLTAGE:
+                        # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
+                        foundHighCellVoltage = True
+                        penaltySum += voltage - utils.MAX_CELL_VOLTAGE
 
-                voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
+            voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
-                if self.max_voltage_start_time is None:
-                    # start timer, if max voltage is reached and cells are balanced
-                    if (
-                        self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
-                        and voltageDiff
-                        <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
-                        and self.allow_max_voltage
-                    ):
-                        self.max_voltage_start_time = int(time())
+            if self.max_voltage_start_time is None:
+                # start timer, if max voltage is reached and cells are balanced
+                if (
+                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
+                    and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+                    and self.allow_max_voltage
+                ):
+                    self.max_voltage_start_time = int(time())
 
-                    # allow max voltage again, if cells are unbalanced or SoC threshold is reached
-                    elif (
-                        utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
-                        or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
-                    ) and not self.allow_max_voltage:
-                        self.allow_max_voltage = True
-                else:
-                    tDiff = int(time()) - self.max_voltage_start_time
-                    # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                    # keep max voltage for 300 more seconds
-                    if 300 < tDiff:
-                        self.allow_max_voltage = False
-                        self.max_voltage_start_time = None
-                    # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
-                    # regardless of whether we were in absorption mode or not
-                    if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP:
-                        self.max_voltage_start_time = None
+                # allow max voltage again, if cells are unbalanced or SoC threshold is reached
+                elif (
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+                ) and not self.allow_max_voltage:
+                    self.allow_max_voltage = True
+            else:
+                tDiff = int(time()) - self.max_voltage_start_time
+                # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                # keep max voltage for 300 more seconds
+                if 300 < tDiff:
+                    self.allow_max_voltage = False
+                    self.max_voltage_start_time = None
+                # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
+                # regardless of whether we were in absorption mode or not
+                if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP:
+                    self.max_voltage_start_time = None
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
@@ -375,43 +373,42 @@ class Battery(ABC):
         tDiff = 0
 
         try:
-            if utils.CVCM_ENABLE:
-                # calculate battery sum
-                for i in range(self.cell_count):
-                    voltage = self.get_cell_voltage(i)
-                    if voltage:
-                        voltageSum += voltage
+            # calculate battery sum
+            for i in range(self.cell_count):
+                voltage = self.get_cell_voltage(i)
+                if voltage:
+                    voltageSum += voltage
 
-                if self.max_voltage_start_time is None:
-                    # check if max voltage is reached and start timer to keep max voltage
-                    if (
-                        self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
-                        and self.allow_max_voltage
-                    ):
-                        # example 2
-                        self.max_voltage_start_time = time()
+            if self.max_voltage_start_time is None:
+                # check if max voltage is reached and start timer to keep max voltage
+                if (
+                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
+                    and self.allow_max_voltage
+                ):
+                    # example 2
+                    self.max_voltage_start_time = time()
 
-                    # check if reset soc is greater than battery soc
-                    # this prevents flapping between max and float voltage
-                    elif (
-                        utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
-                        and not self.allow_max_voltage
-                    ):
-                        self.allow_max_voltage = True
+                # check if reset soc is greater than battery soc
+                # this prevents flapping between max and float voltage
+                elif (
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    and not self.allow_max_voltage
+                ):
+                    self.allow_max_voltage = True
 
-                    # do nothing
-                    else:
-                        pass
-
-                # timer started
+                # do nothing
                 else:
-                    tDiff = time() - self.max_voltage_start_time
-                    if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                        self.allow_max_voltage = False
-                        self.max_voltage_start_time = None
+                    pass
 
-                    else:
-                        pass
+            # timer started
+            else:
+                tDiff = time() - self.max_voltage_start_time
+                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                    self.allow_max_voltage = False
+                    self.max_voltage_start_time = None
+
+                else:
+                    pass
 
             if self.allow_max_voltage:
                 self.control_voltage = self.max_battery_voltage
