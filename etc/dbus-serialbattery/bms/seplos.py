@@ -140,7 +140,7 @@ class Seplos(Battery):
             logger.debug("alarm info raw {}".format(data))
             return self.decode_alarm_data(bytes.fromhex(data.decode("ascii")))
         except (ValueError, UnicodeDecodeError) as e:
-            logger.warning("could not hex-decode raw alarm data", exc_info = e)
+            logger.warning("could not hex-decode raw alarm data", exc_info=e)
             return False
 
     def decode_alarm_data(self, data: bytes):
@@ -257,7 +257,6 @@ class Seplos(Battery):
         )
         logger.debug("HW:" + self.hardware_version)
 
-
     @staticmethod
     def is_valid_frame(data: bytes) -> bool:
         """checks if data contains a valid frame
@@ -304,7 +303,9 @@ class Seplos(Battery):
             return_data = data[length_pos + 3 : -5]
             info_length = Seplos.int_from_2byte_hex_ascii(b"0" + data[length_pos:], 0)
             logger.debug(
-                "returning info data of length {}, info_length is {} : {}".format(len(return_data), info_length, return_data)
+                "returning info data of length {}, info_length is {} : {}".format(
+                    len(return_data), info_length, return_data
+                )
             )
 
             return return_data
