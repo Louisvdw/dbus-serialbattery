@@ -63,15 +63,9 @@ class ANT(Battery):
 
         voltage = unpack_from(">H", status_data, 4)
         self.voltage = voltage[0] * 0.1
-        # check if data is in the thresholds, if not it's very likely that it's not an ANT BMS
-        if self.voltage < 0 and self.voltage > 100:
-            return False
 
         current, self.soc = unpack_from(">lB", status_data, 70)
         self.current = 0.0 if current == 0 else current / -10
-        # check if data is in the thresholds, if not it's very likely that it's not an ANT BMS
-        if self.soc < 0 or self.soc > 100 or abs(self.current) > 1000:
-            return False
 
         self.cell_count = unpack_from(">b", status_data, 123)[0]
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
@@ -87,9 +81,6 @@ class ANT(Battery):
 
         capacity = unpack_from(">L", status_data, 75)
         self.capacity = capacity[0] / 1000000
-        # check if data is in the thresholds, if not it's very likely that it's not an ANT BMS
-        if self.capacity < 0 or self.capacity > 1000:
-            return False
 
         capacity_remain = unpack_from(">L", status_data, 79)
         self.capacity_remain = capacity_remain[0] / 1000000

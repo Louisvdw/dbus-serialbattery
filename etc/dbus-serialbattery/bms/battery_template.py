@@ -28,8 +28,7 @@ class BatteryTemplate(Battery):
         try:
             result = self.read_status_data()
             # get first data to show in startup log, only if result is true
-            if result:
-                self.refresh_data()
+            result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -86,6 +85,8 @@ class BatteryTemplate(Battery):
             state,
             self.cycles,
         ) = unpack_from(">bb??bhx", status_data)
+
+        # Integrate a check to be sure, that the received data is from the BMS type you are making this driver for
 
         self.hardware_version = "TemplateBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)

@@ -103,7 +103,7 @@ def main():
                     battery: Battery = batteryClass(
                         port=_port, baud=baud, address=test.get("address")
                     )
-                    if battery.test_connection():
+                    if battery.test_connection() and battery.validate_data():
                         logger.info(
                             "Connection established to " + battery.__class__.__name__
                         )
@@ -135,12 +135,12 @@ def main():
             if port not in utils.EXCLUDED_DEVICES:
                 return port
             else:
-                logger.info(
+                logger.debug(
                     "Stopping dbus-serialbattery: "
                     + str(port)
                     + " is excluded trough the config file"
                 )
-                sleep(86400)
+                sleep(60)
                 sys.exit(0)
         else:
             # just for MNB-SPI
@@ -166,7 +166,7 @@ def main():
 
         class_ = eval(port)
         testbms = class_("", 9600, sys.argv[2])
-        if testbms.test_connection() is True:
+        if testbms.test_connection():
             logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
     else:
