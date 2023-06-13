@@ -345,15 +345,12 @@ class Battery(ABC):
             else:
                 floatVoltage = round((utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
                 if self.control_voltage:
-                    if (
-                        self.charge_mode != "Float"
-                        and self.charge_mode != "Float Transition"
-                    ):
-                        self.transition_start_time = time.time()
+                    if not self.charge_mode.startswith("Float"):
+                        self.transition_start_time = int(time())
                         self.initial_control_voltage = self.control_voltage
                         self.charge_mode = "Float Transition"
-                    elif self.charge_mode == "Float Transition":
-                        elapsed_time = time.time() - self.transition_start_time
+                    elif self.charge_mode.startswith("Float Transition"):
+                        elapsed_time = int(time()) - self.transition_start_time
                         # Duration in seconds for smooth voltage drop from absorption to float
                         FLOAT_MODE_TRANSITION_DURATION = 180
                         t = min(1, elapsed_time / FLOAT_MODE_TRANSITION_DURATION)
@@ -362,8 +359,11 @@ class Battery(ABC):
                         ) * self.initial_control_voltage + t * floatVoltage
                         if t == 1:
                             self.charge_mode = "Float"
+                        else:
+                            self.charge_mode = "Float Transition"
                 else:
                     self.control_voltage = floatVoltage
+                    self.charge_mode = "Float"
 
             if (
                 self.allow_max_voltage
