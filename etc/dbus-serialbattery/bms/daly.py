@@ -186,6 +186,9 @@ class Daly(Battery):
 
     def update_soc(self, ser):
         if self.last_charge_mode is not None and self.charge_mode is not None:
+            #debug
+            if self.last_charge_mode != self.charge_mode:
+                logger.info(f"Switch charge mode from {self.last_charge_mode} to {self.charge_mode}")
             if not self.last_charge_mode.startswith(
                 "Float"
             ) and self.charge_mode.startswith("Float"):
@@ -560,6 +563,10 @@ class Daly(Battery):
         if self.soc_to_set is None:
             return False
 
+        # wait shortly, else the Daly is not ready and throws a lot of no reply errors
+        # if you see a lot of errors, try to increase in steps of 0.005
+        sleep(0.020)
+
         cmd = bytearray(13)
         now = datetime.now()
 
@@ -589,7 +596,7 @@ class Daly(Battery):
         ser.write(cmd)
 
         reply = self.read_sentence(ser, self.command_set_soc)
-        if reply[0] != 1:
+        if reply is False or reply[0] != 1:
             logger.error("write soc failed")
         return True
 
@@ -622,6 +629,10 @@ class Daly(Battery):
         return False
 
     def write_charge_discharge_mos(self, ser):
+        # wait shortly, else the Daly is not ready and throws a lot of no reply errors
+        # if you see a lot of errors, try to increase in steps of 0.005
+        sleep(0.020)
+
         if (
             self.trigger_force_disable_charge is None
             and self.trigger_force_disable_discharge is None
