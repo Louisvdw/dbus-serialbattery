@@ -257,6 +257,9 @@ class Battery(ABC):
                         self.allow_max_voltage = False
                         self.max_voltage_start_time = None
 
+            logger.info(f"highCell {foundHighCellVoltage}, vDiff {voltageDiff}, vStartTime {self.max_voltage_start_time}, allowMaxV {self.allow_max_voltage}")
+
+
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
             if foundHighCellVoltage and self.allow_max_voltage:
