@@ -612,7 +612,7 @@ class DbusHelper:
                                 )
                             )
                         )
-                        if self.battery.current
+                        if self.battery.current and abs(self.battery.current) > 0.1
                         else None
                     )
 
