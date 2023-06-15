@@ -156,6 +156,9 @@ if [ -d "/service/dbus-blebattery.0" ]; then
     pkill -f "supervise dbus-blebattery.*"
     pkill -f "multilog .* /var/log/dbus-blebattery.*"
     pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+
+    # kill opened bluetoothctl processes
+    pkill -f "^bluetoothctl "
 fi
 
 
@@ -241,8 +244,11 @@ if [ "$length" -gt 0 ]; then
     echo
 
     # setup cronjob to restart Bluetooth
-    # remove if not needed anymore, has to be checked first
-    grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+    # remove if not needed anymore, has to be checked first --> seems that it's not needed anymore
+    # grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+
+    # remove cronjob
+    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
 
 else
 
