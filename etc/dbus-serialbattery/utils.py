@@ -15,10 +15,13 @@ logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
+PATH_CONFIG_DEFAULT = "config.default.ini"
+PATH_CONFIG_USER = "config.ini"
+
 config = configparser.ConfigParser()
 path = Path(__file__).parents[0]
-default_config_file_path = path.joinpath("config.default.ini").absolute().__str__()
-custom_config_file_path = path.joinpath("config.ini").absolute().__str__()
+default_config_file_path = path.joinpath(PATH_CONFIG_DEFAULT).absolute().__str__()
+custom_config_file_path = path.joinpath(PATH_CONFIG_USER).absolute().__str__()
 config.read([default_config_file_path, custom_config_file_path])
 
 
@@ -34,11 +37,8 @@ def _get_list_from_config(
     )
 
 
-# battery types
-# if not specified: baud = 9600
-
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230526dev"
+DRIVER_VERSION = "1.0.20230613dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -267,16 +267,25 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 
 # --------- Additional settings ---------
-# Specify only one BMS type to load else leave empty to try to load all available
+# Specify one or more BMS types to load else leave empty to try to load all available
 # -- Available BMS:
 # Daly, Ecs, HeltecModbus, HLPdataBMS4S, Jkbms, Lifepower, LltJbd, Renogy, Seplos
-# -- Available BMS, but disabled by default:
-# https://louisvdw.github.io/dbus-serialbattery/general/install#how-to-enable-a-disabled-bms
-# Ant, MNB, Sinowealth
-BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
+# -- Available BMS, but disabled by default (just enter one or more below and it will be enabled):
+# ANT, MNB, Sinowealth
+BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
+# Exclute this serial devices from the driver startup
+# Example: /dev/ttyUSB2, /dev/ttyUSB4
 EXCLUDED_DEVICES = _get_list_from_config(
     "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
+)
+
+# Enter custom battery names here or change it over the GUI
+# Example:
+#     /dev/ttyUSB0:My first battery
+#     /dev/ttyUSB0:My first battery, /dev/ttyUSB1:My second battery
+CUSTOM_BATTERY_NAMES = _get_list_from_config(
+    "DEFAULT", "CUSTOM_BATTERY_NAMES", lambda v: str(v)
 )
 
 # Publish the config settings to the dbus path "/Info/Config/"
@@ -526,6 +535,7 @@ def read_serialport_data(
 locals_copy = locals().copy()
 
 
+# Publish config variables to dbus
 def publish_config_variables(dbusservice):
     for variable, value in locals_copy.items():
         if variable.startswith("__"):

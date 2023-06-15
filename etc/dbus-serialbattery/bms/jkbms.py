@@ -10,6 +10,7 @@ class Jkbms(Battery):
     def __init__(self, port, baud, address):
         super(Jkbms, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
+        self.unique_identifier_tmp = ""
 
     BATTERYTYPE = "Jkbms"
     LENGTH_CHECK = 1
@@ -126,6 +127,7 @@ class Jkbms(Battery):
             unpack_from(">H", self.get_data(status_data, b"\x99", offset, 2))[0]
         )
 
+        # the JKBMS resets to 95% SoC, if all cell voltages are above or equal to 3.500 V
         offset = cellbyte_count + 18
         self.soc = unpack_from(">B", self.get_data(status_data, b"\x85", offset, 1))[0]
 
@@ -183,9 +185,9 @@ class Jkbms(Battery):
         )[0].decode()
 
         offset = cellbyte_count + 197
-        self.unique_identifier = sub(
+        self.unique_identifier_tmp = sub(
             " +",
-            " ",
+            "_",
             (
                 unpack_from(">24s", self.get_data(status_data, b"\xBA", offset, 24))[0]
                 .decode()
@@ -207,6 +209,12 @@ class Jkbms(Battery):
 
         # logger.info(self.hardware_version)
         return True
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        """
+        return self.unique_identifier_tmp
 
     def to_fet_bits(self, byte_data):
         tmp = bin(byte_data)[2:].rjust(3, utils.zero_char)

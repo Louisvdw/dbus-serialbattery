@@ -3,8 +3,6 @@
 # remove comment for easier troubleshooting
 #set -x
 
-DRIVERNAME=dbus-serialbattery
-
 
 # check if minimum required Venus OS is installed | start
 versionRequired="v2.90"
@@ -66,15 +64,15 @@ fi
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # install
-rm -rf /opt/victronenergy/service/$DRIVERNAME
-rm -rf /opt/victronenergy/service-templates/$DRIVERNAME
-rm -rf /opt/victronenergy/$DRIVERNAME
-mkdir /opt/victronenergy/$DRIVERNAME
-mkdir /opt/victronenergy/$DRIVERNAME/bms
-cp -f /data/etc/$DRIVERNAME/* /opt/victronenergy/$DRIVERNAME &>/dev/null
-cp -f /data/etc/$DRIVERNAME/bms/* /opt/victronenergy/$DRIVERNAME/bms &>/dev/null
-cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVERNAME
-bash /data/etc/$DRIVERNAME/install-qml.sh
+rm -rf /opt/victronenergy/service/dbus-serialbattery
+rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
+rm -rf /opt/victronenergy/dbus-serialbattery
+mkdir /opt/victronenergy/dbus-serialbattery
+mkdir /opt/victronenergy/dbus-serialbattery/bms
+cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery &>/dev/null
+cp -f /data/etc/dbus-serialbattery/bms/* /opt/victronenergy/dbus-serialbattery/bms &>/dev/null
+cp -rf /data/etc/dbus-serialbattery/service /opt/victronenergy/service-templates/dbus-serialbattery
+bash /data/etc/dbus-serialbattery/install-qml.sh
 
 # check if serial-starter.d was deleted
 serialstarter_path="/data/conf/serial-starter.d"
@@ -105,10 +103,10 @@ if [ ! -f "$filename" ]; then
     echo "#!/bin/bash" > "$filename"
     chmod 755 "$filename"
 fi
-grep -qxF "bash /data/etc/$DRIVERNAME/reinstall-local.sh" $filename || echo "bash /data/etc/$DRIVERNAME/reinstall-local.sh" >> $filename
+grep -qxF "bash /data/etc/dbus-serialbattery/reinstall-local.sh" $filename || echo "bash /data/etc/dbus-serialbattery/reinstall-local.sh" >> $filename
 
 # add empty config.ini, if it does not exist to make it easier for users to add custom settings
-filename="/data/etc/$DRIVERNAME/config.ini"
+filename="/data/etc/dbus-serialbattery/config.ini"
 if [ ! -f "$filename" ]; then
     {
         echo "[DEFAULT]"
@@ -123,6 +121,9 @@ if [ ! -f "$filename" ]; then
         echo
     } > $filename
 fi
+
+# kill driver, if running. It gets restarted by the service daemon
+pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 
 
 
@@ -144,29 +145,57 @@ IFS="," read -r -a bms_array <<< "$bluetooth_bms_clean"
 length=${#bms_array[@]}
 # echo $length
 
-# always remove existing blebattery services to cleanup
-rm -rf /service/dbus-blebattery.*
+# stop all dbus-blebattery services, if at least one exists
+if [ -d "/service/dbus-blebattery.0" ]; then
+    svc -u /service/dbus-blebattery.*
 
-# kill all blebattery processes
-pkill -f "blebattery"
+    # always remove existing blebattery services to cleanup
+    rm -rf /service/dbus-blebattery.*
+
+    # kill all blebattery processes that remain
+    pkill -f "supervise dbus-blebattery.*"
+    pkill -f "multilog .* /var/log/dbus-blebattery.*"
+    pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+fi
+
 
 if [ "$length" -gt 0 ]; then
 
+    echo
     echo "Found $length Bluetooth BMS in the config file!"
-    echo ""
+    echo
 
     # install required packages
     # TO DO: Check first if packages are already installed
-    echo "Installing required packages..."
+    echo "Installing required packages to use Bluetooth connection..."
+
     opkg update
     opkg install python3-misc python3-pip
     pip3 install bleak
 
-    # setup cronjob to restart Bluetooth
-    grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+    echo "done."
+    echo
 
     # function to install ble battery
     install_blebattery_service() {
+        if [ -z "$1" ]; then
+            echo "ERROR: BMS unique number is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        if [ -z "$2" ]; then
+            echo "ERROR: BMS type for battery $1 is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        if [ -z "$3" ]; then
+            echo "ERROR: BMS MAC address for battery $1 with BMS type $2 is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+
+        echo "Installing \"$2\" with MAC address \"$3\" as dbus-blebattery.$1"
+
         mkdir -p "/service/dbus-blebattery.$1/log"
         {
             echo "#!/bin/sh"
@@ -177,31 +206,56 @@ if [ "$length" -gt 0 ]; then
         {
             echo "#!/bin/sh"
             echo "exec 2>&1"
+            echo "echo"
+            echo "echo \"INFO:Bluetooth details\""
+            # close all open connections, else the driver can't connect
             echo "bluetoothctl disconnect $3"
+
+            # enable bluetoothctl scan in background to display signal strength (RSSI), else it's missing
+            echo "bluetoothctl scan on | grep \"$3\" | grep \"RSSI\" &"
+            # with multiple Bluetooth BMS one scan for all should be enough. Check if that can be changed globally, maybe with a cronjob after reboot?
+            # echo "bluetoothctl scan on > /dev/null &"
+
+            # wait 5 seconds to finish the scan
+            echo "sleep 5"
+            # display some Bluetooth device details
+            echo "bluetoothctl info $3 | grep -E \"Device|Alias|Pair|Trusted|Blocked|Connected|RSSI|Power\""
+            echo "echo"
             echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3"
+            echo "pkill -f \"bluetoothctl scan on\""
         } > "/service/dbus-blebattery.$1/run"
         chmod 755 "/service/dbus-blebattery.$1/run"
     }
 
-    echo "Packages installed."
-    echo ""
-
+    # Example
     # install_blebattery_service 0 Jkbms_Ble C8:47:8C:00:00:00
     # install_blebattery_service 1 Jkbms_Ble C8:47:8C:00:00:11
 
     for (( i=0; i<length; i++ ));
     do
-        echo "Installing ${bms_array[$i]} as dbus-blebattery.$i"
-        install_blebattery_service $i "${bms_array[$i]}"
+        # split BMS type and MAC address
+        IFS=' ' read -r -a bms <<< "${bms_array[$i]}"
+        install_blebattery_service $i "${bms[0]}" "${bms[1]}"
     done
+
+    echo
+
+    # setup cronjob to restart Bluetooth
+    # remove if not needed anymore, has to be checked first --> seems that it's not needed anymore
+    # grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+
+    # remove cronjob
+    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
 
 else
 
     # remove cronjob
     sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
 
+    echo
     echo "No Bluetooth battery configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
     echo "You can ignore this, if you are using only a serial connection."
+    echo
 
 fi
 ### BLUETOOTH PART | END ###
@@ -218,17 +272,8 @@ sed -i "/^sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
 ### needed for upgrading from older versions | end ###
 
 
-# kill driver, if running. It gets restarted by the service daemon
-pkill -f "python .*/$DRIVERNAME.py"
-
-# restart bluetooth service, if Bluetooth BMS configured
-if [ "$length" -gt 0 ]; then
-    /etc/init.d/bluetooth restart
-fi
-
 
 # install notes
-echo
 echo
 echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
 echo

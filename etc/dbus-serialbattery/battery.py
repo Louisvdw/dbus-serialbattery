@@ -7,6 +7,8 @@ import logging
 import math
 from time import time
 from abc import ABC, abstractmethod
+import re
+import sys
 
 
 class Protection(object):
@@ -69,16 +71,16 @@ class Battery(ABC):
         self.max_battery_discharge_current = None
         self.has_settings = 0
 
-        self.init_values()
-
-        # used to identify a BMS when multiple BMS are connected - planned for future use
-        self.unique_identifier = None
-
         # fetched from the BMS from a field where the user can input a custom string
         # only if available
         self.custom_field = None
 
+        self.init_values()
+
     def init_values(self):
+        """
+        Used to reset values, if battery unexpectly disconnects
+        """
         self.voltage = None
         self.current = None
         self.capacity_remain = None
@@ -102,14 +104,16 @@ class Battery(ABC):
         self.cells: List[Cell] = []
         self.control_charging = None
         self.control_voltage = None
+        self.max_battery_voltage = None
+        self.min_battery_voltage = None
         self.allow_max_voltage = True
+        self.max_voltage_start_time = None
         self.charge_mode = None
         self.charge_limitation = None
         self.discharge_limitation = None
         self.linear_cvl_last_set = 0
         self.linear_ccl_last_set = 0
         self.linear_dcl_last_set = 0
-        self.max_voltage_start_time = None
         self.control_current = None
         self.control_previous_total = None
         self.control_previous_max = None
@@ -129,11 +133,35 @@ class Battery(ABC):
         # return false when failed, true if successful
         return False
 
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        If not provided by the BMS/driver then the hardware version and capacity is used,
+        since it can be changed by small amounts to make a battery unique.
+        On +/- 5 Ah you can identify 11 batteries
+        """
+        string = (
+            "".join(filter(str.isalnum, str(self.hardware_version))) + "_"
+            if self.hardware_version is not None and self.hardware_version != ""
+            else ""
+        )
+        string += str(self.capacity) + "Ah"
+        return string
+
     def connection_name(self) -> str:
         return "Serial " + self.port
 
     def custom_name(self) -> str:
-        return "SerialBattery(" + self.type + ")"
+        """
+        Check if the custom name is present in the config file, else return default name
+        """
+        if len(utils.CUSTOM_BATTERY_NAMES) > 0:
+            for name in utils.CUSTOM_BATTERY_NAMES:
+                tmp = name.split(":")
+                if tmp[0].strip() == self.port:
+                    return tmp[1].strip()
+        else:
+            return "SerialBattery(" + self.type + ")"
 
     def product_name(self) -> str:
         return "SerialBattery(" + self.type + ")"
@@ -196,6 +224,7 @@ class Battery(ABC):
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
+        self.prepare_voltage_management()
         if utils.CVCM_ENABLE:
             if utils.LINEAR_LIMITATION_ENABLE:
                 self.manage_charge_voltage_linear()
@@ -203,8 +232,12 @@ class Battery(ABC):
                 self.manage_charge_voltage_step()
         # on CVCM_ENABLE = False apply max voltage
         else:
-            self.control_voltage = round((utils.MAX_CELL_VOLTAGE * self.cell_count), 3)
+            self.control_voltage = round(self.max_battery_voltage, 3)
             self.charge_mode = "Keep always max voltage"
+
+    def prepare_voltage_management(self) -> None:
+        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
     def manage_charge_voltage_linear(self) -> None:
         """
@@ -217,45 +250,46 @@ class Battery(ABC):
         tDiff = 0
 
         try:
-            if utils.CVCM_ENABLE:
-                # calculate battery sum
-                for i in range(self.cell_count):
-                    voltage = self.get_cell_voltage(i)
-                    if voltage:
-                        voltageSum += voltage
+            # calculate battery sum
+            for i in range(self.cell_count):
+                voltage = self.get_cell_voltage(i)
+                if voltage:
+                    voltageSum += voltage
 
-                        # calculate penalty sum to prevent single cell overcharge by using current cell voltage
-                        if voltage > utils.MAX_CELL_VOLTAGE:
-                            # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
-                            foundHighCellVoltage = True
-                            penaltySum += voltage - utils.MAX_CELL_VOLTAGE - 0.010
+                    # calculate penalty sum to prevent single cell overcharge by using current cell voltage
+                    if voltage > utils.MAX_CELL_VOLTAGE:
+                        # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
+                        foundHighCellVoltage = True
+                        penaltySum += voltage - utils.MAX_CELL_VOLTAGE
 
-                voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
+            voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
-                if self.max_voltage_start_time is None:
-                    # start timer, if max voltage is reached and cells are balanced
-                    if (
-                        (utils.MAX_CELL_VOLTAGE * self.cell_count) - utils.VOLTAGE_DROP
-                        <= voltageSum
-                        and voltageDiff
-                        <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
-                        and self.allow_max_voltage
-                    ):
-                        self.max_voltage_start_time = time()
+            if self.max_voltage_start_time is None:
+                # start timer, if max voltage is reached and cells are balanced
+                if (
+                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
+                    and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+                    and self.allow_max_voltage
+                ):
+                    self.max_voltage_start_time = int(time())
 
-                    # allow max voltage again, if cells are unbalanced or SoC threshold is reached
-                    elif (
-                        utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
-                        or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
-                    ) and not self.allow_max_voltage:
-                        self.allow_max_voltage = True
-                else:
-                    tDiff = time() - self.max_voltage_start_time
-                    # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                    # keep max voltage for 300 more seconds
-                    if 300 < tDiff:
-                        self.allow_max_voltage = False
-                        self.max_voltage_start_time = None
+                # allow max voltage again, if cells are unbalanced or SoC threshold is reached
+                elif (
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+                ) and not self.allow_max_voltage:
+                    self.allow_max_voltage = True
+            else:
+                tDiff = int(time()) - self.max_voltage_start_time
+                # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                # keep max voltage for 300 more seconds
+                if 300 < tDiff:
+                    self.allow_max_voltage = False
+                    self.max_voltage_start_time = None
+                # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
+                # regardless of whether we were in absorption mode or not
+                if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP:
+                    self.max_voltage_start_time = None
 
             logger.info(f"highCell {foundHighCellVoltage}, vDiff {voltageDiff}, vStartTime {self.max_voltage_start_time}, allowMaxV {self.allow_max_voltage}")
 
@@ -275,9 +309,9 @@ class Battery(ABC):
                         min(
                             max(
                                 voltageSum - penaltySum,
-                                utils.MIN_CELL_VOLTAGE * self.cell_count,
+                                self.min_battery_voltage,
                             ),
-                            utils.MAX_CELL_VOLTAGE * self.cell_count,
+                            self.max_battery_voltage,
                         ),
                         3,
                     )
@@ -293,23 +327,31 @@ class Battery(ABC):
                     else "Absorption dynamic"
                     # + "(vS: "
                     # + str(round(voltageSum, 2))
-                    # + " - pS: "
+                    # + " tDiff: "
+                    # + str(tDiff)
+                    # + " pS: "
                     # + str(round(penaltySum, 2))
                     # + ")"
                 )
 
             elif self.allow_max_voltage:
-                self.control_voltage = round(
-                    (utils.MAX_CELL_VOLTAGE * self.cell_count), 3
-                )
+                self.control_voltage = round(self.max_battery_voltage, 3)
                 self.charge_mode = (
-                    "Bulk" if self.max_voltage_start_time is None else "Absorption"
+                    # "Bulk" if self.max_voltage_start_time is None else "Absorption"
+                    "Bulk"
+                    if self.max_voltage_start_time is None
+                    else "Absorption"
                 )
 
             else:
-                self.control_voltage = round(
-                    (utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3
-                )
+                floatVoltage = round((utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
+                if self.control_voltage:
+                    if self.control_voltage >= (floatVoltage + 0.005):
+                        self.control_voltage -= 0.005
+                    else:
+                        self.control_voltage = floatVoltage
+                else:
+                    self.control_voltage = floatVoltage
                 self.charge_mode = "Float"
 
             if (
@@ -334,45 +376,45 @@ class Battery(ABC):
         tDiff = 0
 
         try:
-            if utils.CVCM_ENABLE:
-                # calculate battery sum
-                for i in range(self.cell_count):
-                    voltage = self.get_cell_voltage(i)
-                    if voltage:
-                        voltageSum += voltage
+            # calculate battery sum
+            for i in range(self.cell_count):
+                voltage = self.get_cell_voltage(i)
+                if voltage:
+                    voltageSum += voltage
 
-                if self.max_voltage_start_time is None:
-                    # check if max voltage is reached and start timer to keep max voltage
-                    if (
-                        utils.MAX_CELL_VOLTAGE * self.cell_count
-                    ) - utils.VOLTAGE_DROP <= voltageSum and self.allow_max_voltage:
-                        # example 2
-                        self.max_voltage_start_time = time()
+            if self.max_voltage_start_time is None:
+                # check if max voltage is reached and start timer to keep max voltage
+                if (
+                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
+                    and self.allow_max_voltage
+                ):
+                    # example 2
+                    self.max_voltage_start_time = time()
 
-                    # check if reset soc is greater than battery soc
-                    # this prevents flapping between max and float voltage
-                    elif (
-                        utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
-                        and not self.allow_max_voltage
-                    ):
-                        self.allow_max_voltage = True
+                # check if reset soc is greater than battery soc
+                # this prevents flapping between max and float voltage
+                elif (
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    and not self.allow_max_voltage
+                ):
+                    self.allow_max_voltage = True
 
-                    # do nothing
-                    else:
-                        pass
-
-                # timer started
+                # do nothing
                 else:
-                    tDiff = time() - self.max_voltage_start_time
-                    if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                        self.allow_max_voltage = False
-                        self.max_voltage_start_time = None
+                    pass
 
-                    else:
-                        pass
+            # timer started
+            else:
+                tDiff = time() - self.max_voltage_start_time
+                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                    self.allow_max_voltage = False
+                    self.max_voltage_start_time = None
+
+                else:
+                    pass
 
             if self.allow_max_voltage:
-                self.control_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+                self.control_voltage = self.max_battery_voltage
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
                 )
@@ -944,6 +986,34 @@ class Battery(ABC):
         else:
             return None
 
+    def validate_data(self) -> bool:
+        """
+        Used to validate the data received from the BMS.
+        If the data is in the thresholds return True,
+        else return False since it's very probably not a BMS
+        """
+        if self.capacity is not None and (self.capacity < 0 or self.capacity > 1000):
+            logger.debug(
+                "Capacity outside of thresholds (from 0 to 1000): " + str(self.capacity)
+            )
+            return False
+        if self.current is not None and abs(self.current) > 1000:
+            logger.debug(
+                "Current outside of thresholds (from -1000 to 1000): "
+                + str(self.current)
+            )
+            return False
+        if self.voltage is not None and (self.voltage < 0 or self.voltage > 100):
+            logger.debug(
+                "Voltage outside of thresholds (form 0 to 100): " + str(self.voltage)
+            )
+            return False
+        if self.soc is not None and (self.soc < 0 or self.soc > 100):
+            logger.debug("SoC outside of thresholds (from 0 to 100): " + str(self.soc))
+            return False
+
+        return True
+
     def log_cell_data(self) -> bool:
         if logger.getEffectiveLevel() > logging.INFO and len(self.cells) == 0:
             return False
@@ -997,10 +1067,149 @@ class Battery(ABC):
         logger.info(
             f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
         )
-        if self.unique_identifier is not None:
-            logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier}")
+        logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier()}")
 
         return
+
+    # save custom name to config file
+    def custom_name_callback(self, path, value):
+        try:
+            if path == "/CustomName":
+                file = open(
+                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "r"
+                )
+                lines = file.readlines()
+                last = len(lines)
+
+                # remove not allowed characters
+                value = value.replace(":", "").replace("=", "").replace(",", "").strip()
+
+                # empty string to save new config file
+                config_file_new = ""
+
+                # make sure we are in the [DEFAULT] section
+                current_line_in_default_section = False
+                default_section_checked = False
+
+                # check if already exists
+                exists = False
+
+                # count lines
+                i = 0
+                # looping through the file
+                for line in lines:
+                    # increment by one
+                    i += 1
+
+                    # stripping line break
+                    line = line.strip()
+
+                    # check, if current line is after the [DEFAULT] section
+                    if line == "[DEFAULT]":
+                        current_line_in_default_section = True
+
+                    # check, if current line starts a new section
+                    if line != "[DEFAULT]" and re.match(r"^\[.*\]", line):
+                        # set default_section_checked to true, if it was already checked and a new section comes on
+                        if current_line_in_default_section and not exists:
+                            default_section_checked = True
+                        current_line_in_default_section = False
+
+                    # check, if the current line is the last line
+                    if i == last:
+                        default_section_checked = True
+
+                    # insert or replace only in [DEFAULT] section
+                    if current_line_in_default_section and re.match(
+                        r"^CUSTOM_BATTERY_NAMES.*", line
+                    ):
+                        # set that the setting was found, else a new one is created
+                        exists = True
+
+                        # remove setting name
+                        line = re.sub(
+                            "^CUSTOM_BATTERY_NAMES\s*=\s*", "", line  # noqa: W605
+                        )
+
+                        # change only the name of the current BMS
+                        result = []
+                        bms_name_list = line.split(",")
+                        for bms_name_pair in bms_name_list:
+                            tmp = bms_name_pair.split(":")
+                            if tmp[0] == self.port:
+                                result.append(tmp[0] + ":" + value)
+                            else:
+                                result.append(bms_name_pair)
+
+                        new_line = "CUSTOM_BATTERY_NAMES = " + ",".join(result)
+
+                    else:
+                        if default_section_checked and not exists:
+                            exists = True
+
+                            # add before current line
+                            if i != last:
+                                new_line = (
+                                    "CUSTOM_BATTERY_NAMES = "
+                                    + self.port
+                                    + ":"
+                                    + value
+                                    + "\n\n"
+                                    + line
+                                )
+
+                            # add at the end if last line
+                            else:
+                                new_line = (
+                                    line
+                                    + "\n\n"
+                                    + "CUSTOM_BATTERY_NAMES = "
+                                    + self.port
+                                    + ":"
+                                    + value
+                                )
+                        else:
+                            new_line = line
+                    # concatenate the new string and add an end-line break
+                    config_file_new = config_file_new + new_line + "\n"
+
+                # close the file
+                file.close()
+                # Open file in write mode
+                write_file = open(
+                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "w"
+                )
+                # overwriting the old file contents with the new/replaced content
+                write_file.write(config_file_new)
+                # close the file
+                write_file.close()
+
+                # logger.error("value (saved): " + str(value))
+
+                """
+                # this removes all comments and tranfsorm the values to lowercase
+                utils.config.set(
+                    "DEFAULT",
+                    "CUSTOM_BATTERY_NAMES",
+                    self.port + ":" + value,
+                )
+
+                # Writing our configuration file to 'example.ini'
+                with open(
+                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "w"
+                ) as configfile:
+                    type(utils.config.write(configfile))
+                """
+
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
+
+        return value
 
     def reset_soc_callback(self, path, value):
         # callback for handling reset soc request

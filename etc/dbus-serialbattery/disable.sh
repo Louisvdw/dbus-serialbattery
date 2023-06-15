@@ -16,8 +16,8 @@ rm -rf /service/dbus-serialbattery.*
 rm -rf /service/dbus-blebattery.*
 
 # kill driver, if running
-pkill -f "python .*/dbus-serialbattery.py"
-pkill -f "blebattery"
+pkill -f "dbus-serialbattery"
+pkill -f "dbus-blebattery"
 
 # remove install script from rc.local
 sed -i "/bash \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local

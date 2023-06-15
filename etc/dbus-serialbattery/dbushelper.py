@@ -33,7 +33,7 @@ class DbusHelper:
         self.battery = battery
         self.instance = 1
         self.settings = None
-        self.error_count = 0
+        self.error = {"count": 0, "timestamp_first": None, "timestamp_last": None}
         self.block_because_disconnect = False
         self._dbusservice = VeDbusService(
             "com.victronenergy.battery."
@@ -123,10 +123,13 @@ class DbusHelper:
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
-            "/CustomName", self.battery.custom_name(), writeable=True
+            "/CustomName",
+            self.battery.custom_name(),
+            writeable=True,
+            onchangecallback=self.battery.custom_name_callback,
         )
         self._dbusservice.add_path(
-            "/Serial", self.battery.unique_identifier, writeable=True
+            "/Serial", self.battery.unique_identifier(), writeable=True
         )
         self._dbusservice.add_path(
             "/DeviceName", self.battery.custom_field, writeable=True
@@ -358,9 +361,10 @@ class DbusHelper:
         # This is called every battery.poll_interval milli second as set up per battery type to read and update the data
         try:
             # Call the battery's refresh_data function
-            success = self.battery.refresh_data()
-            if success:
-                self.error_count = 0
+            result = self.battery.refresh_data()
+            if result:
+                # reset error variables
+                self.error["count"] = 0
                 self.battery.online = True
 
                 # unblock charge/discharge, if it was blocked when battery went offline
@@ -368,9 +372,18 @@ class DbusHelper:
                     self.block_because_disconnect = False
 
             else:
-                self.error_count += 1
-                # If the battery is offline for more than 10 polls (polled every second for most batteries)
-                if self.error_count >= 10:
+                # update error variables
+                if self.error["count"] == 0:
+                    self.error["timestamp_first"] = int(time())
+                self.error["timestamp_last"] = int(time())
+                self.error["count"] += 1
+
+                time_since_first_error = (
+                    self.error["timestamp_last"] - self.error["timestamp_first"]
+                )
+
+                # if the battery did not update in 10 second, it's assumed to be offline
+                if time_since_first_error >= 10:
                     self.battery.online = False
                     self.battery.init_values()
 
@@ -378,8 +391,8 @@ class DbusHelper:
                     if utils.BLOCK_ON_DISCONNECT:
                         self.block_because_disconnect = True
 
-                # Has it completely failed
-                if self.error_count >= 60:
+                # if the battery did not update in 60 second, it's assumed to be completely failed
+                if time_since_first_error >= 60:
                     loop.quit()
 
             # This is to mannage CVCL
