@@ -108,6 +108,8 @@ class Battery(ABC):
         self.min_battery_voltage = None
         self.allow_max_voltage = True
         self.max_voltage_start_time = None
+        self.transition_start_time = None
+        self.control_voltage_at_transition_start = None
         self.charge_mode = None
         self.charge_limitation = None
         self.discharge_limitation = None
@@ -342,14 +344,28 @@ class Battery(ABC):
 
             else:
                 floatVoltage = round((utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
+                chargeMode = "Float"
                 if self.control_voltage:
-                    if self.control_voltage >= (floatVoltage + 0.005):
-                        self.control_voltage -= 0.005
-                    else:
-                        self.control_voltage = floatVoltage
+                    if not self.charge_mode.startswith("Float"):
+                        self.transition_start_time = int(time())
+                        self.initial_control_voltage = self.control_voltage
+                        chargeMode = "Float Transition"
+                    elif self.charge_mode.startswith("Float Transition"):
+                        elapsed_time = int(time()) - self.transition_start_time
+                        # Duration in seconds for smooth voltage drop from absorption to float
+                        # depending on the number of cells
+                        FLOAT_MODE_TRANSITION_DURATION = self.cell_count * 12
+                        t = min(1, elapsed_time / FLOAT_MODE_TRANSITION_DURATION)
+                        self.control_voltage = (
+                            1 - t
+                        ) * self.initial_control_voltage + t * floatVoltage
+                        if t == 1:
+                            chargeMode = "Float"
+                        else:
+                            chargeMode = "Float Transition"
                 else:
                     self.control_voltage = floatVoltage
-                self.charge_mode = "Float"
+                self.charge_mode = chargeMode
 
             if (
                 self.allow_max_voltage
