@@ -143,7 +143,7 @@ class Battery(ABC):
         On +/- 5 Ah you can identify 11 batteries
         """
         string = (
-            "".join(filter(str.isalnum, self.hardware_version)) + "_"
+            "".join(filter(str.isalnum, str(self.hardware_version))) + "_"
             if self.hardware_version is not None and self.hardware_version != ""
             else ""
         )

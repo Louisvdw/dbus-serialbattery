@@ -19,6 +19,7 @@
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS
+* Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
 
 
 ## v1.0.20230531
