@@ -184,8 +184,6 @@ class HLPdataBMS4S(Battery):
 
     def read_serial_data_HLPdataBMS4S(self, command, time, min_len):
         data = read_serial_data(command, self.port, self.baud_rate, time, min_len)
-        if data is False:
-            return False
         return data
 
 
@@ -193,9 +191,7 @@ def read_serial_data(command, port, baud, time, min_len):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.5) as ser:
             ret = read_serialport_data(ser, command, time, min_len)
-            if ret is True:
-                return ret
-        return False
+        return ret
 
     except serial.SerialException as e:
         logger.error(e)
