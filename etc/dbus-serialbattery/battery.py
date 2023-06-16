@@ -108,7 +108,6 @@ class Battery(ABC):
         self.min_battery_voltage = None
         self.allow_max_voltage = True
         self.max_voltage_start_time = None
-        self.transition_start_time = None
         self.control_voltage_at_transition_start = None
         self.charge_mode = None
         self.charge_limitation = None
@@ -347,25 +346,28 @@ class Battery(ABC):
                 chargeMode = "Float"
                 if self.control_voltage:
                     if not self.charge_mode.startswith("Float"):
-                        self.transition_start_time = int(time())
+                        self.linear_cvl_last_set = int(time())
                         self.initial_control_voltage = self.control_voltage
                         chargeMode = "Float Transition"
                     elif self.charge_mode.startswith("Float Transition"):
-                        elapsed_time = int(time()) - self.transition_start_time
+                        current_time = int(time())
+                        elapsed_time = current_time - self.linear_cvl_last_set
                         # Voltage drop per second
                         VOLTAGE_DROP_PER_SECOND = 0.01 / 10
-                        voltage_drop = min(
-                            VOLTAGE_DROP_PER_SECOND * elapsed_time,
-                            self.initial_control_voltage - floatVoltage,
-                        )
-                        self.control_voltage = (
-                            self.initial_control_voltage - voltage_drop
-                        )
-                        if self.control_voltage <= floatVoltage:
-                            self.control_voltage = floatVoltage
-                            chargeMode = "Float"
-                        else:
-                            chargeMode = "Float Transition"
+                        if elapsed_time >= utils.LINEAR_RECALCULATION_EVERY:
+                            voltage_drop = min(
+                                VOLTAGE_DROP_PER_SECOND * elapsed_time,
+                                self.initial_control_voltage - floatVoltage,
+                            )
+                            self.control_voltage = (
+                                self.initial_control_voltage - voltage_drop
+                            )
+                            self.linear_cvl_last_set = current_time
+                            if self.control_voltage <= floatVoltage:
+                                self.control_voltage = floatVoltage
+                                chargeMode = "Float"
+                            else:
+                                chargeMode = "Float Transition"
                 else:
                     self.control_voltage = floatVoltage
                 self.charge_mode = chargeMode
