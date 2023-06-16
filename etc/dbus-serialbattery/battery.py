@@ -353,7 +353,8 @@ class Battery(ABC):
                     elif self.charge_mode.startswith("Float Transition"):
                         elapsed_time = int(time()) - self.transition_start_time
                         # Duration in seconds for smooth voltage drop from absorption to float
-                        FLOAT_MODE_TRANSITION_DURATION = 180
+                        # depending on the number of cells
+                        FLOAT_MODE_TRANSITION_DURATION = self.cell_count * 12
                         t = min(1, elapsed_time / FLOAT_MODE_TRANSITION_DURATION)
                         self.control_voltage = (
                             1 - t
