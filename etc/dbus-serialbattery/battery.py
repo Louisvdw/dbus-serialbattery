@@ -354,7 +354,8 @@ class Battery(ABC):
                         elapsed_time = int(time()) - self.transition_start_time
                         # Duration in seconds for smooth voltage drop from absorption to float
                         # depending on the number of cells
-                        FLOAT_MODE_TRANSITION_DURATION = self.cell_count * 12
+                        # 900 seconds / number of cells (mostly 16) = 56
+                        FLOAT_MODE_TRANSITION_DURATION = self.cell_count * 56
                         t = min(1, elapsed_time / FLOAT_MODE_TRANSITION_DURATION)
                         self.control_voltage = (
                             1 - t
