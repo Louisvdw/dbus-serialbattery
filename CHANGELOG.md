@@ -12,6 +12,7 @@
 * Changed: Fix daly readsentence by @transistorgit
 * Changed: Fix Sinowealth not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
+* Changed: Fixed meaningless Time to Go values by @transistorgit
 * Changed: Fixed typo in `config.ini` sample by @hoschult
 * Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
 * Changed: Improved battery error handling on connection loss by @mr-manuel
