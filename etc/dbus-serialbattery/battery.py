@@ -378,7 +378,7 @@ class Battery(ABC):
 
     def set_cvl_linear(self, control_voltage) -> bool:
         """
-        et CVL only once every LINEAR_RECALCULATION_EVERY seconds
+        set CVL only once every LINEAR_RECALCULATION_EVERY seconds
         :return: bool
         """
         current_time = int(time())
