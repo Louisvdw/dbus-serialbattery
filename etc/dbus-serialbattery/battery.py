@@ -296,24 +296,18 @@ class Battery(ABC):
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
             if foundHighCellVoltage and self.allow_max_voltage:
-                # set CVL only once every LINEAR_RECALCULATION_EVERY seconds
-                if (
-                    int(time()) - self.linear_cvl_last_set
-                    >= utils.LINEAR_RECALCULATION_EVERY
-                ):
-                    self.linear_cvl_last_set = int(time())
-
-                    # Keep penalty above min battery voltage and below max battery voltage
-                    self.control_voltage = round(
-                        min(
-                            max(
-                                voltageSum - penaltySum,
-                                self.min_battery_voltage,
-                            ),
-                            self.max_battery_voltage,
+                # Keep penalty above min battery voltage and below max battery voltage
+                control_voltage = round(
+                    min(
+                        max(
+                            voltageSum - penaltySum,
+                            self.min_battery_voltage,
                         ),
-                        3,
-                    )
+                        self.max_battery_voltage,
+                    ),
+                    3,
+                )
+                self.set_cvl_linear(control_voltage)
 
                 self.charge_mode = (
                     "Bulk dynamic"
@@ -383,6 +377,10 @@ class Battery(ABC):
             self.charge_mode = "--"
 
     def set_cvl_linear(self, control_voltage) -> bool:
+        """
+        et CVL only once every LINEAR_RECALCULATION_EVERY seconds
+        :return: bool
+        """
         current_time = int(time())
         if utils.LINEAR_RECALCULATION_EVERY <= current_time - self.linear_cvl_last_set:
             self.control_voltage = control_voltage
