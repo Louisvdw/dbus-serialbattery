@@ -296,24 +296,18 @@ class Battery(ABC):
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
             if foundHighCellVoltage and self.allow_max_voltage:
-                # set CVL only once every LINEAR_RECALCULATION_EVERY seconds
-                if (
-                    int(time()) - self.linear_cvl_last_set
-                    >= utils.LINEAR_RECALCULATION_EVERY
-                ):
-                    self.linear_cvl_last_set = int(time())
-
-                    # Keep penalty above min battery voltage and below max battery voltage
-                    self.control_voltage = round(
-                        min(
-                            max(
-                                voltageSum - penaltySum,
-                                self.min_battery_voltage,
-                            ),
-                            self.max_battery_voltage,
+                # Keep penalty above min battery voltage and below max battery voltage
+                control_voltage = round(
+                    min(
+                        max(
+                            voltageSum - penaltySum,
+                            self.min_battery_voltage,
                         ),
-                        3,
-                    )
+                        self.max_battery_voltage,
+                    ),
+                    3,
+                )
+                self.set_cvl_linear(control_voltage)
 
                 self.charge_mode = (
                     "Bulk dynamic"
@@ -351,16 +345,17 @@ class Battery(ABC):
                         self.initial_control_voltage = self.control_voltage
                         chargeMode = "Float Transition"
                     elif self.charge_mode.startswith("Float Transition"):
-                        elapsed_time = int(time()) - self.transition_start_time
-                        # Duration in seconds for smooth voltage drop from absorption to float
-                        # depending on the number of cells
-                        # 900 seconds / number of cells (mostly 16) = 56
-                        FLOAT_MODE_TRANSITION_DURATION = self.cell_count * 56
-                        t = min(1, elapsed_time / FLOAT_MODE_TRANSITION_DURATION)
-                        self.control_voltage = (
-                            1 - t
-                        ) * self.initial_control_voltage + t * floatVoltage
-                        if t == 1:
+                        current_time = int(time())
+                        elapsed_time = current_time - self.transition_start_time
+                        # Voltage drop per second
+                        VOLTAGE_DROP_PER_SECOND = 0.01 / 10
+                        voltage_drop = min(
+                            VOLTAGE_DROP_PER_SECOND * elapsed_time,
+                            self.initial_control_voltage - floatVoltage,
+                        )
+                        self.set_cvl_linear(self.initial_control_voltage - voltage_drop)
+                        if self.control_voltage <= floatVoltage:
+                            self.control_voltage = floatVoltage
                             chargeMode = "Float"
                         else:
                             chargeMode = "Float Transition"
@@ -380,6 +375,18 @@ class Battery(ABC):
         except TypeError:
             self.control_voltage = None
             self.charge_mode = "--"
+
+    def set_cvl_linear(self, control_voltage) -> bool:
+        """
+        set CVL only once every LINEAR_RECALCULATION_EVERY seconds
+        :return: bool
+        """
+        current_time = int(time())
+        if utils.LINEAR_RECALCULATION_EVERY <= current_time - self.linear_cvl_last_set:
+            self.control_voltage = control_voltage
+            self.linear_cvl_last_set = current_time
+            return True
+        return False
 
     def manage_charge_voltage_step(self) -> None:
         """
