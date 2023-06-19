@@ -54,21 +54,8 @@ class HLPdataBMS4S(Battery):
             pass
         return result
 
-        # def log_settings(self):
-        #    logger.info(f'Battery {self.type} connected to dbus from {self.port}')
-        #    logger.info(f'=== Settings ===')
-        #    cell_counter = len(self.cells)
-        #    logger.info(f'> Connection voltage {self.voltage}V | current {self.current}A | SOC {self.soc}%')
-        #    logger.info(f'> Cell count {self.cell_count} | cells populated {cell_counter}')
-        #    logger.info(f'> CCCM SOC {CCCM_SOC_ENABLE} | DCCM SOC {DCCM_SOC_ENABLE}')
-        #    logger.info(f'> CCCM CV {CCCM_CV_ENABLE} | DCCM CV {DCCM_CV_ENABLE}')
-        #    logger.info(f'> CCCM T {CCCM_T_ENABLE} | DCCM T {DCCM_T_ENABLE}')
-        #    logger.info(f'> MIN_CELL_VOLTAGE {MIN_CELL_VOLTAGE}V | MAX_CELL_VOLTAGE {MAX_CELL_VOLTAGE}V')
-
-        return
-
     def read_test_data(self):
-        test_data = self.read_serial_data_HLPdataBMS4S(b"pv\n", 1, 15)
+        test_data = self.read_serial_data_HLPdataBMS4S(b"pv\n", 0.2, 12)
         if test_data is False:
             return False
         s1 = str(test_data)
@@ -197,8 +184,6 @@ class HLPdataBMS4S(Battery):
 
     def read_serial_data_HLPdataBMS4S(self, command, time, min_len):
         data = read_serial_data(command, self.port, self.baud_rate, time, min_len)
-        if data is False:
-            return False
         return data
 
 
@@ -206,9 +191,7 @@ def read_serial_data(command, port, baud, time, min_len):
     try:
         with serial.Serial(port, baudrate=baud, timeout=0.5) as ser:
             ret = read_serialport_data(ser, command, time, min_len)
-            if ret is True:
-                return ret
-        return False
+        return ret
 
     except serial.SerialException as e:
         logger.error(e)
@@ -220,6 +203,9 @@ def read_serial_data(command, port, baud, time, min_len):
 
 def read_serialport_data(ser, command, time, min_len):
     try:
+        if min_len == 12:
+            ser.write(b"\n")
+            sleep(0.2)
         cnt = 0
         while cnt < 3:
             cnt += 1
@@ -227,7 +213,8 @@ def read_serialport_data(ser, command, time, min_len):
             ser.flushInput()
             ser.write(command)
             sleep(time)
-            res = ser.read(1000)
+            toread = ser.inWaiting()
+            res = ser.read(toread)
             if len(res) >= min_len:
                 return res
         return False

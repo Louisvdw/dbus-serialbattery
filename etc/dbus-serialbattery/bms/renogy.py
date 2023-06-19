@@ -48,8 +48,7 @@ class Renogy(Battery):
         try:
             result = self.read_gen_data()
             # get first data to show in startup log
-            if result:
-                self.refresh_data()
+            result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -145,6 +144,8 @@ class Renogy(Battery):
                 self.cells[c].voltage = 0
         return True
 
+    """
+    # Did not found who changed this. "command_env_temp_count" is missing
     def read_temp_data(self):
         # Check to see how many Enviromental Temp Sensors this battery has, it may have none.
         num_env_temps = self.read_serial_data_renogy(self.command_env_temp_count)
@@ -170,6 +171,17 @@ class Renogy(Battery):
         else:
             self.temp2 = unpack(">H", temp2)[0] / 10
             logger.info("temp2 = %s °C", temp2)
+
+        return True
+    """
+
+    def read_temp_data(self):
+        temp1 = self.read_serial_data_renogy(self.command_bms_temp1)
+        temp2 = self.read_serial_data_renogy(self.command_bms_temp2)
+        if temp1 is False:
+            return False
+        self.temp1 = unpack(">H", temp1)[0] / 10
+        self.temp2 = unpack(">H", temp2)[0] / 10
 
         return True
 

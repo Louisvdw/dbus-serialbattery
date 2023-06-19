@@ -38,7 +38,7 @@ def _get_list_from_config(
 
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230613dev"
+DRIVER_VERSION = "1.0.20230617dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -55,6 +55,16 @@ MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
 MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
 # Max voltage can seen as absorption voltage
 FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
+if FLOAT_CELL_VOLTAGE > MAX_CELL_VOLTAGE:
+    FLOAT_CELL_VOLTAGE = MAX_CELL_VOLTAGE
+    logger.error(
+        ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value greater than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
+if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
+    FLOAT_CELL_VOLTAGE = MIN_CELL_VOLTAGE
+    logger.error(
+        ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
 
 # --------- BMS disconnect behaviour ---------
 # Description: Block charge and discharge when the communication to the BMS is lost. If you are removing the

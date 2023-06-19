@@ -156,6 +156,9 @@ if [ -d "/service/dbus-blebattery.0" ]; then
     pkill -f "supervise dbus-blebattery.*"
     pkill -f "multilog .* /var/log/dbus-blebattery.*"
     pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+
+    # kill opened bluetoothctl processes
+    pkill -f "^bluetoothctl "
 fi
 
 
