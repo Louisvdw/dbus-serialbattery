@@ -186,9 +186,6 @@ class Daly(Battery):
 
     def update_soc(self, ser):
         if self.last_charge_mode is not None and self.charge_mode is not None:
-            #debug
-            if self.last_charge_mode != self.charge_mode:
-                logger.info(f"Switch charge mode from {self.last_charge_mode} to {self.charge_mode}")
             if not self.last_charge_mode.startswith(
                 "Float"
             ) and self.charge_mode.startswith("Float"):
