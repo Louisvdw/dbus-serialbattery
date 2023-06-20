@@ -3,6 +3,7 @@
 ## v1.0.x
 * Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
+* Added: Daly BMS: Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel

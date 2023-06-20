@@ -175,7 +175,8 @@ class Daly(Battery):
 
                 self.write_charge_discharge_mos(ser)
 
-                self.update_soc(ser)
+                if utils.AUTO_RESET_SOC:
+                    self.update_soc(ser)
 
         except OSError:
             logger.warning("Couldn't open serial port")

@@ -38,7 +38,7 @@ def _get_list_from_config(
 
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230617dev"
+DRIVER_VERSION = "1.0.20230620dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -297,6 +297,11 @@ EXCLUDED_DEVICES = _get_list_from_config(
 CUSTOM_BATTERY_NAMES = _get_list_from_config(
     "DEFAULT", "CUSTOM_BATTERY_NAMES", lambda v: str(v)
 )
+
+# Auto reset SoC
+# If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
+# Currently only working for Daly BMS
+AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
 # Publish the config settings to the dbus path "/Info/Config/"
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
