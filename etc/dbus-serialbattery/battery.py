@@ -251,7 +251,7 @@ class Battery(ABC):
         penaltySum = 0
         tDiff = 0
         # meassurment and variation tolerance in volts
-        measurementToleranceVariation = 0.0215
+        measurementToleranceVariation = 0.022
         try:
             # calculate battery sum
             for i in range(self.cell_count):
@@ -270,10 +270,7 @@ class Battery(ABC):
             if self.max_voltage_start_time is None:
                 # start timer, if max voltage is reached and cells are balanced
                 if (
-                    self.max_battery_voltage
-                    - utils.VOLTAGE_DROP
-                    - measurementToleranceVariation
-                    <= voltageSum
+                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
                     and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
                 ):
