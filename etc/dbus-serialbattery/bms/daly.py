@@ -548,6 +548,10 @@ class Daly(Battery):
         if self.soc_to_set is None:
             return False
 
+        # wait shortly, else the Daly is not ready and throws a lot of no reply errors
+        # if you see a lot of errors, try to increase in steps of 0.005
+        sleep(0.020)
+
         cmd = bytearray(13)
         now = datetime.now()
 
@@ -577,7 +581,7 @@ class Daly(Battery):
         ser.write(cmd)
 
         reply = self.read_sentence(ser, self.command_set_soc)
-        if reply[0] != 1:
+        if reply is False or reply[0] != 1:
             logger.error("write soc failed")
         return True
 
@@ -615,6 +619,10 @@ class Daly(Battery):
             and self.trigger_force_disable_discharge is None
         ):
             return False
+
+        # wait shortly, else the Daly is not ready and throws a lot of no reply errors
+        # if you see a lot of errors, try to increase in steps of 0.005
+        sleep(0.020)
 
         cmd = bytearray(self.command_base)
 
