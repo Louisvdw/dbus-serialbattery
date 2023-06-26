@@ -54,32 +54,6 @@ class DbusHelper:
                 0,
                 0,
             ],
-            # 'CellVoltageMin': [path + '/CellVoltageMin', 2.8, 0.0, 5.0],
-            # 'CellVoltageMax': [path + '/CellVoltageMax', 3.45, 0.0, 5.0],
-            # 'CellVoltageFloat': [path + '/CellVoltageFloat', 3.35, 0.0, 5.0],
-            # 'VoltageMaxTime': [path + '/VoltageMaxTime', 900, 0, 0],
-            # 'VoltageResetSocLimit': [path + '/VoltageResetSocLimit', 90, 0, 100],
-            # 'MaxChargeCurrent': [path + '/MaxCurrentCharge', 5, 0.0, 500],
-            # 'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', 7, 0.0, 500],
-            # 'AllowDynamicChargeCurrent': [path + '/AllowDynamicChargeCurrent', 1, 0, 1],
-            # 'AllowDynamicDischargeCurrent': [path + '/AllowDynamicDischargeCurrent', 1, 0, 1],
-            # 'AllowDynamicChargeVoltage': [path + '/AllowDynamicChargeVoltage', 0, 0, 1],
-            # 'SocLowWarning': [path + '/SocLowWarning', 20, 0, 100],
-            # 'SocLowAlarm': [path + '/SocLowAlarm', 10, 0, 100],
-            # 'Capacity': [path + '/Capacity', '', 0, 500],
-            # 'EnableInvertedCurrent': [path + '/EnableInvertedCurrent', 0, 0, 1],
-            # 'CCMSocLimitCharge1': [path + '/CCMSocLimitCharge1', 98, 0, 100],
-            # 'CCMSocLimitCharge2': [path + '/CCMSocLimitCharge2', 95, 0, 100],
-            # 'CCMSocLimitCharge3': [path + '/CCMSocLimitCharge3', 91, 0, 100],
-            # 'CCMSocLimitDischarge1': [path + '/CCMSocLimitDischarge1', 10, 0, 100],
-            # 'CCMSocLimitDischarge2': [path + '/CCMSocLimitDischarge2', 20, 0, 100],
-            # 'CCMSocLimitDischarge3': [path + '/CCMSocLimitDischarge3', 30, 0, 100],
-            # 'CCMCurrentLimitCharge1': [path + '/CCMCurrentLimitCharge1', 5, 0, 100],
-            # 'CCMCurrentLimitCharge2': [path + '/CCMCurrentLimitCharge2', '', 0, 100],
-            # 'CCMCurrentLimitCharge3': [path + '/CCMCurrentLimitCharge3', '', 0, 100],
-            # 'CCMCurrentLimitDischarge1': [path + '/CCMCurrentLimitDischarge1', 5, 0, 100],
-            # 'CCMCurrentLimitDischarge2': [path + '/CCMCurrentLimitDischarge2', '', 0, 100],
-            # 'CCMCurrentLimitDischarge3': [path + '/CCMCurrentLimitDischarge3', '', 0, 100],
         }
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
@@ -612,7 +586,7 @@ class DbusHelper:
                                 )
                             )
                         )
-                        if self.battery.current
+                        if self.battery.current and abs(self.battery.current) > 0.1
                         else None
                     )
 
