@@ -270,7 +270,10 @@ class Battery(ABC):
             if self.max_voltage_start_time is None:
                 # start timer, if max voltage is reached and cells are balanced
                 if (
-                    self.max_battery_voltage - utils.VOLTAGE_DROP - measurementToleranceVariation <= voltageSum
+                    self.max_battery_voltage
+                    - utils.VOLTAGE_DROP
+                    - measurementToleranceVariation
+                    <= voltageSum
                     and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
                 ):
@@ -291,7 +294,12 @@ class Battery(ABC):
                     self.max_voltage_start_time = None
                 # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
                 # regardless of whether we were in absorption mode or not
-                if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP - measurementToleranceVariation:
+                if (
+                    voltageSum
+                    < self.max_battery_voltage
+                    - utils.VOLTAGE_DROP
+                    - measurementToleranceVariation
+                ):
                     self.max_voltage_start_time = None
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
