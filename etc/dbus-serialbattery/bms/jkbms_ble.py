@@ -2,6 +2,7 @@
 from battery import Battery, Cell
 from typing import Callable
 from utils import logger
+import utils
 from time import sleep, time
 from bms.jkbms_brn import Jkbms_Brn
 import os
@@ -20,6 +21,7 @@ class Jkbms_Ble(Battery):
         self.type = self.BATTERYTYPE
         self.jk = Jkbms_Brn(address)
         self.unique_identifier_tmp = ""
+        self.last_soc_reset_time = None
 
         logger.info("Init of Jkbms_Ble at " + address)
 
@@ -253,3 +255,19 @@ class Jkbms_Ble(Battery):
 
     def get_balancing(self):
         return 1 if self.balancing else 0
+
+    def trigger_soc_reset(self):
+        if utils.AUTO_RESET_SOC and utils.JK_BMS_AUTO_RESET_SOC:
+            if self.last_soc_reset_time is None:
+                self.jk.trigger_soc_reset = True
+                self.last_soc_reset_time = int(time())
+                logger.debug("Triggering SOC reset BLE")
+            else:
+                tdiff = int(time()) - self.last_soc_reset_time
+                if utils.JK_BMS_WAIT_UNTIL_NEXT_SOC_RESET < tdiff:
+                    self.jk.trigger_soc_reset = True
+                    self.last_soc_reset_time = int(time())
+                    logger.debug("Triggering SOC reset BLE")
+                else:
+                    logger.debug("Waiting for timeout ... " + str(tdiff))
+        return

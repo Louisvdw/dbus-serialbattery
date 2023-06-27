@@ -300,8 +300,27 @@ CUSTOM_BATTERY_NAMES = _get_list_from_config(
 
 # Auto reset SoC
 # If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
-# Currently only working for Daly BMS
+# Currently only working for Daly and JK BMS
 AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
+# --------- JK BMS specific settings for SOC reset ---------
+# WARNING! Beta code only tested with HW 11!
+# WARNING! This will always set your JK BMS OVP and OVPR values to this settings!
+JK_BMS_AUTO_RESET_SOC = "True" == config["DEFAULT"]["JK_BMS_AUTO_RESET_SOC"]
+JK_BMS_OVPR_DEFAULT  = float(config["DEFAULT"]["JK_BMS_OVPR_DEFAULT"])
+JK_BMS_OVP_DEFAULT = float(config["DEFAULT"]["JK_BMS_OVP_DEFAULT"])
+if JK_BMS_OVP_DEFAULT < JK_BMS_OVPR_DEFAULT:
+    logger.error(
+        ">>> ERROR: JK_BMS_OVPR_DEFAULT is set to a value greater than JK_BMS_OVP_DEFAULT. " +
+        "Please check the configuration."
+    )
+JK_BMS_OVPR_TRIGGER_RESET = float(config["DEFAULT"]["JK_BMS_OVPR_TRIGGER_RESET"])
+JK_BMS_OVP_TRIGGER_RESET = float(config["DEFAULT"]["JK_BMS_OVP_TRIGGER_RESET"])
+if JK_BMS_OVP_TRIGGER_RESET < JK_BMS_OVPR_TRIGGER_RESET:
+    logger.error(
+        ">>> ERROR: JK_BMS_OVPR_TRIGGER_RESET is set to a value greater than JK_BMS_OVP_TRIGGER_RESET. " +
+        "Please check the configuration."
+    )
+JK_BMS_WAIT_UNTIL_NEXT_SOC_RESET = int(config["DEFAULT"]["JK_BMS_WAIT_UNTIL_NEXT_SOC_RESET"])
 
 # Publish the config settings to the dbus path "/Info/Config/"
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])

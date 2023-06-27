@@ -275,6 +275,9 @@ class Battery(ABC):
                     and self.allow_max_voltage
                 ):
                     self.max_voltage_start_time = int(time())
+                    # Assume battery SOC ist 100% at this stage
+                    # Function for each battery that supports reset of SOC
+                    self.trigger_soc_reset()
 
                 # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                 elif (
@@ -289,7 +292,7 @@ class Battery(ABC):
                 if 300 < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
-                # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
+                # we don't forget to reset max_voltage_start_time when we going to bulk(dynamic) mode
                 # regardless of whether we were in absorption mode or not
                 if (
                     voltageSum
@@ -417,6 +420,9 @@ class Battery(ABC):
                 ):
                     # example 2
                     self.max_voltage_start_time = time()
+                    # Assume battery SOC ist 100% at this stage
+                    # Function for each battery that supports reset of SOC
+                    self.trigger_soc_reset()
 
                 # check if reset soc is greater than battery soc
                 # this prevents flapping between max and float voltage
@@ -1094,6 +1100,19 @@ class Battery(ABC):
         logger.info(
             f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
         )
+        if utils.AUTO_RESET_SOC and utils.JK_BMS_AUTO_RESET_SOC:
+            logger.info("JK BMS SOC reset enabled")
+            logger.info(
+                f"> OVPR default: {str(utils.JK_BMS_OVPR_DEFAULT)}V | OVP default: {utils.JK_BMS_OVP_DEFAULT}V"
+            )
+            logger.info(
+                f"> OVPR trigger: {str(utils.JK_BMS_OVPR_TRIGGER_RESET)}V | OVP trigger: {utils.JK_BMS_OVP_TRIGGER_RESET}V"
+            )
+            logger.info(
+                f"> Timeout to next possible SOC reset: {str(utils.JK_BMS_WAIT_UNTIL_NEXT_SOC_RESET)}"
+            )
+        else:
+            logger.info("JK BMS SOC reset disabled")
         logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier()}")
 
         return
@@ -1249,4 +1268,10 @@ class Battery(ABC):
         return
 
     def turn_balancing_off_callback(self, path, value):
+        return
+
+    def trigger_soc_reset(self):
+        """
+        This method can be used to implement SOC reset when the battery is assumed to be full
+        """
         return
