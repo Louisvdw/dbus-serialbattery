@@ -258,6 +258,10 @@ class Jkbms_Ble(Battery):
 
     def trigger_soc_reset(self):
         if utils.AUTO_RESET_SOC and utils.JK_BMS_AUTO_RESET_SOC:
+            self.jk.JK_BMS_OVPR_TRIGGER_RESET = utils.JK_BMS_OVPR_TRIGGER_RESET
+            self.jk.JK_BMS_OVP_TRIGGER_RESET = utils.JK_BMS_OVP_TRIGGER_RESET
+            self.jk.JK_BMS_OVP_DEFAULT = utils.JK_BMS_OVP_DEFAULT
+            self.jk.JK_BMS_OVPR_DEFAULT = utils.JK_BMS_OVPR_DEFAULT
             if self.last_soc_reset_time is None:
                 self.jk.trigger_soc_reset = True
                 self.last_soc_reset_time = int(time())

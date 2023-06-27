@@ -98,6 +98,10 @@ class Jkbms_Brn:
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
         self.trigger_soc_reset = False
+        self.JK_BMS_OVPR_TRIGGER_RESET = 0
+        self.JK_BMS_OVP_TRIGGER_RESET = 0
+        self.JK_BMS_OVP_DEFAULT = 0
+        self.JK_BMS_OVPR_DEFAULT = 0
 
     async def scanForDevices(self):
         devices = await BleakScanner.discover()
@@ -364,8 +368,8 @@ class Jkbms_Brn:
                 # last_dev_info = time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
                     if self.trigger_soc_reset:
-                        await self.reset_soc_jk(client)
                         self.trigger_soc_reset = False
+                        await self.reset_soc_jk(client)
                     await asyncio.sleep(0.01)
             except Exception as err:
                 self.run = False
@@ -427,15 +431,15 @@ class Jkbms_Brn:
     async def reset_soc_jk(self, c):
         # Lowering OVPR / OVP
         # That will trigger a High Voltage Alert
-        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(utils.JK_BMS_OVPR_TRIGGER_RESET), 0x04, c, True)
-        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(utils.JK_BMS_OVP_TRIGGER_RESET), 0x04, c, True)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(self.JK_BMS_OVPR_TRIGGER_RESET), 0x04, c, True)
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(self.JK_BMS_OVP_TRIGGER_RESET), 0x04, c, True)
 
         # Give BMS some time to recognize
         await asyncio.sleep(10)
 
         # Set values back to default
-        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(utils.JK_BMS_OVP_DEFAULT), 0X04, c, True)
-        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(utils.JK_BMS_OVPR_DEFAULT), 0x04, c, True)
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(self.JK_BMS_OVP_DEFAULT), 0X04, c, True)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(self.JK_BMS_OVPR_DEFAULT), 0x04, c, True)
 
 if __name__ == "__main__":
     import sys
