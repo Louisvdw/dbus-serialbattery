@@ -6,6 +6,8 @@ MbPage {
 
 	property variant service
 
+	property VBusItem chargeModeDebug: VBusItem { bind: service.path("/Info/ChargeModeDebug") }
+
 	model: VisibleItemModel {
 
         MbItemValue {
@@ -13,6 +15,13 @@ MbPage {
             item.bind: service.path("/Info/ChargeMode")
             show: item.valid
         }
+
+		// show debug informations
+		MbItemText {
+			text: chargeModeDebug.value
+			wrapMode: Text.WordWrap
+			show: chargeModeDebug.value != ""
+		}
 
 		MbItemValue {
 			description: qsTr("Charge Voltage Limit (CVL)")
