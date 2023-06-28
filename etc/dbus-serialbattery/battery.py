@@ -252,7 +252,9 @@ class Battery(ABC):
         penaltySum = 0
         tDiff = 0
         current_time = int(time())
-
+        # meassurment and variation tolerance in volts
+        measurementToleranceVariation = 0.022
+        
         try:
             # calculate battery sum
             for i in range(self.cell_count):
@@ -303,7 +305,12 @@ class Battery(ABC):
 
                 # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
                 # regardless of whether we were in absorption mode or not
-                if voltageSum < self.max_battery_voltage - utils.VOLTAGE_DROP:
+                if (
+                    voltageSum
+                    < self.max_battery_voltage
+                    - utils.VOLTAGE_DROP
+                    - measurementToleranceVariation
+                ):
                     self.max_voltage_start_time = None
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
