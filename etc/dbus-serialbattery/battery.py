@@ -111,6 +111,7 @@ class Battery(ABC):
         self.transition_start_time = None
         self.control_voltage_at_transition_start = None
         self.charge_mode = None
+        self.charge_mode_debug = ""
         self.charge_limitation = None
         self.discharge_limitation = None
         self.linear_cvl_last_set = 0
@@ -250,8 +251,10 @@ class Battery(ABC):
         voltageSum = 0
         penaltySum = 0
         tDiff = 0
+        current_time = int(time())
         # meassurment and variation tolerance in volts
         measurementToleranceVariation = 0.022
+        
         try:
             # calculate battery sum
             for i in range(self.cell_count):
@@ -274,7 +277,7 @@ class Battery(ABC):
                     and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
                 ):
-                    self.max_voltage_start_time = int(time())
+                    self.max_voltage_start_time = current_time
 
                 # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                 elif (
@@ -282,13 +285,24 @@ class Battery(ABC):
                     or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
                 ) and not self.allow_max_voltage:
                     self.allow_max_voltage = True
+                else:
+                    pass
+
             else:
-                tDiff = int(time()) - self.max_voltage_start_time
-                # if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
-                # keep max voltage for 300 more seconds
-                if 300 < tDiff:
+                tDiff = current_time - self.max_voltage_start_time
+                # keep max voltage for MAX_VOLTAGE_TIME_SEC more seconds
+                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
+                    if self.soc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
+                        # write to log, that reset to float was not possible
+                        logger.error(
+                            f"Could not change to float voltage. Battery SoC ({self.soc}%) is lower"
+                            + f" than SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT ({utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%)."
+                            + " Please reset SoC manually or lower the SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT in the"
+                            + ' "config.ini".'
+                        )
+
                 # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
                 # regardless of whether we were in absorption mode or not
                 if (
@@ -317,20 +331,8 @@ class Battery(ABC):
 
                 self.charge_mode = (
                     "Bulk dynamic"
-                    # + " (vS: "
-                    # + str(round(voltageSum, 2))
-                    # + " - pS: "
-                    # + str(round(penaltySum, 2))
-                    # + ")"
                     if self.max_voltage_start_time is None
                     else "Absorption dynamic"
-                    # + "(vS: "
-                    # + str(round(voltageSum, 2))
-                    # + " tDiff: "
-                    # + str(tDiff)
-                    # + " pS: "
-                    # + str(round(penaltySum, 2))
-                    # + ")"
                 )
 
             elif self.allow_max_voltage:
@@ -347,19 +349,20 @@ class Battery(ABC):
                 chargeMode = "Float"
                 if self.control_voltage:
                     if not self.charge_mode.startswith("Float"):
-                        self.transition_start_time = int(time())
+                        self.transition_start_time = current_time
                         self.initial_control_voltage = self.control_voltage
                         chargeMode = "Float Transition"
                     elif self.charge_mode.startswith("Float Transition"):
-                        current_time = int(time())
                         elapsed_time = current_time - self.transition_start_time
-                        # Voltage drop per second
-                        VOLTAGE_DROP_PER_SECOND = 0.01 / 10
-                        voltage_drop = min(
-                            VOLTAGE_DROP_PER_SECOND * elapsed_time,
+                        # Voltage reduction per second
+                        VOLTAGE_REDUCTION_PER_SECOND = 0.01 / 10
+                        voltage_reduction = min(
+                            VOLTAGE_REDUCTION_PER_SECOND * elapsed_time,
                             self.initial_control_voltage - floatVoltage,
                         )
-                        self.set_cvl_linear(self.initial_control_voltage - voltage_drop)
+                        self.set_cvl_linear(
+                            self.initial_control_voltage - voltage_reduction
+                        )
                         if self.control_voltage <= floatVoltage:
                             self.control_voltage = floatVoltage
                             chargeMode = "Float"
@@ -377,6 +380,35 @@ class Battery(ABC):
                 self.charge_mode += " + Balancing"
 
             self.charge_mode += " (Linear Mode)"
+
+            # uncomment for enabling debugging infos in GUI
+            """
+            self.charge_mode_debug = (
+                f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
+            )
+            self.charge_mode_debug += (
+                f" - VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)}V"
+            )
+            self.charge_mode_debug += f"\nvoltageSum: {round(voltageSum, 2)}V"
+            self.charge_mode_debug += f" • voltageDiff: {round(voltageDiff, 3)}V"
+            self.charge_mode_debug += (
+                f"\ncontrol_voltage: {round(self.control_voltage, 2)}V"
+            )
+            self.charge_mode_debug += f" • penaltySum: {round(penaltySum, 3)}V"
+            self.charge_mode_debug += f"\ntDiff: {tDiff}/{utils.MAX_VOLTAGE_TIME_SEC}"
+            self.charge_mode_debug += f" • SoC: {self.soc}%"
+            self.charge_mode_debug += (
+                f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
+            )
+            self.charge_mode_debug += f"\nallow_max_voltage: {self.allow_max_voltage}"
+            self.charge_mode_debug += (
+                f"\nmax_voltage_start_time: {self.max_voltage_start_time}"
+            )
+            self.charge_mode_debug += f"\ncurrent_time: {current_time}"
+            self.charge_mode_debug += (
+                f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
+            )
+            """
 
         except TypeError:
             self.control_voltage = None
