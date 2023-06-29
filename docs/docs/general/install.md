@@ -24,7 +24,7 @@ toc_max_heading_level: 4
 | v2.90 - v2.94                                    | untested | x        | x                    | x        |
 | v3.00~1 - v3.00~13                               | untested | untested | x                    | x        |
 | v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x        |
-| v3.00 - v3.10~7                                  | untested | untested | x<sup>1)</sup>       | x        |
+| v3.00 - v3.10~9                                  | untested | untested | x<sup>1)</sup>       | x        |
 
 1) Partially supported. Empty values/pages are not hidden in the GUI
 
@@ -132,8 +132,9 @@ Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/u
 
 ### BMS specific settings
 
-* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted)
+* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted) and [Daly Lost Connection because of standby](https://github.com/Louisvdw/dbus-serialbattery/issues/731#issuecomment-1613580083)
 * ECS BMS &rarr; Check [#254 ECS BMS (comment)](https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313)
+* MNB BMS &rarr; Check [MNB BMS setup](https://github.com/Louisvdw/dbus-serialbattery/issues/590)
 
 Since driver version `>= v1.0.0` you can also get an overview of the BMS specific settings be checking the end of the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
 
