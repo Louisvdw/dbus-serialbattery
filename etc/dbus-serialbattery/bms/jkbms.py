@@ -127,7 +127,9 @@ class Jkbms(Battery):
             unpack_from(">H", self.get_data(status_data, b"\x99", offset, 2))[0]
         )
 
-        # the JKBMS resets to 95% SoC, if all cell voltages are above or equal to 3.500 V
+        # the JKBMS resets to
+        # 95% SoC, if all cell voltages are above or equal to OVPR (Over Voltage Protection Recovery)
+        # 100% Soc, if all cell voltages are above or equal to OVP (Over Voltage Protection)
         offset = cellbyte_count + 18
         self.soc = unpack_from(">B", self.get_data(status_data, b"\x85", offset, 1))[0]
 
@@ -279,7 +281,11 @@ class Jkbms(Battery):
         # MOSFET temperature alarm
         self.protection.temp_high_internal = 2 if is_bit_set(tmp[pos - 1]) else 0
         # charge over voltage alarm
-        self.protection.voltage_high = 2 if is_bit_set(tmp[pos - 2]) else 0
+        # TODO: check if "self.bulk_requested is False" works,
+        # else use "self.bulk_last_reached < int(time()) - (60 * 60)"
+        self.protection.voltage_high = (
+            2 if is_bit_set(tmp[pos - 2]) and self.bulk_requested is False else 0
+        )
         # discharge under voltage alarm
         self.protection.voltage_low = 2 if is_bit_set(tmp[pos - 3]) else 0
         # charge overcurrent alarm
