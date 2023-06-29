@@ -38,7 +38,7 @@ def _get_list_from_config(
 
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230625dev"
+DRIVER_VERSION = "1.0.20230629dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -65,6 +65,29 @@ if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
     logger.error(
         ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
     )
+
+# Bulk voltage (may be needed to reset the SoC to 100% once in a while for some BMS)
+# Has to be higher as the MAX_CELL_VOLTAGE
+BULK_CELL_VOLTAGE = float(config["DEFAULT"]["BULK_CELL_VOLTAGE"])
+if BULK_CELL_VOLTAGE < MAX_CELL_VOLTAGE:
+    BULK_CELL_VOLTAGE = MAX_CELL_VOLTAGE
+    logger.error(
+        ">>> ERROR: BULK_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
+# Specify after how many days the bulk voltage should be reached again
+# The timer is reset when the bulk voltage is reached
+# Leave empty if you don't want to use this
+# Example: Value is set to 15
+# day 1: bulk reached once
+# day 16: bulk reached twice
+# day 31: bulk not reached since it's very cloudy
+# day 34: bulk reached since the sun came out
+# day 49: bulk reached again, since last time it took 3 days to reach bulk voltage
+BULK_AFTER_DAYS = (
+    int(config["DEFAULT"]["BULK_AFTER_DAYS"])
+    if config["DEFAULT"]["BULK_AFTER_DAYS"] != ""
+    else False
+)
 
 # --------- BMS disconnect behaviour ---------
 # Description: Block charge and discharge when the communication to the BMS is lost. If you are removing the
@@ -157,6 +180,10 @@ DCCM_CV_ENABLE = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
 CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
 )
+if CELL_VOLTAGES_WHILE_CHARGING[0] < MAX_CELL_VOLTAGE:
+    logger.error(
+        ">>> ERROR: Maximum value of CELL_VOLTAGES_WHILE_CHARGING is set to a value lower than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
 MAX_CHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
     "MAX_CHARGE_CURRENT_CV_FRACTION",
@@ -166,6 +193,10 @@ MAX_CHARGE_CURRENT_CV = _get_list_from_config(
 CELL_VOLTAGES_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_DISCHARGING", lambda v: float(v)
 )
+if CELL_VOLTAGES_WHILE_DISCHARGING[0] > MIN_CELL_VOLTAGE:
+    logger.error(
+        ">>> ERROR: Minimum value of CELL_VOLTAGES_WHILE_DISCHARGING is set to a value greater than MIN_CELL_VOLTAGE. Please check the configuration."
+    )
 MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
     "MAX_DISCHARGE_CURRENT_CV_FRACTION",
