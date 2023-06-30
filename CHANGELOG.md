@@ -3,6 +3,7 @@
 ## v1.0.x
 * Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
+* Added: Daly BMS: Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
@@ -12,13 +13,14 @@
 * Changed: Fix daly readsentence by @transistorgit
 * Changed: Fix Sinowealth not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
+* Changed: Fixed meaningless Time to Go values by @transistorgit
 * Changed: Fixed typo in `config.ini` sample by @hoschult
 * Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
 * Changed: Improved battery error handling on connection loss by @mr-manuel
 * Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
-* Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS
+* Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
 * Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
 
 

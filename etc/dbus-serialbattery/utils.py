@@ -38,7 +38,7 @@ def _get_list_from_config(
 
 
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230613dev"
+DRIVER_VERSION = "1.0.20230625dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -127,11 +127,15 @@ CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
 
-# -- CVL Reset based on SoC option
-# Specify how long the max voltage should be kept, if reached then switch to float voltage
-MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
-# Specify SoC where CVL limit is reset to max voltage, if value gets below
-SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
+# -- CVL reset based on SoC option (step mode & linear mode)
+# Specify how long the max voltage should be kept
+#     Step mode: If reached then switch to float voltage
+#     Linear mode: If cells are balanced keep max voltage for further MAX_VOLTAGE_TIME_SEC seconds
+MAX_VOLTAGE_TIME_SEC = int(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
+# Specify SoC where CVL limit is reset to max voltage
+#     Step mode: If SoC gets below
+#     Linear mode: If cells are unbalanced or if SoC gets below
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = int(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
 
@@ -297,6 +301,11 @@ EXCLUDED_DEVICES = _get_list_from_config(
 CUSTOM_BATTERY_NAMES = _get_list_from_config(
     "DEFAULT", "CUSTOM_BATTERY_NAMES", lambda v: str(v)
 )
+
+# Auto reset SoC
+# If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
+# Currently only working for Daly BMS
+AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
 # Publish the config settings to the dbus path "/Info/Config/"
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
