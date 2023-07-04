@@ -242,10 +242,6 @@ class Battery(ABC):
             self.charge_mode = "Keep always max voltage"
 
     def prepare_voltage_management(self) -> None:
-        self.bulk_battery_voltage = round(utils.BULK_CELL_VOLTAGE * self.cell_count, 2)
-        self.max_battery_voltage = round(utils.MAX_CELL_VOLTAGE * self.cell_count, 2)
-        self.min_battery_voltage = round(utils.MIN_CELL_VOLTAGE * self.cell_count, 2)
-
         bulk_last_reached_days_ago = (
             0
             if self.bulk_last_reached == 0
@@ -255,7 +251,7 @@ class Battery(ABC):
         # it gets set to False once the bulk voltage was reached once
         if (
             utils.BULK_AFTER_DAYS is not False
-            and self.bulk_requested is not False
+            and self.bulk_requested is False
             and self.allow_max_voltage
             and (
                 self.bulk_last_reached == 0
@@ -263,11 +259,21 @@ class Battery(ABC):
             )
         ):
             logger.info(
-                f"set bulk_requested to True: first time or {utils.BULK_AFTER_DAYS}"
+                f"set bulk_requested to True: first time (0) or {utils.BULK_AFTER_DAYS}"
                 + f" < {round(bulk_last_reached_days_ago, 2)}"
             )
             self.bulk_requested = True
+
+        self.bulk_battery_voltage = round(utils.BULK_CELL_VOLTAGE * self.cell_count, 2)
+
+        if self.bulk_requested:
             self.max_battery_voltage = self.bulk_battery_voltage
+        else:
+            self.max_battery_voltage = round(
+                utils.MAX_CELL_VOLTAGE * self.cell_count, 2
+            )
+
+        self.min_battery_voltage = round(utils.MIN_CELL_VOLTAGE * self.cell_count, 2)
 
     def manage_charge_voltage_linear(self) -> None:
         """
@@ -454,13 +460,16 @@ class Battery(ABC):
             self.charge_mode_debug += (
                 f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
             )
+            bulk_days_ago = round(
+                (current_time - self.bulk_last_reached) / 60 / 60 / 24, 2
+            )
             self.charge_mode_debug += "\nbulk_last_reached: " + str(
                 "Never"
                 if self.bulk_last_reached == 0
-                else str(
-                    round((current_time - self.bulk_last_reached) / 60 / 60 / 24, 2)
-                )
-                + " days ago"
+                else str(bulk_days_ago)
+                + " days ago - next in "
+                + str(utils.BULK_AFTER_DAYS - bulk_days_ago)
+                + "days"
             )
             # """
 
