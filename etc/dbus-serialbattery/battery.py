@@ -124,6 +124,7 @@ class Battery(ABC):
         self.control_charge_current = None
         self.control_allow_charge = None
         self.control_allow_discharge = None
+        self.system_dc_battery_soc = None
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -242,6 +243,15 @@ class Battery(ABC):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
+    def get_utilized_soc(self) -> float:
+        if self.system_dc_battery_soc:
+            try:
+                return self.system_dc_battery_soc()
+            except Exception:
+                # Fallback to own SOC
+                return self.soc
+        return self.soc
+
     def manage_charge_voltage_linear(self) -> None:
         """
         manages the charge voltage using linear interpolation by setting self.control_voltage
@@ -254,7 +264,7 @@ class Battery(ABC):
         current_time = int(time())
         # meassurment and variation tolerance in volts
         measurementToleranceVariation = 0.022
-        
+
         try:
             # calculate battery sum
             for i in range(self.cell_count):
@@ -269,6 +279,7 @@ class Battery(ABC):
                         penaltySum += voltage - utils.MAX_CELL_VOLTAGE
 
             voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
+            utilizedSOC = self.get_utilized_soc()
 
             if self.max_voltage_start_time is None:
                 # start timer, if max voltage is reached and cells are balanced
@@ -281,7 +292,7 @@ class Battery(ABC):
 
                 # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                 elif (
-                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > utilizedSOC
                     or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
                 ) and not self.allow_max_voltage:
                     self.allow_max_voltage = True
@@ -294,10 +305,10 @@ class Battery(ABC):
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
-                    if self.soc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
+                    if utilizedSOC <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
                         # write to log, that reset to float was not possible
                         logger.error(
-                            f"Could not change to float voltage. Battery SoC ({self.soc}%) is lower"
+                            f"Could not change to float voltage. Reference SoC ({utilizedSOC}%) is lower"
                             + f" than SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT ({utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%)."
                             + " Please reset SoC manually or lower the SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT in the"
                             + ' "config.ini".'
@@ -382,7 +393,6 @@ class Battery(ABC):
             self.charge_mode += " (Linear Mode)"
 
             # uncomment for enabling debugging infos in GUI
-            """
             self.charge_mode_debug = (
                 f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
             )
@@ -397,6 +407,7 @@ class Battery(ABC):
             self.charge_mode_debug += f" • penaltySum: {round(penaltySum, 3)}V"
             self.charge_mode_debug += f"\ntDiff: {tDiff}/{utils.MAX_VOLTAGE_TIME_SEC}"
             self.charge_mode_debug += f" • SoC: {self.soc}%"
+            self.charge_mode_debug += f" • utilized SoC: {self.get_utilized_soc()}%"
             self.charge_mode_debug += (
                 f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
             )
@@ -408,7 +419,6 @@ class Battery(ABC):
             self.charge_mode_debug += (
                 f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
             )
-            """
 
         except TypeError:
             self.control_voltage = None

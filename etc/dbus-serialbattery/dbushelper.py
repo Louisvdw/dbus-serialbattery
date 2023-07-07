@@ -15,6 +15,7 @@ sys.path.insert(
     ),
 )
 from vedbus import VeDbusService  # noqa: E402
+from vedbus import VeDbusItemImport  # noqa: E402
 from settingsdevice import SettingsDevice  # noqa: E402
 from utils import logger, publish_config_variables  # noqa: E402
 import utils  # noqa: E402
@@ -40,6 +41,7 @@ class DbusHelper:
             + self.battery.port[self.battery.port.rfind("/") + 1 :],
             get_bus(),
         )
+        self._dbusDCBatterySocItem = None
 
     def setup_instance(self):
         # bms_id = self.battery.production if self.battery.production is not None else \
@@ -55,6 +57,25 @@ class DbusHelper:
                 0,
             ],
         }
+        if utils.UTILIZE_SYSTEM_SOC:
+            logger.info("UTILIZE_SYSTEM_SOC: TRUE")
+            try:
+                self._dbusDCBatterySocItem = VeDbusItemImport(
+                    get_bus(),
+                    "com.victronenergy.system",
+                    "/Dc/Battery/Soc"
+                    # get_bus(), "com.victronenergy.battery.ttyS5", "/Soc"
+                )
+                if self._dbusDCBatterySocItem:
+                    self.battery.system_dc_battery_soc = (
+                        lambda: self._dbusDCBatterySocItem.get_value()
+                    )
+                    logger.info(
+                        "will utilize com.victronenergy.system DC/Battery/Soc: %.2f",
+                        self._dbusDCBatterySocItem.get_value(),
+                    )
+            except Exception:
+                self.battery.system_dc_battery_soc = None
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
         self.battery.role, self.instance = self.get_role_instance()
