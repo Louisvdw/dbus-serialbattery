@@ -246,7 +246,9 @@ class Battery(ABC):
     def get_utilized_soc(self) -> float:
         if self.get_system_dc_battery_soc:
             try:
-                return self.get_system_dc_battery_soc()
+                systemDcBatterySoc = self.get_system_dc_battery_soc()
+                if systemDcBatterySoc:
+                    return systemDcBatterySoc
             except Exception:
                 # Fallback to own SOC
                 return self.soc
@@ -408,7 +410,8 @@ class Battery(ABC):
             self.charge_mode_debug += f" • penaltySum: {round(penaltySum, 3)}V"
             self.charge_mode_debug += f"\ntDiff: {tDiff}/{utils.MAX_VOLTAGE_TIME_SEC}"
             self.charge_mode_debug += f" • SoC: {self.soc}%"
-            self.charge_mode_debug += f" • utilized SoC: {self.get_utilized_soc()}%"
+            if utilizedSOC:
+                self.charge_mode_debug += f" • utilized SoC: {round(utilizedSOC, 2)}%"
             self.charge_mode_debug += (
                 f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
             )

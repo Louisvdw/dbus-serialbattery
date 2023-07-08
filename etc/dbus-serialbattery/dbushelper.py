@@ -70,10 +70,12 @@ class DbusHelper:
                     self.battery.get_system_dc_battery_soc = (
                         lambda: self._dbusDCBatterySocItem.get_value()
                     )
-                    logger.info(
-                        "will utilize com.victronenergy.system DC/Battery/Soc: %.2f",
-                        self._dbusDCBatterySocItem.get_value(),
-                    )
+                    systemDcBatterySoc = self._dbusDCBatterySocItem.get_value()
+                    if systemDcBatterySoc:
+                        logger.info(
+                            "will utilize com.victronenergy.system DC/Battery/Soc: %.2f",
+                            systemDcBatterySoc,
+                        )
             except Exception:
                 self.battery.get_system_dc_battery_soc = None
 
