@@ -393,7 +393,7 @@ class Battery(ABC):
             self.charge_mode += " (Linear Mode)"
 
             # uncomment for enabling debugging infos in GUI
-            # """
+            """
             self.charge_mode_debug = (
                 f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
             )
@@ -420,7 +420,7 @@ class Battery(ABC):
             self.charge_mode_debug += (
                 f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
             )
-            # """
+            """
 
         except TypeError:
             self.control_voltage = None
