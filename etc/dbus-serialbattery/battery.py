@@ -124,7 +124,7 @@ class Battery(ABC):
         self.control_charge_current = None
         self.control_allow_charge = None
         self.control_allow_discharge = None
-        self.system_dc_battery_soc = None
+        self.get_system_dc_battery_soc = None
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -244,9 +244,9 @@ class Battery(ABC):
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
     def get_utilized_soc(self) -> float:
-        if self.system_dc_battery_soc:
+        if self.get_system_dc_battery_soc:
             try:
-                return self.system_dc_battery_soc()
+                return self.get_system_dc_battery_soc()
             except Exception:
                 # Fallback to own SOC
                 return self.soc

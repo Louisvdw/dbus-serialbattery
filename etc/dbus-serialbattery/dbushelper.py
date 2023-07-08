@@ -67,7 +67,7 @@ class DbusHelper:
                     # get_bus(), "com.victronenergy.battery.ttyS5", "/Soc"
                 )
                 if self._dbusDCBatterySocItem:
-                    self.battery.system_dc_battery_soc = (
+                    self.battery.get_system_dc_battery_soc = (
                         lambda: self._dbusDCBatterySocItem.get_value()
                     )
                     logger.info(
@@ -75,7 +75,7 @@ class DbusHelper:
                         self._dbusDCBatterySocItem.get_value(),
                     )
             except Exception:
-                self.battery.system_dc_battery_soc = None
+                self.battery.get_system_dc_battery_soc = None
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
         self.battery.role, self.instance = self.get_role_instance()
