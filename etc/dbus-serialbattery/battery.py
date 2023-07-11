@@ -287,7 +287,7 @@ class Battery(ABC):
         current_time = int(time())
 
         # meassurment and variation tolerance in volts
-        measurementToleranceVariation = 0.025
+        measurementToleranceVariation = 0.5
 
         try:
             # calculate battery sum and check for cell overvoltage
@@ -463,12 +463,13 @@ class Battery(ABC):
             bulk_days_ago = round(
                 (current_time - self.bulk_last_reached) / 60 / 60 / 24, 2
             )
+            bulk_in_days = round(utils.BULK_AFTER_DAYS - bulk_days_ago, 2)
             self.charge_mode_debug += "\nbulk_last_reached: " + str(
                 "Never"
                 if self.bulk_last_reached == 0
                 else str(bulk_days_ago)
                 + " days ago - next in "
-                + str(utils.BULK_AFTER_DAYS - bulk_days_ago)
+                + str(bulk_in_days)
                 + "days"
             )
             # """
