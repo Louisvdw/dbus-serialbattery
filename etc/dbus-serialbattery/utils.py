@@ -202,7 +202,7 @@ MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
-UTILIZE_SYSTEM_SOC = "True" == config["DEFAULT"]["UTILIZE_SYSTEM_SOC"]
+UTILIZE_SOC_OF_DBUS_SERVICE = config["DEFAULT"]["UTILIZE_SOC_OF_DBUS_SERVICE"]
 
 # --------- SOC limitation (affecting CCL/DCL) ---------
 # Description: Maximal charge / discharge current will be increased / decreased depending on State of Charge,

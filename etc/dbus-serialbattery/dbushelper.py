@@ -16,6 +16,9 @@ sys.path.insert(
 )
 from vedbus import VeDbusService  # noqa: E402
 from vedbus import VeDbusItemImport  # noqa: E402
+
+# from dbusmonitor import DbusMonitor  # noqa: E402
+
 from settingsdevice import SettingsDevice  # noqa: E402
 from utils import logger, publish_config_variables  # noqa: E402
 import utils  # noqa: E402
@@ -41,7 +44,8 @@ class DbusHelper:
             + self.battery.port[self.battery.port.rfind("/") + 1 :],
             get_bus(),
         )
-        self._dbusDCBatterySocItem = None
+        self._dbusBatterySocItem = None
+        # self._dbusMonitor = None
 
     def setup_instance(self):
         # bms_id = self.battery.production if self.battery.production is not None else \
@@ -57,30 +61,42 @@ class DbusHelper:
                 0,
             ],
         }
-        if utils.UTILIZE_SYSTEM_SOC:
-            logger.info("UTILIZE_SYSTEM_SOC: TRUE")
+        if utils.UTILIZE_SOC_OF_DBUS_SERVICE:
+            logger.info(
+                "UTILIZE_SOC_OF_DBUS_SERVICE defined: "
+                + utils.UTILIZE_SOC_OF_DBUS_SERVICE
+            )
             try:
-                self._dbusDCBatterySocItem = VeDbusItemImport(
+                self._dbusBatterySocItem = VeDbusItemImport(
                     get_bus(),
-                    "com.victronenergy.system",
-                    "/Dc/Battery/Soc"
-                    # get_bus(), "com.victronenergy.battery.ttyS5", "/Soc"
+                    # "com.victronenergy.battery.ttyS5",
+                    utils.UTILIZE_SOC_OF_DBUS_SERVICE,
+                    "/Soc",
                 )
-                if self._dbusDCBatterySocItem:
-                    self.battery.get_system_dc_battery_soc = (
-                        lambda: self._dbusDCBatterySocItem.get_value()
-                    )
-                    systemDcBatterySoc = self._dbusDCBatterySocItem.get_value()
-                    if systemDcBatterySoc:
-                        logger.info(
-                            "will utilize com.victronenergy.system DC/Battery/Soc: %.2f",
-                            systemDcBatterySoc,
-                        )
-            except Exception:
-                self.battery.get_system_dc_battery_soc = None
+            except Exception as e:
+                logger.error(f"error during obtaining VeDbusItemImport: {e}")
+
+            self.battery.get_system_dc_battery_soc = lambda: self.get_dbus_battery_soc()
+            systemDcBatterySoc = self.get_dbus_battery_soc()
+            if systemDcBatterySoc:
+                logger.info(
+                    "will utilize Soc of service: %s  SOC: %.2f",
+                    utils.UTILIZE_SOC_OF_DBUS_SERVICE,
+                    systemDcBatterySoc,
+                )
+            else:
+                logger.info(
+                    "got empty value /Soc from %s", utils.UTILIZE_SOC_OF_DBUS_SERVICE
+                )
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
         self.battery.role, self.instance = self.get_role_instance()
+
+    def get_dbus_battery_soc(self):
+        if self._dbusBatterySocItem:
+            return self._dbusBatterySocItem.get_value()
+        else:
+            return None
 
     def get_role_instance(self):
         val = self.settings["instance"].split(":")
