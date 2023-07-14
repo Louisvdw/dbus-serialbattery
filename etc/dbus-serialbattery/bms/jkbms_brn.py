@@ -98,10 +98,6 @@ class Jkbms_Brn:
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
         self.trigger_soc_reset = False
-        self.JK_BMS_OVPR_TRIGGER_RESET = 0
-        self.JK_BMS_OVP_TRIGGER_RESET = 0
-        self.JK_BMS_OVP_DEFAULT = 0
-        self.JK_BMS_OVPR_DEFAULT = 0
 
     async def scanForDevices(self):
         devices = await BleakScanner.discover()
@@ -431,15 +427,22 @@ class Jkbms_Brn:
     async def reset_soc_jk(self, c):
         # Lowering OVPR / OVP
         # That will trigger a High Voltage Alert
-        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(self.JK_BMS_OVPR_TRIGGER_RESET), 0x04, c, True)
-        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(self.JK_BMS_OVP_TRIGGER_RESET), 0x04, c, True)
+        ovpr_trigger = round(self.bms_status["settings"]["cell_ovpr"] - 0.250, 3)
+        ovp_trigger = round(self.bms_status["settings"]["cell_ovp"] - 0.250, 3)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(ovpr_trigger), 0x04, c, True)
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(ovp_trigger), 0x04, c, True)
 
         # Give BMS some time to recognize
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
 
         # Set values back to default
-        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(self.JK_BMS_OVP_DEFAULT), 0X04, c, True)
-        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(self.JK_BMS_OVPR_DEFAULT), 0x04, c, True)
+        ovp_reset = round(self.bms_status["settings"]["cell_ovp"], 3)
+        ovpr_reset = round(self.bms_status["settings"]["cell_ovpr"], 3)
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(ovp_reset), 0X04, c, True)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(ovpr_reset), 0x04, c, True)
+
+        logging.info("JK BMS SOC reset finished.")
+
 
 if __name__ == "__main__":
     import sys
