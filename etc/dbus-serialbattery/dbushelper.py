@@ -2,7 +2,7 @@
 import sys
 import os
 import platform
-import dbus
+import dbus  # pyright: ignore[reportMissingImports]
 import traceback
 from time import time
 
@@ -14,8 +14,10 @@ sys.path.insert(
         "/opt/victronenergy/dbus-systemcalc-py/ext/velib_python",
     ),
 )
-from vedbus import VeDbusService  # noqa: E402
-from settingsdevice import SettingsDevice  # noqa: E402
+from vedbus import VeDbusService  # noqa: E402 # pyright: ignore[reportMissingImports]
+from settingsdevice import (  # noqa: E402 # pyright: ignore[reportMissingImports]
+    SettingsDevice,
+)
 from utils import logger, publish_config_variables  # noqa: E402
 import utils  # noqa: E402
 
@@ -500,7 +502,15 @@ class DbusHelper:
         self._dbusservice[
             "/Alarms/LowCellVoltage"
         ] = self.battery.protection.voltage_cell_low
-        self._dbusservice["/Alarms/HighVoltage"] = self.battery.protection.voltage_high
+        # disable high voltage warning temporarly, if loading to bulk voltage and bulk voltage reached is 30 minutes ago
+        self._dbusservice["/Alarms/HighVoltage"] = (
+            self.battery.protection.voltage_high
+            if (
+                self.battery.bulk_requested is False
+                and self.battery.bulk_last_reached < int(time()) - (60 * 30)
+            )
+            else 0
+        )
         self._dbusservice["/Alarms/LowSoc"] = self.battery.protection.soc_low
         self._dbusservice[
             "/Alarms/HighChargeCurrent"
