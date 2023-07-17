@@ -881,6 +881,14 @@ class Battery(ABC):
         else:
             diffSoc = self.soc - socnum
 
+        """
+        calculate only positive SoC points, since negative points have no sense
+        when charging only points above current SoC are shown
+        when discharging only points below current SoC are shown
+        """
+        if diffSoc < 0:
+            return None
+
         ttgStr = None
         if self.soc != socnum and (diffSoc > 0 or utils.TIME_TO_SOC_INC_FROM is True):
             secondstogo = int(diffSoc / crntPrctPerSec)
