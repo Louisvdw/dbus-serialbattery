@@ -582,6 +582,16 @@ class DbusHelper:
 
         # Update TimeToGo and/or TimeToSoC
         try:
+            # calculate current average for the last 300 cycles
+            # if Time-To-Go or Time-To-SoC is enabled
+            if utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0:
+                if self.battery.current is not None:
+                    self.battery.current_avg_lst.append(self.battery.current)
+
+                # delete oldest value
+                if len(self.battery.current_avg_lst) > 300:
+                    del self.battery.current_avg_lst[0]
+
             if (
                 self.battery.capacity is not None
                 and (utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0)
@@ -591,8 +601,15 @@ class DbusHelper:
                 )
             ):
                 self.battery.time_to_soc_update = int(time())
+
+                self.battery.current_avg = round(
+                    sum(self.battery.current_avg_lst)
+                    / len(self.battery.current_avg_lst),
+                    2,
+                )
+
                 crntPrctPerSec = (
-                    abs(self.battery.current / (self.battery.capacity / 100)) / 3600
+                    abs(self.battery.current_avg / (self.battery.capacity / 100)) / 3600
                 )
 
                 # Update TimeToGo item
@@ -602,11 +619,17 @@ class DbusHelper:
                         abs(
                             int(
                                 self.battery.get_timeToSoc(
-                                    utils.SOC_LOW_WARNING, crntPrctPerSec, True
+                                    # switch value depending on charging/discharging
+                                    utils.SOC_LOW_WARNING
+                                    if self.battery.current_avg < 0
+                                    else 100,
+                                    crntPrctPerSec,
+                                    True,
                                 )
                             )
                         )
-                        if self.battery.current and abs(self.battery.current) > 0.1
+                        if self.battery.current_avg
+                        and abs(self.battery.current_avg) > 0.1
                         else None
                     )
 
@@ -615,7 +638,7 @@ class DbusHelper:
                     for num in utils.TIME_TO_SOC_POINTS:
                         self._dbusservice["/TimeToSoC/" + str(num)] = (
                             self.battery.get_timeToSoc(num, crntPrctPerSec)
-                            if self.battery.current
+                            if self.battery.current_avg
                             else None
                         )
 

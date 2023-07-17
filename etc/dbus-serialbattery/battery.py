@@ -83,6 +83,8 @@ class Battery(ABC):
         """
         self.voltage = None
         self.current = None
+        self.current_avg = None
+        self.current_avg_lst = []
         self.capacity_remain = None
         self.capacity = None
         self.cycles = None
