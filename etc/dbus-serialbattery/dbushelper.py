@@ -210,9 +210,13 @@ class DbusHelper:
         self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature1", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature1Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature2", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature2Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature3", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature3Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature4", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature4Name", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -463,9 +467,13 @@ class DbusHelper:
         ] = self.battery.get_max_temp_id()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
         self._dbusservice["/System/Temperature1"] = self.battery.temp1
+        self._dbusservice["/System/Temperature1Name"] = utils.TEMP_1_NAME
         self._dbusservice["/System/Temperature2"] = self.battery.temp2
+        self._dbusservice["/System/Temperature2Name"] = utils.TEMP_2_NAME
         self._dbusservice["/System/Temperature3"] = self.battery.temp3
+        self._dbusservice["/System/Temperature3Name"] = utils.TEMP_3_NAME
         self._dbusservice["/System/Temperature4"] = self.battery.temp4
+        self._dbusservice["/System/Temperature4Name"] = utils.TEMP_4_NAME
 
         # Voltage control
         self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
