@@ -260,10 +260,12 @@ class Battery(ABC):
                 or utils.BULK_AFTER_DAYS < bulk_last_reached_days_ago
             )
         ):
+            """
             logger.info(
                 f"set bulk_requested to True: first time (0) or {utils.BULK_AFTER_DAYS}"
                 + f" < {round(bulk_last_reached_days_ago, 2)}"
             )
+            """
             self.bulk_requested = True
 
         self.bulk_battery_voltage = round(utils.BULK_CELL_VOLTAGE * self.cell_count, 2)
@@ -396,7 +398,7 @@ class Battery(ABC):
                 chargeMode = "Float"
                 # reset bulk when going into float
                 if self.bulk_requested:
-                    logger.info("set bulk_requested to False")
+                    # logger.info("set bulk_requested to False")
                     self.bulk_requested = False
                     # IDEA: Save "bulk_last_reached" in the dbus path com.victronenergy.settings
                     # to make it restart persistent
@@ -436,7 +438,7 @@ class Battery(ABC):
             self.charge_mode += " (Linear Mode)"
 
             # uncomment for enabling debugging infos in GUI
-            # """
+            """
             self.charge_mode_debug = (
                 f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
             )
@@ -550,7 +552,7 @@ class Battery(ABC):
                 self.charge_mode = "Float"
                 # reset bulk when going into float
                 if self.bulk_requested:
-                    logger.info("set bulk_requested to False")
+                    # logger.info("set bulk_requested to False")
                     self.bulk_requested = False
                     self.bulk_last_reached = current_time
 

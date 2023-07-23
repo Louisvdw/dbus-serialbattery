@@ -315,6 +315,12 @@ class DbusHelper:
             # Create TimeToGo item
             if utils.TIME_TO_GO_ENABLE:
                 self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+                self._dbusservice.add_path(
+                    "/CurrentAvg",
+                    None,
+                    writeable=True,
+                    gettextcallback=lambda p, v: "{:0.2f}A".format(v),
+                )
 
             # Create TimeToSoc items
             if len(utils.TIME_TO_SOC_POINTS) > 0:
@@ -592,6 +598,20 @@ class DbusHelper:
                 if len(self.battery.current_avg_lst) > 300:
                     del self.battery.current_avg_lst[0]
 
+            """
+            logger.info(
+                str(self.battery.capacity)
+                + " - "
+                + str(utils.TIME_TO_GO_ENABLE)
+                + " - "
+                + str(len(utils.TIME_TO_SOC_POINTS))
+                + " - "
+                + str(int(time()) - self.battery.time_to_soc_update)
+                + " - "
+                + str(utils.TIME_TO_SOC_RECALCULATE_EVERY)
+            )
+            """
+
             if (
                 self.battery.capacity is not None
                 and (utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0)
@@ -608,30 +628,35 @@ class DbusHelper:
                     2,
                 )
 
+                self._dbusservice["/CurrentAvg"] = self.battery.current_avg
+
                 crntPrctPerSec = (
                     abs(self.battery.current_avg / (self.battery.capacity / 100)) / 3600
                 )
 
                 # Update TimeToGo item
                 if utils.TIME_TO_GO_ENABLE:
-                    # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
-                    self._dbusservice["/TimeToGo"] = (
-                        abs(
-                            int(
-                                self.battery.get_timeToSoc(
-                                    # switch value depending on charging/discharging
-                                    utils.SOC_LOW_WARNING
-                                    if self.battery.current_avg < 0
-                                    else 100,
-                                    crntPrctPerSec,
-                                    True,
+                    if self.battery.current_avg is not None:
+                        # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
+                        self._dbusservice["/TimeToGo"] = (
+                            abs(
+                                int(
+                                    self.battery.get_timeToSoc(
+                                        # switch value depending on charging/discharging
+                                        utils.SOC_LOW_WARNING
+                                        if self.battery.current_avg < 0
+                                        else 100,
+                                        crntPrctPerSec,
+                                        True,
+                                    )
                                 )
                             )
+                            if self.battery.current_avg
+                            and abs(self.battery.current_avg) > 0.1
+                            else None
                         )
-                        if self.battery.current_avg
-                        and abs(self.battery.current_avg) > 0.1
-                        else None
-                    )
+                    else:
+                        self._dbusservice["/TimeToGo"] = None
 
                 # Update TimeToSoc items
                 if len(utils.TIME_TO_SOC_POINTS) > 0:
@@ -643,6 +668,12 @@ class DbusHelper:
                         )
 
         except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             pass
 
         if self.battery.soc is not None:
