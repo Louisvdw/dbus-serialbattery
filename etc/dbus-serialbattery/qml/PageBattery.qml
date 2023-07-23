@@ -95,6 +95,12 @@ MbPage {
         }
 
         MbItemValue {
+            description: qsTr("Current (last 5 minutes avg.)")
+            item.bind: service.path("/CurrentAvg")
+            show: item.seen
+        }
+
+        MbItemValue {
             id: soc
 
             description: qsTr("State of charge")

@@ -210,9 +210,13 @@ class DbusHelper:
         self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature1", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature1Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature2", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature2Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature3", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature3Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature4", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature4Name", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -311,6 +315,12 @@ class DbusHelper:
             # Create TimeToGo item
             if utils.TIME_TO_GO_ENABLE:
                 self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+                self._dbusservice.add_path(
+                    "/CurrentAvg",
+                    None,
+                    writeable=True,
+                    gettextcallback=lambda p, v: "{:0.2f}A".format(v),
+                )
 
             # Create TimeToSoc items
             if len(utils.TIME_TO_SOC_POINTS) > 0:
@@ -463,9 +473,13 @@ class DbusHelper:
         ] = self.battery.get_max_temp_id()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
         self._dbusservice["/System/Temperature1"] = self.battery.temp1
+        self._dbusservice["/System/Temperature1Name"] = utils.TEMP_1_NAME
         self._dbusservice["/System/Temperature2"] = self.battery.temp2
+        self._dbusservice["/System/Temperature2Name"] = utils.TEMP_2_NAME
         self._dbusservice["/System/Temperature3"] = self.battery.temp3
+        self._dbusservice["/System/Temperature3Name"] = utils.TEMP_3_NAME
         self._dbusservice["/System/Temperature4"] = self.battery.temp4
+        self._dbusservice["/System/Temperature4Name"] = utils.TEMP_4_NAME
 
         # Voltage control
         self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
@@ -574,6 +588,30 @@ class DbusHelper:
 
         # Update TimeToGo and/or TimeToSoC
         try:
+            # calculate current average for the last 300 cycles
+            # if Time-To-Go or Time-To-SoC is enabled
+            if utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0:
+                if self.battery.current is not None:
+                    self.battery.current_avg_lst.append(self.battery.current)
+
+                # delete oldest value
+                if len(self.battery.current_avg_lst) > 300:
+                    del self.battery.current_avg_lst[0]
+
+            """
+            logger.info(
+                str(self.battery.capacity)
+                + " - "
+                + str(utils.TIME_TO_GO_ENABLE)
+                + " - "
+                + str(len(utils.TIME_TO_SOC_POINTS))
+                + " - "
+                + str(int(time()) - self.battery.time_to_soc_update)
+                + " - "
+                + str(utils.TIME_TO_SOC_RECALCULATE_EVERY)
+            )
+            """
+
             if (
                 self.battery.capacity is not None
                 and (utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0)
@@ -583,35 +621,59 @@ class DbusHelper:
                 )
             ):
                 self.battery.time_to_soc_update = int(time())
+
+                self.battery.current_avg = round(
+                    sum(self.battery.current_avg_lst)
+                    / len(self.battery.current_avg_lst),
+                    2,
+                )
+
+                self._dbusservice["/CurrentAvg"] = self.battery.current_avg
+
                 crntPrctPerSec = (
-                    abs(self.battery.current / (self.battery.capacity / 100)) / 3600
+                    abs(self.battery.current_avg / (self.battery.capacity / 100)) / 3600
                 )
 
                 # Update TimeToGo item
                 if utils.TIME_TO_GO_ENABLE:
-                    # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
-                    self._dbusservice["/TimeToGo"] = (
-                        abs(
-                            int(
-                                self.battery.get_timeToSoc(
-                                    utils.SOC_LOW_WARNING, crntPrctPerSec, True
+                    if self.battery.current_avg is not None:
+                        # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
+                        self._dbusservice["/TimeToGo"] = (
+                            abs(
+                                int(
+                                    self.battery.get_timeToSoc(
+                                        # switch value depending on charging/discharging
+                                        utils.SOC_LOW_WARNING
+                                        if self.battery.current_avg < 0
+                                        else 100,
+                                        crntPrctPerSec,
+                                        True,
+                                    )
                                 )
                             )
+                            if self.battery.current_avg
+                            and abs(self.battery.current_avg) > 0.1
+                            else None
                         )
-                        if self.battery.current and abs(self.battery.current) > 0.1
-                        else None
-                    )
+                    else:
+                        self._dbusservice["/TimeToGo"] = None
 
                 # Update TimeToSoc items
                 if len(utils.TIME_TO_SOC_POINTS) > 0:
                     for num in utils.TIME_TO_SOC_POINTS:
                         self._dbusservice["/TimeToSoC/" + str(num)] = (
                             self.battery.get_timeToSoc(num, crntPrctPerSec)
-                            if self.battery.current
+                            if self.battery.current_avg
                             else None
                         )
 
         except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             pass
 
         if self.battery.soc is not None:
