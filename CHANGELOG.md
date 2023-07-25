@@ -24,6 +24,7 @@
 * Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
+* Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
 * Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
 * Changed: Time-to-SoC calculate only positive points by @mr-manuel
