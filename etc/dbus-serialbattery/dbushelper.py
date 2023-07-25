@@ -636,27 +636,21 @@ class DbusHelper:
 
                 # Update TimeToGo item
                 if utils.TIME_TO_GO_ENABLE:
-                    if self.battery.current_avg is not None:
-                        # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
-                        self._dbusservice["/TimeToGo"] = (
-                            abs(
-                                int(
-                                    self.battery.get_timeToSoc(
-                                        # switch value depending on charging/discharging
-                                        utils.SOC_LOW_WARNING
-                                        if self.battery.current_avg < 0
-                                        else 100,
-                                        crntPrctPerSec,
-                                        True,
-                                    )
-                                )
-                            )
-                            if self.battery.current_avg
-                            and abs(self.battery.current_avg) > 0.1
-                            else None
-                        )
-                    else:
-                        self._dbusservice["/TimeToGo"] = None
+                    # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
+                    time_to_go = self.battery.get_timeToSoc(
+                        # switch value depending on charging/discharging
+                        utils.SOC_LOW_WARNING if self.battery.current_avg < 0 else 100,
+                        crntPrctPerSec,
+                        True,
+                    )
+
+                    # Check that time_to_go is not None and current is not near zero
+                    self._dbusservice["/TimeToGo"] = (
+                        abs(int(time_to_go))
+                        if time_to_go is not None
+                        and abs(self.battery.current_avg) > 0.1
+                        else None
+                    )
 
                 # Update TimeToSoc items
                 if len(utils.TIME_TO_SOC_POINTS) > 0:
