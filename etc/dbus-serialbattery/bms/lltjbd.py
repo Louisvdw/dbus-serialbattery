@@ -295,8 +295,8 @@ class LltJbd(Battery):
                 )
             func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
             if func_config:
-                self.func_config = func_config
-                self.balance_fet = (func_config & FUNC_BALANCE_EN) != 0
+                self.func_config = unpack_from(">H", func_config)[0]
+                self.balance_fet = (self.func_config & FUNC_BALANCE_EN) != 0
 
         return True
 
