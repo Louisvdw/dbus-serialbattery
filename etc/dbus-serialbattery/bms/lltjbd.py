@@ -282,7 +282,7 @@ class LltJbd(Battery):
         with self.eeprom(writable=False):
             cycle_cap = self.read_serial_data_llt(readCmd(REG_CYCLE_CAP))
             if cycle_cap:
-                self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0] / 100.0)
+                self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0])
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
                 self.max_battery_charge_current = float(
