@@ -244,9 +244,6 @@ class LltJbd(Battery):
         self.trigger_force_disable_charge = None
         self.trigger_disable_balancer = None
         self.cycle_capacity = None
-        self.trigger_force_disable_discharge = None
-        self.trigger_force_disable_charge = None
-        self.trigger_disable_balancer = None
 
     # degree_sign = u'\N{DEGREE SIGN}'
     BATTERYTYPE = "LLT/JBD"
