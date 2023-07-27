@@ -2,7 +2,7 @@
 from battery import Protection, Battery, Cell
 from utils import is_bit_set, read_serial_data, logger
 import utils
-from struct import unpack_from
+from struct import unpack_from, pack
 import struct
 
 # Protocol registers
@@ -68,8 +68,10 @@ REG_PACK_V_DELAYS = 0x3C
 REG_CELL_V_DELAYS = 0x3D
 REG_CHGOC_DELAYS = 0x3E
 REG_DSGOC_DELAYS = 0x3F
-REG_GPSOFF = 0x40
-REG_GPSOFF_TIME = 0x41
+# Cut-off voltage turns off GPS protection board
+REG_GPS_OFF = 0x40
+# Cut-off voltage delay for GPS protection board
+REG_GPS_OFF_TIME = 0x41
 REG_CAP_90 = 0x42
 REG_CAP_70 = 0x43
 REG_CAP_50 = 0x44
@@ -140,6 +142,27 @@ REG_RESET = 0xE3
 CMD_ENTER_FACTORY_MODE = b"\x56\x78"
 CMD_EXIT_FACTORY_MODE = b"\x00\x00"
 CMD_EXIT_AND_SAVE_FACTORY_MODE = b"\x28\x28"
+
+# Weak current switch function
+FUNC_SW_EN = 0x0001  # bit 0
+# Load lock function used to disconnect the load when short circuit is required to recover
+FUNC_LOAD_EN = 0x0002  # bit 1
+# Enable balancer function
+FUNC_BALANCE_EN = 0x0004  # bit 2
+# Charge balance, only turn on balance when charging
+FUNC_BALANCE_CHARGING_ONLY = 0x0008  # bit 3
+# LED power indicator function
+FUNC_LED = 0x0010  # bit 4
+# Compatible with LED modes
+FUNC_LED_NUM = 0x0020  # bit 5
+# With history recording
+FUNC_RTC = 0x0040  # bit 6
+# whether it is necessary to set the range when it is currently used for FCC update
+FUNC_EDV = 0x0080  # bit 7
+# Additional GPS protection board is connected
+FUNC_GPS_EN = 0x0100  # bit 8
+# Enable onboard buzzer / GPS protection board buzzer?
+FUNC_BUZZER_EN = 0x0200  # bit 9
 
 
 def checksum(payload):
@@ -217,6 +240,10 @@ class LltJbd(Battery):
         self.soc_to_set = None
         self.factory_mode = False
         self.writable = False
+        self.trigger_force_disable_discharge = None
+        self.trigger_force_disable_charge = None
+        self.trigger_disable_balancer = None
+        self.cycle_capacity = None
 
     # degree_sign = u'\N{DEGREE SIGN}'
     BATTERYTYPE = "LLT/JBD"
@@ -253,6 +280,9 @@ class LltJbd(Battery):
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         with self.eeprom(writable=False):
+            cycle_cap = self.read_serial_data_llt(readCmd(REG_CYCLE_CAP))
+            if cycle_cap:
+                self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0] / 100.0)
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
                 self.max_battery_charge_current = float(
@@ -263,6 +293,9 @@ class LltJbd(Battery):
                 self.max_battery_discharge_current = float(
                     unpack_from(">h", discharge_over_current)[0] / -100.0
                 )
+            func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
+            if func_config:
+                self.func_config = func_config
 
         return True
 
@@ -288,7 +321,119 @@ class LltJbd(Battery):
             pack_voltage = struct.pack(">H", int(self.voltage * 10))
             self.read_serial_data_llt(writeCmd(REG_CAP_100, pack_voltage))
 
+    def force_charging_off_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_force_disable_charge = False
+            return True
+
+        if value == 1:
+            self.trigger_force_disable_charge = True
+            return True
+
+        return False
+
+    def force_discharging_off_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_force_disable_discharge = False
+            return True
+
+        if value == 1:
+            self.trigger_force_disable_discharge = True
+            return True
+
+        return False
+
+    def write_charge_discharge_mos(self):
+        if (
+            self.trigger_force_disable_charge is None
+            and self.trigger_force_disable_discharge is None
+        ):
+            return False
+
+        charge_disabled = 0 if self.charge_fet else 1
+        if self.trigger_force_disable_charge is not None and self.control_allow_charge:
+            charge_disabled = 1 if self.trigger_force_disable_charge else 0
+            logger.info(
+                f"write force disable charging: {'true' if self.trigger_force_disable_charge else 'false'}"
+            )
+        self.trigger_force_disable_charge = None
+
+        discharge_disabled = 0 if self.discharge_fet else 1
+        if (
+            self.trigger_force_disable_discharge is not None
+            and self.control_allow_discharge
+        ):
+            discharge_disabled = 1 if self.trigger_force_disable_discharge else 0
+            logger.info(
+                f"write force disable discharging: {'true' if self.trigger_force_disable_discharge else 'false'}"
+            )
+        self.trigger_force_disable_discharge = None
+
+        mosdata = pack(">BB", 0, charge_disabled | (discharge_disabled << 1))
+
+        reply = self.read_serial_data_llt(writeCmd(REG_CTRL_MOSFET, mosdata))
+
+        if reply is False:
+            logger.error("write force disable charge/discharge failed")
+            return False
+
+    def turn_balancing_off_callback(self, path, value):
+        if value is None:
+            return False
+
+        if value == 0:
+            self.trigger_disable_balancer = False
+            return True
+
+        if value == 1:
+            self.trigger_disable_balancer = True
+            return True
+
+        return False
+
+    def write_balancer(self):
+        if self.trigger_disable_balancer is None:
+            return False
+
+        disable_balancer = self.trigger_disable_balancer
+        logger.info(
+            f"write disable balancer: {'true' if self.trigger_disable_balancer else 'false'}"
+        )
+        self.trigger_disable_balancer = None
+        new_func_config = None
+
+        with self.eeprom():
+            func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
+            if func_config:
+                self.func_config = unpack_from(">H", func_config)[0]
+                balancer_enabled = self.func_config & FUNC_BALANCE_EN
+                # Balance is enabled, force disable OR balancer is disabled and force enable
+                if (balancer_enabled != 0 and disable_balancer) or (
+                    balancer_enabled == 0 and not disable_balancer
+                ):
+                    new_func_config = self.func_config ^ FUNC_BALANCE_EN
+
+        if new_func_config:
+            new_func_config_bytes = pack(">H", new_func_config)
+            with self.eeprom(writable=True):
+                reply = self.read_serial_data_llt(
+                    writeCmd(REG_FUNC_CONFIG, new_func_config_bytes)
+                )
+                if reply is False:
+                    logger.error("write force disable balancer failed")
+                    return False
+
+        return True
+
     def refresh_data(self):
+        self.write_charge_discharge_mos()
+        self.write_balancer()
         result = self.read_gen_data()
         result = result and self.read_cell_data()
         return result
@@ -402,7 +547,9 @@ class LltJbd(Battery):
         ) = unpack_from(">HhHHHHhHHBBBBB", gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
-        self.soc = round(100 * capacity_remain / capacity, 2)
+        if not self.cycle_capacity:
+            self.cycle_capacity = capacity
+        self.soc = round(100 * capacity_remain / self.cycle_capacity, 2)
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
         self.to_cell_bits(balance, balance2)
