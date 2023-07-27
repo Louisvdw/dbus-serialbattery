@@ -285,7 +285,7 @@ class LltJbd(Battery):
         with self.eeprom(writable=False):
             cycle_cap = self.read_serial_data_llt(readCmd(REG_CYCLE_CAP))
             if cycle_cap:
-                self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0] / 100.0)
+                self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0])
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
                 self.max_battery_charge_current = float(
@@ -299,6 +299,7 @@ class LltJbd(Battery):
             func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
             if func_config:
                 self.func_config = func_config
+                self.balance_fet = (func_config & FUNC_BALANCE_EN) != 0
 
         return True
 
@@ -431,6 +432,9 @@ class LltJbd(Battery):
                 if reply is False:
                     logger.error("write force disable balancer failed")
                     return False
+                else:
+                    self.func_config = new_func_config
+                    self.balance_fet = (self.func_config & FUNC_BALANCE_EN) != 0
 
         return True
 
