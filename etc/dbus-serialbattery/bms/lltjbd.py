@@ -240,6 +240,9 @@ class LltJbd(Battery):
         self.soc_to_set = None
         self.factory_mode = False
         self.writable = False
+        self.trigger_force_disable_discharge = None
+        self.trigger_force_disable_charge = None
+        self.trigger_disable_balancer = None
         self.cycle_capacity = None
         self.trigger_force_disable_discharge = None
         self.trigger_force_disable_charge = None
