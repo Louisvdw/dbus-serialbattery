@@ -240,6 +240,7 @@ class LltJbd(Battery):
         self.soc_to_set = None
         self.factory_mode = False
         self.writable = False
+        self.cycle_capacity = None
         self.trigger_force_disable_discharge = None
         self.trigger_force_disable_charge = None
         self.trigger_disable_balancer = None
@@ -279,6 +280,9 @@ class LltJbd(Battery):
         self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
         with self.eeprom(writable=False):
+            cycle_cap = self.read_serial_data_llt(readCmd(REG_CYCLE_CAP))
+            if cycle_cap:
+                self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0] / 100.0)
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
                 self.max_battery_charge_current = float(
@@ -543,7 +547,9 @@ class LltJbd(Battery):
         ) = unpack_from(">HhHHHHhHHBBBBB", gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
-        self.soc = round(100 * capacity_remain / capacity, 2)
+        if not self.cycle_capacity:
+            self.cycle_capacity = capacity
+        self.soc = round(100 * capacity_remain / self.cycle_capacity, 2)
         self.capacity_remain = capacity_remain / 100
         self.capacity = capacity / 100
         self.to_cell_bits(balance, balance2)
