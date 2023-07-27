@@ -1,6 +1,36 @@
 # Changelog
 
-## v1.0.0
+## v1.0.x
+* Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
+* Added: Create unique identifier, if not provided from BMS by @mr-manuel
+* Added: Current average of the last 5 minutes by @mr-manuel
+* Added: Daly BMS: Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
+* Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
+* Added: Implement callback function for update by @seidler2547
+* Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
+* Added: Load to bulk voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
+* Added: Save custom name and make it restart persistant by @mr-manuel
+* Added: Temperature names to dbus and mqtt by @mr-manuel
+* Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
+* Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
+* Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
+* Changed: Fix daly readsentence by @transistorgit
+* Changed: Fix Sinowealth not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
+* Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
+* Changed: Fixed meaningless Time to Go values by @transistorgit
+* Changed: Fixed typo in `config.ini` sample by @hoschult
+* Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
+* Changed: Improved battery error handling on connection loss by @mr-manuel
+* Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
+* Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
+* Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
+* Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
+* Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
+* Changed: Time-to-SoC calculate only positive points by @mr-manuel
+* Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
+
+
+## v1.0.20230531
 
 ### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
 
@@ -65,6 +95,7 @@
 * Changed: `reinstall-local.sh` to recreate `/data/conf/serial-starter.d`, if deleted by `disable.sh` --> to check if the file `conf/serial-starter.d` could now be removed from the repository by @mr-manuel
 * Changed: Added QML to `restore-gui.sh` by @mr-manuel
 * Changed: Bash output by @mr-manuel
+* Changed: CVL calculation improvement. Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced or SoC is below threshold by @mr-manuel
 * Changed: Daly BMS - Fixed BMS alerts by @mr-manuel
 * Changed: Daly BMS - Improved driver stability by @transistorgit & @mr-manuel
 * Changed: Daly BMS - Reworked serial parser by @transistorgit
@@ -78,6 +109,7 @@
 * Changed: Default LINEAR_LIMITATION_ENABLE from False to True by @mr-manuel
 * Changed: Disabled ANT BMS by default https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: Driver can now also start without serial adapter attached for Bluetooth BMS by @seidler2547
+* Changed: Feedback from BMS driver to know, if BMS is found or not by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
 * Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
@@ -96,7 +128,6 @@
 * Changed: Moved Bluetooth part to `reinstall-local.sh` by @mr-manuel
 * Changed: Moved BMS scripts to subfolder by @mr-manuel
 * Changed: Removed all wildcard imports and fixed black lint errors by @mr-manuel
-* Changed: CVL calculation improvement. Removed cell voltage penalty. Replaced by automatic voltage calculation. Max voltage is kept until cells are balanced and reset when cells are inbalanced or SoC is below threshold by @mr-manuel
 * Changed: Renamed scripts for better reading #532 by @mr-manuel
 * Changed: Reworked and optimized installation scripts by @mr-manuel
 * Changed: Separate Time-To-Go and Time-To-SoC activation by @mr-manuel

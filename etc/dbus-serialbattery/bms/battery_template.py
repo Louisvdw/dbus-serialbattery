@@ -27,14 +27,22 @@ class BatteryTemplate(Battery):
         result = False
         try:
             result = self.read_status_data()
-            # get first data to show in startup log
-            if result:
-                self.refresh_data()
+            # get first data to show in startup log, only if result is true
+            result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
 
         return result
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        Provide a unique identifier from the BMS to identify a BMS, if multiple same BMS are connected
+        e.g. the serial number
+        If there is no such value, please remove this function
+        """
+        return self.serialnumber
 
     def get_settings(self):
         # After successful  connection get_settings will be call to set up the battery.
@@ -53,11 +61,6 @@ class BatteryTemplate(Battery):
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
-        # provide a unique identifier from the BMS to identify a BMS, if multiple same BMS are connected
-        # e.g. the serial number
-        # If there is no such value, please leave the line commented. In this case the capacity is used,
-        # since it can be changed by small amounts to make a battery unique. On +/- 5 Ah you can identify 11 batteries
-        # self.unique_identifier = str()
         return True
 
     def refresh_data(self):
@@ -83,6 +86,8 @@ class BatteryTemplate(Battery):
             self.cycles,
         ) = unpack_from(">bb??bhx", status_data)
 
+        # Integrate a check to be sure, that the received data is from the BMS type you are making this driver for
+
         self.hardware_version = "TemplateBMS " + str(self.cell_count) + " cells"
         logger.info(self.hardware_version)
         return True
@@ -105,6 +110,7 @@ class BatteryTemplate(Battery):
             command, self.port, self.baud_rate, self.LENGTH_POS, self.LENGTH_CHECK
         )
         if data is False:
+            logger.error(">>> ERROR: No reply - returning")
             return False
 
         start, flag, command_ret, length = unpack_from("BBBB", data)

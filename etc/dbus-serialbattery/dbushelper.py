@@ -2,7 +2,7 @@
 import sys
 import os
 import platform
-import dbus
+import dbus  # pyright: ignore[reportMissingImports]
 import traceback
 from time import time
 
@@ -14,8 +14,10 @@ sys.path.insert(
         "/opt/victronenergy/dbus-systemcalc-py/ext/velib_python",
     ),
 )
-from vedbus import VeDbusService  # noqa: E402
-from settingsdevice import SettingsDevice  # noqa: E402
+from vedbus import VeDbusService  # noqa: E402 # pyright: ignore[reportMissingImports]
+from settingsdevice import (  # noqa: E402 # pyright: ignore[reportMissingImports]
+    SettingsDevice,
+)
 from utils import logger, publish_config_variables  # noqa: E402
 import utils  # noqa: E402
 
@@ -33,7 +35,7 @@ class DbusHelper:
         self.battery = battery
         self.instance = 1
         self.settings = None
-        self.error_count = 0
+        self.error = {"count": 0, "timestamp_first": None, "timestamp_last": None}
         self.block_because_disconnect = False
         self._dbusservice = VeDbusService(
             "com.victronenergy.battery."
@@ -54,32 +56,6 @@ class DbusHelper:
                 0,
                 0,
             ],
-            # 'CellVoltageMin': [path + '/CellVoltageMin', 2.8, 0.0, 5.0],
-            # 'CellVoltageMax': [path + '/CellVoltageMax', 3.45, 0.0, 5.0],
-            # 'CellVoltageFloat': [path + '/CellVoltageFloat', 3.35, 0.0, 5.0],
-            # 'VoltageMaxTime': [path + '/VoltageMaxTime', 900, 0, 0],
-            # 'VoltageResetSocLimit': [path + '/VoltageResetSocLimit', 90, 0, 100],
-            # 'MaxChargeCurrent': [path + '/MaxCurrentCharge', 5, 0.0, 500],
-            # 'MaxDischargeCurrent': [path + '/MaxCurrentDischarge', 7, 0.0, 500],
-            # 'AllowDynamicChargeCurrent': [path + '/AllowDynamicChargeCurrent', 1, 0, 1],
-            # 'AllowDynamicDischargeCurrent': [path + '/AllowDynamicDischargeCurrent', 1, 0, 1],
-            # 'AllowDynamicChargeVoltage': [path + '/AllowDynamicChargeVoltage', 0, 0, 1],
-            # 'SocLowWarning': [path + '/SocLowWarning', 20, 0, 100],
-            # 'SocLowAlarm': [path + '/SocLowAlarm', 10, 0, 100],
-            # 'Capacity': [path + '/Capacity', '', 0, 500],
-            # 'EnableInvertedCurrent': [path + '/EnableInvertedCurrent', 0, 0, 1],
-            # 'CCMSocLimitCharge1': [path + '/CCMSocLimitCharge1', 98, 0, 100],
-            # 'CCMSocLimitCharge2': [path + '/CCMSocLimitCharge2', 95, 0, 100],
-            # 'CCMSocLimitCharge3': [path + '/CCMSocLimitCharge3', 91, 0, 100],
-            # 'CCMSocLimitDischarge1': [path + '/CCMSocLimitDischarge1', 10, 0, 100],
-            # 'CCMSocLimitDischarge2': [path + '/CCMSocLimitDischarge2', 20, 0, 100],
-            # 'CCMSocLimitDischarge3': [path + '/CCMSocLimitDischarge3', 30, 0, 100],
-            # 'CCMCurrentLimitCharge1': [path + '/CCMCurrentLimitCharge1', 5, 0, 100],
-            # 'CCMCurrentLimitCharge2': [path + '/CCMCurrentLimitCharge2', '', 0, 100],
-            # 'CCMCurrentLimitCharge3': [path + '/CCMCurrentLimitCharge3', '', 0, 100],
-            # 'CCMCurrentLimitDischarge1': [path + '/CCMCurrentLimitDischarge1', 5, 0, 100],
-            # 'CCMCurrentLimitDischarge2': [path + '/CCMCurrentLimitDischarge2', '', 0, 100],
-            # 'CCMCurrentLimitDischarge3': [path + '/CCMCurrentLimitDischarge3', '', 0, 100],
         }
 
         self.settings = SettingsDevice(get_bus(), settings, self.handle_changed_setting)
@@ -123,10 +99,13 @@ class DbusHelper:
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
         self._dbusservice.add_path("/Connected", 1)
         self._dbusservice.add_path(
-            "/CustomName", self.battery.custom_name(), writeable=True
+            "/CustomName",
+            self.battery.custom_name(),
+            writeable=True,
+            onchangecallback=self.battery.custom_name_callback,
         )
         self._dbusservice.add_path(
-            "/Serial", self.battery.unique_identifier, writeable=True
+            "/Serial", self.battery.unique_identifier(), writeable=True
         )
         self._dbusservice.add_path(
             "/DeviceName", self.battery.custom_field, writeable=True
@@ -156,6 +135,7 @@ class DbusHelper:
         )
 
         self._dbusservice.add_path("/Info/ChargeMode", None, writeable=True)
+        self._dbusservice.add_path("/Info/ChargeModeDebug", None, writeable=True)
         self._dbusservice.add_path("/Info/ChargeLimitation", None, writeable=True)
         self._dbusservice.add_path("/Info/DischargeLimitation", None, writeable=True)
 
@@ -230,9 +210,13 @@ class DbusHelper:
         self._dbusservice.add_path("/System/MaxTemperatureCellId", None, writeable=True)
         self._dbusservice.add_path("/System/MOSTemperature", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature1", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature1Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature2", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature2Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature3", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature3Name", None, writeable=True)
         self._dbusservice.add_path("/System/Temperature4", None, writeable=True)
+        self._dbusservice.add_path("/System/Temperature4Name", None, writeable=True)
         self._dbusservice.add_path(
             "/System/MaxCellVoltage",
             None,
@@ -331,6 +315,12 @@ class DbusHelper:
             # Create TimeToGo item
             if utils.TIME_TO_GO_ENABLE:
                 self._dbusservice.add_path("/TimeToGo", None, writeable=True)
+                self._dbusservice.add_path(
+                    "/CurrentAvg",
+                    None,
+                    writeable=True,
+                    gettextcallback=lambda p, v: "{:0.2f}A".format(v),
+                )
 
             # Create TimeToSoc items
             if len(utils.TIME_TO_SOC_POINTS) > 0:
@@ -358,9 +348,10 @@ class DbusHelper:
         # This is called every battery.poll_interval milli second as set up per battery type to read and update the data
         try:
             # Call the battery's refresh_data function
-            success = self.battery.refresh_data()
-            if success:
-                self.error_count = 0
+            result = self.battery.refresh_data()
+            if result:
+                # reset error variables
+                self.error["count"] = 0
                 self.battery.online = True
 
                 # unblock charge/discharge, if it was blocked when battery went offline
@@ -368,9 +359,18 @@ class DbusHelper:
                     self.block_because_disconnect = False
 
             else:
-                self.error_count += 1
-                # If the battery is offline for more than 10 polls (polled every second for most batteries)
-                if self.error_count >= 10:
+                # update error variables
+                if self.error["count"] == 0:
+                    self.error["timestamp_first"] = int(time())
+                self.error["timestamp_last"] = int(time())
+                self.error["count"] += 1
+
+                time_since_first_error = (
+                    self.error["timestamp_last"] - self.error["timestamp_first"]
+                )
+
+                # if the battery did not update in 10 second, it's assumed to be offline
+                if time_since_first_error >= 10:
                     self.battery.online = False
                     self.battery.init_values()
 
@@ -378,8 +378,8 @@ class DbusHelper:
                     if utils.BLOCK_ON_DISCONNECT:
                         self.block_because_disconnect = True
 
-                # Has it completely failed
-                if self.error_count >= 60:
+                # if the battery did not update in 60 second, it's assumed to be completely failed
+                if time_since_first_error >= 60:
                     loop.quit()
 
             # This is to mannage CVCL
@@ -473,9 +473,13 @@ class DbusHelper:
         ] = self.battery.get_max_temp_id()
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
         self._dbusservice["/System/Temperature1"] = self.battery.temp1
+        self._dbusservice["/System/Temperature1Name"] = utils.TEMP_1_NAME
         self._dbusservice["/System/Temperature2"] = self.battery.temp2
+        self._dbusservice["/System/Temperature2Name"] = utils.TEMP_2_NAME
         self._dbusservice["/System/Temperature3"] = self.battery.temp3
+        self._dbusservice["/System/Temperature3Name"] = utils.TEMP_3_NAME
         self._dbusservice["/System/Temperature4"] = self.battery.temp4
+        self._dbusservice["/System/Temperature4Name"] = utils.TEMP_4_NAME
 
         # Voltage control
         self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
@@ -490,6 +494,7 @@ class DbusHelper:
 
         # Voltage and charge control info
         self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
+        self._dbusservice["/Info/ChargeModeDebug"] = self.battery.charge_mode_debug
         self._dbusservice["/Info/ChargeLimitation"] = self.battery.charge_limitation
         self._dbusservice[
             "/Info/DischargeLimitation"
@@ -511,7 +516,15 @@ class DbusHelper:
         self._dbusservice[
             "/Alarms/LowCellVoltage"
         ] = self.battery.protection.voltage_cell_low
-        self._dbusservice["/Alarms/HighVoltage"] = self.battery.protection.voltage_high
+        # disable high voltage warning temporarly, if loading to bulk voltage and bulk voltage reached is 30 minutes ago
+        self._dbusservice["/Alarms/HighVoltage"] = (
+            self.battery.protection.voltage_high
+            if (
+                self.battery.bulk_requested is False
+                and self.battery.bulk_last_reached < int(time()) - (60 * 30)
+            )
+            else 0
+        )
         self._dbusservice["/Alarms/LowSoc"] = self.battery.protection.soc_low
         self._dbusservice[
             "/Alarms/HighChargeCurrent"
@@ -575,6 +588,30 @@ class DbusHelper:
 
         # Update TimeToGo and/or TimeToSoC
         try:
+            # calculate current average for the last 300 cycles
+            # if Time-To-Go or Time-To-SoC is enabled
+            if utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0:
+                if self.battery.current is not None:
+                    self.battery.current_avg_lst.append(self.battery.current)
+
+                # delete oldest value
+                if len(self.battery.current_avg_lst) > 300:
+                    del self.battery.current_avg_lst[0]
+
+            """
+            logger.info(
+                str(self.battery.capacity)
+                + " - "
+                + str(utils.TIME_TO_GO_ENABLE)
+                + " - "
+                + str(len(utils.TIME_TO_SOC_POINTS))
+                + " - "
+                + str(int(time()) - self.battery.time_to_soc_update)
+                + " - "
+                + str(utils.TIME_TO_SOC_RECALCULATE_EVERY)
+            )
+            """
+
             if (
                 self.battery.capacity is not None
                 and (utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0)
@@ -584,35 +621,59 @@ class DbusHelper:
                 )
             ):
                 self.battery.time_to_soc_update = int(time())
+
+                self.battery.current_avg = round(
+                    sum(self.battery.current_avg_lst)
+                    / len(self.battery.current_avg_lst),
+                    2,
+                )
+
+                self._dbusservice["/CurrentAvg"] = self.battery.current_avg
+
                 crntPrctPerSec = (
-                    abs(self.battery.current / (self.battery.capacity / 100)) / 3600
+                    abs(self.battery.current_avg / (self.battery.capacity / 100)) / 3600
                 )
 
                 # Update TimeToGo item
                 if utils.TIME_TO_GO_ENABLE:
-                    # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
-                    self._dbusservice["/TimeToGo"] = (
-                        abs(
-                            int(
-                                self.battery.get_timeToSoc(
-                                    utils.SOC_LOW_WARNING, crntPrctPerSec, True
+                    if self.battery.current_avg is not None:
+                        # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
+                        self._dbusservice["/TimeToGo"] = (
+                            abs(
+                                int(
+                                    self.battery.get_timeToSoc(
+                                        # switch value depending on charging/discharging
+                                        utils.SOC_LOW_WARNING
+                                        if self.battery.current_avg < 0
+                                        else 100,
+                                        crntPrctPerSec,
+                                        True,
+                                    )
                                 )
                             )
+                            if self.battery.current_avg
+                            and abs(self.battery.current_avg) > 0.1
+                            else None
                         )
-                        if self.battery.current
-                        else None
-                    )
+                    else:
+                        self._dbusservice["/TimeToGo"] = None
 
                 # Update TimeToSoc items
                 if len(utils.TIME_TO_SOC_POINTS) > 0:
                     for num in utils.TIME_TO_SOC_POINTS:
                         self._dbusservice["/TimeToSoC/" + str(num)] = (
                             self.battery.get_timeToSoc(num, crntPrctPerSec)
-                            if self.battery.current
+                            if self.battery.current_avg
                             else None
                         )
 
         except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             pass
 
         if self.battery.soc is not None:

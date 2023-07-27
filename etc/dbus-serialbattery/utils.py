@@ -15,10 +15,13 @@ logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
 logger.setLevel(logging.INFO)
 
+PATH_CONFIG_DEFAULT = "config.default.ini"
+PATH_CONFIG_USER = "config.ini"
+
 config = configparser.ConfigParser()
 path = Path(__file__).parents[0]
-default_config_file_path = path.joinpath("config.default.ini").absolute().__str__()
-custom_config_file_path = path.joinpath("config.ini").absolute().__str__()
+default_config_file_path = path.joinpath(PATH_CONFIG_DEFAULT).absolute().__str__()
+custom_config_file_path = path.joinpath(PATH_CONFIG_USER).absolute().__str__()
 config.read([default_config_file_path, custom_config_file_path])
 
 
@@ -27,15 +30,15 @@ def _get_list_from_config(
 ) -> List[Any]:
     rawList = config[group][option].split(",")
     return list(
-        map(mapper, [item for item in rawList if item != "" and item is not None])
+        map(
+            mapper,
+            [item.strip() for item in rawList if item != "" and item is not None],
+        )
     )
 
 
-# battery types
-# if not specified: baud = 9600
-
 # Constants - Need to dynamically get them in future
-DRIVER_VERSION = "1.0.20230525dev"
+DRIVER_VERSION = "1.0.20230723dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -52,6 +55,39 @@ MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
 MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
 # Max voltage can seen as absorption voltage
 FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
+if FLOAT_CELL_VOLTAGE > MAX_CELL_VOLTAGE:
+    FLOAT_CELL_VOLTAGE = MAX_CELL_VOLTAGE
+    logger.error(
+        ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value greater than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
+if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
+    FLOAT_CELL_VOLTAGE = MIN_CELL_VOLTAGE
+    logger.error(
+        ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
+
+# Bulk voltage (may be needed to reset the SoC to 100% once in a while for some BMS)
+# Has to be higher as the MAX_CELL_VOLTAGE
+BULK_CELL_VOLTAGE = float(config["DEFAULT"]["BULK_CELL_VOLTAGE"])
+if BULK_CELL_VOLTAGE < MAX_CELL_VOLTAGE:
+    BULK_CELL_VOLTAGE = MAX_CELL_VOLTAGE
+    logger.error(
+        ">>> ERROR: BULK_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
+# Specify after how many days the bulk voltage should be reached again
+# The timer is reset when the bulk voltage is reached
+# Leave empty if you don't want to use this
+# Example: Value is set to 15
+# day 1: bulk reached once
+# day 16: bulk reached twice
+# day 31: bulk not reached since it's very cloudy
+# day 34: bulk reached since the sun came out
+# day 49: bulk reached again, since last time it took 3 days to reach bulk voltage
+BULK_AFTER_DAYS = (
+    int(config["DEFAULT"]["BULK_AFTER_DAYS"])
+    if config["DEFAULT"]["BULK_AFTER_DAYS"] != ""
+    else False
+)
 
 # --------- BMS disconnect behaviour ---------
 # Description: Block charge and discharge when the communication to the BMS is lost. If you are removing the
@@ -114,11 +150,15 @@ CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
 
-# -- CVL Reset based on SoC option
-# Specify how long the max voltage should be kept, if reached then switch to float voltage
-MAX_VOLTAGE_TIME_SEC = float(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
-# Specify SoC where CVL limit is reset to max voltage, if value gets below
-SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = float(
+# -- CVL reset based on SoC option (step mode & linear mode)
+# Specify how long the max voltage should be kept
+#     Step mode: If reached then switch to float voltage
+#     Linear mode: If cells are balanced keep max voltage for further MAX_VOLTAGE_TIME_SEC seconds
+MAX_VOLTAGE_TIME_SEC = int(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
+# Specify SoC where CVL limit is reset to max voltage
+#     Step mode: If SoC gets below
+#     Linear mode: If cells are unbalanced or if SoC gets below
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = int(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
 
@@ -140,6 +180,10 @@ DCCM_CV_ENABLE = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
 CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
 )
+if CELL_VOLTAGES_WHILE_CHARGING[0] < MAX_CELL_VOLTAGE:
+    logger.error(
+        ">>> ERROR: Maximum value of CELL_VOLTAGES_WHILE_CHARGING is set to a value lower than MAX_CELL_VOLTAGE. Please check the configuration."
+    )
 MAX_CHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
     "MAX_CHARGE_CURRENT_CV_FRACTION",
@@ -149,6 +193,10 @@ MAX_CHARGE_CURRENT_CV = _get_list_from_config(
 CELL_VOLTAGES_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_DISCHARGING", lambda v: float(v)
 )
+if CELL_VOLTAGES_WHILE_DISCHARGING[0] > MIN_CELL_VOLTAGE:
+    logger.error(
+        ">>> ERROR: Minimum value of CELL_VOLTAGES_WHILE_DISCHARGING is set to a value greater than MIN_CELL_VOLTAGE. Please check the configuration."
+    )
 MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
     "MAX_DISCHARGE_CURRENT_CV_FRACTION",
@@ -264,9 +312,31 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 
 # --------- Additional settings ---------
-# Specify only one BMS type to load else leave empty to try to load all availabe
-# LltJbd, Ant, Daly, Daly, Jkbms, Lifepower, Renogy, Renogy, Ecs
-BMS_TYPE = config["DEFAULT"]["BMS_TYPE"]
+# Specify one or more BMS types to load else leave empty to try to load all available
+# -- Available BMS:
+# Daly, Ecs, HeltecModbus, HLPdataBMS4S, Jkbms, Lifepower, LltJbd, Renogy, Seplos
+# -- Available BMS, but disabled by default (just enter one or more below and it will be enabled):
+# ANT, MNB, Sinowealth
+BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
+
+# Exclute this serial devices from the driver startup
+# Example: /dev/ttyUSB2, /dev/ttyUSB4
+EXCLUDED_DEVICES = _get_list_from_config(
+    "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
+)
+
+# Enter custom battery names here or change it over the GUI
+# Example:
+#     /dev/ttyUSB0:My first battery
+#     /dev/ttyUSB0:My first battery, /dev/ttyUSB1:My second battery
+CUSTOM_BATTERY_NAMES = _get_list_from_config(
+    "DEFAULT", "CUSTOM_BATTERY_NAMES", lambda v: str(v)
+)
+
+# Auto reset SoC
+# If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
+# Currently only working for Daly BMS
+AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
 # Publish the config settings to the dbus path "/Info/Config/"
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
@@ -515,6 +585,7 @@ def read_serialport_data(
 locals_copy = locals().copy()
 
 
+# Publish config variables to dbus
 def publish_config_variables(dbusservice):
     for variable, value in locals_copy.items():
         if variable.startswith("__"):

@@ -30,13 +30,14 @@ class HeltecModbus(Battery):
     def __init__(self, port, baud, address):
         super(HeltecModbus, self).__init__(port, baud, address)
         self.type = "Heltec_Smart"
+        self.unique_identifier_tmp = ""
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         for self.address in utils.HELTEC_MODBUS_ADDR:
-            logger.info("Testing on slave address " + str(self.address))
+            logger.debug("Testing on slave address " + str(self.address))
             found = False
             if self.address not in locks:
                 locks[self.address] = threading.Lock()
@@ -64,7 +65,7 @@ class HeltecModbus(Battery):
                         string = mbdev.read_string(7, 13)
                         time.sleep(SLPTIME)
                         found = True
-                        logger.info(
+                        logger.debug(
                             "found in try "
                             + str(n)
                             + "/"
@@ -77,7 +78,7 @@ class HeltecModbus(Battery):
                             + string
                         )
                     except Exception as e:
-                        logger.warn(
+                        logger.debug(
                             "testing failed ("
                             + str(e)
                             + ") "
@@ -95,6 +96,10 @@ class HeltecModbus(Battery):
                 if found:
                     self.type = "#" + str(self.address) + "_Heltec_Smart"
                     break
+
+        # give the user a feedback that no BMS was found
+        if not found:
+            logger.error(">>> ERROR: No reply - returning")
 
         return (
             found
@@ -119,7 +124,7 @@ class HeltecModbus(Battery):
         mbdev = mbdevs[self.address]
 
         with locks[self.address]:
-            for n in range(1, RETRYCNT):
+            for n in range(1, RETRYCNT + 1):
                 try:
                     ccur = mbdev.read_register(191, 0, 3, False)
                     self.max_battery_charge_current = (
@@ -170,7 +175,7 @@ class HeltecModbus(Battery):
                     time.sleep(SLPTIME)
 
                     serial1 = mbdev.read_registers(2, number_of_registers=4)
-                    self.unique_identifier = "-".join(
+                    self.unique_identifier_tmp = "-".join(
                         "{:04x}".format(x) for x in serial1
                     )
                     time.sleep(SLPTIME)
@@ -223,12 +228,14 @@ class HeltecModbus(Battery):
                         + "): "
                         + str(e)
                     )
+                    if n == RETRYCNT:
+                        return False
                     continue
 
             logger.info(self.hardware_version)
             logger.info("Heltec-" + self.hwTypeName)
             logger.info("  Dev name: " + self.devName)
-            logger.info("  Serial: " + self.unique_identifier)
+            logger.info("  Serial: " + self.unique_identifier_tmp)
             logger.info("  Made on: " + self.production_date)
             logger.info("  Cell count: " + str(self.cell_count))
             logger.info("  Cell type: " + self.cellType)
@@ -238,6 +245,12 @@ class HeltecModbus(Battery):
             logger.info("  learned capacity: " + str(self.learned_capacity))
 
         return True
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        """
+        return self.unique_identifier_tmp
 
     def read_soc_data(self):
         mbdev = mbdevs[self.address]

@@ -9,6 +9,19 @@ toc_max_heading_level: 4
 
 # How to troubleshoot
 
+## How the driver works
+
+1. During installation (`execution of reinstall-local.sh`) the installer script creates a configuration file (`/data/conf/serial-starter.d/dbus-serialbattery.conf`) for the `serial starter`.
+    This allows the `serial starter` to create services for `dbus-serialbattery`, if a new serial adapter is connected. The `serial starter` service (`/service/serial-starter`) then creates a
+    service (`/service/dbus-serialbattery.*`) for each found serial port.
+
+    Additionally during installation a service (`/service/dbus-blebattery.*`) for each Bluetooth BMS is created.
+
+2. Each created service in `/service/dbus-serialbattery.*` or `/service/dbus-serialbattery.*` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh *` where the `*` stands for the serial port.
+
+    For example: The service `/service/dbus-serialbattery.ttyUSB0` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh ttyUSB0`
+
+
 ## Driver log files
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
@@ -98,7 +111,7 @@ INFO:SerialBattery:com.victronenergy.battery.BMS_MAC_ADDRESS
 
 ```bash
 INFO:SerialBattery:Starting dbus-serialbattery
-INFO:SerialBattery:dbus-serialbattery v1.0.0-jkbms_ble
+INFO:SerialBattery:dbus-serialbattery v1.0.0
 INFO:SerialBattery:init of BMS_NAME at BMS_MAC_ADDRESS
 INFO:SerialBattery:test of BMS_NAME at BMS_MAC_ADDRESS
 ERROR:SerialBattery:no BMS found at BMS_MAC_ADDRESS

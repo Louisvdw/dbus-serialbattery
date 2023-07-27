@@ -24,10 +24,24 @@
   --ifm-blockquote-border-color: #ff5f5f;
   --ifm-blockquote-padding-vertical: 0.5rem;
   --ifm-blockquote-padding-horizontal: 1rem;
+  --ifm-h4-font-size: 1.5rem;
+}
+
+.markdown > h2 {
+  --ifm-h2-font-size: 2.2rem;
+}
+
+.markdown > h3 {
+  --ifm-h3-font-size: 1.8rem;
 }
 
 blockquote {
   background-color: #fff4f4;
+}
+
+.h-1em,
+.table-of-contents li a img {
+  height: .9em !important;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */

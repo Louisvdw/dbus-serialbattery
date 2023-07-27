@@ -260,11 +260,10 @@ class LltJbd(Battery):
         result = False
         try:
             result = self.get_settings()
+            # get first data to show in startup log, only if result is true
             if result:
-                result = result and self.read_hardware_data()
-            # get first data to show in startup log
-            if result:
-                result = result and self.refresh_data()
+                self.read_hardware_data()
+                self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -346,8 +345,8 @@ class LltJbd(Battery):
 
     def write_charge_discharge_mos(self):
         if (
-            self.trigger_force_disable_charge is None
-            and self.trigger_force_disable_discharge is None
+                self.trigger_force_disable_charge is None
+                and self.trigger_force_disable_discharge is None
         ):
             return False
 
@@ -411,7 +410,7 @@ class LltJbd(Battery):
                 balancer_enabled = config & FUNC_BALANCE_EN
                 # Balance is enabled, force disable OR balancer is disabled and disable force disable
                 if (balancer_enabled and disable_balancer) or (
-                    not balancer_enabled and not disable_balancer
+                        not balancer_enabled and not disable_balancer
                 ):
                     new_func_config = config ^ FUNC_BALANCE_EN
 
@@ -583,7 +582,7 @@ class LltJbd(Battery):
 
         self._product_name = unpack_from(
             ">" + str(len(hardware_data)) + "s", hardware_data
-        )[0].decode()
+        )[0].decode("ascii", errors="ignore")
         logger.debug(self._product_name)
         return True
 
