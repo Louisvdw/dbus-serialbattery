@@ -26,14 +26,14 @@ toc_max_heading_level: 4
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
+> 💡 If you are opening an issue or posting your logs somewhere please make sure you execute the complete commands to get the logs, including `tai64nlocal`. Without readable timestamps we cannot help you.
+
 Check the log files on your GX device/Raspberry Pi. Connect to your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
 
 ### Serial BMS connection
 
 > There are two log files that are relevant for the serial connection. Please check both.
-
-> 💡 If you are opening an issue or posting your logs somewhere please make sure you execute the complete commands to get the logs, including `tai64nlocal`. Without readable timestamps we cannot help you.
 
 1. `/data/log/serial-starter/current`
 2. `/data/log/dbus-serialbattery.ttyUSB*/current` or `/data/log/dbus-serialbattery.ttyAMA0/current`
