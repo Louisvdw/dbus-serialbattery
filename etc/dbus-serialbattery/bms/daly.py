@@ -6,6 +6,7 @@ from struct import unpack_from, pack_into
 from time import sleep, time
 from datetime import datetime
 from re import sub
+import math
 
 
 class Daly(Battery):
@@ -229,7 +230,17 @@ class Daly(Battery):
             )
             if crntMinValid < current < crntMaxValid:
                 self.voltage = voltage / 10
-                self.current = current
+                
+                if self.current is None or utils.AVERAGE_CURRENT_TIME_CONSTANT == 0:
+                    self.current = current
+                else:
+                    # time between two sampling points
+                    dT = 0.5
+                    # first order low pass filter
+                    w = 2 * math.pi * dT / utils.AVERAGE_CURRENT_TIME_CONSTANT
+                    a = w / (w + 1)
+                    self.current = (1 - a) * self.current + a * current
+                
                 self.soc = soc / 10
                 return True
 
