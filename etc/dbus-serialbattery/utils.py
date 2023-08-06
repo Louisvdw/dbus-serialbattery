@@ -319,7 +319,9 @@ BATTERY_CAPACITY = float(config["DEFAULT"]["BATTERY_CAPACITY"])
 # Invert Battery Current. Default non-inverted. Set to -1 to invert
 INVERT_CURRENT_MEASUREMENT = int(config["DEFAULT"]["INVERT_CURRENT_MEASUREMENT"])
 # Average battery current. Set filter time constant in seconds. Set to 0 to disable.
-AVERAGE_CURRENT_TIME_CONSTANT = float(config["DEFAULT"]["AVERAGE_CURRENT_TIME_CONSTANT"])
+AVERAGE_CURRENT_TIME_CONSTANT = float(
+    config["DEFAULT"]["AVERAGE_CURRENT_TIME_CONSTANT"]
+)
 
 # -- ESC GreenMeter and Lipro device settings
 GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])
