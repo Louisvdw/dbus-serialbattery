@@ -636,25 +636,22 @@ class DbusHelper:
 
                 # Update TimeToGo item
                 if utils.TIME_TO_GO_ENABLE:
-                    if self.battery.current_avg is not None:
-                        # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
-                        self._dbusservice["/TimeToGo"] = (
-                            abs(
-                                int(
-                                    self.battery.get_timeToSoc(
-                                        # switch value depending on charging/discharging
-                                        utils.SOC_LOW_WARNING
-                                        if self.battery.current_avg < 0
-                                        else 100,
-                                        crntPrctPerSec,
-                                        True,
-                                    )
-                                )
-                            )
-                            if self.battery.current_avg
-                            and abs(self.battery.current_avg) > 0.1
-                            else None
+                    if (
+                        self.battery.current_avg is not None
+                        and abs(self.battery.current_avg) > 0.1
+                    ):
+                        time_to_go = self.battery.get_timeToSoc(
+                            # switch value depending on charging/discharging
+                            utils.SOC_LOW_WARNING
+                            if self.battery.current_avg < 0
+                            else 100,
+                            crntPrctPerSec,
+                            True,
                         )
+                        # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
+                        if time_to_go is not None and not isinstance(time_to_go, int):
+                            time_to_go = abs(int(time_to_go))
+                        self._dbusservice["/TimeToGo"] = time_to_go
                     else:
                         self._dbusservice["/TimeToGo"] = None
 

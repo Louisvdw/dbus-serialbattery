@@ -877,7 +877,9 @@ class Battery(ABC):
             return self.capacity * self.soc / 100
         return None
 
-    def get_timeToSoc(self, socnum, crntPrctPerSec, onlyNumber=False) -> str:
+    def get_timeToSoc(
+        self, socnum, crntPrctPerSec, onlyNumber=False
+    ) -> Union[str, None]:
         if self.current > 0:
             diffSoc = socnum - self.soc
         else:
