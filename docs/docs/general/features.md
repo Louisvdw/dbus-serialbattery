@@ -142,7 +142,7 @@ If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` 
 | Get CCL/DCL from the BMS                                                  | No    | No    | No                 | Yes    | No           | Yes    | No              | No      | No                 | No     | No     | No                        |
 | Charge current control management (CCCM)                                  | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
 | Set battery parameters (DVCC)                                             | Calc  | Calc  | Yes                | Calc   | Yes          | Calc   | Calc            | Calc    | Yes                | Calc   | Calc   | Calc                      |
-| Bluetooth connection <img src="../img/bluetooth.svg" className="h-1em" /> | No    | No    | No                 | No     | No           | Yes    | No              | Yes     | No                 | No     | No     | No                        |
+| Bluetooth connection <img src="../../img/bluetooth.svg" className="h-1em" /> | No    | No    | No                 | No     | No           | Yes    | No              | Yes     | No                 | No     | No     | No                        |
 
 
 `Calc` means that the value is calculated by the driver.
