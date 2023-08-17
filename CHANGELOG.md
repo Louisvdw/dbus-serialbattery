@@ -3,11 +3,15 @@
 ## v1.0.x
 * Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
+* Added: Current average of the last 5 minutes by @mr-manuel
 * Added: Daly BMS: Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
+* Added: Load to bulk voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
+* Added: Temperature names to dbus and mqtt by @mr-manuel
+* Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
 * Changed: Fix daly readsentence by @transistorgit
@@ -21,6 +25,8 @@
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
+* Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
+* Changed: Time-to-SoC calculate only positive points by @mr-manuel
 * Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
 
 
