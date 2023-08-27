@@ -154,7 +154,7 @@ Check in the `utils.py`, if you have set one of this to true. If yes, then you a
 * `DCCM_T_ENABLE = True` then modify `MAX_DISCHARGE_CURRENT_T = [0, 28, 60, 60, 28, 0]`
 
 ### Driver version `>= v1.0.0`
-The limits are based on percentages of `MAX_CHARGE_CURRENT_CV` and `MAX_DISCHARGE_CURRENT_CV` values, so there is no need for additional modifications. Additionaly you see in the remote console/GUI under `SerialBattery` &rarr; `Parameters` why it's limited.
+The limits are based on percentages of `MAX_BATTERY_CHARGE_CURRENT` and `MAX_BATTERY_DISCHARGE_CURRENT` values, so there is no need for additional modifications. Additionaly you see in the remote console/GUI under `SerialBattery` &rarr; `Parameters` why it's limited.
 
 ![VenusOS](../../screenshots/venus-os_013.png)
 
