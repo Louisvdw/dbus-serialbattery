@@ -635,7 +635,7 @@ class DbusHelper:
                 )
 
                 # Update TimeToGo item
-                if utils.TIME_TO_GO_ENABLE:
+                if utils.TIME_TO_GO_ENABLE and crntPrctPerSec is not None:
                     # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
                     time_to_go = self.battery.get_timeToSoc(
                         # switch value depending on charging/discharging
