@@ -576,7 +576,7 @@ class Battery(ABC):
             if self.max_battery_charge_current != tmp:
                 if tmp in charge_limits:
                     # do not add string, if global limitation is applied
-                    if charge_limits["tmp"] != "Max Battery Charge Current":
+                    if charge_limits[tmp] != "Max Battery Charge Current":
                         charge_limits.update(
                             {tmp: charge_limits[tmp] + ", Cell Voltage"}
                         )
@@ -590,7 +590,7 @@ class Battery(ABC):
             if self.max_battery_charge_current != tmp:
                 if tmp in charge_limits:
                     # do not add string, if global limitation is applied
-                    if charge_limits["tmp"] != "Max Battery Charge Current":
+                    if charge_limits[tmp] != "Max Battery Charge Current":
                         charge_limits.update({tmp: charge_limits[tmp] + ", Temp"})
                     else:
                         pass
@@ -602,7 +602,7 @@ class Battery(ABC):
             if self.max_battery_charge_current != tmp:
                 if tmp in charge_limits:
                     # do not add string, if global limitation is applied
-                    if charge_limits["tmp"] != "Max Battery Charge Current":
+                    if charge_limits[tmp] != "Max Battery Charge Current":
                         charge_limits.update({tmp: charge_limits[tmp] + ", SoC"})
                     else:
                         pass
@@ -659,7 +659,7 @@ class Battery(ABC):
             if self.max_battery_discharge_current != tmp:
                 if tmp in discharge_limits:
                     # do not add string, if global limitation is applied
-                    if discharge_limits["tmp"] != "Max Battery Discharge Current":
+                    if discharge_limits[tmp] != "Max Battery Discharge Current":
                         discharge_limits.update(
                             {tmp: discharge_limits[tmp] + ", Cell Voltage"}
                         )
@@ -673,7 +673,7 @@ class Battery(ABC):
             if self.max_battery_discharge_current != tmp:
                 if tmp in discharge_limits:
                     # do not add string, if global limitation is applied
-                    if discharge_limits["tmp"] != "Max Battery Discharge Current":
+                    if discharge_limits[tmp] != "Max Battery Discharge Current":
                         discharge_limits.update({tmp: discharge_limits[tmp] + ", Temp"})
                     else:
                         pass
@@ -685,7 +685,7 @@ class Battery(ABC):
             if self.max_battery_discharge_current != tmp:
                 if tmp in discharge_limits:
                     # do not add string, if global limitation is applied
-                    if discharge_limits["tmp"] != "Max Battery Discharge Current":
+                    if discharge_limits[tmp] != "Max Battery Discharge Current":
                         discharge_limits.update({tmp: discharge_limits[tmp] + ", SoC"})
                     else:
                         pass
