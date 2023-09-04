@@ -4,10 +4,12 @@
 * Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
 * Added: Current average of the last 5 minutes by @mr-manuel
-* Added: Daly BMS: Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
+* Added: Daly BMS - Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
+* Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
+* Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
 * Added: Load to bulk voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
 * Added: Temperature names to dbus and mqtt by @mr-manuel
@@ -24,6 +26,8 @@
 * Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
+* Changed: LLT/JBD - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
+* Changed: LLT/JBD BMS - SOC different in Xiaoxiang app and dbus-serialbattery with https://github.com/Louisvdw/dbus-serialbattery/pull/760 by @idstein
 * Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
 * Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
