@@ -3,6 +3,7 @@ import asyncio
 import atexit
 import functools
 import threading
+import sys
 from asyncio import CancelledError
 from typing import Union, Optional
 from utils import logger
@@ -55,8 +56,14 @@ class LltJbd_Ble(LltJbd):
             self.device = await BleakScanner.find_device_by_address(
                 self.address, cb=dict(use_bdaddr=True)
             )
-        except Exception as e:
-            logger.error(">>> ERROR: Bluetooth stack failed.", e)
+
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             self.device = None
             await asyncio.sleep(0.5)
 
@@ -173,8 +180,6 @@ class LltJbd_Ble(LltJbd):
 
 
 if __name__ == "__main__":
-    import sys
-
     bat = LltJbd_Ble("Foo", -1, sys.argv[1])
     if not bat.test_connection():
         logger.error(">>> ERROR: Unable to connect")
