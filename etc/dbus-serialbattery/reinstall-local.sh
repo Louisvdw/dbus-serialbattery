@@ -175,6 +175,11 @@ if [ "$length" -gt 0 ]; then
     opkg update
     opkg install python3-misc python3-pip
     pip3 install bleak
+    # pip3 install bleak==0.20.2
+    # pip3 install bleak==0.21.0
+    pip3 install dbus-fast==1.87.0
+    # pip3 install dbus-fast==1.87.3
+    # pip3 install dbus-fast==1.87.4
 
     echo "done."
     echo
