@@ -212,6 +212,12 @@ This will be much faster to do if you use the Keep Batteries changed in ESS opti
 
 Balancing works when ever 1 cell go above the balance threshold, so you are trying to find the battery voltage where that one cell is above the threshold but below the high voltage alarm (e.g. `3.45V - 3.65V`) and then giving the balancers time to work down the high cell with the small balance currents (`50mA` to `200mA`).
 
+### Daly BMS
+
+For a high voltage alarm on Daly BMS check also [Daly BMS - High voltage alarm](https://github.com/Louisvdw/dbus-serialbattery/issues/653).
+
+The Daly BMS alarms did not work in driver versions before `v1.0.20230531` and therefore in 99% of the cases the BMS is not setup correctly.
+
 
 ## Why is the battery current inverted?
 Some Daly BMS send the current as inverted value. This can be corrected by setting `INVERT_CURRENT_MEASUREMENT` to `-1` in the `utils.py` or `config.ini` (depending on the installed driver version). See [How to edit `utils.py` or `config.ini`](../general/install#how-to-edit-utilspy-or-configini).
