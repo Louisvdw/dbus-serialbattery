@@ -195,8 +195,8 @@ Important!!! - When the ESS asisstant is activated, all the 3 "DC input low volt
 2. Reducing the ESS "Cut-off voltage" like I mentioned above
 
 
-## Why do I get a High Voltage alarm?
-If you receive High Voltage alarms that would indicate your battery is:
+## Why do I get a high voltage alarm?
+If you receive high voltage alarms that would indicate your battery is:
 
 1. Not set up correctly and you are using the wrong charge voltages
 2. It has cell imbalance issues
@@ -204,7 +204,7 @@ If you receive High Voltage alarms that would indicate your battery is:
 So asuming you have set the max battery voltage for what the battery require, you then need to help the battery to get the cells balanced. You do that by  lowering the max voltage to a level where you don’t get high voltage alarms anymore and then slowly over a few weeks you can increase the max voltage to where it should be. This will give the balancers time to work.
 
 In your GX settings go to the DVCC menu and activate the "Limit managed battery charge voltage" feature and lower the "Maximum Charge Voltage".
-Drop your voltage to `0.2V` lees that normal and then increase it every day by `0.05V` if you did not get a High Voltage alarm during the previous day. If you did get an alarm leave it unchanged for another day.
+Drop your voltage to `0.2V` lees that normal and then increase it every day by `0.05V` if you did not get a high voltage alarm during the previous day. If you did get an alarm leave it unchanged for another day.
 
 Do this until you get to the original max charge voltage for your battery.
 
@@ -212,7 +212,7 @@ This will be much faster to do if you use the Keep Batteries changed in ESS opti
 
 Balancing works when ever 1 cell go above the balance threshold, so you are trying to find the battery voltage where that one cell is above the threshold but below the high voltage alarm (e.g. `3.45V - 3.65V`) and then giving the balancers time to work down the high cell with the small balance currents (`50mA` to `200mA`).
 
-### Daly BMS
+### Daly BMS - High voltage alarm
 
 For a high voltage alarm on Daly BMS check also [Daly BMS - High voltage alarm](https://github.com/Louisvdw/dbus-serialbattery/issues/653).
 
