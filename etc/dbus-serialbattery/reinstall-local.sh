@@ -177,6 +177,12 @@ if [ "$length" -gt 0 ]; then
     # TO DO: Check first if packages are already installed
     echo "Installing required packages to use Bluetooth connection..."
 
+    # dbus-fast: skip compiling/building the wheel
+    # else weak system crash and are not able to install it,
+    # see https://github.com/Bluetooth-Devices/dbus-fast/issues/237
+    # and https://github.com/Louisvdw/dbus-serialbattery/issues/785
+    export SKIP_CYTHON=false
+
     opkg update
     opkg install python3-misc python3-pip
 
@@ -191,10 +197,13 @@ if [ "$length" -gt 0 ]; then
     # read -r -p "Specify the bleak version to install: " bleak_version
     # pip3 install bleak=="$bleak_version"
     # echo
-    echo
-    pip3 install dbus-fast==1.87.0
-    # pip3 install dbus-fast==1.87.3
-    # pip3 install dbus-fast==1.87.4
+    # echo
+    # echo "Available dbus-fast versions:"
+    # curl --silent https://api.github.com/repos/Bluetooth-Devices/dbus-fast/releases | grep '"name": "v' | sed "s/    \"name\": \"v//g" | sed "s/\",//g"
+    # echo
+    # read -r -p "Specify the dbus-fast version to install: " dbus_fast_version
+    # pip3 install dbus-fast=="$dbus_fast_version"
+    # echo
 
     echo "done."
     echo
