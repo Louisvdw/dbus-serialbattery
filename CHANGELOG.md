@@ -24,6 +24,7 @@
 * Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
 * Changed: Improved battery error handling on connection loss by @mr-manuel
 * Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
+* Changed: Improved driver disable script by @md-manuel
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
 * Changed: LLT/JBD - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein

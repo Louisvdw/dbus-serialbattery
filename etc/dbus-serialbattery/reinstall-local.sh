@@ -123,6 +123,8 @@ if [ ! -f "$filename" ]; then
 fi
 
 # kill driver, if running. It gets restarted by the service daemon
+pkill -f "supervise dbus-serialbattery.*"
+pkill -f "multilog .* /var/log/dbus-serialbattery.*"
 pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 
 
@@ -168,20 +170,29 @@ if [ "$length" -gt 0 ]; then
     echo "Found $length Bluetooth BMS in the config file!"
     echo
 
+    /etc/init.d/bluetooth stop
+    echo
+
     # install required packages
     # TO DO: Check first if packages are already installed
     echo "Installing required packages to use Bluetooth connection..."
 
     opkg update
     opkg install python3-misc python3-pip
-    pip3 install bleak
-    # pip3 install bleak==0.20.2
+
+    echo
+    pip3 install bleak==0.20.2
     # pip3 install bleak==0.21.0
+
+    echo
     pip3 install dbus-fast==1.87.0
     # pip3 install dbus-fast==1.87.3
     # pip3 install dbus-fast==1.87.4
 
     echo "done."
+    echo
+
+    /etc/init.d/bluetooth start
     echo
 
     # function to install ble battery
@@ -253,12 +264,12 @@ if [ "$length" -gt 0 ]; then
     # grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
 
     # remove cronjob
-    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
+    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root >/dev/null 2>&1
 
 else
 
     # remove cronjob
-    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
+    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root >/dev/null 2>&1
 
     echo
     echo "No Bluetooth battery configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
