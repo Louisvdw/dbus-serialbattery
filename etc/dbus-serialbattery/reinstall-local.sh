@@ -181,9 +181,16 @@ if [ "$length" -gt 0 ]; then
     opkg install python3-misc python3-pip
 
     echo
-    pip3 install bleak==0.20.2
-    # pip3 install bleak==0.21.0
+    pip3 install bleak
 
+    # # ONLY FOR TESTING if there are version issues
+    # echo
+    # echo "Available bleak versions:"
+    # curl --silent https://api.github.com/repos/hbldh/bleak/releases | grep '"name": "v' | sed "s/    \"name\": \"v//g" | sed "s/\",//g"
+    # echo
+    # read -r -p "Specify the bleak version to install: " bleak_version
+    # pip3 install bleak=="$bleak_version"
+    # echo
     echo
     pip3 install dbus-fast==1.87.0
     # pip3 install dbus-fast==1.87.3
