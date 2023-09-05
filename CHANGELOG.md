@@ -15,21 +15,25 @@
 * Added: Temperature names to dbus and mqtt by @mr-manuel
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
+* Changed: Daly BMS - Fix readsentence by @transistorgit
 * Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
-* Changed: Fix daly readsentence by @transistorgit
-* Changed: Fix Sinowealth not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
+* Changed: Fixed Building wheel for dbus-fast won't finish on weak systems https://github.com/Louisvdw/dbus-serialbattery/issues/785 by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
 * Changed: Fixed meaningless Time to Go values by @transistorgit
 * Changed: Fixed typo in `config.ini` sample by @hoschult
 * Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
 * Changed: Improved battery error handling on connection loss by @mr-manuel
 * Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
+* Changed: Improved driver disable script by @md-manuel
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
-* Changed: Improved Jkbms_Ble driver by @seidler2547 & @mr-manuel
-* Changed: LLT/JBD - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
+* Changed: JKBMS_BLE BMS - Improved driver by @seidler2547 & @mr-manuel
+* Changed: LLT/JBD BMS - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
+* Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/778 with https://github.com/Louisvdw/dbus-serialbattery/pull/798 by @idstein
+* Changed: LLT/JBD BMS - Improved error handling and automatical driver restart in case of error. Should fix https://github.com/Louisvdw/dbus-serialbattery/issues/730, https://github.com/Louisvdw/dbus-serialbattery/issues/769 and https://github.com/Louisvdw/dbus-serialbattery/issues/777 by @mr-manuel
 * Changed: LLT/JBD BMS - SOC different in Xiaoxiang app and dbus-serialbattery with https://github.com/Louisvdw/dbus-serialbattery/pull/760 by @idstein
 * Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
+* Changed: Sinowealth BMS - Fix not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
 * Changed: Time-to-SoC calculate only positive points by @mr-manuel
 * Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel

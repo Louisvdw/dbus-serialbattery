@@ -8,6 +8,8 @@ bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # remove driver from serial starter
 rm -f /data/conf/serial-starter.d/dbus-serialbattery.conf
+# remove serial-starter.d if empty
+rmdir /data/conf/serial-starter.d >/dev/null 2>&1
 # kill serial starter, to reload changes
 pkill -f "/opt/victronenergy/serial-starter/serial-starter.sh"
 
@@ -16,14 +18,20 @@ rm -rf /service/dbus-serialbattery.*
 rm -rf /service/dbus-blebattery.*
 
 # kill driver, if running
-pkill -f "dbus-serialbattery"
-pkill -f "dbus-blebattery"
+# serial
+pkill -f "supervise dbus-serialbattery.*"
+pkill -f "multilog .* /var/log/dbus-serialbattery.*"
+pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
+# bluetooth
+pkill -f "supervise dbus-blebattery.*"
+pkill -f "multilog .* /var/log/dbus-blebattery.*"
+pkill -f "python .*/dbus-serialbattery.py .*_Ble"
 
 # remove install script from rc.local
 sed -i "/bash \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
 
 # remove cronjob
-sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
+sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root >/dev/null 2>&1
 
 
 ### needed for upgrading from older versions | start ###
