@@ -212,7 +212,7 @@ CUSTOM_BATTERY_NAMES = _get_list_from_config(
 
 # Auto reset SoC
 # If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
-# Currently only working for Daly and JK BMS
+# Currently only working for Daly and JK BMS BLE
 AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
