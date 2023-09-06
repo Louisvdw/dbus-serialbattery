@@ -90,7 +90,6 @@ class Jkbms_Ble(Battery):
         if self.jk.ovp_initial_voltage is None or self.jk.ovpr_initial_voltage is None:
             self.jk.ovp_initial_voltage = st["cell_ovp"]
             self.jk.ovpr_initial_voltage = st["cell_ovpr"]
-            logger.error("Persisting OVP: " + str(self.jk.ovp_initial_voltage) + " and OVPR: " + str(self.jk.ovpr_initial_voltage))
 
         # "User Private Data" field in APP
         tmp = self.jk.get_status()["device_info"]["production"]
