@@ -1,3 +1,4 @@
 pyserial==3.5
 minimalmodbus==2.0.1
-bleak==0.20.0
+bleak==0.21.0
+dbus-fast==1.94.1

@@ -260,11 +260,14 @@ class LltJbd(Battery):
         # Return True if success, False for failure
         result = False
         try:
-            result = self.get_settings()
-            # get first data to show in startup log, only if result is true
-            if result:
+            # 1) Read name of BMS
+            # 2) Try read BMS settings
+            # 3) Refresh general data
+            result = (
                 self.read_hardware_data()
-                self.refresh_data()
+                and self.get_settings()
+                and self.refresh_data()
+            )
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -438,9 +441,7 @@ class LltJbd(Battery):
     def refresh_data(self):
         self.write_charge_discharge_mos()
         self.write_balancer()
-        result = self.read_gen_data()
-        result = result and self.read_cell_data()
-        return result
+        return self.read_gen_data() and self.read_cell_data()
 
     def to_protection_bits(self, byte_data):
         tmp = bin(byte_data)[2:].rjust(13, utils.zero_char)
@@ -530,7 +531,7 @@ class LltJbd(Battery):
     def read_gen_data(self):
         gen_data = self.read_serial_data_llt(self.command_general)
         # check if connect success
-        if gen_data is False or len(gen_data) < 27:
+        if gen_data is False or len(gen_data) < 23:
             return False
 
         (
@@ -567,6 +568,13 @@ class LltJbd(Battery):
 
         # 0 = MOS, 1 = temp 1, 2 = temp 2
         for t in range(self.temp_sensors):
+            if len(gen_data) < 23 + (2 * t) + 2:
+                logger.warn(
+                    "Expected %d temperature sensors, but received only %d sensor readings!",
+                    self.temp_sensors,
+                    t,
+                )
+                return True
             temp1 = unpack_from(">H", gen_data, 23 + (2 * t))[0]
             self.to_temp(t, utils.kelvin_to_celsius(temp1 / 10))
 
