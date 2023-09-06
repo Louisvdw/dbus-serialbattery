@@ -86,6 +86,12 @@ class Jkbms_Ble(Battery):
         self.max_battery_voltage = st["cell_ovp"] * self.cell_count
         self.min_battery_voltage = st["cell_uvp"] * self.cell_count
 
+        # Persist initial OVP and OPVR settings of JK BMS BLE
+        if self.jk.ovp_initial_voltage is None or self.jk.ovpr_initial_voltage is None:
+            self.jk.ovp_initial_voltage = st["cell_ovp"]
+            self.jk.ovpr_initial_voltage = st["cell_ovpr"]
+            logger.error("Persisting OVP: " + str(self.jk.ovp_initial_voltage) + " and OVPR: " + str(self.jk.ovpr_initial_voltage))
+
         # "User Private Data" field in APP
         tmp = self.jk.get_status()["device_info"]["production"]
         self.custom_field = tmp if tmp != "Input Us" else None
@@ -257,6 +263,6 @@ class Jkbms_Ble(Battery):
 
     def trigger_soc_reset(self):
         if utils.AUTO_RESET_SOC:
-            self.jk.get_status()
+            self.jk.max_cell_voltage = self.get_max_cell_voltage()
             self.jk.trigger_soc_reset = True
         return

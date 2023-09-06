@@ -94,6 +94,13 @@ class Jkbms_Brn:
 
     _new_data_callback = None
 
+    # Variables to control automatic SOC reset for BLE connected JK BMS
+    # max_cell_voltage will be updated when a SOC reset is requested
+    max_cell_voltage = None
+    # OVP and OVPR will be persisted after the first successful readout of the BMS settings
+    ovp_initial_voltage = None
+    ovpr_initial_voltage = None
+
     def __init__(self, addr):
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
@@ -425,21 +432,19 @@ class Jkbms_Brn:
         return bytearray.fromhex(hexval)[::-1]
 
     async def reset_soc_jk(self, c):
-        # Lowering OVPR / OVP
-        # That will trigger a High Voltage Alert
-        ovpr_trigger = round(self.bms_status["settings"]["cell_ovpr"] - 0.250, 3)
-        ovp_trigger = round(self.bms_status["settings"]["cell_ovp"] - 0.250, 3)
+        # Lowering OVPR / OVP based on the maximum cell voltage at the time
+        # That will trigger a High Voltage Alert and resets SOC to 100%
+        ovp_trigger = round(self.max_cell_voltage - 0.05, 3)
+        ovpr_trigger = round(self.max_cell_voltage - 0.10, 3)
         await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(ovpr_trigger), 0x04, c, True)
         await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(ovp_trigger), 0x04, c, True)
 
         # Give BMS some time to recognize
         await asyncio.sleep(5)
 
-        # Set values back to default
-        ovp_reset = round(self.bms_status["settings"]["cell_ovp"], 3)
-        ovpr_reset = round(self.bms_status["settings"]["cell_ovpr"], 3)
-        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(ovp_reset), 0X04, c, True)
-        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(ovpr_reset), 0x04, c, True)
+        # Set values back to initial values
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(self.ovp_initial_voltage), 0X04, c, True)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(self.ovpr_initial_voltage), 0x04, c, True)
 
         logging.info("JK BMS SOC reset finished.")
 
