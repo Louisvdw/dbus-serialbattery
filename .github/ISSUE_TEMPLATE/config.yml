@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Troubleshoot
+    about: Take a look how to troubleshoot.
+    url: https://louisvdw.github.io/dbus-serialbattery/troubleshoot/
+
+  - name: FAQ (Frequently Asked Questions)
+    about: Take a look on the FAQ's.
+    url: https://louisvdw.github.io/dbus-serialbattery/faq/

@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      # do not match pre release
+      # matches:
+      # v1.0.0
+      # v1.0.123
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Replace version string
+        run: |
+          echo $GITHUB_REF_NAME
+          VERSION=$(echo $GITHUB_REF_NAME | sed 's/^v//')
+          echo $VERSION
+          echo
+          head -n 39 etc/dbus-serialbattery/utils.py | tail -n 3
+          sed -i --regexp-extended --expression="s/[0-9]+\.[0-9]+\.[0-9a-z\_\-]+/$VERSION/" "etc/dbus-serialbattery/utils.py"
+          head -n 39 etc/dbus-serialbattery/utils.py | tail -n 3
+
+      - name: build release archive
+        run: |
+          find . -type f -name "*.py" -exec chmod +x {} \;
+          find . -type f -name "*.sh" -exec chmod +x {} \;
+          find . -type f -name "run" -exec chmod +x {} \;
+          tar -czvf venus-data.tar.gz \
+            --mode='a+rwX' \
+            --exclude __pycache__ \
+            --exclude bms/battery_template.py \
+            --exclude bms/revov.py \
+            --exclude bms/test_max17853.py \
+            etc/dbus-serialbattery/ \
+            rc/
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: venus-data.tar.gz

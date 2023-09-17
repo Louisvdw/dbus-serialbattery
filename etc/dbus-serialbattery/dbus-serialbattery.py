@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from typing import Union
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
-from threading import Thread
-import dbus
+
 import sys
+
 if sys.version_info.major == 2:
     import gobject
 else:
@@ -16,82 +16,173 @@ else:
 # from ve_utils import exit_on_error
 
 from dbushelper import DbusHelper
-from utils import DRIVER_VERSION, DRIVER_SUBVERSION, logger
-import logging
-from lltjbd import LltJbd
-from daly import Daly
-from ant import Ant
-from jkbms import Jkbms
-from sinowealth import Sinowealth
-from renogy import Renogy
-from revov import Revov
-from daly_can import DalyCAN
-#from mnb import MNB
+from utils import logger
+import utils
+from battery import Battery
 
+# import battery classes
+from bms.daly import Daly
+from bms.ecs import Ecs
+from bms.heltecmodbus import HeltecModbus
+from bms.hlpdatabms4s import HLPdataBMS4S
+from bms.jkbms import Jkbms
+from bms.lifepower import Lifepower
+from bms.lltjbd import LltJbd
+from bms.renogy import Renogy
+from bms.seplos import Seplos
 
-logger.info('Starting dbus-serialbattery')
+# enabled only if explicitly set in config under "BMS_TYPE"
+if "ANT" in utils.BMS_TYPE:
+    from bms.ant import ANT
+if "Daly_CAN" in utils.BMS_TYPE:
+    from bms.daly_can import Daly_CAN
+if "MNB" in utils.BMS_TYPE:
+    from bms.mnb import MNB
+if "Sinowealth" in utils.BMS_TYPE:
+    from bms.sinowealth import Sinowealth
+
+supported_bms_types = [
+    {"bms": Daly, "baud": 9600, "address": b"\x40"},
+    {"bms": Daly, "baud": 9600, "address": b"\x80"},
+    {"bms": Ecs, "baud": 19200},
+    {"bms": HeltecModbus, "baud": 9600},
+    {"bms": HLPdataBMS4S, "baud": 9600},
+    {"bms": Jkbms, "baud": 115200},
+    {"bms": Lifepower, "baud": 9600},
+    {"bms": LltJbd, "baud": 9600},
+    {"bms": Renogy, "baud": 9600, "address": b"\x30"},
+    {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
+    {"bms": Seplos, "baud": 19200},
+]
+
+# enabled only if explicitly set in config under "BMS_TYPE"
+if "ANT" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": ANT, "baud": 19200})
+if "Daly_CAN" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": Daly_CAN, "baud": 9600})
+if "MNB" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": MNB, "baud": 9600})
+if "Sinowealth" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": Sinowealth, "baud": 9600})
+
+expected_bms_types = [
+    battery_type
+    for battery_type in supported_bms_types
+    if battery_type["bms"].__name__ in utils.BMS_TYPE or len(utils.BMS_TYPE) == 0
+]
+
+logger.info("")
+logger.info("Starting dbus-serialbattery")
+
 
 def main():
-
     def poll_battery(loop):
-        # Run in separate thread. Pass in the mainloop so the thread can kill us if there is an exception.
-        poller = Thread(target=lambda: helper.publish_battery(loop))
-        # Thread will die with us if deamon
-        poller.daemon = True
-        poller.start()
+        helper.publish_battery(loop)
         return True
 
-    def get_battery_type(_port):
+    def get_battery(_port) -> Union[Battery, None]:
         # all the different batteries the driver support and need to test for
-        battery_types = [
-            LltJbd(port=_port, baud=9600),
-            Ant(port=_port, baud=19200),
-            Daly(port=_port, baud=9600, address=b"\x40"),
-            Daly(port=_port, baud=9600, address=b"\x80"),
-            Jkbms(port=_port, baud=115200),
-            Sinowealth(port=_port, baud=9600),
-            Renogy(port=_port, baud=9600),
-            Revov (port=_port, baud=9600),
-            # DalyCAN(port=_port, baud=9600),
-            # MNB(port=_port, baud=9600),
-        ]
-
         # try to establish communications with the battery 3 times, else exit
-        count = 3
-        while count > 0:
+        retry = 1
+        retries = 3
+        while retry <= retries:
+            logger.info(
+                "-- Testing BMS: " + str(retry) + " of " + str(retries) + " rounds"
+            )
             # create a new battery object that can read the battery and run connection test
-            for test in battery_types:
-                logger.info('Testing ' + test.__class__.__name__)
-                if test.test_connection() is True:
-                    logger.info('Connection established to ' + test.__class__.__name__)
-                    return test
-
-            count -= 1
+            for test in expected_bms_types:
+                # noinspection PyBroadException
+                try:
+                    logger.info(
+                        "Testing "
+                        + test["bms"].__name__
+                        + (
+                            ' at address "' + f"\\x{bytes(test['address']).hex()}" + '"'
+                            if "address" in test
+                            else ""
+                        )
+                    )
+                    batteryClass = test["bms"]
+                    baud = test["baud"]
+                    battery: Battery = batteryClass(
+                        port=_port, baud=baud, address=test.get("address")
+                    )
+                    if battery.test_connection() and battery.validate_data():
+                        logger.info(
+                            "Connection established to " + battery.__class__.__name__
+                        )
+                        return battery
+                except KeyboardInterrupt:
+                    return None
+                except Exception:
+                    (
+                        exception_type,
+                        exception_object,
+                        exception_traceback,
+                    ) = sys.exc_info()
+                    file = exception_traceback.tb_frame.f_code.co_filename
+                    line = exception_traceback.tb_lineno
+                    logger.error(
+                        f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                    )
+                    # Ignore any malfunction test_function()
+                    pass
+            retry += 1
             sleep(0.5)
 
         return None
 
-    def get_port():
+    def get_port() -> str:
         # Get the port we need to use from the argument
         if len(sys.argv) > 1:
-            return sys.argv[1]
+            port = sys.argv[1]
+            if port not in utils.EXCLUDED_DEVICES:
+                return port
+            else:
+                logger.debug(
+                    "Stopping dbus-serialbattery: "
+                    + str(port)
+                    + " is excluded trough the config file"
+                )
+                sleep(60)
+                sys.exit(0)
         else:
             # just for MNB-SPI
-            logger.info('No Port needed')
-            return '/dev/tty/USB9'
+            logger.info("No Port needed")
+            return "/dev/ttyUSB9"
 
-    logger.info('dbus-serialbattery v' + str(DRIVER_VERSION) + DRIVER_SUBVERSION)
+    logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION))
 
     port = get_port()
-    battery = get_battery_type(port)
+    battery = None
+    if port.endswith("_Ble") and len(sys.argv) > 2:
+        """
+        Import ble classes only, if it's a ble port, else the driver won't start due to missing python modules
+        This prevent problems when using the driver only with a serial connection
+        """
+        if port == "Jkbms_Ble":
+            # noqa: F401 --> ignore flake "imported but unused" error
+            from bms.jkbms_ble import Jkbms_Ble  # noqa: F401
+
+        if port == "LltJbd_Ble":
+            # noqa: F401 --> ignore flake "imported but unused" error
+            from bms.lltjbd_ble import LltJbd_Ble  # noqa: F401
+
+        class_ = eval(port)
+        testbms = class_("", 9600, sys.argv[2])
+        if testbms.test_connection():
+            logger.info("Connection established to " + testbms.__class__.__name__)
+            battery = testbms
+    else:
+        battery = get_battery(port)
 
     # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)
-    
+
     battery.log_settings()
-    
+
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
     if sys.version_info.major == 2:
@@ -100,13 +191,17 @@ def main():
 
     # Get the initial values for the battery used by setup_vedbus
     helper = DbusHelper(battery)
-    
+
     if not helper.setup_vedbus():
         logger.error("ERROR >>> Problem with battery set up at " + port)
         sys.exit(1)
-    
-    # Poll the battery at INTERVAL and run the main loop
-    gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+
+    # try using active callback on this battery
+    if not battery.use_callback(lambda: poll_battery(mainloop)):
+        # if not possible, poll the battery every poll_interval milliseconds
+        gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+
+    # Run the main loop
     try:
         mainloop.run()
     except KeyboardInterrupt:

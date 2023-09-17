@@ -1,0 +1,43 @@
+name: "CodeChecks"
+
+on:
+  push:
+    branches:
+      - '**'
+
+    # Run on changes in the etc folder
+    paths:
+      - etc/**
+
+jobs:
+  analyse:
+    name: Analyze Using GitHub CodeQL
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8.13"
+
+    - name: Clone velib_python and add it to PYTHONPATH for subsequent steps
+      run: |
+        git clone https://github.com/victronenergy/velib_python.git
+        echo PYTHONPATH=$PYTHONPATH:$(pwd)/velib_python >> $GITHUB_ENV
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: python
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+    - name: Execute black lint check
+      uses: psf/black@stable
+
+    - name: flake8 Lint
+      uses: py-actions/flake8@v2
