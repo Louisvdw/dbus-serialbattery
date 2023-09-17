@@ -21,6 +21,8 @@ FRAME_VERSION_JK02 = 0x02
 FRAME_VERSION_JK02_32S = 0x03
 PROTOCOL_VERSION_JK02 = 0x02
 
+JK_REGISTER_OVPR = 0x05
+JK_REGISTER_OVP = 0x04
 
 protocol_version = PROTOCOL_VERSION_JK02
 
@@ -92,9 +94,17 @@ class Jkbms_Brn:
 
     _new_data_callback = None
 
+    # Variables to control automatic SOC reset for BLE connected JK BMS
+    # max_cell_voltage will be updated when a SOC reset is requested
+    max_cell_voltage = None
+    # OVP and OVPR will be persisted after the first successful readout of the BMS settings
+    ovp_initial_voltage = None
+    ovpr_initial_voltage = None
+
     def __init__(self, addr):
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
+        self.trigger_soc_reset = False
 
     async def scanForDevices(self):
         devices = await BleakScanner.discover()
@@ -281,7 +291,7 @@ class Jkbms_Brn:
         return crc.to_bytes(2, "little")[0]
 
     async def write_register(
-        self, address, vals: bytearray, length: int, bleakC: BleakClient
+        self, address, vals: bytearray, length: int, bleakC: BleakClient, awaitresponse: bool
     ):
         frame = bytearray(20)
         frame[0] = 0xAA  # start sequence
@@ -304,8 +314,10 @@ class Jkbms_Brn:
         frame[17] = 0x00
         frame[18] = 0x00
         frame[19] = self.crc(frame, len(frame) - 1)
-        logging.debug("Write register: ", frame)
-        await bleakC.write_gatt_char(CHAR_HANDLE, frame, False)
+        logging.debug("Write register: " + str(address) + " " + str(frame))
+        await bleakC.write_gatt_char(CHAR_HANDLE, frame, response=awaitresponse)
+        if awaitresponse:
+            await asyncio.sleep(5)
 
     async def request_bt(self, rtype: str, client):
         timeout = time()
@@ -323,7 +335,7 @@ class Jkbms_Brn:
         else:
             return
 
-        await self.write_register(cmd, b"\0\0\0\0", 0x00, client)
+        await self.write_register(cmd, b"\0\0\0\0", 0x00, client, False)
 
     def get_status(self):
         if "settings" in self.bms_status and "cell_info" in self.bms_status:
@@ -358,6 +370,9 @@ class Jkbms_Brn:
                 # await self.enable_charging(client)
                 # last_dev_info = time()
                 while client.is_connected and self.run and self.main_thread.is_alive():
+                    if self.trigger_soc_reset:
+                        self.trigger_soc_reset = False
+                        await self.reset_soc_jk(client)
                     await asyncio.sleep(0.01)
             except Exception as err:
                 self.run = False
@@ -406,10 +421,32 @@ class Jkbms_Brn:
         # data is 01 00 00 00 for on  00 00 00 00 for off;
         # the following bytes up to 19 are unclear and changing
         # dynamically -> auth-mechanism?
-        await self.write_register(0x1D, b"\x01\x00\x00\x00", 4, c)
-        await self.write_register(0x1E, b"\x01\x00\x00\x00", 4, c)
-        await self.write_register(0x1F, b"\x01\x00\x00\x00", 4, c)
-        await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c)
+        await self.write_register(0x1D, b"\x01\x00\x00\x00", 4, c, True)
+        await self.write_register(0x1E, b"\x01\x00\x00\x00", 4, c, True)
+        await self.write_register(0x1F, b"\x01\x00\x00\x00", 4, c, True)
+        await self.write_register(0x40, b"\x01\x00\x00\x00", 4, c, True)
+
+    def jk_float_to_hex_little(self, val: float):
+        intval = int(val * 1000)
+        hexval = f'{intval:0>8X}'
+        return bytearray.fromhex(hexval)[::-1]
+
+    async def reset_soc_jk(self, c):
+        # Lowering OVPR / OVP based on the maximum cell voltage at the time
+        # That will trigger a High Voltage Alert and resets SOC to 100%
+        ovp_trigger = round(self.max_cell_voltage - 0.05, 3)
+        ovpr_trigger = round(self.max_cell_voltage - 0.10, 3)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(ovpr_trigger), 0x04, c, True)
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(ovp_trigger), 0x04, c, True)
+
+        # Give BMS some time to recognize
+        await asyncio.sleep(5)
+
+        # Set values back to initial values
+        await self.write_register(JK_REGISTER_OVP, self.jk_float_to_hex_little(self.ovp_initial_voltage), 0X04, c, True)
+        await self.write_register(JK_REGISTER_OVPR, self.jk_float_to_hex_little(self.ovpr_initial_voltage), 0x04, c, True)
+
+        logging.info("JK BMS SOC reset finished.")
 
 
 if __name__ == "__main__":

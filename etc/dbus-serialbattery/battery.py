@@ -408,6 +408,8 @@ class Battery(ABC):
                         self.transition_start_time = current_time
                         self.initial_control_voltage = self.control_voltage
                         chargeMode = "Float Transition"
+                        # Assume battery SOC ist 100% at this stage
+                        self.trigger_soc_reset()
                     elif self.charge_mode.startswith("Float Transition"):
                         elapsed_time = current_time - self.transition_start_time
                         # Voltage reduction per second
@@ -1395,4 +1397,10 @@ class Battery(ABC):
         return
 
     def turn_balancing_off_callback(self, path, value):
+        return
+
+    def trigger_soc_reset(self):
+        """
+        This method can be used to implement SOC reset when the battery is assumed to be full
+        """
         return
