@@ -16,6 +16,7 @@ pkill -f "/opt/victronenergy/serial-starter/serial-starter.sh"
 # remove services
 rm -rf /service/dbus-serialbattery.*
 rm -rf /service/dbus-blebattery.*
+rm -rf /service/dbus-canbattery.*
 
 # kill driver, if running
 # serial
@@ -25,7 +26,11 @@ pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 # bluetooth
 pkill -f "supervise dbus-blebattery.*"
 pkill -f "multilog .* /var/log/dbus-blebattery.*"
-pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+pkill -f "python .*/dbus-serialbattery.py .*_Ble.*"
+# can
+pkill -f "supervise dbus-canbattery.*"
+pkill -f "multilog .* /var/log/dbus-canbattery.*"
+pkill -f "python .*/dbus-serialbattery.py can.*"
 
 # remove install script from rc.local
 sed -i "/bash \/data\/etc\/dbus-serialbattery\/reinstall-local.sh/d" /data/rc.local
