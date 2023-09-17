@@ -5,10 +5,10 @@ from utils import *
 from struct import *
 import can
 
-class DalyCAN(Battery):
 
-    def __init__(self,port,baud):
-        super(DalyCAN, self).__init__(port,baud)
+class Daly_Can(Battery):
+    def __init__(self, port, baud):
+        super(Daly_Can, self).__init__(port, baud)
         self.charger_connected = None
         self.load_connected = None
         self.cell_min_voltage = None
@@ -19,6 +19,7 @@ class DalyCAN(Battery):
         self.poll_step = 0
         self.type = self.BATTERYTYPE
         self.bus = None
+
     # command bytes [Priority=18][Command=94][BMS ID=01][Uplink ID=40]
     command_base = 0x18940140
     command_soc = 0x18900140
@@ -41,8 +42,8 @@ class DalyCAN(Battery):
     response_temp = 0x18964001
     response_cell_balance = 0x18974001
     response_alarm = 0x18984001
-    
-    BATTERYTYPE = "Daly_CAN"
+
+    BATTERYTYPE = "Daly_Can"
     LENGTH_CHECK = 4
     LENGTH_POS = 3
     CURRENT_ZERO_CONSTANT = 30000
@@ -52,20 +53,24 @@ class DalyCAN(Battery):
         result = False
 
         # TODO handle errors?
-        can_filters = [{"can_id":self.response_base, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_soc, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_minmax_cell_volts, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_minmax_temp, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_fet, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_status, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_cell_volts, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_temp, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_cell_balance, "can_mask": 0xFFFFFFF},
-               {"can_id":self.response_alarm, "can_mask": 0xFFFFFFF}]
-        self.bus = can.Bus(interface='socketcan',
-              channel='can0',
-              receive_own_messages=False,
-              can_filters=can_filters)
+        can_filters = [
+            {"can_id": self.response_base, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_soc, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_minmax_cell_volts, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_minmax_temp, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_fet, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_status, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_cell_volts, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_temp, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_cell_balance, "can_mask": 0xFFFFFFF},
+            {"can_id": self.response_alarm, "can_mask": 0xFFFFFFF},
+        ]
+        self.bus = can.Bus(
+            interface="socketcan",
+            channel="can0",
+            receive_own_messages=False,
+            can_filters=can_filters,
+        )
 
         result = self.read_status_data(self.bus)
 
@@ -91,12 +96,12 @@ class DalyCAN(Battery):
             result = result and self.read_cells_volts(self.bus)
         elif self.poll_step == 3:
             result = result and self.read_temperature_range_data(self.bus)
-        #else:          # A placeholder to remind this is the last step. Add any additional steps before here
+            # else:          # A placeholder to remind this is the last step. Add any additional steps before here
             # This is last step so reset poll_step
             self.poll_step = -1
 
         self.poll_step += 1
-            
+
         return result
 
     def read_status_data(self, bus):
@@ -106,8 +111,14 @@ class DalyCAN(Battery):
             logger.debug("read_status_data")
             return False
 
-        self.cell_count, self.temp_sensors, self.charger_connected, self.load_connected, \
-            state, self.cycles = unpack_from('>bb??bhx', status_data)
+        (
+            self.cell_count,
+            self.temp_sensors,
+            self.charger_connected,
+            self.load_connected,
+            state,
+            self.cycles,
+        ) = unpack_from(">bb??bhx", status_data)
 
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
@@ -116,10 +127,10 @@ class DalyCAN(Battery):
         logger.info(self.hardware_version)
         return True
 
-    def read_soc_data(self, ser):                
+    def read_soc_data(self, ser):
         # Ensure data received is valid
         crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
-        crntMaxValid = (MAX_BATTERY_CURRENT * 1.3)
+        crntMaxValid = MAX_BATTERY_CURRENT * 1.3
         triesValid = 2
         while triesValid > 0:
             soc_data = self.read_bus_data_daly(ser, self.command_soc)
@@ -127,15 +138,19 @@ class DalyCAN(Battery):
             if soc_data is False:
                 return False
 
-            voltage, tmp, current, soc = unpack_from('>hhhh', soc_data)
-            current = ((current - self.CURRENT_ZERO_CONSTANT) / -10 * INVERT_CURRENT_MEASUREMENT)
-            #logger.info("voltage: " + str(voltage) + ", current: " + str(current) + ", soc: " + str(soc))
+            voltage, tmp, current, soc = unpack_from(">hhhh", soc_data)
+            current = (
+                (current - self.CURRENT_ZERO_CONSTANT)
+                / -10
+                * INVERT_CURRENT_MEASUREMENT
+            )
+            # logger.info("voltage: " + str(voltage) + ", current: " + str(current) + ", soc: " + str(soc))
             if crntMinValid < current < crntMaxValid:
-                self.voltage = (voltage / 10)
+                self.voltage = voltage / 10
                 self.current = current
-                self.soc = (soc / 10)
+                self.soc = soc / 10
                 return True
-                
+
             logger.warning("read_soc_data - triesValid " + str(triesValid))
             triesValid -= 1
 
@@ -148,12 +163,20 @@ class DalyCAN(Battery):
             logger.warning("read_alarm_data")
             return False
 
-        al_volt, al_temp, al_crnt_soc, al_diff, \
-            al_mos, al_misc1, al_misc2, al_fault = unpack_from('>bbbbbbbb', alarm_data)
+        (
+            al_volt,
+            al_temp,
+            al_crnt_soc,
+            al_diff,
+            al_mos,
+            al_misc1,
+            al_misc2,
+            al_fault,
+        ) = unpack_from(">bbbbbbbb", alarm_data)
 
         if al_volt & 48:
             # High voltage levels - Alarm
-            self.voltage_high = 2            
+            self.voltage_high = 2
         elif al_volt & 15:
             # High voltage Warning levels - Pre-alarm
             self.voltage_high = 1
@@ -171,7 +194,7 @@ class DalyCAN(Battery):
 
         if al_temp & 2:
             # High charge temp - Alarm
-            self.temp_high_charge = 2            
+            self.temp_high_charge = 2
         elif al_temp & 1:
             # High charge temp - Pre-alarm
             self.temp_high_charge = 1
@@ -180,17 +203,16 @@ class DalyCAN(Battery):
 
         if al_temp & 8:
             # Low charge temp - Alarm
-            self.temp_low_charge = 2            
+            self.temp_low_charge = 2
         elif al_temp & 4:
             # Low charge temp - Pre-alarm
             self.temp_low_charge = 1
         else:
             self.temp_low_charge = 0
 
-
         if al_temp & 32:
             # High discharge temp - Alarm
-            self.temp_high_discharge = 2            
+            self.temp_high_discharge = 2
         elif al_temp & 16:
             # High discharge temp - Pre-alarm
             self.temp_high_discharge = 1
@@ -199,34 +221,34 @@ class DalyCAN(Battery):
 
         if al_temp & 128:
             # Low discharge temp - Alarm
-            self.temp_low_discharge = 2            
+            self.temp_low_discharge = 2
         elif al_temp & 64:
             # Low discharge temp - Pre-alarm
             self.temp_low_discharge = 1
         else:
             self.temp_low_discharge = 0
 
-        #if al_crnt_soc & 2:
+        # if al_crnt_soc & 2:
         #    # High charge current - Alarm
-        #    self.current_over = 2            
-        #elif al_crnt_soc & 1:
+        #    self.current_over = 2
+        # elif al_crnt_soc & 1:
         #    # High charge current - Pre-alarm
         #    self.current_over = 1
-        #else:
+        # else:
         #    self.current_over = 0
 
-        #if al_crnt_soc & 8:
+        # if al_crnt_soc & 8:
         #    # High discharge current - Alarm
-        #    self.current_over = 2            
-        #elif al_crnt_soc & 4:
+        #    self.current_over = 2
+        # elif al_crnt_soc & 4:
         #    # High discharge current - Pre-alarm
         #    self.current_over = 1
-        #else:
+        # else:
         #    self.current_over = 0
 
         if al_crnt_soc & 2 or al_crnt_soc & 8:
             # High charge/discharge current - Alarm
-            self.current_over = 2            
+            self.current_over = 2
         elif al_crnt_soc & 1 or al_crnt_soc & 4:
             # High charge/discharge current - Pre-alarm
             self.current_over = 1
@@ -241,7 +263,7 @@ class DalyCAN(Battery):
             self.soc_low = 1
         else:
             self.soc_low = 0
-        
+
         return True
 
     def read_cells_volts(self, bus):
@@ -252,7 +274,7 @@ class DalyCAN(Battery):
                 return False
 
             frameCell = [0, 0, 0]
-            lowMin = (MIN_CELL_VOLTAGE / 2)
+            lowMin = MIN_CELL_VOLTAGE / 2
             frame = 0
             bufIdx = 0
 
@@ -262,15 +284,19 @@ class DalyCAN(Battery):
                 for idx in range(self.cell_count):
                     self.cells.append(Cell(True))
 
-            while bufIdx < len(cells_volts_data): 
-                  frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from('>Bhhh', cells_volts_data, bufIdx)
-                  for idx in range(3):
+            while bufIdx < len(cells_volts_data):
+                frame, frameCell[0], frameCell[1], frameCell[2] = unpack_from(
+                    ">Bhhh", cells_volts_data, bufIdx
+                )
+                for idx in range(3):
                     cellnum = ((frame - 1) * 3) + idx  # daly is 1 based, driver 0 based
                     if cellnum >= self.cell_count:
                         break
                     cellVoltage = frameCell[idx] / 1000
-                    self.cells[cellnum].voltage = None if cellVoltage < lowMin else cellVoltage
-                  bufIdx += 8
+                    self.cells[cellnum].voltage = (
+                        None if cellVoltage < lowMin else cellVoltage
+                    )
+                bufIdx += 8
 
         return True
 
@@ -281,7 +307,12 @@ class DalyCAN(Battery):
             logger.warning("read_cell_voltage_range_data")
             return False
 
-        cell_max_voltage,self.cell_max_no,cell_min_voltage, self.cell_min_no = unpack_from('>hbhb', minmax_data)
+        (
+            cell_max_voltage,
+            self.cell_max_no,
+            cell_min_voltage,
+            self.cell_min_no,
+        ) = unpack_from(">hbhb", minmax_data)
         # Daly cells numbers are 1 based and not 0 based
         self.cell_min_no -= 1
         self.cell_max_no -= 1
@@ -297,7 +328,7 @@ class DalyCAN(Battery):
             logger.debug("read_temperature_range_data")
             return False
 
-        max_temp,max_no,min_temp, min_no = unpack_from('>bbbb', minmax_data)
+        max_temp, max_no, min_temp, min_no = unpack_from(">bbbb", minmax_data)
         self.temp1 = min_temp - self.TEMP_ZERO_CONSTANT
         self.temp2 = max_temp - self.TEMP_ZERO_CONSTANT
         return True
@@ -309,18 +340,24 @@ class DalyCAN(Battery):
             logger.debug("read_fed_data")
             return False
 
-        status, self.charge_fet, self.discharge_fet, bms_cycles, capacity_remain = unpack_from('>b??BL', fed_data)
+        (
+            status,
+            self.charge_fet,
+            self.discharge_fet,
+            bms_cycles,
+            capacity_remain,
+        ) = unpack_from(">b??BL", fed_data)
         self.capacity_remain = capacity_remain / 1000
         return True
 
-    def read_bus_data_daly(self, bus, command, expectedMessageCount = 1):
+    def read_bus_data_daly(self, bus, command, expectedMessageCount=1):
         # TODO handling of error cases
         message = can.Message(arbitration_id=command)
         bus.send(message, timeout=0.2)
         response = bytearray()
 
         # TODO use async notifier instead of this where we expect a specific frame to be received
-        # this could end up in a deadlock if a package is not received 
+        # this could end up in a deadlock if a package is not received
         count = 0
         for msg in bus:
             # print(f"{msg.arbitration_id:X}: {msg.data}")
@@ -328,5 +365,5 @@ class DalyCAN(Battery):
             response.extend(msg.data)
             count += 1
             if count == expectedMessageCount:
-              break
+                break
         return response

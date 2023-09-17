@@ -34,8 +34,10 @@ from bms.seplos import Seplos
 # enabled only if explicitly set in config under "BMS_TYPE"
 if "ANT" in utils.BMS_TYPE:
     from bms.ant import ANT
-if "Daly_CAN" in utils.BMS_TYPE:
-    from bms.daly_can import Daly_CAN
+if "Daly_Can" in utils.BMS_TYPE:
+    from bms.daly_can import Daly_Can
+if "Jkbms_Can" in utils.BMS_TYPE:
+    from bms.jkbms_can import Jkbms_Can
 if "MNB" in utils.BMS_TYPE:
     from bms.mnb import MNB
 if "Sinowealth" in utils.BMS_TYPE:
@@ -58,8 +60,10 @@ supported_bms_types = [
 # enabled only if explicitly set in config under "BMS_TYPE"
 if "ANT" in utils.BMS_TYPE:
     supported_bms_types.append({"bms": ANT, "baud": 19200})
-if "Daly_CAN" in utils.BMS_TYPE:
-    supported_bms_types.append({"bms": Daly_CAN, "baud": 9600})
+if "Daly_Can" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": Daly_Can, "baud": 9600})
+if "Jkbms_Can" in utils.BMS_TYPE:
+    supported_bms_types.append({"bms": Jkbms_Can, "baud": 250000})
 if "MNB" in utils.BMS_TYPE:
     supported_bms_types.append({"bms": MNB, "baud": 9600})
 if "Sinowealth" in utils.BMS_TYPE:
