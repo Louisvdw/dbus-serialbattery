@@ -5,9 +5,12 @@
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
 * Added: Current average of the last 5 minutes by @mr-manuel
 * Added: Daly BMS - Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
+* Added: Daly BMS connect via CAN (experimental, some limits apply) with https://github.com/Louisvdw/dbus-serialbattery/pull/169 by @SamuelBrucksch and @mr-manuel
 * Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
 * Added: Implement callback function for update by @seidler2547
+* Added: JKBMS BLE - Automatic SOC reset with https://github.com/Louisvdw/dbus-serialbattery/pull/736 by @ArendsM
 * Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
+* Added: JKBMS BMS connect via CAN (experimental, some limits apply) by @IrisCrimson and @mr-manuel
 * Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
 * Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
 * Added: Load to bulk voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel

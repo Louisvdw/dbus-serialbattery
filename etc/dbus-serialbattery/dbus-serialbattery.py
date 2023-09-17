@@ -34,10 +34,6 @@ from bms.seplos import Seplos
 # enabled only if explicitly set in config under "BMS_TYPE"
 if "ANT" in utils.BMS_TYPE:
     from bms.ant import ANT
-if "Daly_Can" in utils.BMS_TYPE:
-    from bms.daly_can import Daly_Can
-if "Jkbms_Can" in utils.BMS_TYPE:
-    from bms.jkbms_can import Jkbms_Can
 if "MNB" in utils.BMS_TYPE:
     from bms.mnb import MNB
 if "Sinowealth" in utils.BMS_TYPE:
@@ -60,10 +56,6 @@ supported_bms_types = [
 # enabled only if explicitly set in config under "BMS_TYPE"
 if "ANT" in utils.BMS_TYPE:
     supported_bms_types.append({"bms": ANT, "baud": 19200})
-if "Daly_Can" in utils.BMS_TYPE:
-    supported_bms_types.append({"bms": Daly_Can, "baud": 9600})
-if "Jkbms_Can" in utils.BMS_TYPE:
-    supported_bms_types.append({"bms": Jkbms_Can, "baud": 250000})
 if "MNB" in utils.BMS_TYPE:
     supported_bms_types.append({"bms": MNB, "baud": 9600})
 if "Sinowealth" in utils.BMS_TYPE:
@@ -177,6 +169,28 @@ def main():
         if testbms.test_connection():
             logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
+    elif port.startswith("can"):
+        """
+        Import CAN classes only, if it's a can port, else the driver won't start due to missing python modules
+        This prevent problems when using the driver only with a serial connection
+        """
+        from bms.daly_can import Daly_Can
+        from bms.jkbms_can import Jkbms_Can
+
+        # only try CAN BMS on CAN port
+        supported_bms_types = [
+            {"bms": Daly_Can, "baud": 250000},
+            {"bms": Jkbms_Can, "baud": 250000},
+        ]
+
+        expected_bms_types = [
+            battery_type
+            for battery_type in supported_bms_types
+            if battery_type["bms"].__name__ in utils.BMS_TYPE
+            or len(utils.BMS_TYPE) == 0
+        ]
+
+        battery = get_battery(port)
     else:
         battery = get_battery(port)
 

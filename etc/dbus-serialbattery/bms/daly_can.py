@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import (
+    BATTERY_CAPACITY,
+    INVERT_CURRENT_MEASUREMENT,
+    logger,
+    MAX_BATTERY_CHARGE_CURRENT,
+    MAX_BATTERY_DISCHARGE_CURRENT,
+    MAX_CELL_VOLTAGE,
+    MIN_CELL_VOLTAGE,
+)
+from struct import unpack_from
 import can
+
+"""
+https://github.com/Louisvdw/dbus-serialbattery/pull/169
+"""
 
 
 class Daly_Can(Battery):
-    def __init__(self, port, baud):
-        super(Daly_Can, self).__init__(port, baud)
+    def __init__(self, port, baud, address):
+        super(Daly_Can, self).__init__(port, baud, address)
         self.charger_connected = None
         self.load_connected = None
         self.cell_min_voltage = None
@@ -18,7 +30,7 @@ class Daly_Can(Battery):
         self.poll_interval = 1000
         self.poll_step = 0
         self.type = self.BATTERYTYPE
-        self.bus = None
+        self.can_bus = None
 
     # command bytes [Priority=18][Command=94][BMS ID=01][Uplink ID=40]
     command_base = 0x18940140
@@ -65,37 +77,38 @@ class Daly_Can(Battery):
             {"can_id": self.response_cell_balance, "can_mask": 0xFFFFFFF},
             {"can_id": self.response_alarm, "can_mask": 0xFFFFFFF},
         ]
-        self.bus = can.Bus(
+        self.can_bus = can.Bus(
             interface="socketcan",
-            channel="can0",
+            channel=self.port,
             receive_own_messages=False,
             can_filters=can_filters,
         )
 
-        result = self.read_status_data(self.bus)
+        result = self.read_status_data(self.can_bus)
 
         return result
 
     def get_settings(self):
         self.capacity = BATTERY_CAPACITY
-        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         return True
 
     def refresh_data(self):
         result = False
 
-        result = self.read_soc_data(self.bus)
-        result = result and self.read_fed_data(self.bus)
+        result = self.read_soc_data(self.can_bus)
+        result = result and self.read_fed_data(self.can_bus)
         if self.poll_step == 0:
-            # This must be listed in step 0 as get_min_cell_voltage and get_max_cell_voltage in battery.py needs it at first cycle for publish_dbus in dbushelper.py
-            result = result and self.read_cell_voltage_range_data(self.bus)
+            # This must be listed in step 0 as get_min_cell_voltage and get_max_cell_voltage in battery.py
+            # needs it at first cycle for publish_dbus in dbushelper.py
+            result = result and self.read_cell_voltage_range_data(self.can_bus)
         elif self.poll_step == 1:
-            result = result and self.read_alarm_data(self.bus)
+            result = result and self.read_alarm_data(self.can_bus)
         elif self.poll_step == 2:
-            result = result and self.read_cells_volts(self.bus)
+            result = result and self.read_cells_volts(self.can_bus)
         elif self.poll_step == 3:
-            result = result and self.read_temperature_range_data(self.bus)
+            result = result and self.read_temperature_range_data(self.can_bus)
             # else:          # A placeholder to remind this is the last step. Add any additional steps before here
             # This is last step so reset poll_step
             self.poll_step = -1
@@ -104,8 +117,8 @@ class Daly_Can(Battery):
 
         return result
 
-    def read_status_data(self, bus):
-        status_data = self.read_bus_data_daly(bus, self.command_status)
+    def read_status_data(self, can_bus):
+        status_data = self.read_bus_data_daly(can_bus, self.command_status)
         # check if connection success
         if status_data is False:
             logger.debug("read_status_data")
@@ -130,7 +143,7 @@ class Daly_Can(Battery):
     def read_soc_data(self, ser):
         # Ensure data received is valid
         crntMinValid = -(MAX_BATTERY_DISCHARGE_CURRENT * 2.1)
-        crntMaxValid = MAX_BATTERY_CURRENT * 1.3
+        crntMaxValid = MAX_BATTERY_CHARGE_CURRENT * 1.3
         triesValid = 2
         while triesValid > 0:
             soc_data = self.read_bus_data_daly(ser, self.command_soc)
@@ -266,9 +279,11 @@ class Daly_Can(Battery):
 
         return True
 
-    def read_cells_volts(self, bus):
+    def read_cells_volts(self, can_bus):
         if self.cell_count is not None:
-            cells_volts_data = self.read_bus_data_daly(bus, self.command_cell_volts, 6)
+            cells_volts_data = self.read_bus_data_daly(
+                can_bus, self.command_cell_volts, 6
+            )
             if cells_volts_data is False:
                 logger.warning("read_cells_volts")
                 return False
@@ -350,16 +365,16 @@ class Daly_Can(Battery):
         self.capacity_remain = capacity_remain / 1000
         return True
 
-    def read_bus_data_daly(self, bus, command, expectedMessageCount=1):
+    def read_bus_data_daly(self, can_bus, command, expectedMessageCount=1):
         # TODO handling of error cases
         message = can.Message(arbitration_id=command)
-        bus.send(message, timeout=0.2)
+        can_bus.send(message, timeout=0.2)
         response = bytearray()
 
         # TODO use async notifier instead of this where we expect a specific frame to be received
         # this could end up in a deadlock if a package is not received
         count = 0
-        for msg in bus:
+        for msg in can_bus:
             # print(f"{msg.arbitration_id:X}: {msg.data}")
             # logger.info('Frame: ' + ", ".join(hex(b) for b in msg.data))
             response.extend(msg.data)

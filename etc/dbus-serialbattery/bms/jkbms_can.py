@@ -1,18 +1,31 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-from battery import Protection, Battery, Cell
-from utils import *
-from struct import *
+from battery import Battery, Cell
+from utils import (
+    is_bit_set,
+    logger,
+    MAX_BATTERY_CHARGE_CURRENT,
+    MAX_BATTERY_DISCHARGE_CURRENT,
+    MAX_CELL_VOLTAGE,
+    MIN_CELL_VOLTAGE,
+    zero_char,
+)
+from struct import unpack_from
 import can
 import time
 
-CAN_BUS_TYPE = "socketcan"
+"""
+https://github.com/Louisvdw/dbus-serialbattery/compare/dev...IrisCrimson:dbus-serialbattery:jkbms_can
+
+# Restrictions seen from code:
+-
+"""
 
 
-class Jkbms_CAN(Battery):
-    def __init__(self, port, baud):
-        super(Jkbms_CAN, self).__init__(port, baud)
-        self._can_bus = False
+class Jkbms_Can(Battery):
+    def __init__(self, port, baud, address):
+        super(Jkbms_Can, self).__init__(port, baud, address)
+        self.can_bus = False
         self.cell_count = 1
         self.poll_interval = 1500
         self.type = self.BATTERYTYPE
@@ -20,12 +33,13 @@ class Jkbms_CAN(Battery):
         self.error_active = False
 
     def __del__(self):
-        if self._can_bus:
-            self._can_bus.shutdown()
-            self._can_bus = False
+        if self.can_bus:
+            self.can_bus.shutdown()
+            self.can_bus = False
             logger.debug("bus shutdown")
 
-    BATTERYTYPE = "Jkbms"
+    BATTERYTYPE = "Jkbms_Can"
+    CAN_BUS_TYPE = "socketcan"
 
     CURRENT_ZERO_CONSTANT = 400
     BATT_STAT = "BATT_STAT"
@@ -52,10 +66,10 @@ class Jkbms_CAN(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_current = MAX_BATTERY_CURRENT
+        self.max_battery_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * 16  # self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * 16  # self.cell_count
+        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
+        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
 
         # init the cell array add only missing Cell instances
         missing_instances = self.cell_count - len(self.cells)
@@ -157,30 +171,30 @@ class Jkbms_CAN(Battery):
         self.protection.internal_failure = 0
 
     def read_serial_data_jkbms_CAN(self):
-        if self._can_bus is False:
+        if self.can_bus is False:
             logger.debug("Can bus init")
             # intit the can interface
             try:
-                self._can_bus = can.interface.Bus(
-                    bustype=CAN_BUS_TYPE, channel=self.port, bitrate=self.baud_rate
+                self.can_bus = can.interface.Bus(
+                    bustype=self.CAN_BUS_TYPE, channel=self.port, bitrate=self.baud_rate
                 )
             except can.CanError as e:
                 logger.error(e)
 
-            if self._can_bus is None:
+            if self.can_bus is None:
                 return False
 
             logger.debug("Can bus init done")
 
         # reset errors after timeout
-        if ((time.time() - self.last_error_time) > 120.0) and self.error_active == True:
+        if ((time.time() - self.last_error_time) > 120.0) and self.error_active is True:
             self.error_active = False
             self.reset_protection_bits()
 
         # read msgs until we get one we want
         messages_to_read = self.MESSAGES_TO_READ
         while messages_to_read > 0:
-            msg = self._can_bus.recv(1)
+            msg = self.can_bus.recv(1)
             if msg is None:
                 logger.info("No CAN Message received")
                 return False
