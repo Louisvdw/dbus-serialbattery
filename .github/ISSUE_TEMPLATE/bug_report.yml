@@ -128,7 +128,8 @@ body:
     id: config
     attributes:
       label: Config file
-      description: Paste your config file here. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#settings-locationpath) where you can find it. to get This will be automatically formatted into code, so no need for backticks.
+      description: |
+        Paste your config file here. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#settings-locationpath) where you can find it. The content will be automatically formatted into code, so no need for backticks.
       render: ini
     validations:
       required: true
@@ -137,7 +138,9 @@ body:
     id: logs
     attributes:
       label: Relevant log output
-      description: Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. This will be automatically formatted into code, so no need for backticks.
+      description: |
+        Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. The content will be automatically formatted into code, so no need for backticks.
+        ⚠️ **IMPORTANT:** Do not forget to pipe the output through `tai64nlocal`, if you don't copy the commands from the documentation.
       render: shell
     validations:
       required: true
@@ -146,3 +149,4 @@ body:
     id: other
     attributes:
       label: Any other information that may be helpful
+      description: Leave empty, if you already said all
