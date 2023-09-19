@@ -72,6 +72,9 @@ logger.info("Starting dbus-serialbattery")
 
 
 def main():
+    # NameError: free variable 'expected_bms_types' referenced before assignment in enclosing scope
+    global expected_bms_types
+
     def poll_battery(loop):
         helper.publish_battery(loop)
         return True
