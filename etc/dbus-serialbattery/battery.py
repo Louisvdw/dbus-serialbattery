@@ -539,6 +539,8 @@ class Battery(ABC):
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
+                    # Assume battery SOC ist 100% at this stage
+                    self.trigger_soc_reset()
 
                 else:
                     pass
