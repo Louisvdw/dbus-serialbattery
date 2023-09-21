@@ -552,7 +552,8 @@ class LltJbd(Battery):
         ) = unpack_from(">HhHHHHhHHBBBBB", gen_data)
         self.voltage = voltage / 100
         self.current = current / 100
-        if not self.cycle_capacity:
+        # https://github.com/Louisvdw/dbus-serialbattery/issues/769#issuecomment-1720805325
+        if not self.cycle_capacity or self.cycle_capacity < capacity_remain:
             self.cycle_capacity = capacity
         self.soc = round(100 * capacity_remain / self.cycle_capacity, 2)
         self.capacity_remain = capacity_remain / 100
