@@ -404,6 +404,7 @@ class Battery(ABC):
                     # to make it restart persistent
                     self.bulk_last_reached = current_time
                 if self.control_voltage:
+                    # check if battery changed from bulk/absoprtion to float
                     if not self.charge_mode.startswith("Float"):
                         self.transition_start_time = current_time
                         self.initial_control_voltage = self.control_voltage
@@ -539,8 +540,6 @@ class Battery(ABC):
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
-                    # Assume battery SOC ist 100% at this stage
-                    self.trigger_soc_reset()
 
                 else:
                     pass
@@ -552,6 +551,10 @@ class Battery(ABC):
                 )
 
             else:
+                # check if battery changed from bulk/absoprtion to float
+                if not self.charge_mode.startswith("Float"):
+                    # Assume battery SOC ist 100% at this stage
+                    self.trigger_soc_reset()
                 self.control_voltage = utils.FLOAT_CELL_VOLTAGE * self.cell_count
                 self.charge_mode = "Float"
                 # reset bulk when going into float
