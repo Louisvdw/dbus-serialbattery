@@ -16,6 +16,8 @@ body:
     attributes:
       label: Describe the bug
       description: A clear and concise description of what the bug is. Paste also screenshots, if needed.
+      placeholder: |
+        NOTE: Paste the logfields in the appropriate field below.
     validations:
       required: true
 
@@ -24,7 +26,7 @@ body:
     attributes:
       label: How to reproduce
       description: Please describe in clear steps how to reproduce the issue. Paste also screenshots, if needed.
-      value: |
+      placeholder: |
         Steps to reproduce the behavior:
         1. Go to '...'
         2. Click on '....'
@@ -45,7 +47,11 @@ body:
     id: driver_version
     attributes:
       label: Driver version
-      description: Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`
+      description: |
+        Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`.
+
+        ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
+      placeholder: e.g. v1.0.20230927beta
     validations:
       required: true
 
@@ -73,7 +79,10 @@ body:
     id: venus_os_version
     attributes:
       label: Venus OS version
-      description: Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+      description: |
+        Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+
+        ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
       placeholder: e.g. v2.94
     validations:
       required: true
@@ -140,6 +149,7 @@ body:
       label: Relevant log output
       description: |
         Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. The content will be automatically formatted into code, so no need for backticks.
+
         ⚠️ **IMPORTANT:** Do not forget to pipe the output through `tai64nlocal`, if you don't copy the commands from the documentation.
       render: shell
     validations:
