@@ -1,5 +1,13 @@
 # Changelog
 
+## Breaking changes
+
+* Driver version greater or equal to `v1.0.20230629beta` and smaller or equal to `v1.0.20230926beta`:
+
+  With `v1.0.20230927beta` the following values changed names:
+  * `BULK_CELL_VOLTAGE` -> `SOC_RESET_VOLTAGE`
+  * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
+
 ## v1.0.x
 
 * Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
@@ -14,7 +22,7 @@
 * Added: JKBMS BMS connect via CAN (experimental, some limits apply) by @IrisCrimson and @mr-manuel
 * Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
 * Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
-* Added: Load to bulk voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
+* Added: Load to SOC reset voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
 * Added: Temperature names to dbus and mqtt by @mr-manuel
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel

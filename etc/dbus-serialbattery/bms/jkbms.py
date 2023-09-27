@@ -284,8 +284,8 @@ class Jkbms(Battery):
         # MOSFET temperature alarm
         self.protection.temp_high_internal = 2 if is_bit_set(tmp[pos - 1]) else 0
         # charge over voltage alarm
-        # TODO: check if "self.bulk_requested is False" works,
-        # else use "self.bulk_last_reached < int(time()) - (60 * 60)"
+        # TODO: check if "self.soc_reset_requested is False" works,
+        # else use "self.soc_reset_last_reached < int(time()) - (60 * 60)"
         self.protection.voltage_high = 2 if is_bit_set(tmp[pos - 2]) else 0
         # discharge under voltage alarm
         self.protection.voltage_low = 2 if is_bit_set(tmp[pos - 3]) else 0
