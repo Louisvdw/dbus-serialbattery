@@ -321,7 +321,7 @@ class Battery(ABC):
             if self.max_voltage_start_time is None:
                 # start timer, if max voltage is reached and cells are balanced
                 if (
-                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
+                    self.max_battery_voltage <= voltageSum
                     and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
                 ):
@@ -355,9 +355,7 @@ class Battery(ABC):
                 # regardless of whether we were in absorption mode or not
                 if (
                     voltageSum
-                    < self.max_battery_voltage
-                    - utils.VOLTAGE_DROP
-                    - measurementToleranceVariation
+                    < self.max_battery_voltage - measurementToleranceVariation
                 ):
                     self.max_voltage_start_time = None
 
@@ -515,10 +513,7 @@ class Battery(ABC):
 
             if self.max_voltage_start_time is None:
                 # check if max voltage is reached and start timer to keep max voltage
-                if (
-                    self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum
-                    and self.allow_max_voltage
-                ):
+                if self.max_battery_voltage <= voltageSum and self.allow_max_voltage:
                     # example 2
                     self.max_voltage_start_time = current_time
 

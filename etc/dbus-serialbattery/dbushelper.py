@@ -482,7 +482,9 @@ class DbusHelper:
         self._dbusservice["/System/Temperature4Name"] = utils.TEMP_4_NAME
 
         # Voltage control
-        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
+        self._dbusservice["/Info/MaxChargeVoltage"] = round(
+            self.battery.control_voltage + utils.VOLTAGE_DROP, 2
+        )
 
         # Charge control
         self._dbusservice[
