@@ -181,7 +181,7 @@ class Jkbms(Battery):
                 0
             ].decode()
             self.production = "20" + tmp + "01" if tmp and tmp != "" else None
-        except UnicodeEncodeError:
+        except UnicodeDecodeError:
             self.production = None
 
         offset = cellbyte_count + 174
