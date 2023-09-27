@@ -175,11 +175,14 @@ class Jkbms(Battery):
         self.custom_field = tmp if tmp != "Input Us" else None
 
         # production date
-        offset = cellbyte_count + 164
-        tmp = unpack_from(">4s", self.get_data(status_data, b"\xB5", offset, 4))[
-            0
-        ].decode()
-        self.production = "20" + tmp + "01" if tmp and tmp != "" else None
+        try:
+            offset = cellbyte_count + 164
+            tmp = unpack_from(">4s", self.get_data(status_data, b"\xB5", offset, 4))[
+                0
+            ].decode()
+            self.production = "20" + tmp + "01" if tmp and tmp != "" else None
+        except UnicodeEncodeError:
+            self.production = None
 
         offset = cellbyte_count + 174
         self.version = unpack_from(

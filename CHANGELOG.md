@@ -31,6 +31,7 @@
 * Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
 * Changed: Improved driver disable script by @md-manuel
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
+* Changed: JKBMS - Driver do not start if manufacturer date in BMS is empty https://github.com/Louisvdw/dbus-serialbattery/issues/823 by @mr-manuel
 * Changed: JKBMS_BLE BMS - Improved driver by @seidler2547 & @mr-manuel
 * Changed: LLT/JBD BMS - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
 * Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/730 by @mr-manuel
