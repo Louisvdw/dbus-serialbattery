@@ -200,6 +200,8 @@ class Jkbms_Brn:
         for t in TRANSLATE_CELL_INFO:
             self.translate(fb, t, self.bms_status, f32s=has32s)
         self.decode_warnings(fb)
+        logging.debug("decode_cellinfo_jk02(): self.frame_buffer")
+        logging.debug(self.frame_buffer)
         logging.debug(self.bms_status)
 
     def decode_settings_jk02(self):
@@ -255,6 +257,10 @@ class Jkbms_Brn:
         self._new_data_callback = callback
 
     def assemble_frame(self, data: bytearray):
+        logging.debug(
+            f"--> assemble_frame() -> self.frame_buffer (before extend) -> lenght:  {len(self.frame_buffer)}"
+        )
+        logging.debug(self.frame_buffer)
         if len(self.frame_buffer) > MAX_RESPONSE_SIZE:
             logging.info(
                 "data dropped because it alone was longer than max frame length"
@@ -267,6 +273,10 @@ class Jkbms_Brn:
 
         self.frame_buffer.extend(data)
 
+        logging.debug(
+            f"--> assemble_frame() -> self.frame_buffer (after extend) -> lenght:  {len(self.frame_buffer)}"
+        )
+        logging.debug(self.frame_buffer)
         if len(self.frame_buffer) >= MIN_RESPONSE_SIZE:
             # check crc; always at position 300, independent of
             # actual frame-lentgh, so crc up to 299
@@ -282,6 +292,8 @@ class Jkbms_Brn:
 
     def ncallback(self, sender: int, data: bytearray):
         logging.debug(f"--> NEW PACKAGE! lenght:  {len(data)}")
+        logging.debug("ncallback(): data")
+        logging.debug(data)
         self.assemble_frame(data)
 
     def crc(self, arr: bytearray, length: int) -> int:
