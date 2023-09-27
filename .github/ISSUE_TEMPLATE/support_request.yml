@@ -16,6 +16,8 @@ body:
     attributes:
       label: Describe the problem
       description: A clear and concise description of what the problem is. Paste also screenshots and pictures, if needed. The more informations you give, the faster we find a solution.
+      placeholder: |
+        NOTE: Paste the logfields in the appropriate field below.
     validations:
       required: true
 
@@ -23,7 +25,11 @@ body:
     id: driver_version
     attributes:
       label: Driver version
-      description: Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`
+      description: |
+        Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`.
+
+        ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
+      placeholder: e.g. v1.0.20230927beta
     validations:
       required: true
 
@@ -51,7 +57,10 @@ body:
     id: venus_os_version
     attributes:
       label: Venus OS version
-      description: Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+      description: |
+        Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+
+        ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
       placeholder: e.g. v2.94
     validations:
       required: true
