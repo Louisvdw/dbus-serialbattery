@@ -482,7 +482,11 @@ class DbusHelper:
         self._dbusservice["/System/Temperature4Name"] = utils.TEMP_4_NAME
 
         # Voltage control
-        self._dbusservice["/Info/MaxChargeVoltage"] = self.battery.control_voltage
+        self._dbusservice["/Info/MaxChargeVoltage"] = (
+            round(self.battery.control_voltage + utils.VOLTAGE_DROP, 2)
+            if self.battery.control_voltage is not None
+            else None
+        )
 
         # Charge control
         self._dbusservice[
@@ -520,8 +524,8 @@ class DbusHelper:
         self._dbusservice["/Alarms/HighVoltage"] = (
             self.battery.protection.voltage_high
             if (
-                self.battery.bulk_requested is False
-                and self.battery.bulk_last_reached < int(time()) - (60 * 30)
+                self.battery.soc_reset_requested is False
+                and self.battery.soc_reset_last_reached < int(time()) - (60 * 30)
             )
             else 0
         )

@@ -38,7 +38,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20230921dev"
+DRIVER_VERSION = "1.0.20230927dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -66,15 +66,15 @@ if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
         ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
     )
 
-BULK_CELL_VOLTAGE = float(config["DEFAULT"]["BULK_CELL_VOLTAGE"])
-if BULK_CELL_VOLTAGE < MAX_CELL_VOLTAGE:
-    BULK_CELL_VOLTAGE = MAX_CELL_VOLTAGE
+SOC_RESET_VOLTAGE = float(config["DEFAULT"]["SOC_RESET_VOLTAGE"])
+if SOC_RESET_VOLTAGE < MAX_CELL_VOLTAGE:
+    SOC_RESET_VOLTAGE = MAX_CELL_VOLTAGE
     logger.error(
-        ">>> ERROR: BULK_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+        ">>> ERROR: SOC_RESET_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
     )
-BULK_AFTER_DAYS = (
-    int(config["DEFAULT"]["BULK_AFTER_DAYS"])
-    if config["DEFAULT"]["BULK_AFTER_DAYS"] != ""
+SOC_RESET_AFTER_DAYS = (
+    int(config["DEFAULT"]["SOC_RESET_AFTER_DAYS"])
+    if config["DEFAULT"]["SOC_RESET_AFTER_DAYS"] != ""
     else False
 )
 
