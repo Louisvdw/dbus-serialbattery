@@ -433,9 +433,8 @@ echo "SERIAL battery connection: The installation is complete. You don't have to
 echo
 echo "BLUETOOTH battery connection: There are a few more steps to complete installation."
 echo
-echo "    1. Please add the Bluetooth BMS to the config file \"/data/etc/dbus-serialbattery/config.ini\" by adding \"BLUETOOTH_BMS\" = "
-echo "       Example with 1 BMS: BLUETOOTH_BMS = Jkbms_Ble C8:47:8C:00:00:00"
-echo "       Example with 3 BMS: BLUETOOTH_BMS = Jkbms_Ble C8:47:8C:00:00:00, Jkbms_Ble C8:47:8C:00:00:11, Jkbms_Ble C8:47:8C:00:00:22"
+echo "    1. Add your Bluetooth BMS to the config file \"/data/etc/dbus-serialbattery/config.ini\"."
+echo "       Check the default config file \"/data/etc/dbus-serialbattery/config.default.ini\" for more informations."
 echo "       If your Bluetooth BMS are nearby you can show the MAC address with \"bluetoothctl devices\"."
 echo
 echo "    2. Make sure to disable Bluetooth in \"Settings -> Bluetooth\" in the remote console/GUI to prevent reconnects every minute."
@@ -448,9 +447,8 @@ echo "    See https://wiki.debian.org/BluetoothUser#Using_bluetoothctl for more 
 echo
 echo "CAN battery connection: There are a few more steps to complete installation."
 echo
-echo "    1. Please add the CAN port to the config file \"/data/etc/dbus-serialbattery/config.ini\" by adding \"CAN_PORT\" = "
-echo "       Example with 1 CAN port: CAN_PORT = can0"
-echo "       Example with 3 CAN port: CAN_PORT = can0, can8, can9"
+echo "    1. Add your CAN port to the config file \"/data/etc/dbus-serialbattery/config.ini\"."
+echo "       Check the default config file \"/data/etc/dbus-serialbattery/config.default.ini\" for more informations."
 echo
 echo "    2. Make sure to select a profile with 250 kbit/s in \"Settings -> Services -> VE.Can port -> CAN-bus profile\" in the remote console/GUI."
 echo
