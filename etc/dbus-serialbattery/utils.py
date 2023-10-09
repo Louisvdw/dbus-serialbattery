@@ -13,7 +13,6 @@ import bisect
 # Logging
 logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
-logger.setLevel(logging.INFO)
 
 PATH_CONFIG_DEFAULT = "config.default.ini"
 PATH_CONFIG_USER = "config.ini"
@@ -38,9 +37,19 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20230927dev"
+DRIVER_VERSION = "1.0.20231009dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
+
+# get logging level from config file
+if config["DEFAULT"]["LOGGING"] == "ERROR":
+    logging.basicConfig(level=logging.ERROR)
+elif config["DEFAULT"]["LOGGING"] == "WARNING":
+    logging.basicConfig(level=logging.WARNING)
+elif config["DEFAULT"]["LOGGING"] == "DEBUG":
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
 
 # save config values to constants
 

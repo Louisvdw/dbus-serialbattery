@@ -195,6 +195,9 @@ def main():
 
         battery = get_battery(port)
     else:
+        # wait some seconds to be sure that the serial connection is ready
+        # else the error throw a lot of timeouts
+        sleep(16)
         battery = get_battery(port)
 
     # exit if no battery could be found

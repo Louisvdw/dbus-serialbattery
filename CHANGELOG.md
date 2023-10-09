@@ -11,6 +11,7 @@
 ## v1.0.x
 
 * Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
+* Added: Configure logging level in `config.ini` by @mr-manuel
 * Added: Create unique identifier, if not provided from BMS by @mr-manuel
 * Added: Current average of the last 5 minutes by @mr-manuel
 * Added: Daly BMS - Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
