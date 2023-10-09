@@ -37,19 +37,19 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231009dev"
+DRIVER_VERSION = "1.0.20231010dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
 # get logging level from config file
 if config["DEFAULT"]["LOGGING"] == "ERROR":
-    logging.basicConfig(level=logging.ERROR)
+    logger.setLevel(logging.ERROR)
 elif config["DEFAULT"]["LOGGING"] == "WARNING":
-    logging.basicConfig(level=logging.WARNING)
+    logger.setLevel(logging.WARNING)
 elif config["DEFAULT"]["LOGGING"] == "DEBUG":
-    logging.basicConfig(level=logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    logger.setLevel(logging.INFO)
 
 # save config values to constants
 
