@@ -537,7 +537,7 @@ class Daly(Battery):
             self.custom_field = sub(
                 " +",
                 " ",
-                (battery_code.strip()),
+                (battery_code.replace("\x00", " ").strip()),
             )
         return True
 
