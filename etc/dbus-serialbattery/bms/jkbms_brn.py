@@ -57,7 +57,7 @@ TRANSLATE_SETTINGS = [
 ]
 
 
-TRANSLATE_CELL_INFO = [
+TRANSLATE_CELL_INFO_16S = [
     [["cell_info", "voltages", 32], 6, "<H", 0.001],
     [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
     [["cell_info", "delta_cell_voltage"], 60, "<H", 0.001],
@@ -69,6 +69,31 @@ TRANSLATE_CELL_INFO = [
     [["cell_info", "temperature_sensor_1"], 130, "<H", 0.1],
     [["cell_info", "temperature_sensor_2"], 132, "<H", 0.1],
     [["cell_info", "temperature_mos"], 134, "<H", 0.1],
+    [["cell_info", "balancing_current"], 138, "<H", 0.001],
+    [["cell_info", "balancing_action"], 140, "<B", 0.001],
+    [["cell_info", "battery_soc"], 141, "B"],
+    [["cell_info", "capacity_remain"], 142, "<L", 0.001],
+    [["cell_info", "capacity_nominal"], 146, "<L", 0.001],
+    [["cell_info", "cycle_count"], 150, "<L"],
+    [["cell_info", "cycle_capacity"], 154, "<L", 0.001],
+    [["cell_info", "charging_switch_enabled"], 166, "1?"],
+    [["cell_info", "discharging_switch_enabled"], 167, "1?"],
+    [["cell_info", "balancing_active"], 191, "1?"],
+]
+
+
+TRANSLATE_CELL_INFO_32S = [
+    [["cell_info", "voltages", 32], 6, "<H", 0.001],
+    [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
+    [["cell_info", "delta_cell_voltage"], 60, "<H", 0.001],
+    [["cell_info", "max_voltage_cell"], 62, "<B"],
+    [["cell_info", "min_voltage_cell"], 63, "<B"],
+    [["cell_info", "resistances", 32], 64, "<H", 0.001],
+    [["cell_info", "total_voltage"], 118, "<H", 0.001],
+    [["cell_info", "current"], 126, "<l", 0.001],
+    [["cell_info", "temperature_sensor_1"], 130, "<H", 0.1],
+    [["cell_info", "temperature_sensor_2"], 132, "<H", 0.1],
+    [["cell_info", "temperature_mos"], 112, "<H", 0.1],
     [["cell_info", "balancing_current"], 138, "<H", 0.001],
     [["cell_info", "balancing_action"], 140, "<B", 0.001],
     [["cell_info", "battery_soc"], 141, "B"],
@@ -101,6 +126,12 @@ class Jkbms_Brn:
     ovp_initial_voltage = None
     ovpr_initial_voltage = None
 
+    # will be set by get_bms_max_cell_count()
+    bms_max_cell_count = None
+
+    # translate info placeholder, since it depends on the bms_max_cell_count
+    translate_cell_info = []
+
     def __init__(self, addr):
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
@@ -110,6 +141,17 @@ class Jkbms_Brn:
         devices = await BleakScanner.discover()
         for d in devices:
             logging.debug(d)
+
+    # check if the bms is a 16s or 32s type
+    def get_bms_max_cell_count(self):
+        fb = self.frame_buffer
+        has32s = fb[189] == 0x00 and fb[189 + 32] > 0
+        if has32s:
+            self.bms_max_cell_count = 32
+            self.translate_cell_info = TRANSLATE_CELL_INFO_32S
+        else:
+            self.bms_max_cell_count = 16
+            self.translate_cell_info = TRANSLATE_CELL_INFO_16S
 
     # iterative implementation maybe later due to referencing
     def translate(self, fb, translation, o, f32s=False, i=0):
@@ -196,8 +238,8 @@ class Jkbms_Brn:
 
     def decode_cellinfo_jk02(self):
         fb = self.frame_buffer
-        has32s = fb[189] == 0x00 and fb[189 + 32] > 0
-        for t in TRANSLATE_CELL_INFO:
+        has32s = self.bms_max_cell_count == 32
+        for t in self.translate_cell_info:
             self.translate(fb, t, self.bms_status, f32s=has32s)
         self.decode_warnings(fb)
         logging.debug("decode_cellinfo_jk02(): self.frame_buffer")
@@ -213,15 +255,16 @@ class Jkbms_Brn:
     def decode(self):
         # check what kind of info the frame contains
         info_type = self.frame_buffer[4]
+        self.get_bms_max_cell_count()
         if info_type == 0x01:
             logging.info("Processing frame with settings info")
             if protocol_version == PROTOCOL_VERSION_JK02:
                 self.decode_settings_jk02()
                 # adapt translation table for cell array lengths
                 ccount = self.bms_status["settings"]["cell_count"]
-                for i, t in enumerate(TRANSLATE_CELL_INFO):
+                for i, t in enumerate(self.translate_cell_info):
                     if t[0][-2] == "voltages" or t[0][-2] == "voltages":
-                        TRANSLATE_CELL_INFO[i][0][-1] = ccount
+                        self.translate_cell_info[i][0][-1] = ccount
                 self.bms_status["last_update"] = time()
 
         elif info_type == 0x02:
