@@ -15,6 +15,8 @@ toc_max_heading_level: 4
 
 > It is always recommended to use the latest Venus OS version with the latest driver version. To avoid a [white screen](../faq/#fix-white-screen-after-install) after install check the compatibility matrix below.
 
+> Multi battery setup: If you are using multiple batteries you need to use a battery aggregator else you cannot use the full system power. See [How to aggregate multiple batteries?](../faq/#how-to-aggregate-multiple-batteries)
+
 ## Compatibility Matrix
 
 | &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0   |
