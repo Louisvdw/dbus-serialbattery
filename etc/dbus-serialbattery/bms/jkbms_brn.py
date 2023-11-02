@@ -56,7 +56,6 @@ TRANSLATE_SETTINGS = [
     [["settings", "balancing_switch"], 126, "4?"],
 ]
 
-
 TRANSLATE_CELL_INFO_16S = [
     [["cell_info", "voltages", 32], 6, "<H", 0.001],
     [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
@@ -80,7 +79,6 @@ TRANSLATE_CELL_INFO_16S = [
     [["cell_info", "discharging_switch_enabled"], 167, "1?"],
     [["cell_info", "balancing_active"], 191, "1?"],
 ]
-
 
 TRANSLATE_CELL_INFO_32S = [
     [["cell_info", "voltages", 32], 6, "<H", 0.001],
@@ -142,13 +140,22 @@ class Jkbms_Brn:
         for d in devices:
             logging.debug(d)
 
-    # check if the bms is a 16s or 32s type
+    # check where the bms data starts and
+    # if the bms is a 16s or 32s type
     def get_bms_max_cell_count(self):
         fb = self.frame_buffer
-        has32s = fb[189] == 0x00 and fb[189 + 32] > 0
-        if has32s:
+
+        # old check to recognize 32s
+        # what does this check validate?
+        # unfortunately does not work on every system
+        # has32s = fb[189] == 0x00 and fb[189 + 32] > 0
+
+        # check where data starts
+        # for 32s it's at fb[70]
+        if fb[70] == 255 and fb[71] == 255:
             self.bms_max_cell_count = 32
             self.translate_cell_info = TRANSLATE_CELL_INFO_32S
+        # for 16s it's at fb[54]
         else:
             self.bms_max_cell_count = 16
             self.translate_cell_info = TRANSLATE_CELL_INFO_16S
