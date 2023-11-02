@@ -37,16 +37,16 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231010dev2"
+DRIVER_VERSION = "1.0.20231102dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
 # get logging level from config file
-if config["DEFAULT"]["LOGGING"] == "ERROR":
+if config["DEFAULT"]["LOGGING"].upper() == "ERROR":
     logger.setLevel(logging.ERROR)
-elif config["DEFAULT"]["LOGGING"] == "WARNING":
+elif config["DEFAULT"]["LOGGING"].upper() == "WARNING":
     logger.setLevel(logging.WARNING)
-elif config["DEFAULT"]["LOGGING"] == "DEBUG":
+elif config["DEFAULT"]["LOGGING"].upper() == "DEBUG":
     logger.setLevel(logging.DEBUG)
 else:
     logger.setLevel(logging.INFO)

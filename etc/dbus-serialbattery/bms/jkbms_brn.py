@@ -2,11 +2,16 @@ from struct import unpack_from, calcsize
 from bleak import BleakScanner, BleakClient
 from time import sleep, time
 import asyncio
-import logging
 import threading
 
-logging.basicConfig(level=logging.INFO)
+# if used as standalone script then use custom logger
+# else import logger from utils
+if __name__ == "__main__":
+    import logging
 
+    logger = logging.basicConfig(level=logging.DEBUG)
+else:
+    from utils import logger
 
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
@@ -56,8 +61,7 @@ TRANSLATE_SETTINGS = [
     [["settings", "balancing_switch"], 126, "4?"],
 ]
 
-
-TRANSLATE_CELL_INFO = [
+TRANSLATE_CELL_INFO_16S = [
     [["cell_info", "voltages", 32], 6, "<H", 0.001],
     [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
     [["cell_info", "delta_cell_voltage"], 60, "<H", 0.001],
@@ -69,6 +73,30 @@ TRANSLATE_CELL_INFO = [
     [["cell_info", "temperature_sensor_1"], 130, "<H", 0.1],
     [["cell_info", "temperature_sensor_2"], 132, "<H", 0.1],
     [["cell_info", "temperature_mos"], 134, "<H", 0.1],
+    [["cell_info", "balancing_current"], 138, "<H", 0.001],
+    [["cell_info", "balancing_action"], 140, "<B", 0.001],
+    [["cell_info", "battery_soc"], 141, "B"],
+    [["cell_info", "capacity_remain"], 142, "<L", 0.001],
+    [["cell_info", "capacity_nominal"], 146, "<L", 0.001],
+    [["cell_info", "cycle_count"], 150, "<L"],
+    [["cell_info", "cycle_capacity"], 154, "<L", 0.001],
+    [["cell_info", "charging_switch_enabled"], 166, "1?"],
+    [["cell_info", "discharging_switch_enabled"], 167, "1?"],
+    [["cell_info", "balancing_active"], 191, "1?"],
+]
+
+TRANSLATE_CELL_INFO_32S = [
+    [["cell_info", "voltages", 32], 6, "<H", 0.001],
+    [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
+    [["cell_info", "delta_cell_voltage"], 60, "<H", 0.001],
+    [["cell_info", "max_voltage_cell"], 62, "<B"],
+    [["cell_info", "min_voltage_cell"], 63, "<B"],
+    [["cell_info", "resistances", 32], 64, "<H", 0.001],
+    [["cell_info", "total_voltage"], 118, "<H", 0.001],
+    [["cell_info", "current"], 126, "<l", 0.001],
+    [["cell_info", "temperature_sensor_1"], 130, "<H", 0.1],
+    [["cell_info", "temperature_sensor_2"], 132, "<H", 0.1],
+    [["cell_info", "temperature_mos"], 112, "<H", 0.1],
     [["cell_info", "balancing_current"], 138, "<H", 0.001],
     [["cell_info", "balancing_action"], 140, "<B", 0.001],
     [["cell_info", "battery_soc"], 141, "B"],
@@ -101,6 +129,12 @@ class Jkbms_Brn:
     ovp_initial_voltage = None
     ovpr_initial_voltage = None
 
+    # will be set by get_bms_max_cell_count()
+    bms_max_cell_count = None
+
+    # translate info placeholder, since it depends on the bms_max_cell_count
+    translate_cell_info = []
+
     def __init__(self, addr):
         self.address = addr
         self.bt_thread = threading.Thread(target=self.connect_and_scrape)
@@ -109,7 +143,38 @@ class Jkbms_Brn:
     async def scanForDevices(self):
         devices = await BleakScanner.discover()
         for d in devices:
-            logging.debug(d)
+            logger.debug(d)
+
+    # check where the bms data starts and
+    # if the bms is a 16s or 32s type
+    def get_bms_max_cell_count(self):
+        fb = self.frame_buffer
+        logger.debug(self.frame_buffer)
+
+        # old check to recognize 32s
+        # what does this check validate?
+        # unfortunately does not work on every system
+        # has32s = fb[189] == 0x00 and fb[189 + 32] > 0
+
+        # logger can be removed after releasing next stable
+        # current version v1.0.20231102dev
+        logger.debug(f"fb[38]: {fb[36]}.{fb[37]}.{fb[38]}.{fb[39]}.{fb[40]}")
+        logger.debug(f"fb[54]: {fb[52]}.{fb[53]}.{fb[54]}.{fb[55]}.{fb[56]}")
+        logger.debug(f"fb[70]: {fb[68]}.{fb[69]}.{fb[70]}.{fb[71]}.{fb[72]}")
+        logger.debug(f"fb[134]: {fb[132]}.{fb[133]}.{fb[134]}.{fb[135]}.{fb[136]}")
+        logger.debug(f"fb[144]: {fb[142]}.{fb[143]}.{fb[144]}.{fb[145]}.{fb[146]}")
+
+        # check where data starts
+        # for 32s it's at fb[70]
+        if fb[70] == 255 and fb[71] == 255:
+            self.bms_max_cell_count = 32
+            self.translate_cell_info = TRANSLATE_CELL_INFO_32S
+        # for 16s it's at fb[54]
+        else:
+            self.bms_max_cell_count = 16
+            self.translate_cell_info = TRANSLATE_CELL_INFO_16S
+
+        logger.debug(f"bms_max_cell_count recognized: {self.bms_max_cell_count}")
 
     # iterative implementation maybe later due to referencing
     def translate(self, fb, translation, o, f32s=False, i=0):
@@ -196,32 +261,33 @@ class Jkbms_Brn:
 
     def decode_cellinfo_jk02(self):
         fb = self.frame_buffer
-        has32s = fb[189] == 0x00 and fb[189 + 32] > 0
-        for t in TRANSLATE_CELL_INFO:
+        has32s = self.bms_max_cell_count == 32
+        for t in self.translate_cell_info:
             self.translate(fb, t, self.bms_status, f32s=has32s)
         self.decode_warnings(fb)
-        logging.debug("decode_cellinfo_jk02(): self.frame_buffer")
-        logging.debug(self.frame_buffer)
-        logging.debug(self.bms_status)
+        logger.debug("decode_cellinfo_jk02(): self.frame_buffer")
+        logger.debug(self.frame_buffer)
+        logger.debug(self.bms_status)
 
     def decode_settings_jk02(self):
         fb = self.frame_buffer
         for t in TRANSLATE_SETTINGS:
             self.translate(fb, t, self.bms_status)
-        logging.debug(self.bms_status)
+        logger.debug(self.bms_status)
 
     def decode(self):
         # check what kind of info the frame contains
         info_type = self.frame_buffer[4]
+        self.get_bms_max_cell_count()
         if info_type == 0x01:
-            logging.info("Processing frame with settings info")
+            logger.debug("Processing frame with settings info")
             if protocol_version == PROTOCOL_VERSION_JK02:
                 self.decode_settings_jk02()
                 # adapt translation table for cell array lengths
                 ccount = self.bms_status["settings"]["cell_count"]
-                for i, t in enumerate(TRANSLATE_CELL_INFO):
+                for i, t in enumerate(self.translate_cell_info):
                     if t[0][-2] == "voltages" or t[0][-2] == "voltages":
-                        TRANSLATE_CELL_INFO[i][0][-1] = ccount
+                        self.translate_cell_info[i][0][-1] = ccount
                 self.bms_status["last_update"] = time()
 
         elif info_type == 0x02:
@@ -230,7 +296,7 @@ class Jkbms_Brn:
                 or time() - self.last_cell_info > CELL_INFO_REFRESH_S
             ):
                 self.last_cell_info = time()
-                logging.info("processing frame with battery cell info")
+                logger.debug("processing frame with battery cell info")
                 if protocol_version == PROTOCOL_VERSION_JK02:
                     self.decode_cellinfo_jk02()
                     self.bms_status["last_update"] = time()
@@ -244,7 +310,7 @@ class Jkbms_Brn:
                     self.waiting_for_response = ""
 
         elif info_type == 0x03:
-            logging.info("processing frame with device info")
+            logger.debug("processing frame with device info")
             if protocol_version == PROTOCOL_VERSION_JK02:
                 self.decode_device_info_jk02()
                 self.bms_status["last_update"] = time()
@@ -257,12 +323,12 @@ class Jkbms_Brn:
         self._new_data_callback = callback
 
     def assemble_frame(self, data: bytearray):
-        logging.debug(
+        logger.debug(
             f"--> assemble_frame() -> self.frame_buffer (before extend) -> lenght:  {len(self.frame_buffer)}"
         )
-        logging.debug(self.frame_buffer)
+        logger.debug(self.frame_buffer)
         if len(self.frame_buffer) > MAX_RESPONSE_SIZE:
-            logging.info(
+            logger.debug(
                 "data dropped because it alone was longer than max frame length"
             )
             self.frame_buffer = []
@@ -273,27 +339,27 @@ class Jkbms_Brn:
 
         self.frame_buffer.extend(data)
 
-        logging.debug(
+        logger.debug(
             f"--> assemble_frame() -> self.frame_buffer (after extend) -> lenght:  {len(self.frame_buffer)}"
         )
-        logging.debug(self.frame_buffer)
+        logger.debug(self.frame_buffer)
         if len(self.frame_buffer) >= MIN_RESPONSE_SIZE:
             # check crc; always at position 300, independent of
             # actual frame-lentgh, so crc up to 299
             ccrc = self.crc(self.frame_buffer, 300 - 1)
             rcrc = self.frame_buffer[300 - 1]
-            logging.debug(f"compair recvd. crc: {rcrc} vs calc. crc: {ccrc}")
+            logger.debug(f"compair recvd. crc: {rcrc} vs calc. crc: {ccrc}")
             if ccrc == rcrc:
-                logging.debug("great success! frame complete and sane, lets decode")
+                logger.debug("great success! frame complete and sane, lets decode")
                 self.decode()
                 self.frame_buffer = []
                 if self._new_data_callback is not None:
                     self._new_data_callback()
 
     def ncallback(self, sender: int, data: bytearray):
-        logging.debug(f"--> NEW PACKAGE! lenght:  {len(data)}")
-        logging.debug("ncallback(): data")
-        logging.debug(data)
+        logger.debug(f"--> NEW PACKAGE! lenght:  {len(data)}")
+        logger.debug("ncallback(): data")
+        logger.debug(data)
         self.assemble_frame(data)
 
     def crc(self, arr: bytearray, length: int) -> int:
@@ -331,7 +397,7 @@ class Jkbms_Brn:
         frame[17] = 0x00
         frame[18] = 0x00
         frame[19] = self.crc(frame, len(frame) - 1)
-        logging.debug("Write register: " + str(address) + " " + str(frame))
+        logger.debug("Write register: " + str(address) + " " + str(frame))
         await bleakC.write_gatt_char(CHAR_HANDLE, frame, response=awaitresponse)
         if awaitresponse:
             await asyncio.sleep(5)
@@ -341,7 +407,7 @@ class Jkbms_Brn:
 
         while self.waiting_for_response != "" and time() - timeout < 10:
             await asyncio.sleep(1)
-            logging.debug(self.waiting_for_response)
+            logger.debug(self.waiting_for_response)
 
         if rtype == "cell_info":
             cmd = COMMAND_CELL_INFO
@@ -365,16 +431,16 @@ class Jkbms_Brn:
 
     # self.bt_thread
     async def asy_connect_and_scrape(self):
-        logging.debug(
+        logger.debug(
             "--> asy_connect_and_scrape(): Connect and scrape on address: "
             + self.address
         )
         self.run = True
         while self.run and self.main_thread.is_alive():  # autoreconnect
             client = BleakClient(self.address)
-            logging.debug("--> asy_connect_and_scrape(): btloop")
+            logger.debug("--> asy_connect_and_scrape(): btloop")
             try:
-                logging.debug("--> asy_connect_and_scrape(): reconnect")
+                logger.debug("--> asy_connect_and_scrape(): reconnect")
                 await client.connect()
                 self.bms_status["model_nbr"] = (
                     await client.read_gatt_char(MODEL_NBR_UUID)
@@ -393,7 +459,7 @@ class Jkbms_Brn:
                     await asyncio.sleep(0.01)
             except Exception as err:
                 self.run = False
-                logging.info(
+                logger.info(
                     f"--> asy_connect_and_scrape(): error while connecting to bt: {err}"
                 )
             finally:
@@ -402,19 +468,19 @@ class Jkbms_Brn:
                     try:
                         await client.disconnect()
                     except Exception as err:
-                        logging.info(
+                        logger.info(
                             f"--> asy_connect_and_scrape(): error while disconnecting: {err}"
                         )
 
-        logging.info("--> asy_connect_and_scrape(): Exit")
+        logger.info("--> asy_connect_and_scrape(): Exit")
 
     def start_scraping(self):
         self.main_thread = threading.current_thread()
         if self.is_running():
-            logging.info("screaping thread already running")
+            logger.debug("screaping thread already running")
             return
         self.bt_thread.start()
-        logging.info(
+        logger.debug(
             "scraping thread started -> main thread id: "
             + str(self.main_thread.ident)
             + " scraping thread: "
@@ -479,7 +545,7 @@ class Jkbms_Brn:
             True,
         )
 
-        logging.info("JK BMS SOC reset finished.")
+        logger.info("JK BMS SOC reset finished.")
 
 
 if __name__ == "__main__":
@@ -487,9 +553,9 @@ if __name__ == "__main__":
 
     jk = Jkbms_Brn(sys.argv[1])
     if not jk.test_connection():
-        logging.error(">>> ERROR: Unable to connect")
+        logger.error(">>> ERROR: Unable to connect")
     else:
         jk.start_scraping()
         while True:
-            logging.debug(jk.get_status())
+            logger.debug(jk.get_status())
             sleep(5)
