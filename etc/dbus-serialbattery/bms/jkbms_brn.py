@@ -166,7 +166,7 @@ class Jkbms_Brn:
 
         # check where data starts
         # for 32s it's at fb[70]
-        if fb[70] == 255 and fb[71] == 255:
+        if fb[70] == 255:
             self.bms_max_cell_count = 32
             self.translate_cell_info = TRANSLATE_CELL_INFO_32S
         # for 16s it's at fb[54]
