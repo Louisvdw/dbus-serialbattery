@@ -96,7 +96,9 @@ def main():
                         "Testing "
                         + test["bms"].__name__
                         + (
-                            ' at address "' + f"\\x{bytes(test['address']).hex()}" + '"'
+                            ' at address "'
+                            + utils.bytearray_to_string(test["address"])
+                            + '"'
                             if "address" in test
                             else ""
                         )
