@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231102dev"
+DRIVER_VERSION = "1.0.20231103dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -316,6 +316,10 @@ def is_bit_set(tmp):
 
 def kelvin_to_celsius(kelvin_temp):
     return kelvin_temp - 273.1
+
+
+def bytearray_to_string(data):
+    return "".join("\\x" + format(byte, "02x") for byte in data)
 
 
 def format_value(value, prefix, suffix):

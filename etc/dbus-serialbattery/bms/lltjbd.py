@@ -610,13 +610,13 @@ class LltJbd(Battery):
 
     @staticmethod
     def validate_packet(data):
-        if not data:
-            return False
-
         if data is False:
             return False
 
         start, op, status, payload_length = unpack_from("BBBB", data)
+
+        logger.debug("bytearray: " + utils.bytearray_to_string(data))
+
         if start != 0xDD:
             logger.error(
                 ">>> ERROR: Invalid response packet. Expected begin packet character 0xDD"

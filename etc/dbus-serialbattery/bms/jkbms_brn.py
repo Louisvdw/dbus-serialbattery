@@ -10,8 +10,12 @@ if __name__ == "__main__":
     import logging
 
     logger = logging.basicConfig(level=logging.DEBUG)
+
+    def bytearray_to_string(data):
+        return "".join("\\x" + format(byte, "02x") for byte in data)
+
 else:
-    from utils import logger
+    from utils import bytearray_to_string, logger
 
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
@@ -166,7 +170,7 @@ class Jkbms_Brn:
 
         # check where data starts
         # for 32s it's at fb[70]
-        if fb[70] == 255 and fb[71] == 255:
+        if fb[70] == 255:
             self.bms_max_cell_count = 32
             self.translate_cell_info = TRANSLATE_CELL_INFO_32S
         # for 16s it's at fb[54]
@@ -358,8 +362,7 @@ class Jkbms_Brn:
 
     def ncallback(self, sender: int, data: bytearray):
         logger.debug(f"--> NEW PACKAGE! lenght:  {len(data)}")
-        logger.debug("ncallback(): data")
-        logger.debug(data)
+        logger.debug("ncallback(): " + bytearray_to_string(data))
         self.assemble_frame(data)
 
     def crc(self, arr: bytearray, length: int) -> int:

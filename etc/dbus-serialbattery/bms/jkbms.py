@@ -343,6 +343,8 @@ class Jkbms(Battery):
 
         s = sum(data[0:-4])
 
+        logger.debug("bytearray: " + utils.bytearray_to_string(data))
+
         if start == 0x4E57 and end == 0x68 and s == crc_lo:
             return data[10 : length - 7]
         elif s != crc_lo:
