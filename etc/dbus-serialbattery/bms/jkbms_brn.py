@@ -65,7 +65,7 @@ TRANSLATE_SETTINGS = [
     [["settings", "balancing_switch"], 126, "4?"],
 ]
 
-TRANSLATE_CELL_INFO_16S = [
+TRANSLATE_CELL_INFO_24S = [
     [["cell_info", "voltages", 32], 6, "<H", 0.001],
     [["cell_info", "average_cell_voltage"], 58, "<H", 0.001],
     [["cell_info", "delta_cell_voltage"], 60, "<H", 0.001],
@@ -150,7 +150,7 @@ class Jkbms_Brn:
             logger.debug(d)
 
     # check where the bms data starts and
-    # if the bms is a 16s or 32s type
+    # if the bms is a 24s or 32s type
     def get_bms_max_cell_count(self):
         fb = self.frame_buffer
         logger.debug(self.frame_buffer)
@@ -167,16 +167,16 @@ class Jkbms_Brn:
         logger.debug(f"fb[70]: {fb[68]}.{fb[69]}.{fb[70]}.{fb[71]}.{fb[72]}")
         logger.debug(f"fb[134]: {fb[132]}.{fb[133]}.{fb[134]}.{fb[135]}.{fb[136]}")
         logger.debug(f"fb[144]: {fb[142]}.{fb[143]}.{fb[144]}.{fb[145]}.{fb[146]}")
+        logger.debug(f"fb[289]: {fb[287]}.{fb[288]}.{fb[289]}.{fb[290]}.{fb[291]}")
 
-        # check where data starts
-        # for 32s it's at fb[70]
-        if fb[70] == 255:
+        # if BMS has a max of 32s the data at fb[287] is not empty
+        if fb[287] > 0:
             self.bms_max_cell_count = 32
             self.translate_cell_info = TRANSLATE_CELL_INFO_32S
-        # for 16s it's at fb[54]
+        # if BMS has a max of 24s the data ends at fb[219]
         else:
-            self.bms_max_cell_count = 16
-            self.translate_cell_info = TRANSLATE_CELL_INFO_16S
+            self.bms_max_cell_count = 24
+            self.translate_cell_info = TRANSLATE_CELL_INFO_24S
 
         logger.debug(f"bms_max_cell_count recognized: {self.bms_max_cell_count}")
 
