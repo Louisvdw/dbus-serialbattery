@@ -20,7 +20,7 @@ If you find this driver helpful please consider supporting this project. You can
 * Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
 * Introduced the new documentation page of the driver with the ability to search and reworked a great part of it for easier understanding
 
-[<img src="https://github.md0.eu/uploads/donate-button.svg" height="38" />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
+[<img src="https://github.md0.eu/uploads/donate-button.svg" style={{width: '178px', height: '38px'}} />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
 
 ### Support [Louisvdw](https://github.com/Louisvdw)
 * Initiator of this project

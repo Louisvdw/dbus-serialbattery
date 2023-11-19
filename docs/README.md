@@ -38,3 +38,9 @@ yarn upgrade @docusaurus/core@latest @docusaurus/preset-classic@latest
 ```
 
 This command updates Docusaurus to the latest version.
+
+## Install yarn if not installed
+
+```bash
+npm install --global yarn
+```
