@@ -13,21 +13,19 @@ The driver will communicate with a Battery Management System (BMS) that support 
 ### Supporting this project
 If you find this driver helpful please consider supporting this project. You can buy me a Ko-Fi or get in contact, if you would like to donate hardware for development.
 
-### Support [mr-manuel](https://github.com/mr-manuel)
-* Main developer since 2023
-* Answers to nearly all of the issues and discussions
-* Added a lot of features, optimizations and improvements with `v1.0.x`
-* Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
-* Introduced the new documentation page of the driver with the ability to search and reworked a great part of it for easier understanding
-
-[<img src="https://github.md0.eu/uploads/donate-button.svg" style={{width: '178px', height: '38px'}} />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
-
 ### Support [Louisvdw](https://github.com/Louisvdw)
-* Initiator of this project
-* Main developer until end of 2022
+* Main developer
 * Added most of the BMS drivers
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
+
+### Support [mr-manuel](https://github.com/mr-manuel)
+* Added a lot of features, optimizations and improvements with `v1.0.x`
+* Assistance with the issues and discussions of forum
+* Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
+* Introduced the new documentation page of the driver and reworked a great part of it for easier understanding
+
+[<img src="https://github.md0.eu/uploads/donate-button.svg" style={{width: '178px', height: '38px'}} />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
 
 ## Requirements
 

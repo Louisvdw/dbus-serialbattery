@@ -10,6 +10,16 @@ sidebar_position: 3
 See [this page](../general/install#how-to-change-the-default-limits).
 
 
+## What is the `config.ini` and `config.default.ini`?
+
+The `config.ini` is a file where you can specify your own configuration changes. Like when you want to change default values, e.g. increase the charge and discharge limits. Lookup the `config.default.ini` to see which settings are available. This file is preserved after a version update.
+
+The `config.default.ini` is a file where all possible configuration settings are stored with their default values. Every setting is also well documented in order to understand what the setting does. This file is overwritten after a version update.
+
+* Click [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) to see the `config.default.ini` of the `master` branch, which is the latest stable version.
+* Click [here](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/config.default.ini) to see the `config.default.ini` of the `dev` branch, which is the most up to date version containing new fixes and features.
+
+
 ## How to edit `utils.py` or `config.ini`
 See [this page](../general/install#how-to-edit-utilspy-or-configini).
 
