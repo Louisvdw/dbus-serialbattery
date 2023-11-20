@@ -23,11 +23,11 @@ If you find this driver helpful please consider supporting this project. You can
 
 ### Support [mr-manuel](https://github.com/mr-manuel)
 * Added a lot of features, optimizations and improvements with `v1.0.x`
+* Assistance with the issues and discussions of forum
 * Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
 * Introduced the new documentation page of the driver and reworked a great part of it for easier understanding
 
 [<img src="https://github.md0.eu/uploads/donate-button.svg" height="38">](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
-
 
 ### Developer Remarks
 To develop this project, install the requirements. This project makes use of velib_python which is pre-installed on

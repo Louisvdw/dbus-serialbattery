@@ -11,6 +11,12 @@ body:
 
         In the case you have difficulties to write in english, try the [deepl.com](https://www.deepl.com) translator.
 
+        ## 🚨 IMPORTANT 🚨
+
+        * Please carefully read all the instructions below including the descriptions! Very often we have to request the data again, because it was not provided in the first place.
+
+        * Please try the `nightly` build from the `dev` first, if you are not already using it. It's very likely that the bug is already fixed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+
   - type: textarea
     id: description
     attributes:
