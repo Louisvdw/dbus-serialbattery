@@ -17,7 +17,6 @@ If you find this driver helpful please consider supporting this project. You can
 
 ### Support [Louisvdw](https://github.com/Louisvdw)
 * Main developer
-* Main developer until end of 2022
 * Added most of the BMS drivers
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z73LCW1) or using [Paypal.me](https://paypal.me/innernet)
