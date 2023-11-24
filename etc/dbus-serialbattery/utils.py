@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231117dev"
+DRIVER_VERSION = "1.0.20231117dev_chfl231124"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -217,6 +217,8 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 #          * Sum of Cell voltages >= MAX_CELL_VOLTAGE * Cell Count - VOLTAGE_DROP
 # SOC_CALCULATION = False: Use SOC reported from BMS
 SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
+SOC_CALC_CURRENT_FACTOR = float(config["DEFAULT"]["SOC_CALC_CURRENT_FACTOR"])
+SOC_CALC_CURRENT_OFFSET = float(config["DEFAULT"]["SOC_CALC_CURRENT_OFFSET"])
 SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
 SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
 
