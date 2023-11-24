@@ -208,6 +208,18 @@ TIME_TO_SOC_RECALCULATE_EVERY = (
 )
 TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
+# --------- SOC calculation ---------
+# Description: Calculate the SOC in the driver. Do not use the SOC reported by the BMS
+# SOC_CALCULATION = True: Calc SOC in the driver, do not use SOC reported from BMS
+#      The SOC is calculated by integration of the current reported by the BMS.
+#      The SOC is set to 100% if following conditions apply for at least SOC_RESET_TIME seconds:
+#          * current is lower than SOC_RESET_CURRENT Amps
+#          * Sum of Cell voltages >= MAX_CELL_VOLTAGE * Cell Count - VOLTAGE_DROP
+# SOC_CALCULATION = False: Use SOC reported from BMS
+SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
+SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
+SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
+
 # --------- Additional settings ---------
 BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 

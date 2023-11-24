@@ -398,9 +398,16 @@ class DbusHelper:
     def publish_dbus(self):
         # Update SOC, DC and System items
         self._dbusservice["/System/NrOfCellsPerBattery"] = self.battery.cell_count
-        self._dbusservice["/Soc"] = (
-            round(self.battery.soc, 2) if self.battery.soc is not None else None
-        )
+        if utils.SOC_CALCULATION:
+            self._dbusservice["/Soc"] = (
+                round(self.battery.soc_calc, 2)
+                if self.battery.soc_calc is not None
+                else None
+            )
+        else:
+            self._dbusservice["/Soc"] = (
+                round(self.battery.soc, 2) if self.battery.soc is not None else None
+            )
         self._dbusservice["/Dc/0/Voltage"] = (
             round(self.battery.voltage, 2) if self.battery.voltage is not None else None
         )
