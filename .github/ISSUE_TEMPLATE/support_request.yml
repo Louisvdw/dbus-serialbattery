@@ -11,11 +11,19 @@ body:
 
         In the case you have difficulties to write in english, try the [deepl.com](https://www.deepl.com) translator.
 
+        ## 🚨 IMPORTANT 🚨
+
+        * Please carefully read all the instructions below including the descriptions! Very often we have to request the data again, because it was not provided in the first place.
+
+        * Please try the `nightly` build from the `dev` first, if you are not already using it. It's very likely that the bug is already fixed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+
   - type: textarea
     id: description
     attributes:
       label: Describe the problem
       description: A clear and concise description of what the problem is. Paste also screenshots and pictures, if needed. The more informations you give, the faster we find a solution.
+      placeholder: |
+        NOTE: Paste the logfields in the appropriate field below.
     validations:
       required: true
 
@@ -23,7 +31,11 @@ body:
     id: driver_version
     attributes:
       label: Driver version
-      description: Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`
+      description: |
+        Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`.
+
+        ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
+      placeholder: e.g. v1.0.20230927beta
     validations:
       required: true
 
@@ -51,7 +63,10 @@ body:
     id: venus_os_version
     attributes:
       label: Venus OS version
-      description: Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+      description: |
+        Visible in the remote console/GUI under `Settings` -> `Firmware` -> `Firmware version`
+
+        ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
       placeholder: e.g. v2.94
     validations:
       required: true
@@ -97,6 +112,7 @@ body:
         - Please select
         - Serial USB adapter to TTL
         - Serial USB adapter to RS485
+        - Raspberry Pi RS485 HAT
         - Bluetooth
     validations:
       required: true
@@ -105,7 +121,8 @@ body:
     id: config
     attributes:
       label: Config file
-      description: Paste your config file here. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#settings-locationpath) where you can find it. to get This will be automatically formatted into code, so no need for backticks.
+      description: |
+        Paste your config file here. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#settings-locationpath) where you can find it. The content will be automatically formatted into code, so no need for backticks.
       render: ini
     validations:
       required: true
@@ -114,7 +131,9 @@ body:
     id: logs
     attributes:
       label: Relevant log output
-      description: Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. This will be automatically formatted into code, so no need for backticks.
+      description: |
+        Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. The content will be automatically formatted into code, so no need for backticks.
+        ⚠️ **IMPORTANT:** Do not forget to pipe the output through `tai64nlocal`, if you don't copy the commands from the documentation.
       render: shell
     validations:
       required: true
@@ -123,3 +142,4 @@ body:
     id: other
     attributes:
       label: Any other information that may be helpful
+      description: Leave empty, if you already said all
