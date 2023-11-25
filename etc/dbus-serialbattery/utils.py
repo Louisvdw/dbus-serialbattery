@@ -211,20 +211,26 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 # --------- SOC calculation ---------
 # Description: Calculate the SOC in the driver. Do not use the SOC reported by the BMS
 # SOC_CALCULATION = True: Calc SOC in the driver, do not use SOC reported from BMS
-#      The SOC is calculated by integration of the current reported by the BMS.
-#      The SOC is set to 100% if following conditions apply for at least SOC_RESET_TIME seconds:
+#      - The SOC is calculated by integration of the current reported by the BMS.
+#      - If SOC_CALC_CURRENT_CORRECTION = True then a correction applies to the current defined by
+#        the map (SOC_CALC_CURRENT_MEASURED,SOC_CALC_CURRENT_REAL).
+#      - If SOC_CALC_CURRENT_CORRECTION = False then the current reported by the bms is integrated as it is.
+#      - The SOC is set to 100% if the following conditions apply for at least SOC_RESET_TIME seconds:
 #          * current is lower than SOC_RESET_CURRENT Amps
 #          * Sum of Cell voltages >= MAX_CELL_VOLTAGE * Cell Count - VOLTAGE_DROP
-# SOC_CALCULATION = False: Use SOC reported from BMS
+#      - When the driver starts, the SOC starts at SOC_CALC_INIT_VALUE
+# SOC_CALCULATION = False: Use SOC reported from BMS (none of the other parameters apply)
 SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
+SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
+SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
+SOC_CALC_CURRENT_CORRECTION = "True" == config["DEFAULT"]["SOC_CALC_CURRENT_CORRECTION"]
 SOC_CALC_CURRENT_MEASURED = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_MEASURED", lambda v: float(v)
 )
 SOC_CALC_CURRENT_REAL = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_REAL", lambda v: float(v)
 )
-SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
-SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
+SOC_CALC_INIT_VALUE = float(config["DEFAULT"]["SOC_CALC_INIT_VALUE"])
 
 # --------- Additional settings ---------
 BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))

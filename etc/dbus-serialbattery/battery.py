@@ -255,6 +255,7 @@ class Battery(ABC):
     def soc_calculation(self) -> None:
         current_time = time()
         voltageSum = 0
+        current_corr = 0
 
         for i in range(self.cell_count):
             voltage = self.get_cell_voltage(i)
@@ -262,13 +263,17 @@ class Battery(ABC):
                 voltageSum += voltage
 
         if self.soc_calc_capacity_remain:
-            self.soc_calc_capacity_remain = (
-                self.soc_calc_capacity_remain
-                + utils.calcLinearRelationship(
+            if utils.SOC_CALC_CURRENT_CORRECTION:
+                current_corr=utils.calcLinearRelationship(
                     self.current,
                     utils.SOC_CALC_CURRENT_MEASURED,
                     utils.SOC_CALC_CURRENT_REAL,
                 )
+            else
+                current_corr = self.current
+            self.soc_calc_capacity_remain = (
+                self.soc_calc_capacity_remain
+                + current_corr
                 * (current_time - self.soc_calc_capacity_remain_lasttime)
                 / 3600
             )
@@ -286,7 +291,7 @@ class Battery(ABC):
             else:
                 self.soc_calc_reset_starttime = int(current_time)
         else:
-            self.soc_calc_capacity_remain = self.capacity
+            self.soc_calc_capacity_remain = utils.SOC_CALC_INIT_VALUE
             self.soc_calc_capacity_remain_lasttime = current_time
 
         # Calculate the SOC based on remaining capacity
@@ -395,10 +400,10 @@ class Battery(ABC):
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
-                    if self.soc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
+                    if self.soc_calc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
                         # write to log, that reset to float was not possible
                         logger.error(
-                            f"Could not change to float voltage. Battery SoC ({self.soc}%) is lower"
+                            f"Could not change to float voltage. Battery SoC ({self.soc_calc}%) is lower"
                             + f" than SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT ({utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%)."
                             + " Please reset SoC manually or lower the SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT in the"
                             + ' "config.ini".'
@@ -508,7 +513,7 @@ class Battery(ABC):
             )
             self.charge_mode_debug += f" • penaltySum: {round(penaltySum, 3)}V"
             self.charge_mode_debug += f"\ntDiff: {tDiff}/{utils.MAX_VOLTAGE_TIME_SEC}"
-            self.charge_mode_debug += f" • SoC: {self.soc}%"
+            self.charge_mode_debug += f" • SoC: {self.soc}% SoC_Calc {self.soc_calc}%"
             self.charge_mode_debug += (
                 f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
             )
