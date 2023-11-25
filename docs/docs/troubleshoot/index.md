@@ -26,18 +26,29 @@ toc_max_heading_level: 4
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
+> 💡 If you are opening an issue or posting your logs somewhere please make sure you execute the complete commands to get the logs, including `tai64nlocal`. Without readable timestamps we cannot help you.
+
 Check the log files on your GX device/Raspberry Pi. Connect to your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
 
 ### Serial BMS connection
+
+> There are two log files that are relevant for the serial connection. Please check both.
+
+1. `/data/log/serial-starter/current`
+2. `/data/log/dbus-serialbattery.ttyUSB*/current` or `/data/log/dbus-serialbattery.ttyAMA0/current`
 
 #### `/data/log/serial-starter/current`
 
 Serial starter will show, if the driver was started against a USB port.
 
 **Execute**
+
+💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+You can exit by pressing `CTRL + C`.
+
 ```bash
-tail -n 100 -f /data/log/serial-starter/current | grep dbus-serialbattery | tai64nlocal
+tail -F -n 100 /data/log/serial-starter/current | grep dbus-serialbattery | tai64nlocal
 ```
 
 **Output**
@@ -54,8 +65,12 @@ INFO: Start service dbus-serialbattery.ttyUSB0 once
 Where `*` is the number of your USB port (e.g. `ttyUSB0`, `ttyUSB1`, `ttyUSB2`, ...) or `ttyAMA0`, if you are using a Raspberry Pi hat.
 
 **Execute**
+
+💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+You can exit by pressing `CTRL + C`.
+
 ```bash
-tail -n 100 -f /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
+tail -F -n 100 /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
 ```
 
 **Output**
@@ -84,11 +99,15 @@ ERROR:SerialBattery:ERROR >>> No battery connection at /dev/ttyUSB0
 ### Bluetooth BMS connection
 
 #### `/data/log/dbus-blebattery.*/current`
-When you are using a Bluetooth connection `*` is the MAC address of your BMS.
+Where `*` is a unique number starting from 0.
 
 **Execute**
+
+💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+You can exit by pressing `CTRL + C`.
+
 ```bash
-tail -n 100 -f /data/log/dbus-blebattery.*/current | tai64nlocal
+tail -F -n 100 /data/log/dbus-blebattery.*/current | tai64nlocal
 ```
 
 **Output**
@@ -127,35 +146,168 @@ The log file will tell you what the driver did and where it failed.
 #### No log file
 If there is no log folder under `/data/log/dbus-serialbattery.*` then check:
 
-   * Did the install have any error? Reinstall the driver, also trying an alternative method.
+* Did the install have any error? Reinstall the driver, also trying an alternative method and version.
 
-   * Is the connection picked up by serial-starter? Use the command
+* Is the connection picked up by serial-starter?
 
-     ```bash
-     tail -f /data/log/serial-starter/current | tai64nlocal
-     ```
+  💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+  You can exit by pressing `CTRL + C`.
 
-     to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `tty` port it uses.
+  Use the command
 
-   * Check, if your BMS type is found (change to the `ttyUSB*` your device use)
+  ```bash
+  tail -F /data/log/serial-starter/current | tai64nlocal
+  ```
 
-     ```bash
-     tail -f /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
-     ```
+  to show the last part of the log file as it updates. Plug your USB device in and out to see, if it's picked up and what `ttyUSB` port it uses.
 
-     or
+  You can also check, which USB port it used by plugging out your USB device, wait some seconds, execute the command below, plug in your USB device, execute the command below again and compare which `ttyUSB` device appeared now.
 
-     ```bash
-     tail -f /data/log/dbus-serialbattery.*/current | tai64nlocal
-     ```
+  **Execute**
+  ```bash
+  ls -l /dev/ttyUSB*
+  ```
 
-     to check all devices the serialstarter started.
+  **Example output (USB device unplugged)**
+  ```bash
+  crw-rw----    1 root     dialout   188,   0 Jun 11 17:08 /dev/ttyUSB0
+  ```
+
+  **Example output (USB device plugged)**
+  ```bash
+  crw-rw----    1 root     dialout   188,   0 Jun 11 17:08 /dev/ttyUSB0
+  crw-rw----    1 root     dialout   188,   1 Jun 11 17:08 /dev/ttyUSB1
+  ```
+
+* Did the serial starter correctly assign the USB port to the correct service?
+
+  If the content under `==> /data/var/lib/serial-starter/* <==` shows `sbattery` then this USB port is assigned to the `dbus-serialbattery` driver.
+
+  **Execute**
+  ```bash
+  head /data/var/lib/serial-starter/*
+  ```
+
+  **Output**
+  ```bash
+  ==> /data/var/lib/serial-starter/ttyACM0 <==
+  gps
+
+  ==> /data/var/lib/serial-starter/ttyUSB0 <==
+  vedirect
+
+  ==> /data/var/lib/serial-starter/ttyUSB1 <==
+  sbattery
+
+  ==> /data/var/lib/serial-starter/ttyUSB2 <==
+  vedirect
+  ```
+
+  If the assignment is wrong you can reset all executing this command
+
+  ```bash
+  rm /data/var/lib/serial-starter/*
+  ```
+
+  and then reboot. You can also overwrite an assignment by executing the command below.
+  Change the `#` with the number of your USB port before executing the command. Reboot after the change.
+
+  ```bash
+  echo "sbattery" > /data/var/lib/serial-starter/ttyUSB#
+  ```
+
+
+* Check, if your BMS type is found (change to the `ttyUSB*` your device use)
+
+  - For serial connected BMS
+
+    💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+    You can exit by pressing `CTRL + C`.
+
+    ```bash
+    tail -F /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
+    ```
+
+    or
+
+    ```bash
+    tail -F /data/log/dbus-serialbattery.*/current | tai64nlocal
+    ```
+
+    to check all devices the serialstarter started.
+
+  - For Bluetooth connected BMS
+
+    💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+    You can exit by pressing `CTRL + C`.
+
+    ```bash
+    tail -F /data/log/dbus-blebattery.0/current | tai64nlocal
+    ```
+
+    or
+
+    ```bash
+    tail -F /data/log/dbus-blebattery.*/current | tai64nlocal
+    ```
+
+    to check all Bluetooth devices.
+
+
 
 #### `No reply` in log file
 
 Check your cable connections, if the log file shows `ERROR: No reply - returning` from the battery.
 
 The RX/TX lights should both flash as data is transfered. If only one flashes then your RX/TX might be swapped.
+
+#### Driver runtime (stability check)
+
+Check for how long the driver is running without restart.
+
+**Execute**
+
+For serial connected BMS
+
+```bash
+svstat /service/dbus-serialbattery.tty*
+```
+
+For Bluetooth connected BMS
+
+```bash
+svstat /service/dbus-blebattery.*
+```
+
+**Output**
+```bash
+root@raspberrypi2:~# svstat /service/dbus-serialbattery.*
+/service/dbus-serialbattery.ttyUSB0: up (pid 8136) 1128725 seconds
+```
+✅ If the seconds (`runtime`) have a high number (e.g. several days; 86400 seconds = 1 day) then this indicates, that your driver is stable.
+
+❌ If the seconds (`runtime`) are low (e.g. 300 seconds) then this means your driver has (re)started 300 seconds ago.
+Check again in a few minutes, if the `pid` changed and if the `runtime` increased or reset.
+If that is the case, your driver is not stable and has a problem.
+
+```bash
+root@raspberrypi2:~# svstat /service/dbus-serialbattery.*
+/service/dbus-serialbattery.ttyUSB0: up (pid 8136) 300 seconds
+```
+
+ Additionally you can check the system uptime.
+
+ **Execute**
+ ```bash
+ uptime
+ ```
+
+**Output**
+```bash
+10:08:14 up 8 days,  3:24,  load average: 1.52, 0.87, 0.79
+```
+
+
 
 ## FAQ (Frequently Asked Questions)
 
