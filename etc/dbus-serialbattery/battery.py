@@ -264,9 +264,10 @@ class Battery(ABC):
         if self.soc_calc_capacity_remain:
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
-                + (
-                    self.current * utils.SOC_CALC_CURRENT_FACTOR
-                    + utils.SOC_CALC_CURRENT_OFFSET
+                + utils.calcLinearRelationship(
+                    self.current,
+                    utils.SOC_CALC_CURRENT_MEASURED,
+                    utils.SOC_CALC_CURRENT_REAL,
                 )
                 * (current_time - self.soc_calc_capacity_remain_lasttime)
                 / 3600
