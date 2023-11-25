@@ -26,7 +26,7 @@ toc_max_heading_level: 4
 | v2.90 - v2.94                                    | untested | x        | x                    | x        |
 | v3.00~1 - v3.00~13                               | untested | untested | x                    | x        |
 | v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x        |
-| v3.00 - v3.10~9                                  | untested | untested | x<sup>1)</sup>       | x        |
+| v3.00 - v3.20~30                                 | untested | untested | x<sup>1)</sup>       | x        |
 
 1) Partially supported. Empty values/pages are not hidden in the GUI
 
