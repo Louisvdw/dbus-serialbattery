@@ -10,6 +10,16 @@ sidebar_position: 3
 See [this page](../general/install#how-to-change-the-default-limits).
 
 
+## What is the `config.ini` and `config.default.ini`?
+
+The `config.ini` is a file where you can specify your own configuration changes. Like when you want to change default values, e.g. increase the charge and discharge limits. Lookup the `config.default.ini` to see which settings are available. This file is preserved after a version update.
+
+The `config.default.ini` is a file where all possible configuration settings are stored with their default values. Every setting is also well documented in order to understand what the setting does. This file is overwritten after a version update.
+
+* Click [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) to see the `config.default.ini` of the `master` branch, which is the latest stable version.
+* Click [here](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/config.default.ini) to see the `config.default.ini` of the `dev` branch, which is the most up to date version containing new fixes and features.
+
+
 ## How to edit `utils.py` or `config.ini`
 See [this page](../general/install#how-to-edit-utilspy-or-configini).
 
@@ -154,7 +164,7 @@ Check in the `utils.py`, if you have set one of this to true. If yes, then you a
 * `DCCM_T_ENABLE = True` then modify `MAX_DISCHARGE_CURRENT_T = [0, 28, 60, 60, 28, 0]`
 
 ### Driver version `>= v1.0.0`
-The limits are based on percentages of `MAX_CHARGE_CURRENT_CV` and `MAX_DISCHARGE_CURRENT_CV` values, so there is no need for additional modifications. Additionaly you see in the remote console/GUI under `SerialBattery` &rarr; `Parameters` why it's limited.
+The limits are based on percentages of `MAX_BATTERY_CHARGE_CURRENT` and `MAX_BATTERY_DISCHARGE_CURRENT` values, so there is no need for additional modifications. Additionaly you see in the remote console/GUI under `SerialBattery` &rarr; `Parameters` why it's limited.
 
 ![VenusOS](../../screenshots/venus-os_013.png)
 
@@ -195,8 +205,8 @@ Important!!! - When the ESS asisstant is activated, all the 3 "DC input low volt
 2. Reducing the ESS "Cut-off voltage" like I mentioned above
 
 
-## Why do I get a High Voltage alarm?
-If you receive High Voltage alarms that would indicate your battery is:
+## Why do I get a high voltage alarm?
+If you receive high voltage alarms that would indicate your battery is:
 
 1. Not set up correctly and you are using the wrong charge voltages
 2. It has cell imbalance issues
@@ -204,13 +214,19 @@ If you receive High Voltage alarms that would indicate your battery is:
 So asuming you have set the max battery voltage for what the battery require, you then need to help the battery to get the cells balanced. You do that by  lowering the max voltage to a level where you don’t get high voltage alarms anymore and then slowly over a few weeks you can increase the max voltage to where it should be. This will give the balancers time to work.
 
 In your GX settings go to the DVCC menu and activate the "Limit managed battery charge voltage" feature and lower the "Maximum Charge Voltage".
-Drop your voltage to `0.2V` lees that normal and then increase it every day by `0.05V` if you did not get a High Voltage alarm during the previous day. If you did get an alarm leave it unchanged for another day.
+Drop your voltage to `0.2V` lees that normal and then increase it every day by `0.05V` if you did not get a high voltage alarm during the previous day. If you did get an alarm leave it unchanged for another day.
 
 Do this until you get to the original max charge voltage for your battery.
 
 This will be much faster to do if you use the Keep Batteries changed in ESS option while you are doing this.
 
 Balancing works when ever 1 cell go above the balance threshold, so you are trying to find the battery voltage where that one cell is above the threshold but below the high voltage alarm (e.g. `3.45V - 3.65V`) and then giving the balancers time to work down the high cell with the small balance currents (`50mA` to `200mA`).
+
+### Daly BMS - High voltage alarm
+
+For a high voltage alarm on Daly BMS check also [Daly BMS - High voltage alarm](https://github.com/Louisvdw/dbus-serialbattery/issues/653).
+
+The Daly BMS alarms did not work in driver versions before `v1.0.20230531` and therefore in 99% of the cases the BMS is not setup correctly.
 
 
 ## Why is the battery current inverted?
@@ -226,6 +242,15 @@ Most unstable communications arise due to:
 * Damaged/Defective serial adapters: Try another serial adapter.
 * Cheap USB Hubs: Make sure you are using a qualitative USB Hub with enough power.
 * Raspberry Pi: Do not use a charger for powering the Raspberry Pi. Instead buy a power supply with enough power.
+
+## Why is my `utils.py` always reset to default values?
+
+Probably you forgot to remove the USB/SD card with the `venus-data.tar.gz` after successful installation. Please delete the file or remove the USB/SD card. This is fixed with `>= v1.0.20230512`.
+
+
+## Why is the custom name lost after a reboot?
+
+This feature is only available in and after `v1.0.20230724beta`.
 
 ## Why is my `utils.py` always reset to default values?
 
@@ -290,3 +315,7 @@ sed -i 's/\r//' /data/etc/dbus-serialbattery/service/log/run
 ```
 
 Now reboot the device. If this doesn't help, then download/unpack and reinstall the driver again.
+
+## `tar: conf/serial-starter.d: Cannot open: File exists`
+
+See [this page](../general/install#downgrade-from--v100-to--v0143).

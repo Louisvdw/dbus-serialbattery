@@ -8,7 +8,7 @@ sidebar_position: 1
 # dbus-serialbattery
 This is a driver for Venus OS devices (any GX device sold by Victron or a Raspberry Pi running the Venus OS image).
 
-The driver will communicate with a Battery Management System (BMS) that support serial (RS232, RS485 or TTL UART) and Bluetooth communication (see [BMS feature comparison](../general/features#bms-feature-comparison) for details). The data is then published to the Venus OS system (dbus). The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter/charger.
+The driver will communicate with a Battery Management System (BMS) that support serial (RS232, RS485 or TTL UART) and Bluetooth communication (see [BMS feature comparison](./general/features#bms-feature-comparison) for details). The data is then published to the Venus OS system (dbus). The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter/charger.
 
 ### Supporting this project
 If you find this driver helpful please consider supporting this project. You can buy me a Ko-Fi or get in contact, if you would like to donate hardware for development.
@@ -21,10 +21,11 @@ If you find this driver helpful please consider supporting this project. You can
 
 ### Support [mr-manuel](https://github.com/mr-manuel)
 * Added a lot of features, optimizations and improvements with `v1.0.x`
+* Assistance with the issues and discussions of forum
 * Added a lot of documentation to the config file and notes that are displayed after installation for better understanding
 * Introduced the new documentation page of the driver and reworked a great part of it for easier understanding
 
-[<img src="https://github.md0.eu/uploads/donate-button.svg" width="178" />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
+[<img src="https://github.md0.eu/uploads/donate-button.svg" style={{width: '178px', height: '38px'}} />](https://www.paypal.com/donate/?hosted_button_id=3NEVZBDM5KABW)
 
 ## Requirements
 
