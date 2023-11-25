@@ -2,11 +2,15 @@
 import asyncio
 import atexit
 import functools
+import os
 import threading
+import sys
 from asyncio import CancelledError
+from time import sleep
 from typing import Union, Optional
 from utils import logger
 from bleak import BleakClient, BleakScanner, BLEDevice
+from bleak.exc import BleakDBusError
 from bms.lltjbd import LltJbdProtection, LltJbd
 
 BLE_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
@@ -55,25 +59,72 @@ class LltJbd_Ble(LltJbd):
             self.device = await BleakScanner.find_device_by_address(
                 self.address, cb=dict(use_bdaddr=True)
             )
-        except Exception as e:
-            logger.error(">>> ERROR: Bluetooth stack failed.", e)
+
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"BleakScanner(): Exception occurred: {repr(exception_object)} of type {exception_type} "
+                f"in {file} line #{line}"
+            )
             self.device = None
             await asyncio.sleep(0.5)
+            # allow the bluetooth connection to recover
+            sleep(5)
 
         if not self.device:
             self.run = False
             return
 
-        async with BleakClient(
-            self.device, disconnected_callback=self.on_disconnect
-        ) as client:
-            self.bt_client = client
-            self.bt_loop = asyncio.get_event_loop()
-            self.response_queue = asyncio.Queue()
-            self.ready_event.set()
-            while self.run and client.is_connected and self.main_thread.is_alive():
-                await asyncio.sleep(0.1)
-        self.bt_loop = None
+        try:
+            async with BleakClient(
+                self.device, disconnected_callback=self.on_disconnect
+            ) as client:
+                self.bt_client = client
+                self.bt_loop = asyncio.get_event_loop()
+                self.response_queue = asyncio.Queue()
+                self.ready_event.set()
+                while self.run and client.is_connected and self.main_thread.is_alive():
+                    await asyncio.sleep(0.1)
+            self.bt_loop = None
+
+        # Exception occurred: TimeoutError() of type <class 'asyncio.exceptions.TimeoutError'>
+        except asyncio.exceptions.TimeoutError:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"BleakClient(): asyncio.exceptions.TimeoutError: {repr(exception_object)} of type {exception_type} "
+                f"in {file} line #{line}"
+            )
+            # needed?
+            self.run = False
+            return
+
+        except TimeoutError:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"BleakClient(): TimeoutError: {repr(exception_object)} of type {exception_type} "
+                f"in {file} line #{line}"
+            )
+            # needed?
+            self.run = False
+            return
+
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"BleakClient(): Exception occurred: {repr(exception_object)} of type {exception_type} "
+                f"in {file} line #{line}"
+            )
+            # needed?
+            self.run = False
+            return
 
     def background_loop(self):
         while self.run and self.main_thread.is_alive():
@@ -110,8 +161,13 @@ class LltJbd_Ble(LltJbd):
                 result = super().test_connection()
             if not result:
                 logger.error("No BMS found at " + self.address)
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         return result
@@ -154,8 +210,23 @@ class LltJbd_Ble(LltJbd):
         except asyncio.TimeoutError:
             logger.error(">>> ERROR: No reply - returning")
             return False
-        except Exception as e:
-            logger.error(">>> ERROR: No reply - returning", e)
+        except BleakDBusError:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"BleakDBusError: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
+            self.reset_bluetooth()
+            return False
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
+            self.reset_bluetooth()
             return False
 
     def read_serial_data_llt(self, command):
@@ -165,19 +236,54 @@ class LltJbd_Ble(LltJbd):
             data = asyncio.run(self.async_read_serial_data_llt(command))
             return self.validate_packet(data)
         except CancelledError as e:
-            logger.error(">>> ERROR: No reply - canceled - returning", e)
+            logger.error(">>> ERROR: No reply - canceled - returning")
+            logger.error(e)
             return False
-        except Exception as e:
-            logger.error(">>> ERROR: No reply - returning", e)
+        # except Exception as e:
+        #     logger.error(">>> ERROR: No reply - returning")
+        #     logger.error(e)
+        #     return False
+        except Exception:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             return False
+
+    def reset_bluetooth(self):
+        logger.error("Reset of system Bluetooth daemon triggered")
+        self.bt_loop = False
+
+        # process kill is needed, since the service/bluetooth driver is probably freezed
+        # os.system('pkill -f "bluetoothd"')
+        # stop will not work, if service/bluetooth driver is stuck
+        os.system("/etc/init.d/bluetooth stop")
+        sleep(2)
+        os.system("rfkill block bluetooth")
+        os.system("rfkill unblock bluetooth")
+        os.system("/etc/init.d/bluetooth start")
+        logger.error("System Bluetooth daemon should have been restarted")
+        sleep(5)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    import sys
-
     bat = LltJbd_Ble("Foo", -1, sys.argv[1])
     if not bat.test_connection():
         logger.error(">>> ERROR: Unable to connect")
     else:
+        # Allow to change charge / discharge FET
+        bat.control_allow_charge = True
+        bat.control_allow_discharge = True
+
+        bat.trigger_disable_balancer = True
+        bat.trigger_force_disable_charge = True
+        bat.trigger_force_disable_discharge = True
+        bat.refresh_data()
+        bat.trigger_disable_balancer = False
+        bat.trigger_force_disable_charge = False
+        bat.trigger_force_disable_discharge = False
         bat.refresh_data()
         bat.get_settings()

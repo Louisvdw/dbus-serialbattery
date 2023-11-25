@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# disable Sinowealth by default as it causes other issues but can be enabled manually
+# Sinowealth is disabled by default as it causes issues with other devices
+# can be enabled by specifying it in the BMS_TYPE setting in the "config.ini"
 # https://github.com/Louisvdw/dbus-serialbattery/commit/7aab4c850a5c8d9c205efefc155fe62bb527da8e
 
 from battery import Battery, Cell
@@ -44,8 +45,8 @@ class Sinowealth(Battery):
         result = False
         try:
             result = self.read_status_data()
-            result = result and self.read_remaining_capacity()
-            result = result and self.read_pack_config_data()
+            result = result and self.get_settings()
+            result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -64,9 +65,10 @@ class Sinowealth(Battery):
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + " cells"
-        logger.info(self.hardware_version)
+        logger.debug(self.hardware_version)
 
-        self.read_capacity()
+        if not self.read_capacity():
+            return False
 
         for c in range(self.cell_count):
             self.cells.append(Cell(False))
@@ -95,7 +97,7 @@ class Sinowealth(Battery):
         # [1]     -       FAST_DSG MID_DSG  SLOW_DSG DSGING   CHGING  DSGMOS  CHGMOS
         self.discharge_fet = bool(status_data[1] >> 1 & int(1))  # DSGMOS
         self.charge_fet = bool(status_data[1] & int(1))  # CHGMOS
-        logger.info(
+        logger.debug(
             ">>> INFO: Discharge fet: %s, charge fet: %s",
             self.discharge_fet,
             self.charge_fet,
@@ -145,8 +147,9 @@ class Sinowealth(Battery):
         # check if connection success
         if soc_data is False:
             return False
-        logger.info(">>> INFO: current SOC: %u", soc_data[1])
-        self.soc = soc_data[1]
+        logger.debug(">>> INFO: current SOC: %u", soc_data[1])
+        soc = soc_data[1]
+        self.soc = soc
         return True
 
     def read_cycle_count(self):
@@ -156,7 +159,7 @@ class Sinowealth(Battery):
         if cycle_count is False:
             return False
         self.cycles = int(unpack_from(">H", cycle_count[:2])[0])
-        logger.info(">>> INFO: current cycle count: %u", self.cycles)
+        logger.debug(">>> INFO: current cycle count: %u", self.cycles)
         return True
 
     def read_pack_voltage(self):
@@ -165,8 +168,8 @@ class Sinowealth(Battery):
             return False
         pack_voltage = unpack_from(">H", pack_voltage_data[:-1])
         pack_voltage = pack_voltage[0] / 1000
-        logger.info(">>> INFO: current pack voltage: %f", pack_voltage)
         self.voltage = pack_voltage
+        logger.debug(">>> INFO: current pack voltage: %f", self.voltage)
         return True
 
     def read_pack_current(self):
@@ -175,7 +178,8 @@ class Sinowealth(Battery):
             return False
         current = unpack_from(">i", current_data[:-1])
         current = current[0] / 1000
-        logger.info(">>> INFO: current pack current: %f", current)
+        logger.debug(">>> INFO: current pack current: %f", current)
+
         self.current = current
         return True
 
@@ -187,7 +191,9 @@ class Sinowealth(Battery):
             return False
         remaining_capacity = unpack_from(">i", remaining_capacity_data[:-1])
         self.capacity_remain = remaining_capacity[0] / 1000
-        logger.info(">>> INFO: remaining battery capacity: %f Ah", self.capacity_remain)
+        logger.debug(
+            ">>> INFO: remaining battery capacity: %f Ah", self.capacity_remain
+        )
         return True
 
     def read_capacity(self):
@@ -195,8 +201,10 @@ class Sinowealth(Battery):
         if capacity_data is False:
             return False
         capacity = unpack_from(">i", capacity_data[:-1])
-        logger.info(">>> INFO: Battery capacity: %f Ah", capacity[0] / 1000)
-        self.capacity = capacity[0] / 1000
+        capacity = capacity[0] / 1000
+        logger.debug(">>> INFO: Battery capacity: %f Ah", capacity)
+
+        self.capacity = capacity
         return True
 
     def read_pack_config_data(self):
@@ -210,12 +218,12 @@ class Sinowealth(Battery):
         if self.cell_count < 1 or self.cell_count > 32:
             logger.error(">>> ERROR: No valid cell count returnd: %u", self.cell_count)
             return False
-        logger.info(">>> INFO: Number of cells: %u", self.cell_count)
+        logger.debug(">>> INFO: Number of cells: %u", self.cell_count)
         temp_sens_mask = int(~(1 << 6))
         self.temp_sensors = (
             1 if (pack_config_data[1] & temp_sens_mask) else 2
         )  # one means two
-        logger.info(">>> INFO: Number of temperatur sensors: %u", self.temp_sensors)
+        logger.debug(">>> INFO: Number of temperatur sensors: %u", self.temp_sensors)
         return True
 
     def read_cell_data(self):
@@ -235,7 +243,7 @@ class Sinowealth(Battery):
         cell_voltage = unpack_from(">H", cell_data[:-1])
         cell_voltage = cell_voltage[0] / 1000
 
-        logger.info(">>> INFO: Cell %u voltage: %f V", cell_index, cell_voltage)
+        logger.debug(">>> INFO: Cell %u voltage: %f V", cell_index, cell_voltage)
         return cell_voltage
 
     def read_temperature_data(self):
@@ -248,7 +256,7 @@ class Sinowealth(Battery):
 
         temp_ext1 = unpack_from(">H", temp_ext1_data[:-1])
         self.to_temp(1, kelvin_to_celsius(temp_ext1[0] / 10))
-        logger.info(">>> INFO: BMS external temperature 1: %f C", self.temp1)
+        logger.debug(">>> INFO: BMS external temperature 1: %f C", self.temp1)
 
         if self.temp_sensors == 2:
             temp_ext2_data = self.read_serial_data_sinowealth(self.command_temp_ext2)
@@ -257,7 +265,7 @@ class Sinowealth(Battery):
 
             temp_ext2 = unpack_from(">H", temp_ext2_data[:-1])
             self.to_temp(2, kelvin_to_celsius(temp_ext2[0] / 10))
-            logger.info(">>> INFO: BMS external temperature 2: %f C", self.temp2)
+            logger.debug(">>> INFO: BMS external temperature 2: %f C", self.temp2)
 
         # Internal temperature 1 seems to give a logical value
         temp_int1_data = self.read_serial_data_sinowealth(self.command_temp_int1)
@@ -265,7 +273,7 @@ class Sinowealth(Battery):
             return False
 
         temp_int1 = unpack_from(">H", temp_int1_data[:-1])
-        logger.info(
+        logger.debug(
             ">>> INFO: BMS internal temperature 1: %f C",
             kelvin_to_celsius(temp_int1[0] / 10),
         )
@@ -276,7 +284,7 @@ class Sinowealth(Battery):
             return False
 
         temp_int2 = unpack_from(">H", temp_int2_data[:-1])
-        logger.info(
+        logger.debug(
             ">>> INFO: BMS internal temperature 2: %f C",
             kelvin_to_celsius(temp_int2[0] / 10),
         )

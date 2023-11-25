@@ -3,8 +3,6 @@
 # remove comment for easier troubleshooting
 #set -x
 
-DRIVERNAME=dbus-serialbattery
-
 
 # check if minimum required Venus OS is installed | start
 versionRequired="v2.90"
@@ -66,15 +64,15 @@ fi
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # install
-rm -rf /opt/victronenergy/service/$DRIVERNAME
-rm -rf /opt/victronenergy/service-templates/$DRIVERNAME
-rm -rf /opt/victronenergy/$DRIVERNAME
-mkdir /opt/victronenergy/$DRIVERNAME
-mkdir /opt/victronenergy/$DRIVERNAME/bms
-cp -f /data/etc/$DRIVERNAME/* /opt/victronenergy/$DRIVERNAME &>/dev/null
-cp -f /data/etc/$DRIVERNAME/bms/* /opt/victronenergy/$DRIVERNAME/bms &>/dev/null
-cp -rf /data/etc/$DRIVERNAME/service /opt/victronenergy/service-templates/$DRIVERNAME
-bash /data/etc/$DRIVERNAME/install-qml.sh
+rm -rf /opt/victronenergy/service/dbus-serialbattery
+rm -rf /opt/victronenergy/service-templates/dbus-serialbattery
+rm -rf /opt/victronenergy/dbus-serialbattery
+mkdir /opt/victronenergy/dbus-serialbattery
+mkdir /opt/victronenergy/dbus-serialbattery/bms
+cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery &>/dev/null
+cp -f /data/etc/dbus-serialbattery/bms/* /opt/victronenergy/dbus-serialbattery/bms &>/dev/null
+cp -rf /data/etc/dbus-serialbattery/service /opt/victronenergy/service-templates/dbus-serialbattery
+bash /data/etc/dbus-serialbattery/install-qml.sh
 
 # check if serial-starter.d was deleted
 serialstarter_path="/data/conf/serial-starter.d"
@@ -105,10 +103,10 @@ if [ ! -f "$filename" ]; then
     echo "#!/bin/bash" > "$filename"
     chmod 755 "$filename"
 fi
-grep -qxF "bash /data/etc/$DRIVERNAME/reinstall-local.sh" $filename || echo "bash /data/etc/$DRIVERNAME/reinstall-local.sh" >> $filename
+grep -qxF "bash /data/etc/dbus-serialbattery/reinstall-local.sh" $filename || echo "bash /data/etc/dbus-serialbattery/reinstall-local.sh" >> $filename
 
 # add empty config.ini, if it does not exist to make it easier for users to add custom settings
-filename="/data/etc/$DRIVERNAME/config.ini"
+filename="/data/etc/dbus-serialbattery/config.ini"
 if [ ! -f "$filename" ]; then
     {
         echo "[DEFAULT]"
@@ -117,12 +115,17 @@ if [ ! -f "$filename" ]; then
         echo "; and insert them below to persist future driver updates."
         echo
         echo "; Example (remove the semicolon \";\" to uncomment and activate the value/setting):"
-        echo "; MAX_BATTERY_CURRENT = 50.0"
+        echo "; MAX_BATTERY_CHARGE_CURRENT = 50.0"
         echo "; MAX_BATTERY_DISCHARGE_CURRENT = 60.0"
         echo
         echo
     } > $filename
 fi
+
+# kill driver, if running. It gets restarted by the service daemon
+pkill -f "supervise dbus-serialbattery.*"
+pkill -f "multilog .* /var/log/dbus-serialbattery.*"
+pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 
 
 
@@ -141,32 +144,93 @@ IFS="," read -r -a bms_array <<< "$bluetooth_bms_clean"
 #declare -p bms_array
 # readarray -td, bms_array <<< "$bluetooth_bms_clean,"; unset 'bms_array[-1]'; declare -p bms_array;
 
-length=${#bms_array[@]}
-# echo $length
+bluetooth_length=${#bms_array[@]}
+# echo $bluetooth_length
 
-# always remove existing blebattery services to cleanup
-rm -rf /service/dbus-blebattery.*
+# stop all dbus-blebattery services, if at least one exists
+if [ -d "/service/dbus-blebattery.0" ]; then
+    svc -u /service/dbus-blebattery.*
 
-# kill all blebattery processes
-pkill -f "blebattery"
+    # always remove existing blebattery services to cleanup
+    rm -rf /service/dbus-blebattery.*
 
-if [ "$length" -gt 0 ]; then
+    # kill all blebattery processes that remain
+    pkill -f "supervise dbus-blebattery.*"
+    pkill -f "multilog .* /var/log/dbus-blebattery.*"
+    pkill -f "python .*/dbus-serialbattery.py .*_Ble"
 
-    echo "Found $length Bluetooth BMS in the config file!"
-    echo ""
+    # kill opened bluetoothctl processes
+    pkill -f "^bluetoothctl "
+fi
+
+
+if [ "$bluetooth_length" -gt 0 ]; then
+
+    echo
+    echo "Found $bluetooth_length Bluetooth BMS in the config file!"
+    echo
+
+    /etc/init.d/bluetooth stop
+    echo
 
     # install required packages
     # TO DO: Check first if packages are already installed
-    echo "Installing required packages..."
+    echo "Installing required packages to use Bluetooth connection..."
+
+    # dbus-fast: skip compiling/building the wheel
+    # else weak system crash and are not able to install it,
+    # see https://github.com/Bluetooth-Devices/dbus-fast/issues/237
+    # and https://github.com/Louisvdw/dbus-serialbattery/issues/785
+    export SKIP_CYTHON=false
+
     opkg update
     opkg install python3-misc python3-pip
+
+    echo
     pip3 install bleak
 
-    # setup cronjob to restart Bluetooth
-    grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+    # # ONLY FOR TESTING if there are version issues
+    # echo
+    # echo "Available bleak versions:"
+    # curl --silent https://api.github.com/repos/hbldh/bleak/releases | grep '"name": "v' | sed "s/    \"name\": \"v//g" | sed "s/\",//g"
+    # echo
+    # read -r -p "Specify the bleak version to install: " bleak_version
+    # pip3 install bleak=="$bleak_version"
+    # echo
+    # echo
+    # echo "Available dbus-fast versions:"
+    # curl --silent https://api.github.com/repos/Bluetooth-Devices/dbus-fast/releases | grep '"name": "v' | sed "s/    \"name\": \"v//g" | sed "s/\",//g"
+    # echo
+    # read -r -p "Specify the dbus-fast version to install: " dbus_fast_version
+    # pip3 install dbus-fast=="$dbus_fast_version"
+    # echo
+
+    echo "done."
+    echo
+
+    /etc/init.d/bluetooth start
+    echo
 
     # function to install ble battery
     install_blebattery_service() {
+        if [ -z "$1" ]; then
+            echo "ERROR: BMS unique number is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        if [ -z "$2" ]; then
+            echo "ERROR: BMS type for battery $1 is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        if [ -z "$3" ]; then
+            echo "ERROR: BMS MAC address for battery $1 with BMS type $2 is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+
+        echo "Installing \"$2\" with MAC address \"$3\" as dbus-blebattery.$1"
+
         mkdir -p "/service/dbus-blebattery.$1/log"
         {
             echo "#!/bin/sh"
@@ -177,34 +241,173 @@ if [ "$length" -gt 0 ]; then
         {
             echo "#!/bin/sh"
             echo "exec 2>&1"
+            echo "echo"
+            echo "echo \"INFO:Bluetooth details\""
+            # close all open connections, else the driver can't connect
             echo "bluetoothctl disconnect $3"
+
+            # enable bluetoothctl scan in background to display signal strength (RSSI), else it's missing
+            echo "bluetoothctl scan on | grep \"$3\" | grep \"RSSI\" &"
+            # with multiple Bluetooth BMS one scan for all should be enough. Check if that can be changed globally, maybe with a cronjob after reboot?
+            # echo "bluetoothctl scan on > /dev/null &"
+
+            # wait 5 seconds to finish the scan
+            echo "sleep 5"
+            # display some Bluetooth device details
+            echo "bluetoothctl info $3 | grep -E \"Device|Alias|Pair|Trusted|Blocked|Connected|RSSI|Power\""
+            echo "echo"
             echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $2 $3"
+            echo "pkill -f \"bluetoothctl scan on\""
         } > "/service/dbus-blebattery.$1/run"
         chmod 755 "/service/dbus-blebattery.$1/run"
     }
 
-    echo "Packages installed."
-    echo ""
-
+    # Example
     # install_blebattery_service 0 Jkbms_Ble C8:47:8C:00:00:00
     # install_blebattery_service 1 Jkbms_Ble C8:47:8C:00:00:11
 
-    for (( i=0; i<length; i++ ));
+    for (( i=0; i<bluetooth_length; i++ ));
     do
-        echo "Installing ${bms_array[$i]} as dbus-blebattery.$i"
-        install_blebattery_service $i "${bms_array[$i]}"
+        # split BMS type and MAC address
+        IFS=' ' read -r -a bms <<< "${bms_array[$i]}"
+        install_blebattery_service $i "${bms[0]}" "${bms[1]}"
     done
+
+    echo
+
+    # setup cronjob to restart Bluetooth
+    # remove if not needed anymore, has to be checked first --> seems that it's not needed anymore
+    # grep -qxF "5 0,12 * * * /etc/init.d/bluetooth restart" /var/spool/cron/root || echo "5 0,12 * * * /etc/init.d/bluetooth restart" >> /var/spool/cron/root
+
+    # remove cronjob
+    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root >/dev/null 2>&1
 
 else
 
     # remove cronjob
-    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root
+    sed -i "/5 0,12 \* \* \* \/etc\/init.d\/bluetooth restart/d" /var/spool/cron/root >/dev/null 2>&1
 
+    echo
     echo "No Bluetooth battery configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
     echo "You can ignore this, if you are using only a serial connection."
+    echo
 
 fi
 ### BLUETOOTH PART | END ###
+
+
+
+### CAN PART | START ###
+
+# get CAN port(s) from config file
+can_port=$(awk -F "=" '/^CAN_PORT/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+#echo $can_port
+
+# clear whitespaces
+can_port_clean="$(echo $can_port | sed 's/\s*,\s*/,/g')"
+#echo $can_port_clean
+
+# split into array
+IFS="," read -r -a can_array <<< "$can_port_clean"
+#declare -p can_array
+# readarray -td, can_array <<< "$can_port_clean,"; unset 'can_array[-1]'; declare -p can_array;
+
+can_lenght=${#can_array[@]}
+# echo $can_lenght
+
+# stop all dbus-canbattery services, if at least one exists
+if [ -d "/service/dbus-canbattery.0" ]; then
+    svc -u /service/dbus-canbattery.*
+
+    # always remove existing canbattery services to cleanup
+    rm -rf /service/dbus-canbattery.*
+
+    # kill all canbattery processes that remain
+    pkill -f "supervise dbus-canbattery.*"
+    pkill -f "multilog .* /var/log/dbus-canbattery.*"
+    pkill -f "python .*/dbus-serialbattery.py .*_Ble"
+
+    # kill opened bluetoothctl processes
+    pkill -f "^bluetoothctl "
+fi
+
+
+if [ "$can_lenght" -gt 0 ]; then
+
+    echo
+    echo "Found $can_lenght CAN port(s) in the config file!"
+    echo
+
+    # install required packages
+    # TO DO: Check first if packages are already installed
+    echo "Installing required packages to use CAN connection..."
+
+    opkg update
+    opkg install python3-misc python3-pip
+
+    echo
+    pip3 install python-can
+
+    echo "done."
+    echo
+
+    # function to install can battery
+    install_canbattery_service() {
+        if [ -z "$1" ]; then
+            echo "ERROR: CAN port is empty. Aborting installation."
+            echo
+            exit 1
+        fi
+        #if [ -z "$2" ]; then
+        #    echo "ERROR: BMS type for can port $1 is empty. Aborting installation."
+        #    echo
+        #    exit 1
+        #fi
+
+        echo "Installing CAN port \"$1\" as dbus-canbattery.$1"
+
+        mkdir -p "/service/dbus-canbattery.$1/log"
+        {
+            echo "#!/bin/sh"
+            echo "exec multilog t s25000 n4 /var/log/dbus-canbattery.$1"
+        } > "/service/dbus-canbattery.$1/log/run"
+        chmod 755 "/service/dbus-canbattery.$1/log/run"
+
+        {
+            echo "#!/bin/sh"
+            echo "exec 2>&1"
+            echo "echo"
+            echo "python /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py $1"
+        } > "/service/dbus-canbattery.$1/run"
+        chmod 755 "/service/dbus-canbattery.$1/run"
+    }
+
+    # Example
+    # install_canbattery_service can0
+    # install_canbattery_service can9
+
+    for (( i=0; i<can_lenght; i++ ));
+    do
+        # # split CAN port and BMS type
+        # IFS=' ' read -r -a bms <<< "${can_array[$i]}"
+        # install_canbattery_service $i "${bms[0]}" "${bms[1]}"
+        install_canbattery_service "${can_array[$i]}"
+    done
+
+    # root@mutliplus-ii-gx:~# cansequence
+    # interface = can0, family = 29, type = 3, proto = 1
+    # write: No buffer space available
+
+else
+
+    echo
+    echo "No CAN port configuration found in \"/data/etc/dbus-serialbattery/config.ini\"."
+    echo "You can ignore this, if you are using only a serial connection."
+    echo
+
+fi
+### CAN PART | END ###
+
 
 
 ### needed for upgrading from older versions | start ###
@@ -218,34 +421,38 @@ sed -i "/^sh \/data\/etc\/dbus-serialbattery\/installble.sh/d" /data/rc.local
 ### needed for upgrading from older versions | end ###
 
 
-# kill driver, if running. It gets restarted by the service daemon
-pkill -f "python .*/$DRIVERNAME.py"
-
-# restart bluetooth service, if Bluetooth BMS configured
-if [ "$length" -gt 0 ]; then
-    /etc/init.d/bluetooth restart
-fi
-
 
 # install notes
 echo
+echo
+echo "#################"
+echo "# Install notes #"
+echo "#################"
 echo
 echo "SERIAL battery connection: The installation is complete. You don't have to do anything more."
 echo
 echo "BLUETOOTH battery connection: There are a few more steps to complete installation."
 echo
-echo "    1. Please add the Bluetooth BMS to the config file \"/data/etc/dbus-serialbattery/config.ini\" by adding \"BLUETOOTH_BMS\":"
-echo "       Example with 1 BMS: BLUETOOTH_BMS = Jkbms_Ble C8:47:8C:00:00:00"
-echo "       Example with 3 BMS: BLUETOOTH_BMS = Jkbms_Ble C8:47:8C:00:00:00, Jkbms_Ble C8:47:8C:00:00:11, Jkbms_Ble C8:47:8C:00:00:22"
+echo "    1. Add your Bluetooth BMS to the config file \"/data/etc/dbus-serialbattery/config.ini\"."
+echo "       Check the default config file \"/data/etc/dbus-serialbattery/config.default.ini\" for more informations."
 echo "       If your Bluetooth BMS are nearby you can show the MAC address with \"bluetoothctl devices\"."
 echo
-echo "    2. Make sure to disable Settings -> Bluetooth in the remote console/GUI to prevent reconnects every minute."
+echo "    2. Make sure to disable Bluetooth in \"Settings -> Bluetooth\" in the remote console/GUI to prevent reconnects every minute."
 echo
 echo "    3. Re-run \"/data/etc/dbus-serialbattery/reinstall-local.sh\", if the Bluetooth BMS were not added to the \"config.ini\" before."
 echo
 echo "    ATTENTION!"
 echo "    If you changed the default connection PIN of your BMS, then you have to pair the BMS first using OS tools like the \"bluetoothctl\"."
 echo "    See https://wiki.debian.org/BluetoothUser#Using_bluetoothctl for more details."
+echo
+echo "CAN battery connection: There are a few more steps to complete installation."
+echo
+echo "    1. Add your CAN port to the config file \"/data/etc/dbus-serialbattery/config.ini\"."
+echo "       Check the default config file \"/data/etc/dbus-serialbattery/config.default.ini\" for more informations."
+echo
+echo "    2. Make sure to select a profile with 250 kbit/s in \"Settings -> Services -> VE.Can port -> CAN-bus profile\" in the remote console/GUI."
+echo
+echo "    3. Re-run \"/data/etc/dbus-serialbattery/reinstall-local.sh\", if the CAN port was not added to the \"config.ini\" before."
 echo
 echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"/data/etc/dbus-serialbattery/config.default.ini\""
 echo "                 and add them to \"/data/etc/dbus-serialbattery/config.ini\" to persist future driver updates."

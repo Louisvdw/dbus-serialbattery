@@ -19,12 +19,13 @@ rm -rf /opt/victronenergy/dbus-serialbattery
 
 
 # uninstall modules
-read -r -p "Do you want to uninstall bleak, python3-pip and python3-modules? If you don't know just press enter. [y/N] " response
+read -r -p "Do you want to uninstall bleak, python-can, python3-pip and python3-modules? If you don't know just press enter. [y/N] " response
 echo
 response=${response,,} # tolower
 if [[ $response =~ ^(y) ]]; then
     echo "Uninstalling modules..."
     pip3 uninstall bleak
+    pip3 uninstall python-can
     opkg remove python3-pip python3-modules
     echo "done."
     echo

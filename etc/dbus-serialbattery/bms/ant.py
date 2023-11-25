@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# disable ANT BMS by default as it causes other issues but can be enabled manually
+# ANT BMS is disabled by default as it causes issues with other devices
+# can be enabled by specifying it in the BMS_TYPE setting in the "config.ini"
 # https://github.com/Louisvdw/dbus-serialbattery/issues/479
 
 from battery import Battery
@@ -9,9 +10,9 @@ import utils
 from struct import unpack_from
 
 
-class Ant(Battery):
+class ANT(Battery):
     def __init__(self, port, baud, address):
-        super(Ant, self).__init__(port, baud, address)
+        super(ANT, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     command_general = b"\xDB\xDB\x00\x00\x00\x00"
@@ -30,6 +31,7 @@ class Ant(Battery):
         result = False
         try:
             result = self.read_status_data()
+            result = result and self.refresh_data()
         except Exception as err:
             logger.error(f"Unexpected {err=}, {type(err)=}")
             result = False
@@ -61,6 +63,7 @@ class Ant(Battery):
 
         voltage = unpack_from(">H", status_data, 4)
         self.voltage = voltage[0] * 0.1
+
         current, self.soc = unpack_from(">lB", status_data, 70)
         self.current = 0.0 if current == 0 else current / -10
 

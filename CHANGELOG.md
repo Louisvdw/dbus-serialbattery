@@ -1,8 +1,67 @@
 # Changelog
 
-## v1.0.0
+## Breaking changes
 
-### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` gets lost. The changes in the `config.ini` will persists future updates.
+* Driver version greater or equal to `v1.0.20230629beta` and smaller or equal to `v1.0.20230926beta`:
+
+  With `v1.0.20230927beta` the following values changed names:
+  * `BULK_CELL_VOLTAGE` -> `SOC_RESET_VOLTAGE`
+  * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
+
+## v1.0.x
+
+* Added: Bluetooth: Show signal strength of BMS in log by @mr-manuel
+* Added: Configure logging level in `config.ini` by @mr-manuel
+* Added: Create unique identifier, if not provided from BMS by @mr-manuel
+* Added: Current average of the last 5 minutes by @mr-manuel
+* Added: Daly BMS - Auto reset SoC when changing to float (can be turned off in the config file) by @transistorgit
+* Added: Daly BMS connect via CAN (experimental, some limits apply) with https://github.com/Louisvdw/dbus-serialbattery/pull/169 by @SamuelBrucksch and @mr-manuel
+* Added: Exclude a device from beeing used by the dbus-serialbattery driver by @mr-manuel
+* Added: Implement callback function for update by @seidler2547
+* Added: JKBMS BLE - Automatic SOC reset with https://github.com/Louisvdw/dbus-serialbattery/pull/736 by @ArendsM
+* Added: JKBMS BLE - Show last five characters from the MAC address in the custom name (which is displayed in the device list) by @mr-manuel
+* Added: JKBMS BMS connect via CAN (experimental, some limits apply) by @IrisCrimson and @mr-manuel
+* Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
+* Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
+* Added: Load to SOC reset voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
+* Added: Save custom name and make it restart persistant by @mr-manuel
+* Added: Temperature names to dbus and mqtt by @mr-manuel
+* Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
+* Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
+* Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
+* Changed: Daly BMS - Fix readsentence by @transistorgit
+* Changed: Daly BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/837 by @mr-manuel
+* Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
+* Changed: Fixed Building wheel for dbus-fast won't finish on weak systems https://github.com/Louisvdw/dbus-serialbattery/issues/785 by @mr-manuel
+* Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
+* Changed: Fixed meaningless Time to Go values by @transistorgit
+* Changed: Fixed typo in `config.ini` sample by @hoschult
+* Changed: For BMS_TYPE now multiple BMS can be specified by @mr-manuel
+* Changed: Improved battery error handling on connection loss by @mr-manuel
+* Changed: Improved battery voltage handling in linear absorption mode by @ogurevich
+* Changed: Improved driver disable script by @md-manuel
+* Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
+* Changed: JKBMS - Driver do not start if manufacturer date in BMS is empty https://github.com/Louisvdw/dbus-serialbattery/issues/823 by @mr-manuel
+* Changed: JKBMS_BLE BMS - Fixed MOSFET Temperature for HW 11 by @jensbehrens & @mr-manuel
+* Changed: JKBMS_BLE BMS - Fixed recognition of newer models where no data is shown by @mr-manuel
+* Changed: JKBMS_BLE BMS - Improved driver by @seidler2547 & @mr-manuel
+* Changed: LLT/JBD BMS - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
+* Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/730 by @mr-manuel
+* Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/769 by @mr-manuel
+* Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/778 with https://github.com/Louisvdw/dbus-serialbattery/pull/798 by @idstein
+* Changed: LLT/JBD BMS - Improved error handling and automatical driver restart in case of error. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/777 by @mr-manuel
+* Changed: LLT/JBD BMS - SOC different in Xiaoxiang app and dbus-serialbattery with https://github.com/Louisvdw/dbus-serialbattery/pull/760 by @idstein
+* Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
+* Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
+* Changed: Sinowealth BMS - Fix not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
+* Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
+* Changed: Time-to-SoC calculate only positive points by @mr-manuel
+* Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
+
+
+## v1.0.20230531
+
+### ATTENTION: Breaking changes! The config is now done in the `config.ini`. All values from the `utils.py` get lost. The changes in the `config.ini` will persists future updates.
 
 * Added: `self.unique_identifier` to the battery class. Used to identify a BMS when multiple BMS are connected - planned for future use by @mr-manuel
 * Added: Alert is triggered, when BMS communication is lost by @mr-manuel
