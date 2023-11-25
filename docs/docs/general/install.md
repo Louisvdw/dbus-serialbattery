@@ -17,6 +17,8 @@ toc_max_heading_level: 4
 
 > Multi battery setup: If you are using multiple batteries you need to use a battery aggregator else you cannot use the full system power. See [How to aggregate multiple batteries?](../faq/#how-to-aggregate-multiple-batteries)
 
+> The Bluetooth and CAN connections are still not stable on some systems. If you want to have a stable connection use the serial connection.
+
 ## Compatibility Matrix
 
 | &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0   |
