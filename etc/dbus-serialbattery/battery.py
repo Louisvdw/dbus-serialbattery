@@ -360,20 +360,23 @@ class Battery(ABC):
                 ):
                     self.max_voltage_start_time = None
 
-            if self.control_voltage:
-                controlvoltage = self.control_voltage - (
-                    (
-                        self.get_max_cell_voltage()
-                        - utils.MAX_CELL_VOLTAGE
-                        - utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+            if utils.CVL_ICONTROLLER_MODE:
+                if self.control_voltage:
+                    controlvoltage = self.control_voltage - (
+                        (
+                            self.get_max_cell_voltage()
+                            - utils.MAX_CELL_VOLTAGE
+                            - utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+                        )
+                        * utils.CVL_ICONTROLLER_FACTOR
                     )
-                    / 6.0
+                else:
+                    controlvoltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+
+                controlvoltage = min(
+                    max(controlvoltage, self.min_battery_voltage),
+                    self.max_battery_voltage,
                 )
-            else:
-                controlvoltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-            controlvoltage = min(
-                max(controlvoltage, self.min_battery_voltage), self.max_battery_voltage
-            )
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
@@ -389,8 +392,10 @@ class Battery(ABC):
                     ),
                     3,
                 )
-                # self.set_cvl_linear(control_voltage)
-                self.control_voltage = controlvoltage
+                if utils.CVL_ICONTROLLER_MODE:
+                    self.control_voltage = controlvoltage
+                else:
+                    self.set_cvl_linear(control_voltage)
 
                 self.charge_mode = (
                     "Bulk dynamic"
@@ -402,8 +407,10 @@ class Battery(ABC):
                     self.charge_mode += " & SoC Reset"
 
             elif self.allow_max_voltage:
-                # self.control_voltage = round(self.max_battery_voltage, 3)
-                self.control_voltage = controlvoltage
+                if utils.CVL_ICONTROLLER_MODE:
+                    self.control_voltage = controlvoltage
+                else:
+                    self.control_voltage = round(self.max_battery_voltage, 3)
 
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
