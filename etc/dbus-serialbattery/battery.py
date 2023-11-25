@@ -264,13 +264,14 @@ class Battery(ABC):
 
         if self.soc_calc_capacity_remain:
             if utils.SOC_CALC_CURRENT_CORRECTION:
-                current_corr=utils.calcLinearRelationship(
+                current_corr = utils.calcLinearRelationship(
                     self.current,
                     utils.SOC_CALC_CURRENT_MEASURED,
                     utils.SOC_CALC_CURRENT_REAL,
                 )
-            else
+            else:
                 current_corr = self.current
+                
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
                 + current_corr
