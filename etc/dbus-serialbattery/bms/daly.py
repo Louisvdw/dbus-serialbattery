@@ -20,7 +20,7 @@ class Daly(Battery):
         self.cell_max_no = None
         self.poll_interval = 1000
         self.type = self.BATTERYTYPE
-        self.has_settings = 1
+        self.has_settings = True
         self.reset_soc = 0
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors

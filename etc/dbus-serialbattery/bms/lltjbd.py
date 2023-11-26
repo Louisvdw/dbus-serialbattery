@@ -235,7 +235,7 @@ class LltJbd(Battery):
         self.protection = LltJbdProtection()
         self.type = self.BATTERYTYPE
         self._product_name: str = ""
-        self.has_settings = 0
+        self.has_settings = False
         self.reset_soc = 100
         self.soc_to_set = None
         self.factory_mode = False
