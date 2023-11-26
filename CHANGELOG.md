@@ -32,6 +32,7 @@
 * Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
 * Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
 * Added: Load to SOC reset voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
+* Added: Save current charge state for driver restart or device reboot. Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
 * Added: Temperature names to dbus and mqtt by @mr-manuel
 * Added: The device instance does not change anymore when you plug the BMS into another USB port. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/718 by @mr-manuel
