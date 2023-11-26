@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231117dev"
+DRIVER_VERSION = "1.0.20231126dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -434,9 +434,6 @@ def read_serialport_data(
         return False
 
 
-locals_copy = locals().copy()
-
-
 # Publish config variables to dbus
 def publish_config_variables(dbusservice):
     for variable, value in locals_copy.items():
@@ -449,3 +446,6 @@ def publish_config_variables(dbusservice):
             or isinstance(value, List)
         ):
             dbusservice.add_path(f"/Info/Config/{variable}", value)
+
+
+locals_copy = locals().copy()

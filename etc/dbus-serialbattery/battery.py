@@ -7,8 +7,6 @@ import logging
 import math
 from time import time
 from abc import ABC, abstractmethod
-import re
-import sys
 
 
 class Protection(object):
@@ -57,23 +55,23 @@ class Battery(ABC):
     use the individual implementations as type Battery and work with it.
     """
 
-    def __init__(self, port, baud, address):
-        self.port = port
-        self.baud_rate = baud
-        self.role = "battery"
-        self.type = "Generic"
-        self.poll_interval = 1000
-        self.online = True
-        self.hardware_version = None
-        self.cell_count = None
+    def __init__(self, port: str, baud: int, address: str):
+        self.port: str = port
+        self.baud_rate: int = baud
+        self.role: str = "battery"
+        self.type: str = "Generic"
+        self.poll_interval: int = 1000
+        self.online: bool = True
+        self.hardware_version: str = None
+        self.cell_count: int = None
         # max battery charge/discharge current
-        self.max_battery_charge_current = None
-        self.max_battery_discharge_current = None
-        self.has_settings = 0
+        self.max_battery_charge_current: float = None
+        self.max_battery_discharge_current: float = None
+        self.has_settings: bool = False
 
         # fetched from the BMS from a field where the user can input a custom string
         # only if available
-        self.custom_field = None
+        self.custom_field: str = None
 
         self.init_values()
 
@@ -81,54 +79,54 @@ class Battery(ABC):
         """
         Used to reset values, if battery unexpectly disconnects
         """
-        self.voltage = None
-        self.current = None
-        self.current_avg = None
-        self.current_avg_lst = []
-        self.capacity_remain = None
-        self.capacity = None
-        self.cycles = None
-        self.total_ah_drawn = None
+        self.voltage: float = None
+        self.current: float = None
+        self.current_avg: float = None
+        self.current_avg_lst: list = []
+        self.capacity_remain: float = None
+        self.capacity: float = None
+        self.cycles: float = None
+        self.total_ah_drawn: float = None
         self.production = None
         self.protection = Protection()
         self.version = None
-        self.soc = None
-        self.time_to_soc_update = 0
-        self.charge_fet = None
-        self.discharge_fet = None
-        self.balance_fet = None
-        self.temp_sensors = None
-        self.temp1 = None
-        self.temp2 = None
-        self.temp3 = None
-        self.temp4 = None
-        self.temp_mos = None
+        self.soc: float = None
+        self.time_to_soc_update: int = 0
+        self.charge_fet: bool = None
+        self.discharge_fet: bool = None
+        self.balance_fet: bool = None
+        self.temp_sensors: int = None
+        self.temp1: float = None
+        self.temp2: float = None
+        self.temp3: float = None
+        self.temp4: float = None
+        self.temp_mos: float = None
         self.cells: List[Cell] = []
-        self.control_charging = None
-        self.control_voltage = None
-        self.soc_reset_requested = False
-        self.soc_reset_last_reached = 0
-        self.soc_reset_battery_voltage = None
-        self.max_battery_voltage = None
-        self.min_battery_voltage = None
-        self.allow_max_voltage = True
-        self.max_voltage_start_time = None
-        self.transition_start_time = None
-        self.control_voltage_at_transition_start = None
-        self.charge_mode = None
-        self.charge_mode_debug = ""
-        self.charge_limitation = None
-        self.discharge_limitation = None
-        self.linear_cvl_last_set = 0
-        self.linear_ccl_last_set = 0
-        self.linear_dcl_last_set = 0
-        self.control_current = None
-        self.control_previous_total = None
-        self.control_previous_max = None
-        self.control_discharge_current = None
-        self.control_charge_current = None
-        self.control_allow_charge = None
-        self.control_allow_discharge = None
+        # self.control_charging = None  # seems unused
+        self.control_voltage: float = None
+        self.soc_reset_requested: bool = False
+        self.soc_reset_last_reached: int = 0  # save state to preserve on restart
+        self.soc_reset_battery_voltage: int = None
+        self.max_battery_voltage: float = None
+        self.min_battery_voltage: float = None
+        self.allow_max_voltage: bool = True  # save state to preserve on restart
+        self.max_voltage_start_time: int = None  # save state to preserve on restart
+        self.transition_start_time: int = None
+        # self.control_voltage_at_transition_start = None  # seems unused
+        self.charge_mode: str = None
+        self.charge_mode_debug: str = ""
+        self.charge_limitation: str = None
+        self.discharge_limitation: str = None
+        self.linear_cvl_last_set: int = 0
+        self.linear_ccl_last_set: int = 0
+        self.linear_dcl_last_set: int = 0
+        # self.control_current = None  # seems unused
+        # self.control_previous_total = None  # seems unused
+        # self.control_previous_max = None  # seems unused
+        self.control_discharge_current: int = None
+        self.control_charge_current: int = None
+        self.control_allow_charge: bool = None
+        self.control_allow_discharge: bool = None
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -487,7 +485,7 @@ class Battery(ABC):
             self.control_voltage = None
             self.charge_mode = "--"
 
-    def set_cvl_linear(self, control_voltage) -> bool:
+    def set_cvl_linear(self, control_voltage: float) -> bool:
         """
         set CVL only once every LINEAR_RECALCULATION_EVERY seconds
         :return: bool
@@ -899,12 +897,12 @@ class Battery(ABC):
         cell_no = self.get_max_cell()
         return cell_no if cell_no is None else "C" + str(cell_no + 1)
 
-    def get_cell_voltage(self, idx) -> Union[float, None]:
+    def get_cell_voltage(self, idx: int) -> Union[float, None]:
         if idx >= min(len(self.cells), self.cell_count):
             return None
         return self.cells[idx].voltage
 
-    def get_cell_balancing(self, idx) -> Union[int, None]:
+    def get_cell_balancing(self, idx: int) -> Union[int, None]:
         if idx >= min(len(self.cells), self.cell_count):
             return None
         if self.cells[idx].balance is not None and self.cells[idx].balance:
@@ -918,7 +916,9 @@ class Battery(ABC):
             return self.capacity * self.soc / 100
         return None
 
-    def get_timeToSoc(self, socnum, crntPrctPerSec, onlyNumber=False) -> str:
+    def get_timeToSoc(
+        self, socnum: float, crntPrctPerSec: float, onlyNumber: bool = False
+    ) -> str:
         if self.current > 0:
             diffSoc = socnum - self.soc
         else:
@@ -949,7 +949,7 @@ class Battery(ABC):
 
         return ttgStr
 
-    def get_secondsToString(self, timespan, precision=3) -> str:
+    def get_secondsToString(self, timespan: int, precision: int = 3) -> str:
         """
         Transforms seconds to a string in the format: 1d 1h 1m 1s (Victron Style)
         :param precision:
@@ -1253,161 +1253,21 @@ class Battery(ABC):
 
         return
 
-    # save custom name to config file
-    def custom_name_callback(self, path, value):
-        try:
-            if path == "/CustomName":
-                file = open(
-                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "r"
-                )
-                lines = file.readlines()
-                last = len(lines)
-
-                # remove not allowed characters
-                value = value.replace(":", "").replace("=", "").replace(",", "").strip()
-
-                # empty string to save new config file
-                config_file_new = ""
-
-                # make sure we are in the [DEFAULT] section
-                current_line_in_default_section = False
-                default_section_checked = False
-
-                # check if already exists
-                exists = False
-
-                # count lines
-                i = 0
-                # looping through the file
-                for line in lines:
-                    # increment by one
-                    i += 1
-
-                    # stripping line break
-                    line = line.strip()
-
-                    # check, if current line is after the [DEFAULT] section
-                    if line == "[DEFAULT]":
-                        current_line_in_default_section = True
-
-                    # check, if current line starts a new section
-                    if line != "[DEFAULT]" and re.match(r"^\[.*\]", line):
-                        # set default_section_checked to true, if it was already checked and a new section comes on
-                        if current_line_in_default_section and not exists:
-                            default_section_checked = True
-                        current_line_in_default_section = False
-
-                    # check, if the current line is the last line
-                    if i == last:
-                        default_section_checked = True
-
-                    # insert or replace only in [DEFAULT] section
-                    if current_line_in_default_section and re.match(
-                        r"^CUSTOM_BATTERY_NAMES.*", line
-                    ):
-                        # set that the setting was found, else a new one is created
-                        exists = True
-
-                        # remove setting name
-                        line = re.sub(
-                            "^CUSTOM_BATTERY_NAMES\s*=\s*", "", line  # noqa: W605
-                        )
-
-                        # change only the name of the current BMS
-                        result = []
-                        bms_name_list = line.split(",")
-                        for bms_name_pair in bms_name_list:
-                            tmp = bms_name_pair.split(":")
-                            if tmp[0] == self.port:
-                                result.append(tmp[0] + ":" + value)
-                            else:
-                                result.append(bms_name_pair)
-
-                        new_line = "CUSTOM_BATTERY_NAMES = " + ",".join(result)
-
-                    else:
-                        if default_section_checked and not exists:
-                            exists = True
-
-                            # add before current line
-                            if i != last:
-                                new_line = (
-                                    "CUSTOM_BATTERY_NAMES = "
-                                    + self.port
-                                    + ":"
-                                    + value
-                                    + "\n\n"
-                                    + line
-                                )
-
-                            # add at the end if last line
-                            else:
-                                new_line = (
-                                    line
-                                    + "\n\n"
-                                    + "CUSTOM_BATTERY_NAMES = "
-                                    + self.port
-                                    + ":"
-                                    + value
-                                )
-                        else:
-                            new_line = line
-                    # concatenate the new string and add an end-line break
-                    config_file_new = config_file_new + new_line + "\n"
-
-                # close the file
-                file.close()
-                # Open file in write mode
-                write_file = open(
-                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "w"
-                )
-                # overwriting the old file contents with the new/replaced content
-                write_file.write(config_file_new)
-                # close the file
-                write_file.close()
-
-                # logger.error("value (saved): " + str(value))
-
-                """
-                # this removes all comments and tranfsorm the values to lowercase
-                utils.config.set(
-                    "DEFAULT",
-                    "CUSTOM_BATTERY_NAMES",
-                    self.port + ":" + value,
-                )
-
-                # Writing our configuration file to 'example.ini'
-                with open(
-                    "/data/etc/dbus-serialbattery/" + utils.PATH_CONFIG_USER, "w"
-                ) as configfile:
-                    type(utils.config.write(configfile))
-                """
-
-        except Exception:
-            exception_type, exception_object, exception_traceback = sys.exc_info()
-            file = exception_traceback.tb_frame.f_code.co_filename
-            line = exception_traceback.tb_lineno
-            logger.error(
-                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
-            )
-
-        return value
-
-    def reset_soc_callback(self, path, value):
+    def reset_soc_callback(self, path: str, value: int) -> bool:
         # callback for handling reset soc request
-        return
+        return True
 
-    def force_charging_off_callback(self, path, value):
-        return
+    def force_charging_off_callback(self, path: str, value: int) -> bool:
+        return True
 
-    def force_discharging_off_callback(self, path, value):
-        return
+    def force_discharging_off_callback(self, path: str, value: int) -> bool:
+        return True
 
-    def turn_balancing_off_callback(self, path, value):
-        return
+    def turn_balancing_off_callback(self, path: str, value: int) -> bool:
+        return True
 
-    def trigger_soc_reset(self):
+    def trigger_soc_reset(self) -> bool:
         """
         This method can be used to implement SOC reset when the battery is assumed to be full
         """
-        return
+        return True
