@@ -23,7 +23,7 @@ from settingsdevice import (  # noqa: E402
 )
 
 
-def get_bus():
+def get_bus() -> dbus.bus.BusConnection:
     return (
         dbus.SessionBus()
         if "DBUS_SESSION_BUS_ADDRESS" in os.environ
@@ -51,6 +51,11 @@ class DbusHelper:
             for c in self.battery.unique_identifier()
         )
         self.path_battery = None
+        self.save_charge_details_last = {
+            "allow_max_voltage": None,
+            "max_voltage_start_time": None,
+            "soc_reset_last_reached": None,
+        }
 
     def setup_instance(self):
         # checks if the battery was already connected once
@@ -81,18 +86,22 @@ class DbusHelper:
         #     "Settings": {
         #         "Devices": {
         #             "serialbattery_JK_B2A20S20P": {
-        #                 "UniqueIdentifier": "JK_B2A20S20P",
-        #                 "ClassAndVrmInstance": "battery:1",
+        #                 "AllowMaxVoltage",
+        #                 "ClassAndVrmInstance": "battery:3",
         #                 "CustomName": "My Battery 1",
-        #                 "ChargeMode": "0",
         #                 "LastSeen": "1700926114",
+        #                 "MaxVoltageStartTime": "",
+        #                 "SocResetLastReached": 0,
+        #                 "UniqueIdentifier": "JK_B2A20S20P",
         #             },
         #             "serialbattery_JK_B2A20S25P": {
-        #                 "UniqueIdentifier": "JK_B2A20S25P",
-        #                 "ClassAndVrmInstance": "battery:2",
+        #                 "AllowMaxVoltage",
+        #                 "ClassAndVrmInstance": "battery:4",
         #                 "CustomName": "My Battery 2",
-        #                 "ChargeMode": "0",
         #                 "LastSeen": "1700926114",
+        #                 "MaxVoltageStartTime": "",
+        #                 "SocResetLastReached": 0,
+        #                 "UniqueIdentifier": "JK_B2A20S25P",
         #             },
         #             "serialbattery_ttyUSB0": {
         #                 "ClassAndVrmInstance": "battery:1",
@@ -119,39 +128,8 @@ class DbusHelper:
                         ]
                     )
 
-                # check if the battery has a custom name
-                if "CustomName" in value and value["CustomName"] != "":
-                    custom_name = value["CustomName"]
-
-                # check the last seen time and remove the battery it it was not seen for 30 days
-                if "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
-                    60 * 60 * 24 * 30
-                ):
-                    # remove entry
-                    del_return = self.removeSetting(
-                        get_bus(),
-                        "com.victronenergy.settings",
-                        "/Settings/Devices/" + key,
-                        ["ClassAndVrmInstance", "ChargeMode", "CustomName", "LastSeen"],
-                    )
-                    logger.info(
-                        f"Remove /Settings/Devices/{key}/LastSeen from dbus. Delete result: {del_return}"
-                    )
-
-                # check if the battery has a last seen time, if not then it's an old entry
-                if "LastSeen" not in value:
-                    del_return = self.removeSetting(
-                        get_bus(),
-                        "com.victronenergy.settings",
-                        "/Settings/Devices/" + key,
-                        ["ClassAndVrmInstance"],
-                    )
-                    logger.info(
-                        f"Remove /Settings/Devices/{key}/ClassAndVrmInstance from dbus."
-                        + f"Old entry. Delete result: {del_return}"
-                    )
-
-                # check the device instance, if the battery was already connected once
+                # check the unique identifier, if the battery was already connected once
+                # if so, get the last saved data
                 if (
                     "UniqueIdentifier" in value
                     and value["UniqueIdentifier"] == self.bms_id
@@ -169,20 +147,82 @@ class DbusHelper:
                         f"Found existing battery with DeviceInstance = {device_instance}"
                     )
 
+                    if "AllowMaxVoltage" in value and isinstance(
+                        value["AllowMaxVoltage"], int
+                    ):
+                        self.battery.allow_max_voltage = (
+                            True if value["AllowMaxVoltage"] == 1 else False
+                        )
+                        self.battery.max_voltage_start_time = None
+
+                    # check if the battery has a custom name
+                    if "CustomName" in value and value["CustomName"] != "":
+                        custom_name = value["CustomName"]
+
+                    if "MaxVoltageStartTime" in value and isinstance(
+                        value["MaxVoltageStartTime"], int
+                    ):
+                        self.battery.max_voltage_start_time = int(
+                            value["MaxVoltageStartTime"]
+                        )
+
+                    if "SocResetLastReached" in value and isinstance(
+                        value["SocResetLastReached"], int
+                    ):
+                        self.battery.soc_reset_last_reached = int(
+                            value["SocResetLastReached"]
+                        )
+
+                # check the last seen time and remove the battery it it was not seen for 30 days
+                elif "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
+                    60 * 60 * 24 * 30
+                ):
+                    # remove entry
+                    del_return = self.removeSetting(
+                        get_bus(),
+                        "com.victronenergy.settings",
+                        "/Settings/Devices/" + key,
+                        [
+                            "AllowMaxVoltage",
+                            "ClassAndVrmInstance",
+                            "CustomName",
+                            "LastSeen",
+                            "MaxVoltageStartTime",
+                            "SocResetLastReached",
+                            "UniqueIdentifier",
+                        ],
+                    )
+                    logger.info(
+                        f"Remove /Settings/Devices/{key} from dbus. Delete result: {del_return}"
+                    )
+
+                # check if the battery has a last seen time, if not then it's an old entry and can be removed
+                elif "LastSeen" not in value:
+                    del_return = self.removeSetting(
+                        get_bus(),
+                        "com.victronenergy.settings",
+                        "/Settings/Devices/" + key,
+                        ["ClassAndVrmInstance"],
+                    )
+                    logger.info(
+                        f"Remove /Settings/Devices/{key} from dbus."
+                        + f"Old entry. Delete result: {del_return}"
+                    )
+
         # create class and crm instance
         class_and_vrm_instance = "battery:" + str(device_instance)
 
         # preare settings and write them to com.victronenergy.settings
         settings = {
-            "ClassAndVrmInstance": [
-                self.path_battery + "/ClassAndVrmInstance",
-                class_and_vrm_instance,
+            "AllowMaxVoltage": [
+                self.path_battery + "/AllowMaxVoltage",
+                1 if self.battery.allow_max_voltage else 0,
                 0,
                 0,
             ],
-            "ChargeMode": [
-                self.path_battery + "/ChargeMode",
-                0,  # 0 = Bulk, 1 = Absorption, 2 = Float
+            "ClassAndVrmInstance": [
+                self.path_battery + "/ClassAndVrmInstance",
+                class_and_vrm_instance,
                 0,
                 0,
             ],
@@ -198,6 +238,20 @@ class DbusHelper:
                 0,
                 0,
             ],
+            "MaxVoltageStartTime": [
+                self.path_battery + "/MaxVoltageStartTime",
+                self.battery.max_voltage_start_time
+                if self.battery.max_voltage_start_time is not None
+                else "",
+                0,
+                0,
+            ],
+            "SocResetLastReached": [
+                self.path_battery + "/SocResetLastReached",
+                self.battery.soc_reset_last_reached,
+                0,
+                0,
+            ],
             "UniqueIdentifier": [
                 self.path_battery + "/UniqueIdentifier",
                 self.bms_id,
@@ -206,6 +260,7 @@ class DbusHelper:
             ],
         }
 
+        # update last seen
         if found_bms:
             self.setSetting(
                 get_bus(),
@@ -858,6 +913,7 @@ class DbusHelper:
         obj = bus.get_object(service, object_path)
         iface = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
         xml_string = iface.Introspect()
+        # print(xml_string)
         result = {}
         for child in ElementTree.fromstring(xml_string):
             if child.tag == "node" and recursive:
@@ -938,7 +994,7 @@ class DbusHelper:
             else:
                 dict1[key] = dict2[key]
 
-    # save custom name to config file
+    # save custom name to dbus
     def custom_name_callback(self, path, value) -> str:
         result = self.setSetting(
             get_bus(),
@@ -951,3 +1007,66 @@ class DbusHelper:
             f'CustomName changed to "{value}" for {self.path_battery}: {result}'
         )
         return value if result else None
+
+    # save charge mode to dbus
+    def saveChargeDetails(self) -> bool:
+        if (
+            self.battery.allow_max_voltage
+            != self.save_charge_details_last["allow_max_voltage"]
+        ):
+            self.save_charge_details_last[
+                "allow_max_voltage"
+            ] = self.battery.allow_max_voltage
+            result = self.setSetting(
+                get_bus(),
+                "com.victronenergy.settings",
+                self.path_battery,
+                "AllowMaxVoltage",
+                1 if self.battery.allow_max_voltage else 0,
+            )
+            logger.info(
+                f"Saved AllowMaxVoltage. Before {self.save_charge_details_last['allow_max_voltage']}, "
+                + f"after {self.battery.allow_max_voltage}"
+            )
+
+        if (
+            self.battery.max_voltage_start_time
+            != self.save_charge_details_last["max_voltage_start_time"]
+        ):
+            self.save_charge_details_last[
+                "max_voltage_start_time"
+            ] = self.battery.max_voltage_start_time
+            result = result and self.setSetting(
+                get_bus(),
+                "com.victronenergy.settings",
+                self.path_battery,
+                "MaxVoltageStartTime",
+                self.battery.max_voltage_start_time
+                if self.battery.max_voltage_start_time is not None
+                else "",
+            )
+            logger.info(
+                f"Saved MaxVoltageStartTime. Before {self.save_charge_details_last['max_voltage_start_time']}, "
+                + f"after {self.battery.max_voltage_start_time}"
+            )
+
+        if (
+            self.battery.soc_reset_last_reached
+            != self.save_charge_details_last["soc_reset_last_reached"]
+        ):
+            self.save_charge_details_last[
+                "soc_reset_last_reached"
+            ] = self.battery.soc_reset_last_reached
+            result = result and self.setSetting(
+                get_bus(),
+                "com.victronenergy.settings",
+                self.path_battery,
+                "SocResetLastReached",
+                self.battery.soc_reset_last_reached,
+            )
+            logger.info(
+                f"Saved SocResetLastReached. Before {self.save_charge_details_last['soc_reset_last_reached']}, ",
+                +f"after {self.battery.soc_reset_last_reached}",
+            )
+
+        return result
