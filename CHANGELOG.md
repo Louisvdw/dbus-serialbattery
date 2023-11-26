@@ -1,6 +1,14 @@
 # Changelog
 
+## Notes
+
+* The Bluetooth and CAN connections are still not stable on some systems. If you want to have a stable connection use the serial connection.
+
 ## Breaking changes
+
+* Driver version greater or equal to `v1.0.20231126beta`
+
+  The custom name is not saved to the config file anymore, but to the dbus service com.victronenergy.settings. You have to re-enter it once.
 
 * Driver version greater or equal to `v1.0.20230629beta` and smaller or equal to `v1.0.20230926beta`:
 
@@ -24,8 +32,10 @@
 * Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
 * Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
 * Added: Load to SOC reset voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
+* Added: Save current charge state for driver restart or device reboot. Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
 * Added: Temperature names to dbus and mqtt by @mr-manuel
+* Added: The device instance does not change anymore when you plug the BMS into another USB port. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/718 by @mr-manuel
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
