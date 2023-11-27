@@ -205,7 +205,7 @@ class DbusHelper:
                         ["ClassAndVrmInstance"],
                     )
                     logger.info(
-                        f"Remove /Settings/Devices/{key} from dbus."
+                        f"Remove /Settings/Devices/{key} from dbus. "
                         + f"Old entry. Delete result: {del_return}"
                     )
 
@@ -899,6 +899,10 @@ class DbusHelper:
             )
             pass
 
+        # save settings every 15 seconds to dbus
+        if int(time()) % 15:
+            self.saveBatteryOptions()
+
         if self.battery.soc is not None:
             logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
             self.battery.log_cell_data()
@@ -1008,8 +1012,8 @@ class DbusHelper:
         )
         return value if result else None
 
-    # save charge mode to dbus
-    def saveChargeDetails(self) -> bool:
+    # save battery options to dbus
+    def saveBatteryOptions(self) -> bool:
         if (
             self.battery.allow_max_voltage
             != self.save_charge_details_last["allow_max_voltage"]
