@@ -173,6 +173,13 @@ class DbusHelper:
                             value["SocResetLastReached"]
                         )
 
+                    if "SocCalculated" in value and isinstance(
+                        value["SocCalculated"], float
+                    ):
+                        self.battery.soc_calc = float(
+                            value["SocCalculated"]
+                        )
+
                 # check the last seen time and remove the battery it it was not seen for 30 days
                 elif "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
                     60 * 60 * 24 * 30
@@ -189,6 +196,7 @@ class DbusHelper:
                             "LastSeen",
                             "MaxVoltageStartTime",
                             "SocResetLastReached",
+                            "SocCalculated"
                             "UniqueIdentifier",
                         ],
                     )
@@ -248,6 +256,12 @@ class DbusHelper:
             ],
             "SocResetLastReached": [
                 self.path_battery + "/SocResetLastReached",
+                self.battery.soc_reset_last_reached,
+                0,
+                0,
+            ],
+            "SocCalculated": [
+                self.path_battery + "/SocCalculated",
                 self.battery.soc_reset_last_reached,
                 0,
                 0,
@@ -1076,4 +1090,23 @@ class DbusHelper:
                 +f"after {self.battery.soc_reset_last_reached}",
             )
 
+        if (
+            self.battery.soc_calc
+            != self.save_charge_details_last["soc_calc"]
+        ):
+            self.save_charge_details_last[
+                "soc_calc"
+            ] = self.battery.soc_calc
+            result = result and self.setSetting(
+                get_bus(),
+                "com.victronenergy.settings",
+                self.path_battery,
+                "SocCalculated",
+                self.battery.soc_calc,
+            )
+            logger.info(
+                f"Saved SocCalculated. Before {self.save_charge_details_last['soc_calc']}, ",
+                +f"after {self.battery.soc_calc}",
+            )
+            
         return result

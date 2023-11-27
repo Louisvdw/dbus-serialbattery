@@ -218,7 +218,9 @@ TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 #      - The SOC is set to 100% if the following conditions apply for at least SOC_RESET_TIME seconds:
 #          * current is lower than SOC_RESET_CURRENT Amps
 #          * Sum of Cell voltages >= MAX_CELL_VOLTAGE * Cell Count - VOLTAGE_DROP
-#      - When the driver starts, the SOC starts at SOC_CALC_INIT_VALUE
+#      - When the driver starts, the SOC starts at SOC_CALC_INIT_VALUE if SOC_CALC_RESET_VALUE_ON_RESTART is set.
+#        If SOC_CALC_RESET_VALUE_ON_RESTART=False then it is tried to restore the Soc from the dbus. If it is not found,
+#        the Soc is resetted to SOC_CALC_INIT_VALUE nevertheless.
 # SOC_CALCULATION = False: Use SOC reported from BMS (none of the other parameters apply)
 SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
 SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
@@ -230,6 +232,7 @@ SOC_CALC_CURRENT_MEASURED = _get_list_from_config(
 SOC_CALC_CURRENT_REAL = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_REAL", lambda v: float(v)
 )
+SOC_CALC_RESET_VALUE_ON_RESTART = "True" == config["DEFAULT"]["SOC_CALC_RESET_VALUE_ON_RESTART"]
 SOC_CALC_INIT_VALUE = float(config["DEFAULT"]["SOC_CALC_INIT_VALUE"])
 
 # --------- Additional settings ---------
