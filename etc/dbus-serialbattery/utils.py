@@ -232,7 +232,9 @@ SOC_CALC_CURRENT_MEASURED = _get_list_from_config(
 SOC_CALC_CURRENT_REAL = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_REAL", lambda v: float(v)
 )
-SOC_CALC_RESET_VALUE_ON_RESTART = "True" == config["DEFAULT"]["SOC_CALC_RESET_VALUE_ON_RESTART"]
+SOC_CALC_RESET_VALUE_ON_RESTART = (
+    "True" == config["DEFAULT"]["SOC_CALC_RESET_VALUE_ON_RESTART"]
+)
 SOC_CALC_INIT_VALUE = float(config["DEFAULT"]["SOC_CALC_INIT_VALUE"])
 
 # --------- Additional settings ---------

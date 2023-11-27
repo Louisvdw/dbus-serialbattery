@@ -176,9 +176,7 @@ class DbusHelper:
                     if "SocCalculated" in value and isinstance(
                         value["SocCalculated"], float
                     ):
-                        self.battery.soc_calc = float(
-                            value["SocCalculated"]
-                        )
+                        self.battery.soc_calc = float(value["SocCalculated"])
 
                 # check the last seen time and remove the battery it it was not seen for 30 days
                 elif "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
@@ -196,8 +194,7 @@ class DbusHelper:
                             "LastSeen",
                             "MaxVoltageStartTime",
                             "SocResetLastReached",
-                            "SocCalculated"
-                            "UniqueIdentifier",
+                            "SocCalculated" "UniqueIdentifier",
                         ],
                     )
                     logger.info(
@@ -1090,13 +1087,8 @@ class DbusHelper:
                 +f"after {self.battery.soc_reset_last_reached}",
             )
 
-        if (
-            self.battery.soc_calc
-            != self.save_charge_details_last["soc_calc"]
-        ):
-            self.save_charge_details_last[
-                "soc_calc"
-            ] = self.battery.soc_calc
+        if self.battery.soc_calc != self.save_charge_details_last["soc_calc"]:
+            self.save_charge_details_last["soc_calc"] = self.battery.soc_calc
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
@@ -1108,5 +1100,5 @@ class DbusHelper:
                 f"Saved SocCalculated. Before {self.save_charge_details_last['soc_calc']}, ",
                 +f"after {self.battery.soc_calc}",
             )
-            
+
         return result

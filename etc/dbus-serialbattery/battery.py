@@ -290,14 +290,12 @@ class Battery(ABC):
             else:
                 self.soc_calc_reset_starttime = int(current_time)
         else:
-            if (utils.SOC_CALC_RESET_VALUE_ON_RESTART or (self.soc_calc is None)):
+            if utils.SOC_CALC_RESET_VALUE_ON_RESTART or (self.soc_calc is None):
                 self.soc_calc_capacity_remain = (
                     self.capacity * utils.SOC_CALC_INIT_VALUE / 100
                 )
             else:
-                self.soc_calc_capacity_remain = (
-                    self.capacity * self.soc_calc / 100
-                )
+                self.soc_calc_capacity_remain = self.capacity * self.soc_calc / 100
             self.soc_calc_capacity_remain_lasttime = current_time
 
         # Calculate the SOC based on remaining capacity
