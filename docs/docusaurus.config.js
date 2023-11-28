@@ -45,7 +45,9 @@ const config = {
                     sidebarPath: require.resolve('./sidebars.js'),
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
-                    editUrl: 'https://github.com/Louisvdw/dbus-serialbattery/tree/docusaurus/docs/',
+                    editUrl: ({ docPath }) => {
+                        return `https://holocron.so/github/pr/Louisvdw/dbus-serialbattery/master/editor/docs/docs/${docPath}`
+                    },
                     sidebarCollapsible: false
                 },
                 theme: {
