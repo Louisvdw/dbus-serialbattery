@@ -52,9 +52,9 @@ class DbusHelper:
         )
         self.path_battery = None
         self.save_charge_details_last = {
-            "allow_max_voltage": None,
-            "max_voltage_start_time": None,
-            "soc_reset_last_reached": None,
+            "allow_max_voltage": self.battery.allow_max_voltage,
+            "max_voltage_start_time": self.battery.max_voltage_start_time,
+            "soc_reset_last_reached": self.battery.soc_reset_last_reached,
         }
 
     def setup_instance(self):
@@ -65,6 +65,7 @@ class DbusHelper:
         # bms_id = self.battery.production if self.battery.production is not None else \
         #     self.battery.port[self.battery.port.rfind('/') + 1:]
         # bms_id = self.battery.port[self.battery.port.rfind("/") + 1 :]
+        logger.debug("setup_instance(): start")
 
         custom_name = self.battery.custom_name()
         device_instance = "1"
@@ -76,11 +77,15 @@ class DbusHelper:
         self.settings = SettingsDevice(
             get_bus(), self.EMPTY_DICT, self.handle_changed_setting
         )
+        logger.debug("setup_instance(): SettingsDevice")
 
         # get all the settings from the dbus
         settings_from_dbus = self.getSettingsWithValues(
-            get_bus(), "com.victronenergy.settings", "/Settings/Devices"
+            get_bus(),
+            "com.victronenergy.settings",
+            "/Settings/Devices",
         )
+        logger.debug("setup_instance(): getSettingsWithValues")
         # output:
         # {
         #     "Settings": {
@@ -211,9 +216,29 @@ class DbusHelper:
                         ["ClassAndVrmInstance"],
                     )
                     logger.info(
-                        f"Remove /Settings/Devices/{key} from dbus."
+                        f"Remove /Settings/Devices/{key} from dbus. "
                         + f"Old entry. Delete result: {del_return}"
                     )
+
+            if "ruuvi" in key:
+                # check if Ruuvi tag is enabled, if not remove entry.
+                if (
+                    "Enabled" in value
+                    and value["Enabled"] == "0"
+                    and "ClassAndVrmInstance" not in value
+                ):
+                    del_return = self.removeSetting(
+                        get_bus(),
+                        "com.victronenergy.settings",
+                        "/Settings/Devices/" + key,
+                        ["CustomName", "Enabled", "TemperatureType"],
+                    )
+                    logger.info(
+                        f"Remove /Settings/Devices/{key} from dbus. "
+                        + f"Ruuvi tag was disabled and had no ClassAndVrmInstance. Delete result: {del_return}"
+                    )
+
+        logger.debug("setup_instance(): for loop ended")
 
         # create class and crm instance
         class_and_vrm_instance = "battery:" + str(device_instance)
@@ -918,6 +943,10 @@ class DbusHelper:
             )
             pass
 
+        # save settings every 15 seconds to dbus
+        if int(time()) % 15:
+            self.saveBatteryOptions()
+
         if self.battery.soc is not None:
             logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
             self.battery.log_cell_data()
@@ -1027,8 +1056,10 @@ class DbusHelper:
         )
         return value if result else None
 
-    # save charge mode to dbus
-    def saveChargeDetails(self) -> bool:
+    # save battery options to dbus
+    def saveBatteryOptions(self) -> bool:
+        result = True
+
         if (
             self.battery.allow_max_voltage
             != self.save_charge_details_last["allow_max_voltage"]
@@ -1036,7 +1067,7 @@ class DbusHelper:
             self.save_charge_details_last[
                 "allow_max_voltage"
             ] = self.battery.allow_max_voltage
-            result = self.setSetting(
+            result = result + self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
                 self.path_battery,
@@ -1084,8 +1115,8 @@ class DbusHelper:
                 self.battery.soc_reset_last_reached,
             )
             logger.info(
-                f"Saved SocResetLastReached. Before {self.save_charge_details_last['soc_reset_last_reached']}, ",
-                +f"after {self.battery.soc_reset_last_reached}",
+                f"Saved SocResetLastReached. Before {self.save_charge_details_last['soc_reset_last_reached']}, "
+                + f"after {self.battery.soc_reset_last_reached}",
             )
 
         if self.battery.soc_calc != self.save_charge_details_last["soc_calc"]:
