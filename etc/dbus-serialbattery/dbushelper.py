@@ -1119,7 +1119,7 @@ class DbusHelper:
                 + f"after {self.battery.soc_reset_last_reached}",
             )
 
-        if self.battery.soc_calc != self.save_charge_details_last["soc_calc"]:
+        if abs(self.battery.soc_calc - self.save_charge_details_last["soc_calc"]) > 1.0:
             self.save_charge_details_last["soc_calc"] = self.battery.soc_calc
             result = result and self.setSetting(
                 get_bus(),
@@ -1129,8 +1129,8 @@ class DbusHelper:
                 self.battery.soc_calc,
             )
             logger.info(
-                f"Saved SocCalculated. Before {self.save_charge_details_last['soc_calc']}, ",
-                +f"after {self.battery.soc_calc}",
+               f"Saved SocCalculated. Before {self.save_charge_details_last['soc_calc']}, ",
+               +f"after {self.battery.soc_calc}",
             )
 
         return result
