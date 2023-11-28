@@ -194,7 +194,8 @@ class DbusHelper:
                             "LastSeen",
                             "MaxVoltageStartTime",
                             "SocResetLastReached",
-                            "SocCalculated" "UniqueIdentifier",
+                            "SocCalculated",
+                            "UniqueIdentifier",
                         ],
                     )
                     logger.info(
@@ -259,7 +260,7 @@ class DbusHelper:
             ],
             "SocCalculated": [
                 self.path_battery + "/SocCalculated",
-                self.battery.soc_reset_last_reached,
+                self.battery.soc_calc if self.battery.soc_calc else 0.0,
                 0,
                 0,
             ],
