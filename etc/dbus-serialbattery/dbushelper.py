@@ -65,6 +65,7 @@ class DbusHelper:
         # bms_id = self.battery.production if self.battery.production is not None else \
         #     self.battery.port[self.battery.port.rfind('/') + 1:]
         # bms_id = self.battery.port[self.battery.port.rfind("/") + 1 :]
+        logger.debug("setup_instance(): start")
 
         custom_name = self.battery.custom_name()
         device_instance = "1"
@@ -76,11 +77,15 @@ class DbusHelper:
         self.settings = SettingsDevice(
             get_bus(), self.EMPTY_DICT, self.handle_changed_setting
         )
+        logger.debug("setup_instance(): SettingsDevice")
 
         # get all the settings from the dbus
         settings_from_dbus = self.getSettingsWithValues(
-            get_bus(), "com.victronenergy.settings", "/Settings/Devices"
+            get_bus(),
+            "com.victronenergy.settings",
+            "/Settings/Devices",
         )
+        logger.debug("setup_instance(): getSettingsWithValues")
         # output:
         # {
         #     "Settings": {
@@ -208,6 +213,26 @@ class DbusHelper:
                         f"Remove /Settings/Devices/{key} from dbus. "
                         + f"Old entry. Delete result: {del_return}"
                     )
+
+            if "ruuvi" in key:
+                # check if Ruuvi tag is enabled, if not remove entry.
+                if (
+                    "Enabled" in value
+                    and value["Enabled"] == "0"
+                    and "ClassAndVrmInstance" not in value
+                ):
+                    del_return = self.removeSetting(
+                        get_bus(),
+                        "com.victronenergy.settings",
+                        "/Settings/Devices/" + key,
+                        ["CustomName", "Enabled", "TemperatureType"],
+                    )
+                    logger.info(
+                        f"Remove /Settings/Devices/{key} from dbus. "
+                        + f"Ruuvi tag was disabled and had no ClassAndVrmInstance. Delete result: {del_return}"
+                    )
+
+        logger.debug("setup_instance(): for loop ended")
 
         # create class and crm instance
         class_and_vrm_instance = "battery:" + str(device_instance)
