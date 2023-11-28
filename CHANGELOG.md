@@ -6,9 +6,11 @@
 
 ## Breaking changes
 
-* Driver version greater or equal to `v1.0.20231126beta`
+* Driver version greater or equal to `v1.0.20231128beta`
 
-  The custom name is not saved to the config file anymore, but to the dbus service com.victronenergy.settings. You have to re-enter it once.
+  * The custom name is not saved to the config file anymore, but to the dbus service com.victronenergy.settings. You have to re-enter it once.
+
+  * If you selected a specific device in `Settings -> System setup -> Battery monitor` and/or `Settings -> DVCC -> Controlling BMS` you have to reselect it.
 
 * Driver version greater or equal to `v1.0.20230629beta` and smaller or equal to `v1.0.20230926beta`:
 
