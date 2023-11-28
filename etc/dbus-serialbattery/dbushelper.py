@@ -55,6 +55,9 @@ class DbusHelper:
             "allow_max_voltage": self.battery.allow_max_voltage,
             "max_voltage_start_time": self.battery.max_voltage_start_time,
             "soc_reset_last_reached": self.battery.soc_reset_last_reached,
+            "soc_calc": int(self.battery.soc_calc)
+            if self.battery.soc_calc is not None
+            else "",
         }
 
     def setup_instance(self):
@@ -178,10 +181,8 @@ class DbusHelper:
                             value["SocResetLastReached"]
                         )
 
-                    if "SocCalculated" in value and isinstance(
-                        value["SocCalculated"], float
-                    ):
-                        self.battery.soc_calc = float(value["SocCalculated"])
+                    if "SocCalc" in value and isinstance(value["SocCalc"], int):
+                        self.battery.soc_calc = float(value["SocCalc"])
 
                 # check the last seen time and remove the battery it it was not seen for 30 days
                 elif "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
@@ -199,7 +200,7 @@ class DbusHelper:
                             "LastSeen",
                             "MaxVoltageStartTime",
                             "SocResetLastReached",
-                            "SocCalculated",
+                            "SocCalc",
                             "UniqueIdentifier",
                         ],
                     )
@@ -283,9 +284,9 @@ class DbusHelper:
                 0,
                 0,
             ],
-            "SocCalculated": [
-                self.path_battery + "/SocCalculated",
-                self.battery.soc_calc if self.battery.soc_calc else 0.0,
+            "SocCalc": [
+                self.path_battery + "/SocCalc",
+                int(self.battery.soc_calc) if self.battery.soc_calc is not None else "",
                 0,
                 0,
             ],
@@ -1119,18 +1120,21 @@ class DbusHelper:
                 + f"after {self.battery.soc_reset_last_reached}",
             )
 
-        if abs(self.battery.soc_calc - self.save_charge_details_last["soc_calc"]) > 1.0:
-            self.save_charge_details_last["soc_calc"] = self.battery.soc_calc
-            result = result and self.setSetting(
-                get_bus(),
-                "com.victronenergy.settings",
-                self.path_battery,
-                "SocCalculated",
-                self.battery.soc_calc,
-            )
-            logger.info(
-               f"Saved SocCalculated. Before {self.save_charge_details_last['soc_calc']}, ",
-               +f"after {self.battery.soc_calc}",
-            )
+        if self.battery.soc_calc:
+            if (
+                int(self.battery.soc_calc) != self.save_charge_details_last["soc_calc"]
+            ):
+                self.save_charge_details_last["soc_calc"] = int(self.battery.soc_calc)
+                result = result and self.setSetting(
+                    get_bus(),
+                    "com.victronenergy.settings",
+                    self.path_battery,
+                    "SocCalc",
+                    int(self.battery.soc_calc) if self.battery.soc_calc is not None else "",
+                )
+                logger.info(
+                    f"Saved SocCalc. Before {self.save_charge_details_last['soc_calc']}, ",
+                    +f"after {self.battery.soc_calc}",
+                )
 
         return result
