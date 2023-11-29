@@ -93,8 +93,8 @@ class Battery(ABC):
         self.soc_calc_capacity_remain: float = None
         self.soc_calc_capacity_remain_lasttime: float = None
         self.soc_calc_reset_starttime: int = None
-        self.soc_calc: float = None
-        self.soc: float = None  # save Soc to preserve on restart
+        self.soc_calc: float = None # save soc_calc to preserve on restart
+        self.soc: float = None
         self.time_to_soc_update: int = 0
         self.charge_fet: bool = None
         self.discharge_fet: bool = None
