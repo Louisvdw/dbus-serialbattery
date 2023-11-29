@@ -1132,9 +1132,9 @@ class DbusHelper:
                     "SocCalc",
                     int(self.battery.soc_calc) if self.battery.soc_calc is not None else "",
                 )
-                logger.info(
-                    f"Saved SocCalc. Before {self.save_charge_details_last['soc_calc']}, ",
-                    +f"after {self.battery.soc_calc}",
-                )
+                #logger.info(
+                #    f"Saved SocCalc. Before {self.save_charge_details_last['soc_calc']}, ",
+                #    +f"after {round(self.battery.soc_calc,2)}",
+                #)
 
         return result
