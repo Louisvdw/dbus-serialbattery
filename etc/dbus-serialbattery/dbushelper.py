@@ -181,8 +181,11 @@ class DbusHelper:
                             value["SocResetLastReached"]
                         )
 
-                    if "SocCalc" in value and isinstance(value["SocCalc"], int):
+                    if "SocCalc" in value:
                         self.battery.soc_calc = float(value["SocCalc"])
+                        logger.info(f"Soc_calc read from dbus: {int(self.battery.soc_calc)}")
+                    else:
+                        logger.info(f"Soc_calc not found in dbus")
 
                 # check the last seen time and remove the battery it it was not seen for 30 days
                 elif "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
@@ -1121,20 +1124,15 @@ class DbusHelper:
             )
 
         if self.battery.soc_calc:
-            if (
-                int(self.battery.soc_calc) != self.save_charge_details_last["soc_calc"]
-            ):
+            if int(self.battery.soc_calc) != self.save_charge_details_last["soc_calc"]:
                 self.save_charge_details_last["soc_calc"] = int(self.battery.soc_calc)
                 result = result and self.setSetting(
                     get_bus(),
                     "com.victronenergy.settings",
                     self.path_battery,
                     "SocCalc",
-                    int(self.battery.soc_calc) if self.battery.soc_calc is not None else "",
+                    int(self.battery.soc_calc),
                 )
-                #logger.info(
-                #    f"Saved SocCalc. Before {self.save_charge_details_last['soc_calc']}, ",
-                #    +f"after {round(self.battery.soc_calc,2)}",
-                #)
+                logger.info(f"Soc_Calc written to dbus: {int(self.battery.soc_calc)}")
 
         return result
