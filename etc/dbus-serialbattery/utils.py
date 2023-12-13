@@ -13,7 +13,6 @@ import bisect
 # Logging
 logging.basicConfig()
 logger = logging.getLogger("SerialBattery")
-logger.setLevel(logging.INFO)
 
 PATH_CONFIG_DEFAULT = "config.default.ini"
 PATH_CONFIG_USER = "config.ini"
@@ -38,9 +37,19 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20230921dev"
+DRIVER_VERSION = "1.0.20231128dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
+
+# get logging level from config file
+if config["DEFAULT"]["LOGGING"].upper() == "ERROR":
+    logger.setLevel(logging.ERROR)
+elif config["DEFAULT"]["LOGGING"].upper() == "WARNING":
+    logger.setLevel(logging.WARNING)
+elif config["DEFAULT"]["LOGGING"].upper() == "DEBUG":
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 
 # save config values to constants
 
@@ -66,15 +75,15 @@ if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
         ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
     )
 
-BULK_CELL_VOLTAGE = float(config["DEFAULT"]["BULK_CELL_VOLTAGE"])
-if BULK_CELL_VOLTAGE < MAX_CELL_VOLTAGE:
-    BULK_CELL_VOLTAGE = MAX_CELL_VOLTAGE
+SOC_RESET_VOLTAGE = float(config["DEFAULT"]["SOC_RESET_VOLTAGE"])
+if SOC_RESET_VOLTAGE < MAX_CELL_VOLTAGE:
+    SOC_RESET_VOLTAGE = MAX_CELL_VOLTAGE
     logger.error(
-        ">>> ERROR: BULK_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+        ">>> ERROR: SOC_RESET_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
     )
-BULK_AFTER_DAYS = (
-    int(config["DEFAULT"]["BULK_AFTER_DAYS"])
-    if config["DEFAULT"]["BULK_AFTER_DAYS"] != ""
+SOC_RESET_AFTER_DAYS = (
+    int(config["DEFAULT"]["SOC_RESET_AFTER_DAYS"])
+    if config["DEFAULT"]["SOC_RESET_AFTER_DAYS"] != ""
     else False
 )
 
@@ -309,6 +318,10 @@ def kelvin_to_celsius(kelvin_temp):
     return kelvin_temp - 273.1
 
 
+def bytearray_to_string(data):
+    return "".join("\\x" + format(byte, "02x") for byte in data)
+
+
 def format_value(value, prefix, suffix):
     return (
         None
@@ -421,9 +434,6 @@ def read_serialport_data(
         return False
 
 
-locals_copy = locals().copy()
-
-
 # Publish config variables to dbus
 def publish_config_variables(dbusservice):
     for variable, value in locals_copy.items():
@@ -436,3 +446,6 @@ def publish_config_variables(dbusservice):
             or isinstance(value, List)
         ):
             dbusservice.add_path(f"/Info/Config/{variable}", value)
+
+
+locals_copy = locals().copy()

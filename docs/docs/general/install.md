@@ -15,15 +15,20 @@ toc_max_heading_level: 4
 
 > It is always recommended to use the latest Venus OS version with the latest driver version. To avoid a [white screen](../faq/#fix-white-screen-after-install) after install check the compatibility matrix below.
 
+> Multi battery setup: If you are using multiple batteries you need to use a battery aggregator else you cannot use the full system power. See [How to aggregate multiple batteries?](../faq/#how-to-aggregate-multiple-batteries)
+
+> The Bluetooth and CAN connections are still not stable on some systems. If you want to have a stable connection use the serial connection.
+
 ## Compatibility Matrix
 
-| &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0 |
-| ---                                              | :---:    | :---:    | :---:                | :---:  |
-| v2.80 - v2.84                                    | x        | x        |                      |        |
-| v2.85 - v2.89                                    | x        | x        |                      |        |
-| v2.90 - v2.94                                    | untested | x        | x                    | x      |
-| v3.00~1 - v3.00~13                               | untested | untested | x                    | x      |
-| v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x      |
+| &darr; Venus OS version \ Driver version &rarr;  | v0.12.0  | v0.13.0  | v0.14.x              | v1.0.0   |
+| ---                                              | :---:    | :---:    | :---:                | :---:    |
+| v2.80 - v2.84                                    | x        | x        | untested             | untested |
+| v2.85 - v2.89                                    | x        | x        | untested             | untested |
+| v2.90 - v2.94                                    | untested | x        | x                    | x        |
+| v3.00~1 - v3.00~13                               | untested | untested | x                    | x        |
+| v3.00~14 - v3.00~42                              | untested | untested | x<sup>1)</sup>       | x        |
+| v3.00 - v3.20~30                                 | untested | untested | x<sup>1)</sup>       | x        |
 
 1) Partially supported. Empty values/pages are not hidden in the GUI
 
@@ -131,8 +136,9 @@ Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/u
 
 ### BMS specific settings
 
-* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted)
+* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted) and [Daly Lost Connection because of standby](https://github.com/Louisvdw/dbus-serialbattery/issues/731#issuecomment-1613580083)
 * ECS BMS &rarr; Check [#254 ECS BMS (comment)](https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313)
+* MNB BMS &rarr; Check [MNB BMS setup](https://github.com/Louisvdw/dbus-serialbattery/issues/590)
 
 Since driver version `>= v1.0.0` you can also get an overview of the BMS specific settings be checking the end of the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
 
@@ -146,7 +152,7 @@ The driver currently uses a fixed upper current limit for the BMS:
 Should you require more current and your battery can handle that, than you can change it in the settings. The values to change are:
 
 ```ini
-MAX_BATTERY_CURRENT = 50.0
+MAX_BATTERY_CHARGE_CURRENT = 50.0
 MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 ```
 
@@ -218,8 +224,11 @@ becomes
 
 Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and check, if your BMS is already uncommented (without the `#` as first line character) your BMS.
 
-#### Driver version `>= v1.0.0`
+#### Driver version `>= v1.0.0` and `<= v1.0.20230610beta`
 Edit `/data/etc/dbus-serialbattery/dbus-serialbattery.py` and uncommented (without the `#` as first line character) your BMS twice (`# from ...` and `# {"bms": ...}`).
+
+#### Driver version `>= v1.0.20230611beta`
+Add your BMS to the setting `BMS_TYPE` in the `config.ini`. This way you don't have to enable your BMS after every update.
 
 
 ## Disable the driver
@@ -279,3 +288,21 @@ If you want to remove also the install files of the driver run this after you ru
 ```bash
 rm -rf /data/etc/dbus-serialbattery
 ```
+
+
+## Downgrade from `>= v1.0.0` to `<= v0.14.3`
+
+With `>= v1.0.0` the serial starter config is created differently and therefore you have to delete the `/data/conf/serial-starter.d` folder before downgrading to `<= v0.14.3`, else you will get an error like this during installation of `<= v0.14.3`:
+
+```bash
+tar: conf/serial-starter.d: Cannot open: File exists
+tar: Exiting with failure status due to previous errors
+```
+
+To solve this proble run
+
+```bash
+rm -rf /data/conf/serial-starter.d
+```
+
+before the install script.

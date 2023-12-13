@@ -235,7 +235,7 @@ class LltJbd(Battery):
         self.protection = LltJbdProtection()
         self.type = self.BATTERYTYPE
         self._product_name: str = ""
-        self.has_settings = 0
+        self.has_settings = False
         self.reset_soc = 100
         self.soc_to_set = None
         self.factory_mode = False
@@ -610,13 +610,13 @@ class LltJbd(Battery):
 
     @staticmethod
     def validate_packet(data):
-        if not data:
-            return False
-
         if data is False:
             return False
 
         start, op, status, payload_length = unpack_from("BBBB", data)
+
+        logger.debug("bytearray: " + utils.bytearray_to_string(data))
+
         if start != 0xDD:
             logger.error(
                 ">>> ERROR: Invalid response packet. Expected begin packet character 0xDD"

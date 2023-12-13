@@ -175,11 +175,14 @@ class Jkbms(Battery):
         self.custom_field = tmp if tmp != "Input Us" else None
 
         # production date
-        offset = cellbyte_count + 164
-        tmp = unpack_from(">4s", self.get_data(status_data, b"\xB5", offset, 4))[
-            0
-        ].decode()
-        self.production = "20" + tmp + "01" if tmp and tmp != "" else None
+        try:
+            offset = cellbyte_count + 164
+            tmp = unpack_from(">4s", self.get_data(status_data, b"\xB5", offset, 4))[
+                0
+            ].decode()
+            self.production = "20" + tmp + "01" if tmp and tmp != "" else None
+        except UnicodeDecodeError:
+            self.production = None
 
         offset = cellbyte_count + 174
         self.version = unpack_from(
@@ -281,8 +284,8 @@ class Jkbms(Battery):
         # MOSFET temperature alarm
         self.protection.temp_high_internal = 2 if is_bit_set(tmp[pos - 1]) else 0
         # charge over voltage alarm
-        # TODO: check if "self.bulk_requested is False" works,
-        # else use "self.bulk_last_reached < int(time()) - (60 * 60)"
+        # TODO: check if "self.soc_reset_requested is False" works,
+        # else use "self.soc_reset_last_reached < int(time()) - (60 * 60)"
         self.protection.voltage_high = 2 if is_bit_set(tmp[pos - 2]) else 0
         # discharge under voltage alarm
         self.protection.voltage_low = 2 if is_bit_set(tmp[pos - 3]) else 0
@@ -339,6 +342,8 @@ class Jkbms(Battery):
         end, crc_hi, crc_lo = unpack_from(">BHH", data[-5:])
 
         s = sum(data[0:-4])
+
+        logger.debug("bytearray: " + utils.bytearray_to_string(data))
 
         if start == 0x4E57 and end == 0x68 and s == crc_lo:
             return data[10 : length - 7]

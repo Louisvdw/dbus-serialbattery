@@ -20,7 +20,7 @@ class Daly(Battery):
         self.cell_max_no = None
         self.poll_interval = 1000
         self.type = self.BATTERYTYPE
-        self.has_settings = 1
+        self.has_settings = True
         self.reset_soc = 0
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
@@ -404,7 +404,7 @@ class Daly(Battery):
             for idx in range(self.cell_count):
                 self.cells.append(Cell(True))
 
-        # logger.warning("data " + bytes(cells_volts_data).hex())
+        # logger.warning("data " + bytearray_to_string(cells_volts_data))
 
         # from each of the received sentences, read up to 3 voltages
         for i in range(sentences_expected):
@@ -526,7 +526,7 @@ class Daly(Battery):
             return False
 
         battery_code = ""
-        # logger.warning("data " + bytes(cells_volts_data).hex())
+        # logger.warning("data " + utils.bytearray_to_string(cells_volts_data))
         for i in range(5):
             nr, part = unpack_from(">B7s", data, i * 8)
             if nr != i + 1:
@@ -537,7 +537,7 @@ class Daly(Battery):
             self.custom_field = sub(
                 " +",
                 " ",
-                (battery_code.strip()),
+                (battery_code.replace("\x00", " ").strip()),
             )
         return True
 
@@ -720,7 +720,7 @@ class Daly(Battery):
         reply = ser.read_until(b"\xA5")
         if not reply or b"\xA5" not in reply:
             logger.debug(
-                f"read_sentence {bytes(expected_reply).hex()}: no sentence start received"
+                f"read_sentence {utils.bytearray_to_string(expected_reply)}: no sentence start received"
             )
             return False
 
@@ -732,21 +732,27 @@ class Daly(Battery):
             toread = ser.inWaiting()
             time_run = time() - time_start
             if time_run > timeout:
-                logger.debug(f"read_sentence {bytes(expected_reply).hex()}: timeout")
+                logger.debug(
+                    f"read_sentence {utils.bytearray_to_string(expected_reply)}: timeout"
+                )
                 return False
 
         reply += ser.read(12)
         _, id, cmd, length = unpack_from(">BBBB", reply)
 
-        # logger.info(f"reply: {bytes(reply).hex()}")  # debug
+        # logger.info(f"reply: {utils.bytearray_to_string(reply)}")  # debug
 
         if id != 1 or length != 8 or cmd != expected_reply[0]:
-            logger.debug(f"read_sentence {bytes(expected_reply).hex()}: wrong header")
+            logger.debug(
+                f"read_sentence {utils.bytearray_to_string(expected_reply)}: wrong header"
+            )
             return False
 
         chk = unpack_from(">B", reply, 12)[0]
         if sum(reply[:12]) & 0xFF != chk:
-            logger.debug(f"read_sentence {bytes(expected_reply).hex()}: wrong checksum")
+            logger.debug(
+                f"read_sentence {utils.bytearray_to_string(expected_reply)}: wrong checksum"
+            )
             return False
 
         return reply[4:12]
