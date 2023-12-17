@@ -131,6 +131,22 @@ pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 
 ### BLUETOOTH PART | START ###
 
+# get bluetooth mode integrated/usb
+bluetooth_use_usb=$(awk -F "=" '/^BLUETOOTH_USE_USB/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+
+# replace dtoverlay in /u-boot/config.txt this needs a reboot!
+if [[ $bluetooth_use_usb == *"True"* ]]; then
+    if grep -q -r "miniuart-bt" /u-boot/config.txt; then
+        sed -i 's/miniuart-bt/disable-bt/g' /u-boot/config.txt
+        echo "ATTENTION! You have changed the bluetooth mode to USB! THIS NEEDS A MANUAL REBOOT!"
+    fi
+elif [[ $bluetooth_use_usb == *"False"* ]]; then
+    if grep -q -r "disable-bt" /u-boot/config.txt; then
+        sed -i 's/disable-bt/miniuart-bt/g' /u-boot/config.txt
+        echo "ATTENTION! You have changed the bluetooth mode to built in module! THIS NEEDS A MANUAL REBOOT!"
+    fi
+fi
+
 # get BMS list from config file
 bluetooth_bms=$(awk -F "=" '/^BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
 #echo $bluetooth_bms

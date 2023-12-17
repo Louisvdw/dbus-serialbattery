@@ -40,6 +40,7 @@
 * Added: The device instance does not change anymore when you plug the BMS into another USB port. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/718 by @mr-manuel
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
+* Added: Setting and install logic for usb bluetooth module by @Marvo2011
 * Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
 * Changed: Daly BMS - Fix readsentence by @transistorgit
 * Changed: Daly BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/837 by @mr-manuel
