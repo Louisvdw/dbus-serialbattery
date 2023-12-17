@@ -288,13 +288,13 @@ class LltJbd(Battery):
                 self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0])
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
-                self.max_battery_charge_current = float(
-                    unpack_from(">h", charge_over_current)[0] / 100.0
+                self.max_battery_charge_current = abs(
+                    float(unpack_from(">h", charge_over_current)[0] / 100.0)
                 )
             discharge_over_current = self.read_serial_data_llt(readCmd(REG_DSGOC))
             if discharge_over_current:
-                self.max_battery_discharge_current = float(
-                    unpack_from(">h", discharge_over_current)[0] / -100.0
+                self.max_battery_discharge_current = abs(
+                    float(unpack_from(">h", discharge_over_current)[0] / -100.0)
                 )
             func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
             if func_config:
