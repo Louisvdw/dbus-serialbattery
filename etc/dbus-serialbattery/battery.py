@@ -215,15 +215,15 @@ class Battery(ABC):
         :return:
         """
         if sensor == 0:
-            self.temp_mos = min(max(value, -20), 100)
+            self.temp_mos = round(min(max(value, -20), 100), 1)
         if sensor == 1:
-            self.temp1 = min(max(value, -20), 100)
+            self.temp1 = round(min(max(value, -20), 100), 1)
         if sensor == 2:
-            self.temp2 = min(max(value, -20), 100)
+            self.temp2 = round(min(max(value, -20), 100), 1)
         if sensor == 3:
-            self.temp3 = min(max(value, -20), 100)
+            self.temp3 = round(min(max(value, -20), 100), 1)
         if sensor == 4:
-            self.temp4 = min(max(value, -20), 100)
+            self.temp4 = round(min(max(value, -20), 100), 1)
 
     def manage_charge_voltage(self) -> None:
         """
