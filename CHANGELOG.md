@@ -41,6 +41,7 @@
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
+* Changed: Battery disconnect behaviour. See `BLOCK_ON_DISCONNECT` option in the `config.default.ini` file by @mr-manuel
 * Changed: Daly BMS - Fix readsentence by @transistorgit
 * Changed: Daly BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/837 by @mr-manuel
 * Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
@@ -64,6 +65,7 @@
 * Changed: LLT/JBD BMS - Improved error handling and automatical driver restart in case of error. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/777 by @mr-manuel
 * Changed: LLT/JBD BMS - SOC different in Xiaoxiang app and dbus-serialbattery with https://github.com/Louisvdw/dbus-serialbattery/pull/760 by @idstein
 * Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
+* Changed: Optimized CVL calculation on high cell voltage for smoother charging with https://github.com/Louisvdw/dbus-serialbattery/pull/882 by @cflenker
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
 * Changed: Sinowealth BMS - Fix not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
