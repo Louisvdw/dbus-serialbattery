@@ -139,6 +139,11 @@ MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
+# --------- Cell Voltage limitation (affecting CVL) ---------
+
+CVL_ICONTROLLER_MODE = "True" == config["DEFAULT"]["CVL_ICONTROLLER_MODE"]
+CVL_ICONTROLLER_FACTOR = float(config["DEFAULT"]["CVL_ICONTROLLER_FACTOR"])
+
 # --------- Temperature limitation (affecting CCL/DCL) ---------
 CCCM_T_ENABLE = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
 DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
