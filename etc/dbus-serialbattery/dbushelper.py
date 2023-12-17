@@ -40,6 +40,7 @@ class DbusHelper:
         self.settings = None
         self.error = {"count": 0, "timestamp_first": None, "timestamp_last": None}
         self.block_because_disconnect = False
+        self.cell_voltages_good = False
         self._dbusservice = VeDbusService(
             "com.victronenergy.battery."
             + self.battery.port[self.battery.port.rfind("/") + 1 :],
@@ -620,8 +621,18 @@ class DbusHelper:
                 )
 
                 # if the battery did not update in 10 second, it's assumed to be offline
-                if time_since_first_error >= 10:
+                if time_since_first_error >= 10 and self.battery.online:
                     self.battery.online = False
+
+                    # check if the cell voltages are good to go for some minutes
+                    self.cell_voltages_good = (
+                        True
+                        if self.battery.get_min_cell_voltage() > 3.25
+                        and self.battery.get_max_cell_voltage() < 3.35
+                        else False
+                    )
+
+                    # reset the battery values
                     self.battery.init_values()
 
                     # block charge/discharge
@@ -629,7 +640,13 @@ class DbusHelper:
                         self.block_because_disconnect = True
 
                 # if the battery did not update in 60 second, it's assumed to be completely failed
-                if time_since_first_error >= 60:
+                if time_since_first_error >= 60 and (
+                    utils.BLOCK_ON_DISCONNECT or not self.cell_voltages_good
+                ):
+                    loop.quit()
+
+                # if the cells are between 3.2 and 3.3 volt we can continue for some time
+                if time_since_first_error >= 60 * 20 and not utils.BLOCK_ON_DISCONNECT:
                     loop.quit()
 
             # This is to mannage CVCL
