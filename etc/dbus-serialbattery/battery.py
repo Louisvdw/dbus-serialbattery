@@ -365,13 +365,17 @@ class Battery(ABC):
                     controlvoltage = self.control_voltage - (
                         (
                             self.get_max_cell_voltage()
-                            - utils.MAX_CELL_VOLTAGE
+                            - (
+                                utils.SOC_RESET_VOLTAGE
+                                if self.soc_reset_requested
+                                else utils.MAX_CELL_VOLTAGE
+                            )
                             - utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                         )
                         * utils.CVL_ICONTROLLER_FACTOR
                     )
                 else:
-                    controlvoltage = utils.MAX_CELL_VOLTAGE * self.cell_count
+                    controlvoltage = self.max_battery_voltage
 
                 controlvoltage = min(
                     max(controlvoltage, self.min_battery_voltage),
