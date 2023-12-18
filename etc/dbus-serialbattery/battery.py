@@ -947,37 +947,41 @@ class Battery(ABC):
         return None
 
     def get_timeToSoc(
-        self, socnum: float, crntPrctPerSec: float, onlyNumber: bool = False
+        self, soc_target: float, percent_per_second: float, only_number: bool = False
     ) -> str:
         if self.current > 0:
-            diffSoc = socnum - self.soc
+            soc_diff = soc_target - self.soc
         else:
-            diffSoc = self.soc - socnum
+            soc_diff = self.soc - soc_target
 
         """
         calculate only positive SoC points, since negative points have no sense
         when charging only points above current SoC are shown
         when discharging only points below current SoC are shown
         """
-        if diffSoc < 0:
+        if soc_diff < 0:
             return None
 
-        ttgStr = None
-        if self.soc != socnum and (diffSoc > 0 or utils.TIME_TO_SOC_INC_FROM is True):
-            secondstogo = int(diffSoc / crntPrctPerSec)
-            ttgStr = ""
+        time_to_go_str = None
+        if (
+            self.soc != soc_target
+            and percent_per_second != 0
+            and (soc_diff > 0 or utils.TIME_TO_SOC_INC_FROM is True)
+        ):
+            seconds_to_go = int(soc_diff / percent_per_second)
+            time_to_go_str = ""
 
-            if onlyNumber or utils.TIME_TO_SOC_VALUE_TYPE & 1:
-                ttgStr += str(secondstogo)
-                if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
-                    ttgStr += " ["
-            if not onlyNumber and utils.TIME_TO_SOC_VALUE_TYPE & 2:
-                ttgStr += self.get_secondsToString(secondstogo)
+            if only_number or utils.TIME_TO_SOC_VALUE_TYPE & 1:
+                time_to_go_str += str(seconds_to_go)
+                if not only_number and utils.TIME_TO_SOC_VALUE_TYPE & 2:
+                    time_to_go_str += " ["
+            if not only_number and utils.TIME_TO_SOC_VALUE_TYPE & 2:
+                time_to_go_str += self.get_secondsToString(seconds_to_go)
 
                 if utils.TIME_TO_SOC_VALUE_TYPE & 1:
-                    ttgStr += "]"
+                    time_to_go_str += "]"
 
-        return ttgStr
+        return time_to_go_str
 
     def get_secondsToString(self, timespan: int, precision: int = 3) -> str:
         """
