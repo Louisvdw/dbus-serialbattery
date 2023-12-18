@@ -338,6 +338,9 @@ class Battery(ABC):
                     pass
 
             else:
+                if voltageDiff > utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART:
+                    self.max_voltage_start_time = current_time
+
                 tDiff = current_time - self.max_voltage_start_time
                 # keep max voltage for MAX_VOLTAGE_TIME_SEC more seconds
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
