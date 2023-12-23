@@ -924,17 +924,17 @@ class DbusHelper:
 
                 self._dbusservice["/CurrentAvg"] = self.battery.current_avg
 
-                crntPrctPerSec = (
+                percent_per_seconds = (
                     abs(self.battery.current_avg / (self.battery.capacity / 100)) / 3600
                 )
 
                 # Update TimeToGo item
-                if utils.TIME_TO_GO_ENABLE and crntPrctPerSec is not None:
+                if utils.TIME_TO_GO_ENABLE and percent_per_seconds is not None:
                     # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
                     time_to_go = self.battery.get_timeToSoc(
                         # switch value depending on charging/discharging
                         utils.SOC_LOW_WARNING if self.battery.current_avg < 0 else 100,
-                        crntPrctPerSec,
+                        percent_per_seconds,
                         True,
                     )
 
@@ -950,7 +950,7 @@ class DbusHelper:
                 if len(utils.TIME_TO_SOC_POINTS) > 0:
                     for num in utils.TIME_TO_SOC_POINTS:
                         self._dbusservice["/TimeToSoC/" + str(num)] = (
-                            self.battery.get_timeToSoc(num, crntPrctPerSec)
+                            self.battery.get_timeToSoc(num, percent_per_seconds)
                             if self.battery.current_avg
                             else None
                         )
