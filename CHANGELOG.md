@@ -34,15 +34,17 @@
 * Added: LLT/JBD BMS - Discharge / Charge Mosfet and disable / enable balancer switching over remote console/GUI with https://github.com/Louisvdw/dbus-serialbattery/pull/761 by @idstein
 * Added: LLT/JBD BMS - Show balancer state in GUI under the IO page with https://github.com/Louisvdw/dbus-serialbattery/pull/763 by @idstein
 * Added: Load to SOC reset voltage every x days to reset the SoC to 100% for some BMS by @mr-manuel
+* Added: Possibility to count and calculate the SOC based on reference values with https://github.com/Louisvdw/dbus-serialbattery/pull/868 by @cflenker
 * Added: Save current charge state for driver restart or device reboot. Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 * Added: Save custom name and make it restart persistant by @mr-manuel
+* Added: Setting and install logic for usb bluetooth module by @Marvo2011
 * Added: Temperature names to dbus and mqtt by @mr-manuel
 * Added: The device instance does not change anymore when you plug the BMS into another USB port. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/718 by @mr-manuel
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
-* Added: Setting and install logic for usb bluetooth module by @Marvo2011
 * Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
 * Changed: Battery disconnect behaviour. See `BLOCK_ON_DISCONNECT` option in the `config.default.ini` file by @mr-manuel
+* Changed: Condition for the CVL transition to float with https://github.com/Louisvdw/dbus-serialbattery/pull/895 by @cflenker
 * Changed: Daly BMS - Fix readsentence by @transistorgit
 * Changed: Daly BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/837 by @mr-manuel
 * Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
@@ -56,9 +58,10 @@
 * Changed: Improved driver disable script by @md-manuel
 * Changed: Improved driver reinstall when multiple Bluetooth BMS are enabled by @mr-manuel
 * Changed: JKBMS - Driver do not start if manufacturer date in BMS is empty https://github.com/Louisvdw/dbus-serialbattery/issues/823 by @mr-manuel
-* Changed: JKBMS_BLE BMS - Fixed MOSFET Temperature for HW 11 by @jensbehrens & @mr-manuel
-* Changed: JKBMS_BLE BMS - Fixed recognition of newer models where no data is shown by @mr-manuel
-* Changed: JKBMS_BLE BMS - Improved driver by @seidler2547 & @mr-manuel
+* Changed: JKBMS BLE - Fixed MOSFET Temperature for HW 11 by @jensbehrens & @mr-manuel
+* Changed: JKBMS BLE - Fixed recognition of newer models where no data is shown by @mr-manuel
+* Changed: JKBMS BLE - Improved driver by @seidler2547 & @mr-manuel
+* Changed: LLT/JBD BLE BMS recover from lost BLE connection with https://github.com/Louisvdw/dbus-serialbattery/pull/830 by @Marvo2011
 * Changed: LLT/JBD BMS - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
 * Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/730 by @mr-manuel
 * Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/769 by @mr-manuel

@@ -175,11 +175,15 @@ class DbusHelper:
                             value["MaxVoltageStartTime"]
                         )
 
-                    if "SocCalc" in value:
-                        self.battery.soc_calc = float(value["SocCalc"])
-                        logger.info(f"Soc_calc read from dbus: {int(self.battery.soc_calc)}")
-                    else:
-                        logger.info(f"Soc_calc not found in dbus")
+                    # load SOC from dbus only if SOC_CALCULATION is enabled
+                    if utils.SOC_CALCULATION:
+                        if "SocCalc" in value:
+                            self.battery.soc_calc = float(value["SocCalc"])
+                            logger.info(
+                                f"Soc_calc read from dbus: {int(self.battery.soc_calc)}"
+                            )
+                        else:
+                            logger.info("Soc_calc not found in dbus")
 
                     if "SocResetLastReached" in value and isinstance(
                         value["SocResetLastReached"], int

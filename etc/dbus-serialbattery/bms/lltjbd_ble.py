@@ -47,17 +47,16 @@ class LltJbd_Ble(LltJbd):
         self.hci_uart_ok = True
         if not os.path.isfile("/tmp/dbus-blebattery-hciattach"):
             execfile = open("/tmp/dbus-blebattery-hciattach", "w")
-            execpath = os.popen('ps -ww | grep hciattach | grep -v grep').read()
+            execpath = os.popen("ps -ww | grep hciattach | grep -v grep").read()
             execpath = re.search("/usr/bin/hciattach.+", execpath)
             execfile.write(execpath.group())
             execfile.close()
         else:
-            execpath = os.popen('ps -ww | grep hciattach | grep -v grep').read()
+            execpath = os.popen("ps -ww | grep hciattach | grep -v grep").read()
             if not execpath:
                 execfile = open("/tmp/dbus-blebattery-hciattach", "r")
                 os.system(execfile.readline())
                 execfile.close()
-
 
         logger.info("Init of LltJbd_Ble at " + address)
 
@@ -166,6 +165,8 @@ class LltJbd_Ble(LltJbd):
             except asyncio.TimeoutError:
                 logger.error(">>> ERROR: Unable to connect with BLE device")
                 return False
+        else:
+            return False
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -250,6 +251,8 @@ class LltJbd_Ble(LltJbd):
                 )
                 self.reset_bluetooth()
                 return False
+        else:
+            return False
 
     def read_serial_data_llt(self, command):
         if not self.bt_loop:
@@ -308,6 +311,7 @@ class LltJbd_Ble(LltJbd):
         # sleep(0.5)
         # os.system("bluetoothctl connect " + self.address)
         # self.run = True
+
 
 if __name__ == "__main__":
     bat = LltJbd_Ble("Foo", -1, sys.argv[1])
