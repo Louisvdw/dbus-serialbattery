@@ -56,7 +56,7 @@ class DbusHelper:
             "allow_max_voltage": self.battery.allow_max_voltage,
             "max_voltage_start_time": self.battery.max_voltage_start_time,
             "soc_reset_last_reached": self.battery.soc_reset_last_reached,
-            "soc_calc": int(self.battery.soc_calc)
+            "soc_calc": self.battery.soc_calc
             if self.battery.soc_calc is not None
             else "",
         }
@@ -180,7 +180,7 @@ class DbusHelper:
                         if "SocCalc" in value:
                             self.battery.soc_calc = float(value["SocCalc"])
                             logger.info(
-                                f"Soc_calc read from dbus: {int(self.battery.soc_calc)}"
+                                f"Soc_calc read from dbus: {self.battery.soc_calc}"
                             )
                         else:
                             logger.info("Soc_calc not found in dbus")
@@ -288,7 +288,7 @@ class DbusHelper:
             ],
             "SocCalc": [
                 self.path_battery + "/SocCalc",
-                int(self.battery.soc_calc) if self.battery.soc_calc is not None else "",
+                self.battery.soc_calc if self.battery.soc_calc is not None else "",
                 0,
                 0,
             ],
@@ -442,6 +442,10 @@ class DbusHelper:
 
         # Create SOC, DC and System items
         self._dbusservice.add_path("/Soc", None, writeable=True)
+        # add original SOC for comparing
+        if utils.SOC_CALCULATION:
+            self._dbusservice.add_path("/SocBms", None, writeable=True)
+
         self._dbusservice.add_path(
             "/Dc/0/Voltage",
             None,
@@ -690,6 +694,10 @@ class DbusHelper:
                 round(self.battery.soc_calc, 2)
                 if self.battery.soc_calc is not None
                 else None
+            )
+            # add original SOC for comparing
+            self._dbusservice["/SocBms"] = (
+                round(self.battery.soc, 2) if self.battery.soc is not None else None
             )
         else:
             self._dbusservice["/Soc"] = (
@@ -1125,16 +1133,16 @@ class DbusHelper:
                 + f"after {self.battery.max_voltage_start_time}"
             )
 
-        if int(self.battery.soc_calc) != self.save_charge_details_last["soc_calc"]:
-            self.save_charge_details_last["soc_calc"] = int(self.battery.soc_calc)
+        if self.battery.soc_calc != self.save_charge_details_last["soc_calc"]:
+            self.save_charge_details_last["soc_calc"] = self.battery.soc_calc
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
                 self.path_battery,
                 "SocCalc",
-                int(self.battery.soc_calc),
+                self.battery.soc_calc,
             )
-            logger.debug(f"soc_calc written to dbus: {int(self.battery.soc_calc)}")
+            logger.debug(f"soc_calc written to dbus: {self.battery.soc_calc}")
 
         if (
             self.battery.soc_reset_last_reached
