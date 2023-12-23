@@ -306,8 +306,8 @@ class Battery(ABC):
             self.soc_calc_capacity_remain_lasttime = current_time
 
         # Calculate the SOC based on remaining capacity
-        self.soc_calc = max(
-            min((self.soc_calc_capacity_remain / self.capacity) * 100, 100), 0
+        self.soc_calc = round(
+            max(min((self.soc_calc_capacity_remain / self.capacity) * 100, 100), 0), 2
         )
 
     def prepare_voltage_management(self) -> None:
