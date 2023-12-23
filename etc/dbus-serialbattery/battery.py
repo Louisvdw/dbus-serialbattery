@@ -90,6 +90,10 @@ class Battery(ABC):
         self.production = None
         self.protection = Protection()
         self.version = None
+        self.soc_calc_capacity_remain: float = None
+        self.soc_calc_capacity_remain_lasttime: float = None
+        self.soc_calc_reset_starttime: int = None
+        self.soc_calc: float = None # save soc_calc to preserve on restart
         self.soc: float = None
         self.time_to_soc_update: int = 0
         self.charge_fet: bool = None
@@ -230,6 +234,11 @@ class Battery(ABC):
         manages the charge voltage by setting self.control_voltage
         :return: None
         """
+        if utils.SOC_CALCULATION:
+            self.soc_calculation()
+        else:
+            self.soc_calc = self.soc
+
         self.prepare_voltage_management()
         if utils.CVCM_ENABLE:
             if utils.LINEAR_LIMITATION_ENABLE:
@@ -240,6 +249,60 @@ class Battery(ABC):
         else:
             self.control_voltage = round(self.max_battery_voltage, 3)
             self.charge_mode = "Keep always max voltage"
+
+    def soc_calculation(self) -> None:
+        current_time = time()
+        voltageSum = 0
+        current_corr = 0
+
+        for i in range(self.cell_count):
+            voltage = self.get_cell_voltage(i)
+            if voltage:
+                voltageSum += voltage
+
+        if self.soc_calc_capacity_remain:
+            current_corr = utils.calcLinearRelationship(
+                self.current,
+                utils.SOC_CALC_CURRENT_MEASURED,
+                utils.SOC_CALC_CURRENT_REAL,
+            )
+            
+            self.soc_calc_capacity_remain = (
+                self.soc_calc_capacity_remain
+                + current_corr
+                * (current_time - self.soc_calc_capacity_remain_lasttime)
+                / 3600
+            )
+            self.soc_calc_capacity_remain_lasttime = current_time
+            # Reset-Condition
+            if (
+                self.current < utils.SOC_RESET_CURRENT
+                and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum)
+                and self.soc_calc_reset_starttime
+            ):
+                if (
+                    int(current_time) - self.soc_calc_reset_starttime
+                ) > utils.SOC_RESET_TIME:
+                    self.soc_calc_capacity_remain = self.capacity
+            else:
+                self.soc_calc_reset_starttime = int(current_time)
+        else:
+            if self.soc_calc is None:
+                # if soc_calc was not stored in dbus then initialize with the soc reported by the bms
+                if self.soc is not None:
+                    self.soc_calc_capacity_remain = (
+                        self.capacity * self.soc / 100)
+                else:
+                    # if there is no soc from bms then set to 100%
+                    self.soc_calc_capacity_remain = self.capacity
+            else:
+                self.soc_calc_capacity_remain = self.capacity * self.soc_calc / 100
+            self.soc_calc_capacity_remain_lasttime = current_time
+
+        # Calculate the SOC based on remaining capacity
+        self.soc_calc = max(
+            min((self.soc_calc_capacity_remain / self.capacity) * 100, 100), 0
+        )
 
     def prepare_voltage_management(self) -> None:
         soc_reset_last_reached_days_ago = (
@@ -330,7 +393,7 @@ class Battery(ABC):
 
                 # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                 elif (
-                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc_calc
                     or voltageDiff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
                 ) and not self.allow_max_voltage:
                     self.allow_max_voltage = True
@@ -338,15 +401,18 @@ class Battery(ABC):
                     pass
 
             else:
+                if voltageDiff > utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART:
+                    self.max_voltage_start_time = current_time
+
                 tDiff = current_time - self.max_voltage_start_time
                 # keep max voltage for MAX_VOLTAGE_TIME_SEC more seconds
                 if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
-                    if self.soc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
+                    if self.soc_calc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
                         # write to log, that reset to float was not possible
                         logger.error(
-                            f"Could not change to float voltage. Battery SoC ({self.soc}%) is lower"
+                            f"Could not change to float voltage. Battery SoC ({self.soc_calc}%) is lower"
                             + f" than SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT ({utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%)."
                             + " Please reset SoC manually or lower the SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT in the"
                             + ' "config.ini".'
@@ -485,7 +551,7 @@ class Battery(ABC):
             )
             self.charge_mode_debug += f" • penaltySum: {round(penaltySum, 3)}V"
             self.charge_mode_debug += f"\ntDiff: {tDiff}/{utils.MAX_VOLTAGE_TIME_SEC}"
-            self.charge_mode_debug += f" • SoC: {self.soc}%"
+            self.charge_mode_debug += f" • SoC: {self.soc}% SoC_Calc {self.soc_calc}%"
             self.charge_mode_debug += (
                 f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
             )
@@ -552,7 +618,7 @@ class Battery(ABC):
                 # check if reset soc is greater than battery soc
                 # this prevents flapping between max and float voltage
                 elif (
-                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc
+                    utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc_calc
                     and not self.allow_max_voltage
                 ):
                     self.allow_max_voltage = True
@@ -857,10 +923,10 @@ class Battery(ABC):
             ]
             if utils.LINEAR_LIMITATION_ENABLE:
                 return utils.calcLinearRelationship(
-                    self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC
+                    self.soc_calc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC
                 )
             return utils.calcStepRelationship(
-                self.soc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True
+                self.soc_calc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True
             )
         except Exception:
             return self.max_battery_charge_current
@@ -881,10 +947,10 @@ class Battery(ABC):
             ]
             if utils.LINEAR_LIMITATION_ENABLE:
                 return utils.calcLinearRelationship(
-                    self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC
+                    self.soc_calc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC
                 )
             return utils.calcStepRelationship(
-                self.soc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True
+                self.soc_calc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True
             )
         except Exception:
             return self.max_battery_charge_current
@@ -942,15 +1008,15 @@ class Battery(ABC):
     def get_capacity_remain(self) -> Union[float, None]:
         if self.capacity_remain is not None:
             return self.capacity_remain
-        if self.capacity is not None and self.soc is not None:
-            return self.capacity * self.soc / 100
+        if self.capacity is not None and self.soc_calc is not None:
+            return self.capacity * self.soc_calc / 100
         return None
 
     def get_timeToSoc(
         self, soc_target: float, percent_per_second: float, only_number: bool = False
     ) -> str:
         if self.current > 0:
-            soc_diff = soc_target - self.soc
+            soc_diff = soc_target - self.soc_calc
         else:
             soc_diff = self.soc - soc_target
 
@@ -964,7 +1030,7 @@ class Battery(ABC):
 
         time_to_go_str = None
         if (
-            self.soc != soc_target
+            self.soc_calc != soc_target
             and percent_per_second != 0
             and (soc_diff > 0 or utils.TIME_TO_SOC_INC_FROM is True)
         ):
@@ -1247,7 +1313,7 @@ class Battery(ABC):
         logger.info(f"Battery {self.type} connected to dbus from {self.port}")
         logger.info("========== Settings ==========")
         logger.info(
-            f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc}%"
+            f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc_calc}%"
         )
         logger.info(
             f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}"
