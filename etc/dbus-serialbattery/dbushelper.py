@@ -858,7 +858,7 @@ class DbusHelper:
         # cell voltages
         if utils.BATTERY_CELL_DATA_FORMAT > 0:
             try:
-                voltageSum = 0
+                voltage_sum = 0
                 for i in range(self.battery.cell_count):
                     voltage = self.battery.get_cell_voltage(i)
                     cellpath = (
@@ -872,11 +872,11 @@ class DbusHelper:
                             "/Balances/Cell%s" % (str(i + 1))
                         ] = self.battery.get_cell_balancing(i)
                     if voltage:
-                        voltageSum += voltage
+                        voltage_sum += voltage
                 pathbase = (
                     "Cell" if (utils.BATTERY_CELL_DATA_FORMAT & 2) else "Voltages"
                 )
-                self._dbusservice["/%s/Sum" % pathbase] = voltageSum
+                self._dbusservice["/%s/Sum" % pathbase] = voltage_sum
                 self._dbusservice["/%s/Diff" % pathbase] = (
                     self.battery.get_max_cell_voltage()
                     - self.battery.get_min_cell_voltage()
