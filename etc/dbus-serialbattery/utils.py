@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231218dev"
+DRIVER_VERSION = "1.0.20231223dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -217,25 +217,14 @@ TIME_TO_SOC_RECALCULATE_EVERY = (
 TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 # --------- SOC calculation ---------
-# Description: Calculate the SOC in the driver. Do not use the SOC reported by the BMS
-# SOC_CALCULATION = True: Calc SOC in the driver, do not use SOC reported from BMS
-#      - The SOC is calculated by integration of the current reported by the BMS.
-#      - The current reported from the BMS can be corrected by
-#        the map (SOC_CALC_CURRENT_MEASURED,SOC_CALC_CURRENT_REAL).
-#      - The SOC is set to 100% if the following conditions apply for at least SOC_RESET_TIME seconds:
-#          * current is lower than SOC_RESET_CURRENT Amps
-#          * Sum of Cell voltages >= MAX_CELL_VOLTAGE * Cell Count - VOLTAGE_DROP
-#      - The calculated SOC is stored in dbus to persist a driver restart
-# SOC_CALCULATION = False: Use SOC reported from BMS (none of the other parameters apply)
-
 SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
 SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
 SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
-SOC_CALC_CURRENT_MEASURED = _get_list_from_config(
-    "DEFAULT", "SOC_CALC_CURRENT_MEASURED", lambda v: float(v)
+SOC_CALC_CURRENT_REPORTED_BY_BMS = _get_list_from_config(
+    "DEFAULT", "SOC_CALC_CURRENT_REPORTED_BY_BMS", lambda v: float(v)
 )
-SOC_CALC_CURRENT_REAL = _get_list_from_config(
-    "DEFAULT", "SOC_CALC_CURRENT_REAL", lambda v: float(v)
+SOC_CALC_CURRENT_MEASURED_BY_USER = _get_list_from_config(
+    "DEFAULT", "SOC_CALC_CURRENT_MEASURED_BY_USER", lambda v: float(v)
 )
 
 # --------- Additional settings ---------
@@ -250,8 +239,6 @@ CUSTOM_BATTERY_NAMES = _get_list_from_config(
 )
 
 # Auto reset SoC
-# If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
-# Currently only working for Daly BMS and JK BMS BLE
 AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
 PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])

@@ -93,7 +93,7 @@ class Battery(ABC):
         self.soc_calc_capacity_remain: float = None
         self.soc_calc_capacity_remain_lasttime: float = None
         self.soc_calc_reset_starttime: int = None
-        self.soc_calc: float = None # save soc_calc to preserve on restart
+        self.soc_calc: float = None  # save soc_calc to preserve on restart
         self.soc: float = None
         self.time_to_soc_update: int = 0
         self.charge_fet: bool = None
@@ -263,10 +263,10 @@ class Battery(ABC):
         if self.soc_calc_capacity_remain:
             current_corr = utils.calcLinearRelationship(
                 self.current,
-                utils.SOC_CALC_CURRENT_MEASURED,
-                utils.SOC_CALC_CURRENT_REAL,
+                utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
+                utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
             )
-            
+
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
                 + current_corr
@@ -290,8 +290,7 @@ class Battery(ABC):
             if self.soc_calc is None:
                 # if soc_calc was not stored in dbus then initialize with the soc reported by the bms
                 if self.soc is not None:
-                    self.soc_calc_capacity_remain = (
-                        self.capacity * self.soc / 100)
+                    self.soc_calc_capacity_remain = self.capacity * self.soc / 100
                 else:
                     # if there is no soc from bms then set to 100%
                     self.soc_calc_capacity_remain = self.capacity
