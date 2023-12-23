@@ -601,7 +601,7 @@ class DbusHelper:
                     )
 
         logger.info(f"publish config values = {utils.PUBLISH_CONFIG_VALUES}")
-        if utils.PUBLISH_CONFIG_VALUES == 1:
+        if utils.PUBLISH_CONFIG_VALUES:
             publish_config_variables(self._dbusservice)
 
         if self.battery.has_settings:

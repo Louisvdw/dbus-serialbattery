@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231223dev"
+DRIVER_VERSION = "1.1.20231223dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -241,7 +241,8 @@ CUSTOM_BATTERY_NAMES = _get_list_from_config(
 # Auto reset SoC
 AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
-PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
+# Publish the config settings to the dbus path "/Info/Config/"
+PUBLISH_CONFIG_VALUES = "True" == config["DEFAULT"]["PUBLISH_CONFIG_VALUES"]
 
 BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 
