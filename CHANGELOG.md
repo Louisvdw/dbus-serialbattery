@@ -6,6 +6,10 @@
 
 ## Breaking changes
 
+* Driver version greater or equal to `v1.1.20231223beta`
+
+  * `PUBLISH_CONFIG_VALUES` now has to be True or False
+
 * Driver version greater or equal to `v1.0.20231128beta`
 
   * The custom name is not saved to the config file anymore, but to the dbus service com.victronenergy.settings. You have to re-enter it once.
@@ -42,6 +46,7 @@
 * Added: The device instance does not change anymore when you plug the BMS into another USB port. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/718 by @mr-manuel
 * Added: Use current average of the last 300 cycles for time to go and time to SoC calculation by @mr-manuel
 * Added: Validate current, voltage, capacity and SoC for all BMS. This prevents that a device, which is no BMS, is detected as BMS. Fixes also https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
+* Changed: `PUBLISH_CONFIG_VALUES` now has to be True or False by @mr-manuel
 * Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
 * Changed: Battery disconnect behaviour. See `BLOCK_ON_DISCONNECT` option in the `config.default.ini` file by @mr-manuel
 * Changed: Condition for the CVL transition to float with https://github.com/Louisvdw/dbus-serialbattery/pull/895 by @cflenker
