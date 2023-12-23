@@ -252,16 +252,18 @@ class Battery(ABC):
 
     def soc_calculation(self) -> None:
         current_time = time()
-        voltageSum = 0
-        current_corr = 0
+        voltage_sum = 0
+        current_corrected = 0
 
+        # calculate battery voltage from cell voltages
         for i in range(self.cell_count):
             voltage = self.get_cell_voltage(i)
             if voltage:
-                voltageSum += voltage
+                voltage_sum += voltage
 
         if self.soc_calc_capacity_remain:
-            current_corr = utils.calcLinearRelationship(
+            # calculate real current
+            current_corrected = utils.calcLinearRelationship(
                 self.current,
                 utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
                 utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
@@ -269,33 +271,38 @@ class Battery(ABC):
 
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
-                + current_corr
+                + current_corrected
                 * (current_time - self.soc_calc_capacity_remain_lasttime)
                 / 3600
             )
             self.soc_calc_capacity_remain_lasttime = current_time
-            # Reset-Condition
+
+            # check if battery is fully charged
             if (
                 self.current < utils.SOC_RESET_CURRENT
-                and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltageSum)
+                and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltage_sum)
                 and self.soc_calc_reset_starttime
             ):
+                # set soc to 100%
                 if (
                     int(current_time) - self.soc_calc_reset_starttime
                 ) > utils.SOC_RESET_TIME:
                     self.soc_calc_capacity_remain = self.capacity
             else:
                 self.soc_calc_reset_starttime = int(current_time)
+
         else:
+            # if soc_calc is not available from dbus then initialize it
             if self.soc_calc is None:
-                # if soc_calc was not stored in dbus then initialize with the soc reported by the bms
+                # if there is a soc from bms then use it
                 if self.soc is not None:
                     self.soc_calc_capacity_remain = self.capacity * self.soc / 100
+                # else set it to 100%
                 else:
-                    # if there is no soc from bms then set to 100%
                     self.soc_calc_capacity_remain = self.capacity
             else:
                 self.soc_calc_capacity_remain = self.capacity * self.soc_calc / 100
+
             self.soc_calc_capacity_remain_lasttime = current_time
 
         # Calculate the SOC based on remaining capacity
@@ -346,45 +353,45 @@ class Battery(ABC):
         manages the charge voltage using linear interpolation by setting self.control_voltage
         :return: None
         """
-        foundHighCellVoltage = False
-        voltageSum = 0
-        penaltySum = 0
-        tDiff = 0
-        controlvoltage = 0
+        found_high_cell_voltage = False
+        voltage_sum = 0
+        penalty_sum = 0
+        time_diff = 0
+        control_voltage = 0
         current_time = int(time())
 
         # meassurment and variation tolerance in volts
-        measurementToleranceVariation = 0.5
+        measurement_tolerance_variation = 0.5
 
         try:
             # calculate battery sum and check for cell overvoltage
             for i in range(self.cell_count):
                 voltage = self.get_cell_voltage(i)
                 if voltage:
-                    voltageSum += voltage
+                    voltage_sum += voltage
 
                     # calculate penalty sum to prevent single cell overcharge by using current cell voltage
                     if (
                         self.max_battery_voltage != self.soc_reset_battery_voltage
                         and voltage > utils.MAX_CELL_VOLTAGE
                     ):
-                        # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
-                        foundHighCellVoltage = True
-                        penaltySum += voltage - utils.MAX_CELL_VOLTAGE
+                        # found_high_cell_voltage: reset to False is not needed, since it is recalculated every second
+                        found_high_cell_voltage = True
+                        penalty_sum += voltage - utils.MAX_CELL_VOLTAGE
                     elif (
                         self.max_battery_voltage == self.soc_reset_battery_voltage
                         and voltage > utils.SOC_RESET_VOLTAGE
                     ):
-                        # foundHighCellVoltage: reset to False is not needed, since it is recalculated every second
-                        foundHighCellVoltage = True
-                        penaltySum += voltage - utils.SOC_RESET_VOLTAGE
+                        # found_high_cell_voltage: reset to False is not needed, since it is recalculated every second
+                        found_high_cell_voltage = True
+                        penalty_sum += voltage - utils.SOC_RESET_VOLTAGE
 
             voltageDiff = self.get_max_cell_voltage() - self.get_min_cell_voltage()
 
             if self.max_voltage_start_time is None:
                 # start timer, if max voltage is reached and cells are balanced
                 if (
-                    self.max_battery_voltage <= voltageSum
+                    self.max_battery_voltage <= voltage_sum
                     and voltageDiff <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
                 ):
@@ -403,9 +410,9 @@ class Battery(ABC):
                 if voltageDiff > utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART:
                     self.max_voltage_start_time = current_time
 
-                tDiff = current_time - self.max_voltage_start_time
+                time_diff = current_time - self.max_voltage_start_time
                 # keep max voltage for MAX_VOLTAGE_TIME_SEC more seconds
-                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                if utils.MAX_VOLTAGE_TIME_SEC < time_diff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
                     if self.soc_calc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
@@ -420,14 +427,14 @@ class Battery(ABC):
                 # we don't forget to reset max_voltage_start_time wenn we going to bulk(dynamic) mode
                 # regardless of whether we were in absorption mode or not
                 if (
-                    voltageSum
-                    < self.max_battery_voltage - measurementToleranceVariation
+                    voltage_sum
+                    < self.max_battery_voltage - measurement_tolerance_variation
                 ):
                     self.max_voltage_start_time = None
 
             if utils.CVL_ICONTROLLER_MODE:
                 if self.control_voltage:
-                    controlvoltage = self.control_voltage - (
+                    control_voltage = self.control_voltage - (
                         (
                             self.get_max_cell_voltage()
                             - (
@@ -440,21 +447,21 @@ class Battery(ABC):
                         * utils.CVL_ICONTROLLER_FACTOR
                     )
                 else:
-                    controlvoltage = self.max_battery_voltage
+                    control_voltage = self.max_battery_voltage
 
-                controlvoltage = min(
-                    max(controlvoltage, self.min_battery_voltage),
+                control_voltage = min(
+                    max(control_voltage, self.min_battery_voltage),
                     self.max_battery_voltage,
                 )
 
             # INFO: battery will only switch to Absorption, if all cells are balanced.
             #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
-            if foundHighCellVoltage and self.allow_max_voltage:
+            if found_high_cell_voltage and self.allow_max_voltage:
                 # Keep penalty above min battery voltage and below max battery voltage
                 control_voltage = round(
                     min(
                         max(
-                            voltageSum - penaltySum,
+                            voltage_sum - penalty_sum,
                             self.min_battery_voltage,
                         ),
                         self.max_battery_voltage,
@@ -462,7 +469,7 @@ class Battery(ABC):
                     3,
                 )
                 if utils.CVL_ICONTROLLER_MODE:
-                    self.control_voltage = controlvoltage
+                    self.control_voltage = control_voltage
                 else:
                     self.set_cvl_linear(control_voltage)
 
@@ -477,7 +484,7 @@ class Battery(ABC):
 
             elif self.allow_max_voltage:
                 if utils.CVL_ICONTROLLER_MODE:
-                    self.control_voltage = controlvoltage
+                    self.control_voltage = control_voltage
                 else:
                     self.control_voltage = round(self.max_battery_voltage, 3)
 
@@ -543,13 +550,13 @@ class Battery(ABC):
             self.charge_mode_debug += (
                 f" - VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)}V"
             )
-            self.charge_mode_debug += f"\nvoltageSum: {round(voltageSum, 2)}V"
+            self.charge_mode_debug += f"\nvoltage_sum: {round(voltage_sum, 2)}V"
             self.charge_mode_debug += f" • voltageDiff: {round(voltageDiff, 3)}V"
             self.charge_mode_debug += (
                 f"\ncontrol_voltage: {round(self.control_voltage, 2)}V"
             )
-            self.charge_mode_debug += f" • penaltySum: {round(penaltySum, 3)}V"
-            self.charge_mode_debug += f"\ntDiff: {tDiff}/{utils.MAX_VOLTAGE_TIME_SEC}"
+            self.charge_mode_debug += f" • penalty_sum: {round(penalty_sum, 3)}V"
+            self.charge_mode_debug += f"\ntime_diff: {time_diff}/{utils.MAX_VOLTAGE_TIME_SEC}"
             self.charge_mode_debug += f" • SoC: {self.soc}% SoC_Calc {self.soc_calc}%"
             self.charge_mode_debug += (
                 f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
@@ -597,8 +604,8 @@ class Battery(ABC):
         manages the charge voltage using a step function by setting self.control_voltage
         :return: None
         """
-        voltageSum = 0
-        tDiff = 0
+        voltage_sum = 0
+        time_diff = 0
         current_time = int(time())
 
         try:
@@ -606,11 +613,11 @@ class Battery(ABC):
             for i in range(self.cell_count):
                 voltage = self.get_cell_voltage(i)
                 if voltage:
-                    voltageSum += voltage
+                    voltage_sum += voltage
 
             if self.max_voltage_start_time is None:
                 # check if max voltage is reached and start timer to keep max voltage
-                if self.max_battery_voltage <= voltageSum and self.allow_max_voltage:
+                if self.max_battery_voltage <= voltage_sum and self.allow_max_voltage:
                     # example 2
                     self.max_voltage_start_time = current_time
 
@@ -628,8 +635,8 @@ class Battery(ABC):
 
             # timer started
             else:
-                tDiff = current_time - self.max_voltage_start_time
-                if utils.MAX_VOLTAGE_TIME_SEC < tDiff:
+                time_diff = current_time - self.max_voltage_start_time
+                if utils.MAX_VOLTAGE_TIME_SEC < time_diff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
 
