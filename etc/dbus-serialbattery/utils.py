@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.1.20231223dev"
+DRIVER_VERSION = "1.1.20231224dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -232,10 +232,6 @@ BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
 EXCLUDED_DEVICES = _get_list_from_config(
     "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
-)
-
-CUSTOM_BATTERY_NAMES = _get_list_from_config(
-    "DEFAULT", "CUSTOM_BATTERY_NAMES", lambda v: str(v)
 )
 
 # Auto reset SoC

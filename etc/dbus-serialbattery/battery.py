@@ -162,16 +162,7 @@ class Battery(ABC):
         return "Serial " + self.port
 
     def custom_name(self) -> str:
-        """
-        Check if the custom name is present in the config file, else return default name
-        """
-        if len(utils.CUSTOM_BATTERY_NAMES) > 0:
-            for name in utils.CUSTOM_BATTERY_NAMES:
-                tmp = name.split(":")
-                if tmp[0].strip() == self.port:
-                    return tmp[1].strip()
-        else:
-            return "SerialBattery(" + self.type + ")"
+        return "SerialBattery(" + self.type + ")"
 
     def product_name(self) -> str:
         return "SerialBattery(" + self.type + ")"
