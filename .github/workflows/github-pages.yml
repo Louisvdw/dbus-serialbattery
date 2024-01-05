@@ -57,6 +57,9 @@ jobs:
           cache: yarn
           cache-dependency-path: './docs/yarn.lock' # THIS PATTERN did the trick for me.
 
+      - name: Cleanup
+        run: yarn clear
+
       - name: Install dependencies
         run: yarn install --cwd ./docs --frozen-lockfile --non-interactive
 

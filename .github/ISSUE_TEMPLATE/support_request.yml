@@ -102,6 +102,14 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: battery_count
+    attributes:
+      label: Battery count
+      description: Specify how many batteries/BMS are connected to your Venus OS.
+    validations:
+      required: true
+
   - type: dropdown
     id: connection_type
     attributes:
