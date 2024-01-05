@@ -6,7 +6,7 @@ on:
   push:
     # Run on changes in the master branch
     branches:
-      - master
+      #- master
       - docusaurus
 
     # Run on changes in the docs folder
@@ -58,10 +58,12 @@ jobs:
           cache-dependency-path: './docs/yarn.lock' # THIS PATTERN did the trick for me.
 
       - name: Install dependencies
-        run: yarn install --cwd ./docs --frozen-lockfile --non-interactive
+        working-directory: ./docs
+        run: yarn install --frozen-lockfile --non-interactive
 
       - name: Build
-        run: yarn --cwd ./docs build
+        working-directory: ./docs
+        run: yarn build
 
       - name: Setup Pages
         uses: actions/configure-pages@v1

@@ -103,13 +103,13 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 #### Latest release (recommended)
 
-Run the [install script ](../general/install#install-over-ssh) and select `1`.
+Run the [install script ](#install-over-ssh) and select `1`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
 #### Specific version/troubleshooting option
 
-Run the [install script ](../general/install#install-over-ssh) and select `2`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
+Run the [install script ](#install-over-ssh) and select `2`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
@@ -117,7 +117,7 @@ Run the [install script ](../general/install#install-over-ssh) and select `2`. G
 
 > Not recommended in production environment, unless you know what you do. Testers are very welcome!
 
-Run the [install script ](../general/install#install-over-ssh) and select `3`.
+Run the [install script ](#install-over-ssh) and select `3`.
 
 Then select `1` if you want to install from the `master` branch or select `2` if you want to install from the `dev` branch.
 
@@ -129,7 +129,7 @@ The `dev` branch can be seen as most recent version, but also as the most unstab
 
 #### Local tar file
 
-Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script ](../general/install#install-over-ssh) and select `3`.
+Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script ](#install-over-ssh) and select `3`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
@@ -141,6 +141,61 @@ Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/u
 * MNB BMS &rarr; Check [MNB BMS setup](https://github.com/Louisvdw/dbus-serialbattery/issues/590)
 
 Since driver version `>= v1.0.0` you can also get an overview of the BMS specific settings be checking the end of the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
+
+
+### Get BMS MAC address
+
+Execute this commands to scan for Bluetooth devices and get their MAC address:
+
+**Command to execute**
+```bash
+bluetoothctl
+```
+
+**Output**
+```
+Agent registered
+[CHG] Controller xx:xx:xx:xx:xx:xx Pairable: yes
+```
+
+**Command to execute**
+```bash
+scan on
+```
+
+**Output**
+```
+Discovery started
+[CHG] Controller xx:xx:xx:xx:xx:xx Discovering: yes
+[CHG] Device xx:xx:xx:xx:xx:xx RSSI: -60
+```
+
+**Command to execute**
+```
+devices
+```
+
+**Output with device MAC addresses**
+```
+Device xx:xx:xx:xx:xx:xx JK-B2A24S15P
+```
+
+**Command to execute**
+```
+scan off
+```
+
+**Output**
+```
+Discovery stopped
+[CHG] Device xx:xx:xx:xx:xx:xx RSSI is nil
+[CHG] Controller xx:xx:xx:xx:xx:xx Discovering: no
+```
+
+**Command to execute**
+```
+quit
+```
 
 ## How to change the default limits
 
