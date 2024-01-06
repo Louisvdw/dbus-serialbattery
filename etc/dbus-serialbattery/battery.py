@@ -493,8 +493,6 @@ class Battery(ABC):
                 if self.soc_reset_requested:
                     # logger.info("set soc_reset_requested to False")
                     self.soc_reset_requested = False
-                    # IDEA: Save "soc_reset_last_reached" in the dbus path com.victronenergy.settings
-                    # to make it restart persistent
                     self.soc_reset_last_reached = current_time
                 if self.control_voltage:
                     # check if battery changed from bulk/absoprtion to float

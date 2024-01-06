@@ -126,126 +126,130 @@ class DbusHelper:
         # }
 
         # loop through devices in dbus settings
-        for key, value in settings_from_dbus["Settings"]["Devices"].items():
-            # check if it's a serialbattery
-            if "serialbattery" in key:
-                # check used device instances
-                if "ClassAndVrmInstance" in value:
-                    device_instances_used.append(
-                        value["ClassAndVrmInstance"][
-                            value["ClassAndVrmInstance"].rfind(":") + 1 :
-                        ]
-                    )
-
-                # check the unique identifier, if the battery was already connected once
-                # if so, get the last saved data
-                if (
-                    "UniqueIdentifier" in value
-                    and value["UniqueIdentifier"] == self.bms_id
-                ):
-                    # set found_bms to true
-                    found_bms = True
-
-                    # get the instance from the object name
-                    device_instance = int(
-                        value["ClassAndVrmInstance"][
-                            value["ClassAndVrmInstance"].rfind(":") + 1 :
-                        ]
-                    )
-                    logger.info(
-                        f"Found existing battery with DeviceInstance = {device_instance}"
-                    )
-
-                    if "AllowMaxVoltage" in value and isinstance(
-                        value["AllowMaxVoltage"], int
-                    ):
-                        self.battery.allow_max_voltage = (
-                            True if value["AllowMaxVoltage"] == 1 else False
-                        )
-                        self.battery.max_voltage_start_time = None
-
-                    # check if the battery has a custom name
-                    if "CustomName" in value and value["CustomName"] != "":
-                        custom_name = value["CustomName"]
-
-                    if "MaxVoltageStartTime" in value and isinstance(
-                        value["MaxVoltageStartTime"], int
-                    ):
-                        self.battery.max_voltage_start_time = int(
-                            value["MaxVoltageStartTime"]
+        if (
+            "Settings" in settings_from_dbus
+            and "Devices" in settings_from_dbus["Settings"]
+        ):
+            for key, value in settings_from_dbus["Settings"]["Devices"].items():
+                # check if it's a serialbattery
+                if "serialbattery" in key:
+                    # check used device instances
+                    if "ClassAndVrmInstance" in value:
+                        device_instances_used.append(
+                            value["ClassAndVrmInstance"][
+                                value["ClassAndVrmInstance"].rfind(":") + 1 :
+                            ]
                         )
 
-                    # load SOC from dbus only if SOC_CALCULATION is enabled
-                    if utils.SOC_CALCULATION:
-                        if "SocCalc" in value:
-                            self.battery.soc_calc = float(value["SocCalc"])
-                            logger.info(
-                                f"Soc_calc read from dbus: {self.battery.soc_calc}"
+                    # check the unique identifier, if the battery was already connected once
+                    # if so, get the last saved data
+                    if (
+                        "UniqueIdentifier" in value
+                        and value["UniqueIdentifier"] == self.bms_id
+                    ):
+                        # set found_bms to true
+                        found_bms = True
+
+                        # get the instance from the object name
+                        device_instance = int(
+                            value["ClassAndVrmInstance"][
+                                value["ClassAndVrmInstance"].rfind(":") + 1 :
+                            ]
+                        )
+                        logger.info(
+                            f"Found existing battery with DeviceInstance = {device_instance}"
+                        )
+
+                        if "AllowMaxVoltage" in value and isinstance(
+                            value["AllowMaxVoltage"], int
+                        ):
+                            self.battery.allow_max_voltage = (
+                                True if value["AllowMaxVoltage"] == 1 else False
                             )
-                        else:
-                            logger.info("Soc_calc not found in dbus")
+                            self.battery.max_voltage_start_time = None
 
-                    if "SocResetLastReached" in value and isinstance(
-                        value["SocResetLastReached"], int
-                    ):
-                        self.battery.soc_reset_last_reached = int(
-                            value["SocResetLastReached"]
+                        # check if the battery has a custom name
+                        if "CustomName" in value and value["CustomName"] != "":
+                            custom_name = value["CustomName"]
+
+                        if "MaxVoltageStartTime" in value and isinstance(
+                            value["MaxVoltageStartTime"], int
+                        ):
+                            self.battery.max_voltage_start_time = int(
+                                value["MaxVoltageStartTime"]
+                            )
+
+                        # load SOC from dbus only if SOC_CALCULATION is enabled
+                        if utils.SOC_CALCULATION:
+                            if "SocCalc" in value:
+                                self.battery.soc_calc = float(value["SocCalc"])
+                                logger.info(
+                                    f"Soc_calc read from dbus: {self.battery.soc_calc}"
+                                )
+                            else:
+                                logger.info("Soc_calc not found in dbus")
+
+                        if "SocResetLastReached" in value and isinstance(
+                            value["SocResetLastReached"], int
+                        ):
+                            self.battery.soc_reset_last_reached = int(
+                                value["SocResetLastReached"]
+                            )
+
+                    # check the last seen time and remove the battery it it was not seen for 30 days
+                    elif "LastSeen" in value and int(value["LastSeen"]) < int(
+                        time()
+                    ) - (60 * 60 * 24 * 30):
+                        # remove entry
+                        del_return = self.removeSetting(
+                            get_bus(),
+                            "com.victronenergy.settings",
+                            "/Settings/Devices/" + key,
+                            [
+                                "AllowMaxVoltage",
+                                "ClassAndVrmInstance",
+                                "CustomName",
+                                "LastSeen",
+                                "MaxVoltageStartTime",
+                                "SocCalc",
+                                "SocResetLastReached",
+                                "UniqueIdentifier",
+                            ],
+                        )
+                        logger.info(
+                            f"Remove /Settings/Devices/{key} from dbus. Delete result: {del_return}"
                         )
 
-                # check the last seen time and remove the battery it it was not seen for 30 days
-                elif "LastSeen" in value and int(value["LastSeen"]) < int(time()) - (
-                    60 * 60 * 24 * 30
-                ):
-                    # remove entry
-                    del_return = self.removeSetting(
-                        get_bus(),
-                        "com.victronenergy.settings",
-                        "/Settings/Devices/" + key,
-                        [
-                            "AllowMaxVoltage",
-                            "ClassAndVrmInstance",
-                            "CustomName",
-                            "LastSeen",
-                            "MaxVoltageStartTime",
-                            "SocCalc",
-                            "SocResetLastReached",
-                            "UniqueIdentifier",
-                        ],
-                    )
-                    logger.info(
-                        f"Remove /Settings/Devices/{key} from dbus. Delete result: {del_return}"
-                    )
+                    # check if the battery has a last seen time, if not then it's an old entry and can be removed
+                    elif "LastSeen" not in value:
+                        del_return = self.removeSetting(
+                            get_bus(),
+                            "com.victronenergy.settings",
+                            "/Settings/Devices/" + key,
+                            ["ClassAndVrmInstance"],
+                        )
+                        logger.info(
+                            f"Remove /Settings/Devices/{key} from dbus. "
+                            + f"Old entry. Delete result: {del_return}"
+                        )
 
-                # check if the battery has a last seen time, if not then it's an old entry and can be removed
-                elif "LastSeen" not in value:
-                    del_return = self.removeSetting(
-                        get_bus(),
-                        "com.victronenergy.settings",
-                        "/Settings/Devices/" + key,
-                        ["ClassAndVrmInstance"],
-                    )
-                    logger.info(
-                        f"Remove /Settings/Devices/{key} from dbus. "
-                        + f"Old entry. Delete result: {del_return}"
-                    )
-
-            if "ruuvi" in key:
-                # check if Ruuvi tag is enabled, if not remove entry.
-                if (
-                    "Enabled" in value
-                    and value["Enabled"] == "0"
-                    and "ClassAndVrmInstance" not in value
-                ):
-                    del_return = self.removeSetting(
-                        get_bus(),
-                        "com.victronenergy.settings",
-                        "/Settings/Devices/" + key,
-                        ["CustomName", "Enabled", "TemperatureType"],
-                    )
-                    logger.info(
-                        f"Remove /Settings/Devices/{key} from dbus. "
-                        + f"Ruuvi tag was disabled and had no ClassAndVrmInstance. Delete result: {del_return}"
-                    )
+                if "ruuvi" in key:
+                    # check if Ruuvi tag is enabled, if not remove entry.
+                    if (
+                        "Enabled" in value
+                        and value["Enabled"] == "0"
+                        and "ClassAndVrmInstance" not in value
+                    ):
+                        del_return = self.removeSetting(
+                            get_bus(),
+                            "com.victronenergy.settings",
+                            "/Settings/Devices/" + key,
+                            ["CustomName", "Enabled", "TemperatureType"],
+                        )
+                        logger.info(
+                            f"Remove /Settings/Devices/{key} from dbus. "
+                            + f"Ruuvi tag was disabled and had no ClassAndVrmInstance. Delete result: {del_return}"
+                        )
 
         logger.debug("setup_instance(): for loop ended")
 
