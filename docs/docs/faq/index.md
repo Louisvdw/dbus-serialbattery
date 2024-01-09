@@ -120,6 +120,9 @@ The `DVCC` has to be disabled since Venus OS selects the first BMS available in 
 ### Venus OS `>= v3.00`
 Select another or `No battery monitor` in the remote console under `Settings -> System setup -> Battery monitor` and another or `No BMS control` in the remote console under `Settings -> DVCC -> Controlling BMS`.
 
+## Why no SoC is displayed in the overview page?
+Navigate to `Settings -> System Setup` and check that under `Battery monitor` your BMS or battery aggregator is selected.
+
 ## Should I set the Smartshunt or the BMS as the Battery Monitor?
 Set the BMS as the Battery Monitor of your system so that it can read the alarm and cell data to manage your GX system. If you don't, then these alarms will be ignored and the system will keep on (dis)charging the battery even if a problem alarm is raised. The BMS will react by disconnecting the battery for protection and your inverter will go offline.
 
@@ -168,6 +171,9 @@ The limits are based on percentages of `MAX_BATTERY_CHARGE_CURRENT` and `MAX_BAT
 
 ![VenusOS](../../screenshots/venus-os_013.png)
 
+
+## Why is the displayed charging/discharging current limit (CCL/DCL) not applied?
+Navigate to `Settings -> DVCC`, check that `DVCC` is enabled and that under `Controlling BMS` your BMS or battery aggregator is selected. On this page normally only `DVCC` should be enabled.
 
 ## Does the driver work for `3.7V` based cells also?
 Yes, but you will [need to adjust](../general/install#how-to-change-the-default-limits) the `MAX_CELL_VOLTAGE` and `MIN_CELL_VOLTAGE` values for `3.7V` cells instead of the default `3.2V` cells.
