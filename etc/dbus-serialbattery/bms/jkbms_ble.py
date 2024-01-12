@@ -6,6 +6,7 @@ import utils
 from time import sleep, time
 from bms.jkbms_brn import Jkbms_Brn
 import os
+import sys
 
 # from bleak import BleakScanner, BleakError
 # import asyncio
@@ -69,8 +70,17 @@ class Jkbms_Ble(Battery):
             if not result:
                 logger.error("No BMS found at " + self.address)
 
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         return result
