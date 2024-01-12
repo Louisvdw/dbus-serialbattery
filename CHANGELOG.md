@@ -25,6 +25,7 @@
 ## v1.0.x
 
 * Changed: Fix issue on first driver startup, when no device setting in dbus exists by @mr-manuel
+* Changed: More detailed error output when an exception happens by @mr-manuel
 
 
 ## v1.0.20240102beta

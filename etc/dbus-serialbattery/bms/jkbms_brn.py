@@ -460,19 +460,35 @@ class Jkbms_Brn:
                         self.trigger_soc_reset = False
                         await self.reset_soc_jk(client)
                     await asyncio.sleep(0.01)
-            except Exception as err:
-                self.run = False
+            except Exception:
+                (
+                    exception_type,
+                    exception_object,
+                    exception_traceback,
+                ) = sys.exc_info()
+                file = exception_traceback.tb_frame.f_code.co_filename
+                line = exception_traceback.tb_lineno
                 logger.info(
-                    f"--> asy_connect_and_scrape(): error while connecting to bt: {err}"
+                    f"--> asy_connect_and_scrape(): error while connecting to bt: {repr(exception_object)} "
+                    + f"of type {exception_type} in {file} line #{line}"
                 )
+                self.run = False
             finally:
                 self.run = False
                 if client.is_connected:
                     try:
                         await client.disconnect()
-                    except Exception as err:
+                    except Exception:
+                        (
+                            exception_type,
+                            exception_object,
+                            exception_traceback,
+                        ) = sys.exc_info()
+                        file = exception_traceback.tb_frame.f_code.co_filename
+                        line = exception_traceback.tb_lineno
                         logger.info(
-                            f"--> asy_connect_and_scrape(): error while disconnecting: {err}"
+                            f"--> asy_connect_and_scrape(): error while disconnecting: {repr(exception_object)} "
+                            + f"of type {exception_type} in {file} line #{line}"
                         )
 
         logger.info("--> asy_connect_and_scrape(): Exit")

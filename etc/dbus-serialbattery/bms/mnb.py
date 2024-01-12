@@ -8,6 +8,7 @@
 from battery import Protection, Battery, Cell
 from utils import logger
 from bms.mnb_utils_max17853 import data_cycle, init_max
+import sys
 
 # from struct import *
 # from bms.mnb_test_max17853 import *  # use test for testing
@@ -97,8 +98,17 @@ class MNB(Battery):
         result = False
         try:
             result = self.read_status_data()
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         return result
