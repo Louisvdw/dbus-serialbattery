@@ -94,20 +94,25 @@ if [ "$version" = "nightly build" ]; then
 
     PS3="Select the branch from wich you want to install the current code (possible bugs included): "
 
-    select branch in master dev quit
+    select branch in "master" "dev" "dev (mr-manuel's repo)" "quit"
     do
         case $branch in
-            master)
+            "master")
                 echo "Selected branch: $branch"
                 #echo "Selected number: $REPLY"
                 break
                 ;;
-            dev)
+            "dev")
                 echo "Selected branch: $branch"
                 #echo "Selected number: $REPLY"
                 break
                 ;;
-            quit)
+            "dev (mr-manuel's repo)")
+                echo "Selected branch: $branch"
+                #echo "Selected number: $REPLY"
+                break
+                ;;
+            "quit")
                 exit 0
                 ;;
             *)
@@ -119,28 +124,58 @@ if [ "$version" = "nightly build" ]; then
 
     cd /tmp
 
-    # clean already extracted folder
-    rm -rf /tmp/dbus-serialbattery-$branch
+    if [ "$branch" = "dev (mr-manuel's repo)" ]; then
+        branch="dev"
 
-    # download driver
-    wget -O $branch.zip https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
-    if [ $? -ne 0 ]; then
-        echo "Error during downloading the TAR file. Please try again."
-        # restore config.ini
-        if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
-            mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini
+        # clean already extracted folder
+        rm -rf /tmp/venus-os_dbus-serialbattery-$branch
+
+        # download driver
+        wget -O $branch.zip https://github.com/mr-manuel/venus-os_dbus-serialbattery/archive/refs/heads/$branch.zip
+        if [ $? -ne 0 ]; then
+            echo "Error during downloading the ZIP file. Please try again."
+            # restore config.ini
+            if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
+                mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini
+            fi
+            exit
         fi
-        exit
+
+        # extract archive
+        unzip -q $branch.zip
+
+        # remove old driver
+        rm -rf /data/etc/dbus-serialbattery
+
+        # copy driver
+        cp -rf /tmp/venus-os_dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
+
+    else
+
+        # clean already extracted folder
+        rm -rf /tmp/dbus-serialbattery-$branch
+
+        # download driver
+        wget -O $branch.zip https://github.com/Louisvdw/dbus-serialbattery/archive/refs/heads/$branch.zip
+        if [ $? -ne 0 ]; then
+            echo "Error during downloading the ZIP file. Please try again."
+            # restore config.ini
+            if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
+                mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini
+            fi
+            exit
+        fi
+
+        # extract archive
+        unzip -q $branch.zip
+
+        # remove old driver
+        rm -rf /data/etc/dbus-serialbattery
+
+        # copy driver
+        cp -rf /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
+
     fi
-
-    # extract archive
-    unzip -q $branch.zip
-
-    # remove old driver
-    rm -rf /data/etc/dbus-serialbattery
-
-    # copy driver
-    cp -rf /tmp/dbus-serialbattery-$branch/etc/dbus-serialbattery/ /data/etc
 
     # set permissions
     chmod +x /data/etc/dbus-serialbattery/*.sh
