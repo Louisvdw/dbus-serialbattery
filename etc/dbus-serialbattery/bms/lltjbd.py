@@ -632,7 +632,7 @@ class LltJbd(Battery):
                 ">>> ERROR: Invalid response packet. Expected begin packet character 0xDD"
             )
         if status != 0x0:
-            logger.warn(">>> WARN: BMS rejected request. Status " + status)
+            logger.warn(">>> WARN: BMS rejected request. Status " + str(status))
             return False
         if len(data) != payload_length + 7:
             logger.error(
