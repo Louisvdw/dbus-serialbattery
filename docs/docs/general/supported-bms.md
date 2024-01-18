@@ -22,6 +22,9 @@ Disabled by default since driver version `v0.14.0` as it causes other issues. Se
 
 ### &bull; ECS GreenMeter with LiPro
 
+### &bull; EG4ll
+So far only tested on 12v version
+
 ### &bull; HeltecModbus SmartBMS (YanYang BMS)
 Communication to the Heltec SmartBMS (which is a rebranded YYBMS) via Modbus/RS485.
 
@@ -34,7 +37,6 @@ Bluetooth connection supported
 Including:
 
 #### - Revov
-#### - EG4ll
 
 ### &bull; MNB spi BMS
 Disabled by default as it requires additional manual steps to install.
