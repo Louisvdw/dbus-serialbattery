@@ -34,6 +34,7 @@ Bluetooth connection supported
 Including:
 
 #### - Revov
+#### - EG4ll
 
 ### &bull; MNB spi BMS
 Disabled by default as it requires additional manual steps to install.
