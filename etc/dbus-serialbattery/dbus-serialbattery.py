@@ -23,6 +23,7 @@ from battery import Battery
 # import battery classes
 from bms.daly import Daly
 from bms.ecs import Ecs
+from bms.eg4ll import eg4ll
 from bms.heltecmodbus import HeltecModbus
 from bms.hlpdatabms4s import HLPdataBMS4S
 from bms.jkbms import Jkbms
@@ -43,6 +44,7 @@ supported_bms_types = [
     {"bms": Daly, "baud": 9600, "address": b"\x40"},
     {"bms": Daly, "baud": 9600, "address": b"\x80"},
     {"bms": Ecs, "baud": 19200},
+    {"bms": eg4ll, "baud": 9600},
     {"bms": HeltecModbus, "baud": 9600},
     {"bms": HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
