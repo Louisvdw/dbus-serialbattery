@@ -121,7 +121,7 @@ If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` 
 
 ## BMS feature comparison
 
-| Feature                                                                                  | Ant   | Daly  | ECS                | Heltec | HLPdataBMS4S | JK BMS | Life/Tian Power | LLT/JBD | MNB <sup>(1)</sup> | Renogy | Seplos | Sinowealth <sup>(1)</sup> |
+| Feature                                                                                  | Ant   | Daly  | ECS                | Heltec | HLPdataBMS4S | JK BMS | Life/Tian Power/EG4ll | LLT/JBD | MNB <sup>(1)</sup> | Renogy | Seplos | Sinowealth <sup>(1)</sup> |
 | ---:                                                                                     | :---: | :---: | :---:              | :---:  | :---:        | :---:  | :---:           | :---:   | :---:              | :---:  | :---:  | :---:                     |
 | Voltage                                                                                  | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
 | Current                                                                                  | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes                       |
