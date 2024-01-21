@@ -146,7 +146,8 @@ def main():
                     + " is excluded trough the config file"
                 )
                 sleep(60)
-                sys.exit(0)
+                # exit with error in order that the serialstarter goes on
+                sys.exit(1)
         else:
             # just for MNB-SPI
             logger.info("No Port needed")
