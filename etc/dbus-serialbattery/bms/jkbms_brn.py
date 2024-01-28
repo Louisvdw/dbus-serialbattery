@@ -3,6 +3,7 @@ from bleak import BleakScanner, BleakClient
 from time import sleep, time
 import asyncio
 import threading
+import sys
 
 # if used as standalone script then use custom logger
 # else import logger from utils
@@ -141,7 +142,9 @@ class Jkbms_Brn:
 
     def __init__(self, addr):
         self.address = addr
-        self.bt_thread = threading.Thread(target=self.connect_and_scrape)
+        self.bt_thread = threading.Thread(
+            target=self.connect_and_scrape, name="Thread-JKBMS-BLE"
+        )
         self.trigger_soc_reset = False
 
     async def scanForDevices(self):
@@ -568,8 +571,6 @@ class Jkbms_Brn:
 
 
 if __name__ == "__main__":
-    import sys
-
     jk = Jkbms_Brn(sys.argv[1])
     if not jk.test_connection():
         logger.error(">>> ERROR: Unable to connect")

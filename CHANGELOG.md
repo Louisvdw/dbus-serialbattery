@@ -22,6 +22,11 @@
   * `BULK_CELL_VOLTAGE` -> `SOC_RESET_VOLTAGE`
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
+## v1.1.x
+
+* Changed: JKBMS BLE - Fix driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
+* Changed: JKBMS BLE - Fix temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
+
 ## v1.1.20240121
 
 * Changed: Exit the driver with error, when port is excluded in config, else the serialstarter does not continue by @mr-manuel

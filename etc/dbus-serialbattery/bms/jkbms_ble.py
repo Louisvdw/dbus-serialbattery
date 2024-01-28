@@ -181,9 +181,15 @@ class Jkbms_Ble(Battery):
         for c in range(self.cell_count):
             self.cells[c].voltage = st["cell_info"]["voltages"][c]
 
-        self.to_temp(0, st["cell_info"]["temperature_mos"])
-        self.to_temp(1, st["cell_info"]["temperature_sensor_1"])
-        self.to_temp(2, st["cell_info"]["temperature_sensor_2"])
+        temp_mos = st["cell_info"]["temperature_mos"]
+        self.to_temp(0, temp_mos if temp_mos < 32767 else (65535 - temp_mos) * -1)
+
+        temp1 = st["cell_info"]["temperature_sensor_1"]
+        self.to_temp(1, temp1 if temp1 < 32767 else (65535 - temp1) * -1)
+
+        temp2 = st["cell_info"]["temperature_sensor_2"]
+        self.to_temp(1, temp2 if temp2 < 32767 else (65535 - temp2) * -1)
+
         self.current = round(st["cell_info"]["current"], 1)
         self.voltage = round(st["cell_info"]["total_voltage"], 2)
 
@@ -197,8 +203,8 @@ class Jkbms_Ble(Battery):
         self.balancing = False if st["cell_info"]["balancing_action"] == 0.000 else True
         self.balancing_current = (
             st["cell_info"]["balancing_current"]
-            if st["cell_info"]["balancing_current"] < 32768
-            else (65536 / 1000 - st["cell_info"]["balancing_current"]) * -1
+            if st["cell_info"]["balancing_current"] < 32767
+            else (65535 / 1000 - st["cell_info"]["balancing_current"]) * -1
         )
         self.balancing_action = st["cell_info"]["balancing_action"]
 
