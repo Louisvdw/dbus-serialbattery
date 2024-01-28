@@ -20,7 +20,7 @@ class Jkbms_Ble(Battery):
         super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud, address)
         self.address = address
         self.type = self.BATTERYTYPE
-        self.jk = Jkbms_Brn(address)
+        self.jk = Jkbms_Brn(address, lambda: self.reset_bluetooth())
         self.unique_identifier_tmp = ""
 
         logger.info("Init of Jkbms_Ble at " + address)

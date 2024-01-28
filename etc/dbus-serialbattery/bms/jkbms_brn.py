@@ -140,11 +140,14 @@ class Jkbms_Brn:
     # translate info placeholder, since it depends on the bms_max_cell_count
     translate_cell_info = []
 
-    def __init__(self, addr):
+    def __init__(self, addr, reset_bt_callback=None):
         self.address = addr
-        self.bt_thread = threading.Thread(
-            target=self.connect_and_scrape, name="Thread-JKBMS-BLE"
+        self.bt_thread = None
+        self.bt_thread_monitor = threading.Thread(
+            target=self.monitor_scraping, name="Thread-JKBMS-Monitor"
         )
+        self.bt_reset = reset_bt_callback
+        self.should_be_scraping = False
         self.trigger_soc_reset = False
 
     async def scanForDevices(self):
@@ -496,21 +499,36 @@ class Jkbms_Brn:
 
         logger.info("--> asy_connect_and_scrape(): Exit")
 
+    def monitor_scraping(self):
+        while self.should_be_scraping == True:
+            self.bt_thread = threading.Thread(
+                target=self.connect_and_scrape, name="Thread-JKBMS-Connect-and-Scrape"
+            )
+            self.bt_thread.start()
+            logger.debug(
+                "scraping thread started -> main thread id: "
+                + str(self.main_thread.ident)
+                + " scraping thread: "
+                + str(self.bt_thread.ident)
+            )
+            self.bt_thread.join()
+            if self.should_be_scraping == True:
+                logger.debug("scraping thread ended: reseting bluetooth and restarting")
+                if not self.bt_reset == None:
+                    self.bt_reset()
+                sleep(2)
+
     def start_scraping(self):
         self.main_thread = threading.current_thread()
         if self.is_running():
-            logger.debug("screaping thread already running")
+            logger.debug("scraping thread already running")
             return
-        self.bt_thread.start()
-        logger.debug(
-            "scraping thread started -> main thread id: "
-            + str(self.main_thread.ident)
-            + " scraping thread: "
-            + str(self.bt_thread.ident)
-        )
+        self.should_be_scraping = True
+        self.bt_thread_monitor.start()
 
     def stop_scraping(self):
         self.run = False
+        self.should_be_scraping = False
         stop = time()
         while self.is_running():
             sleep(0.1)
@@ -519,7 +537,9 @@ class Jkbms_Brn:
         return True
 
     def is_running(self):
-        return self.bt_thread.is_alive()
+        if self.bt_thread is not None:
+            return self.bt_thread.is_alive()
+        return False
 
     async def enable_charging(self, c):
         # these are the registers for the control-buttons:
