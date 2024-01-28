@@ -666,7 +666,10 @@ class Battery(ABC):
 
         # if BMS limit is lower then config limit and therefore the values are not the same,
         # then the limit was also read from the BMS
-        if utils.MAX_BATTERY_CHARGE_CURRENT > self.max_battery_charge_current:
+        if (
+            isinstance(self.max_battery_charge_current, (int, float))
+            and utils.MAX_BATTERY_CHARGE_CURRENT > self.max_battery_charge_current
+        ):
             charge_limits.update({self.max_battery_charge_current: "BMS Settings"})
 
         if utils.CCCM_CV_ENABLE:
@@ -747,7 +750,10 @@ class Battery(ABC):
 
         # if BMS limit is lower then config limit and therefore the values are not the same,
         # then the limit was also read from the BMS
-        if utils.MAX_BATTERY_DISCHARGE_CURRENT > self.max_battery_discharge_current:
+        if (
+            isinstance(self.max_battery_discharge_current, (int, float))
+            and utils.MAX_BATTERY_DISCHARGE_CURRENT > self.max_battery_discharge_current
+        ):
             discharge_limits.update(
                 {self.max_battery_discharge_current: "BMS Settings"}
             )

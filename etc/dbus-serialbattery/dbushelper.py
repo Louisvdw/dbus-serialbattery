@@ -1039,10 +1039,10 @@ class DbusHelper:
         settings_iface = dbus.Interface(obj, "com.victronenergy.BusItem")
         method = settings_iface.get_dbus_method("SetValue")
         try:
-            print(f"Setted setting {object_path}/{setting_name} to {value}")
+            logger.debug(f"Setted setting {object_path}/{setting_name} to {value}")
             return True if method(value) == 0 else False
         except dbus.exceptions.DBusException as e:
-            print(f"Failed to remove setting: {e}")
+            logger.error(f"Failed to set setting: {e}")
 
     def removeSetting(
         self, bus, service: str, object_path: str, setting_name: list
@@ -1054,10 +1054,10 @@ class DbusHelper:
         settings_iface = dbus.Interface(obj, "com.victronenergy.Settings")
         method = settings_iface.get_dbus_method("RemoveSettings")
         try:
-            print(f"Removed setting at {object_path}")
+            logger.debug(f"Removed setting at {object_path}")
             return True if method(setting_name) == 0 else False
         except dbus.exceptions.DBusException as e:
-            print(f"Failed to remove setting: {e}")
+            logger.error(f"Failed to remove setting: {e}")
 
     def create_nested_dict(self, path, value) -> dict:
         keys = path.strip("/").split("/")

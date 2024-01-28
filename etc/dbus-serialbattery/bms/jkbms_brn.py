@@ -3,6 +3,7 @@ from bleak import BleakScanner, BleakClient
 from time import sleep, time
 import asyncio
 import threading
+import sys
 
 # if used as standalone script then use custom logger
 # else import logger from utils
@@ -139,10 +140,12 @@ class Jkbms_Brn:
     # translate info placeholder, since it depends on the bms_max_cell_count
     translate_cell_info = []
 
-    def __init__(self, addr, reset_bt_callback = None):
+    def __init__(self, addr, reset_bt_callback=None):
         self.address = addr
         self.bt_thread = None
-        self.bt_thread_monitor = threading.Thread(target=self.monitor_scraping)
+        self.bt_thread_monitor = threading.Thread(
+            target=self.monitor_scraping, name="Thread-JKBMS-Monitor"
+        )
         self.bt_reset = reset_bt_callback
         self.should_be_scraping = False
         self.trigger_soc_reset = False
@@ -497,8 +500,10 @@ class Jkbms_Brn:
         logger.info("--> asy_connect_and_scrape(): Exit")
 
     def monitor_scraping(self):
-        while(self.should_be_scraping == True):
-            self.bt_thread = threading.Thread(target=self.connect_and_scrape)
+        while self.should_be_scraping == True:
+            self.bt_thread = threading.Thread(
+                target=self.connect_and_scrape, name="Thread-JKBMS-Connect-and-Scrape"
+            )
             self.bt_thread.start()
             logger.debug(
                 "scraping thread started -> main thread id: "
@@ -507,9 +512,9 @@ class Jkbms_Brn:
                 + str(self.bt_thread.ident)
             )
             self.bt_thread.join()
-            if (self.should_be_scraping == True):
+            if self.should_be_scraping == True:
                 logger.debug("scraping thread ended: reseting bluetooth and restarting")
-                if (not self.bt_reset == None):
+                if not self.bt_reset == None:
                     self.bt_reset()
                 sleep(2)
 
@@ -519,7 +524,7 @@ class Jkbms_Brn:
             logger.debug("scraping thread already running")
             return
         self.should_be_scraping = True
-        self.bt_thread_monitor.start();
+        self.bt_thread_monitor.start()
 
     def stop_scraping(self):
         self.run = False
@@ -532,7 +537,7 @@ class Jkbms_Brn:
         return True
 
     def is_running(self):
-        if (self.bt_thread is not None):
+        if self.bt_thread is not None:
             return self.bt_thread.is_alive()
         return False
 
@@ -586,8 +591,6 @@ class Jkbms_Brn:
 
 
 if __name__ == "__main__":
-    import sys
-
     jk = Jkbms_Brn(sys.argv[1])
     if not jk.test_connection():
         logger.error(">>> ERROR: Unable to connect")
