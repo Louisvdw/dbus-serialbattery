@@ -153,6 +153,12 @@ def main():
             logger.info("No Port needed")
             return "/dev/ttyUSB9"
 
+    with open("/opt/victronenergy/version", "r") as f:
+        venus_version = f.readline().strip()
+    # show Venus OS version
+    logger.info("Venus OS " + venus_version)
+
+    # show the version of the driver
     logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION))
 
     port = get_port()
