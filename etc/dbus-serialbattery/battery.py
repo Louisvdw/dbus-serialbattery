@@ -301,6 +301,14 @@ class Battery(ABC):
             max(min((self.soc_calc_capacity_remain / self.capacity) * 100, 100), 0), 2
         )
 
+        # limit SoC to 99% in absoprtion or bulk else the battery won't charge to 100%
+        if (
+            self.charge_mode
+            and ("Bulk" in self.charge_mode or "Absorption" in self.charge_mode)
+            and self.soc_calc > 99
+        ):
+            self.soc_calc = 99
+
     def prepare_voltage_management(self) -> None:
         soc_reset_last_reached_days_ago = (
             0
@@ -531,46 +539,50 @@ class Battery(ABC):
 
             self.charge_mode += " (Linear Mode)"
 
-            # uncomment for enabling debugging infos in GUI
-            """
-            self.charge_mode_debug = (
-                f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
-            )
-            self.charge_mode_debug += (
-                f" - VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)}V"
-            )
-            self.charge_mode_debug += f"\nvoltage_sum: {round(voltage_sum, 2)}V"
-            self.charge_mode_debug += f" • voltageDiff: {round(voltageDiff, 3)}V"
-            self.charge_mode_debug += (
-                f"\ncontrol_voltage: {round(self.control_voltage, 2)}V"
-            )
-            self.charge_mode_debug += f" • penalty_sum: {round(penalty_sum, 3)}V"
-            self.charge_mode_debug += f"\ntime_diff: {time_diff}/{utils.MAX_VOLTAGE_TIME_SEC}"
-            self.charge_mode_debug += f" • SoC: {self.soc}% SoC_Calc {self.soc_calc}%"
-            self.charge_mode_debug += (
-                f" • Reset SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
-            )
-            self.charge_mode_debug += f"\nallow_max_voltage: {self.allow_max_voltage}"
-            self.charge_mode_debug += (
-                f"\nmax_voltage_start_time: {self.max_voltage_start_time}"
-            )
-            self.charge_mode_debug += f"\ncurrent_time: {current_time}"
-            self.charge_mode_debug += (
-                f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
-            )
-            soc_reset_days_ago = round(
-                (current_time - self.soc_reset_last_reached) / 60 / 60 / 24, 2
-            )
-            soc_reset_in_days = round(utils.SOC_RESET_AFTER_DAYS - soc_reset_days_ago, 2)
-            self.charge_mode_debug += "\nsoc_reset_last_reached: " + str(
-                "Never"
-                if self.soc_reset_last_reached == 0
-                else str(soc_reset_days_ago)
-                + " days ago - next in "
-                + str(soc_reset_in_days)
-                + "days"
-            )
-            # """
+            if logger.isEnabledFor(logging.DEBUG):
+                self.charge_mode_debug = (
+                    f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
+                )
+                self.charge_mode_debug += (
+                    f" - VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)}V"
+                )
+                self.charge_mode_debug += f"\nvoltage_sum: {round(voltage_sum, 2)}V"
+                self.charge_mode_debug += f" • voltageDiff: {round(voltageDiff, 3)}V"
+                self.charge_mode_debug += (
+                    f"\ncontrol_voltage: {round(self.control_voltage, 2)}V"
+                )
+                self.charge_mode_debug += f" • penalty_sum: {round(penalty_sum, 3)}V"
+                self.charge_mode_debug += (
+                    f"\ntime_diff: {time_diff}/{utils.MAX_VOLTAGE_TIME_SEC}"
+                )
+                self.charge_mode_debug += f" • Reset voltage limit SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
+                self.charge_mode_debug += (
+                    f"\nSoC: {self.soc}% • SoC_Calc {self.soc_calc}%"
+                )
+                self.charge_mode_debug += (
+                    f"\nallow_max_voltage: {self.allow_max_voltage}"
+                )
+                self.charge_mode_debug += (
+                    f"\nmax_voltage_start_time: {self.max_voltage_start_time}"
+                )
+                self.charge_mode_debug += f"\ncurrent_time: {current_time}"
+                self.charge_mode_debug += (
+                    f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
+                )
+                soc_reset_days_ago = round(
+                    (current_time - self.soc_reset_last_reached) / 60 / 60 / 24, 2
+                )
+                soc_reset_in_days = round(
+                    utils.SOC_RESET_AFTER_DAYS - soc_reset_days_ago, 2
+                )
+                self.charge_mode_debug += "\nsoc_reset_last_reached: " + str(
+                    "Never"
+                    if self.soc_reset_last_reached == 0
+                    else str(soc_reset_days_ago)
+                    + " d ago, next in "
+                    + str(soc_reset_in_days)
+                    + " d"
+                )
 
         except TypeError:
             self.control_voltage = None
