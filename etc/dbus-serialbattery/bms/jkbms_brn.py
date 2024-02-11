@@ -500,7 +500,7 @@ class Jkbms_Brn:
         logger.info("--> asy_connect_and_scrape(): Exit")
 
     def monitor_scraping(self):
-        while self.should_be_scraping == True:
+        while self.should_be_scraping is True:
             self.bt_thread = threading.Thread(
                 target=self.connect_and_scrape, name="Thread-JKBMS-Connect-and-Scrape"
             )
@@ -512,9 +512,9 @@ class Jkbms_Brn:
                 + str(self.bt_thread.ident)
             )
             self.bt_thread.join()
-            if self.should_be_scraping == True:
+            if self.should_be_scraping is True:
                 logger.debug("scraping thread ended: reseting bluetooth and restarting")
-                if not self.bt_reset == None:
+                if self.bt_reset is not None:
                     self.bt_reset()
                 sleep(2)
 

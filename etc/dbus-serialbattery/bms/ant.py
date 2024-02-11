@@ -115,9 +115,7 @@ class ANT(Battery):
         self.protection.voltage_cell_low = (
             2
             if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE - 0.1
-            else 1
-            if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE
-            else 0
+            else 1 if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE else 0
         )
         self.protection.temp_high_charge = (
             1 if self.charge_fet == 3 or self.charge_fet == 6 else 0

@@ -48,7 +48,7 @@ class Jkbms_Can(Battery):
     ALM_INFO = "ALM_INFO"
 
     MESSAGES_TO_READ = 100
-    
+
     # Changed from 0x0XF4 to 0x0XF5. See https://github.com/Louisvdw/dbus-serialbattery/issues/950
     CAN_FRAMES = {
         BATT_STAT: 0x02F5,
