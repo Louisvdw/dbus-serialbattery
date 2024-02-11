@@ -56,9 +56,9 @@ class DbusHelper:
             "allow_max_voltage": self.battery.allow_max_voltage,
             "max_voltage_start_time": self.battery.max_voltage_start_time,
             "soc_reset_last_reached": self.battery.soc_reset_last_reached,
-            "soc_calc": self.battery.soc_calc
-            if self.battery.soc_calc is not None
-            else "",
+            "soc_calc": (
+                self.battery.soc_calc if self.battery.soc_calc is not None else ""
+            ),
         }
 
     def setup_instance(self):
@@ -160,41 +160,69 @@ class DbusHelper:
                             f"Found existing battery with DeviceInstance = {device_instance}"
                         )
 
-                        if "AllowMaxVoltage" in value and isinstance(
-                            value["AllowMaxVoltage"], int
+                        # check if the battery has AllowMaxVoltage set
+                        if (
+                            "AllowMaxVoltage" in value
+                            and value["AllowMaxVoltage"] != ""
                         ):
                             self.battery.allow_max_voltage = (
                                 True if value["AllowMaxVoltage"] == 1 else False
                             )
                             self.battery.max_voltage_start_time = None
 
-                        # check if the battery has a custom name
+                        # check if the battery has CustomName set
                         if "CustomName" in value and value["CustomName"] != "":
                             custom_name = value["CustomName"]
 
-                        if "MaxVoltageStartTime" in value and isinstance(
-                            value["MaxVoltageStartTime"], int
+                        # check if the battery has MaxVoltageStartTime set
+                        if (
+                            "MaxVoltageStartTime" in value
+                            and value["MaxVoltageStartTime"] != ""
                         ):
-                            self.battery.max_voltage_start_time = int(
-                                value["MaxVoltageStartTime"]
-                            )
+                            try:
+                                self.battery.max_voltage_start_time = int(
+                                    value["MaxVoltageStartTime"]
+                                )
+                            except Exception:
+                                logger.error(
+                                    "MaxVoltageStartTime could not be converted to type int: "
+                                    + str(value["MaxVoltageStartTime"])
+                                )
+                                pass
 
+                        # check if the battery has SocCalc set
                         # load SOC from dbus only if SOC_CALCULATION is enabled
                         if utils.SOC_CALCULATION:
                             if "SocCalc" in value:
-                                self.battery.soc_calc = float(value["SocCalc"])
-                                logger.info(
-                                    f"Soc_calc read from dbus: {self.battery.soc_calc}"
-                                )
+                                try:
+                                    self.battery.soc_calc = float(value["SocCalc"])
+                                    logger.info(
+                                        f"Soc_calc read from dbus: {self.battery.soc_calc}"
+                                    )
+                                except Exception:
+                                    logger.error(
+                                        "SocCalc could not be converted to type float: "
+                                        + str(value["SocCalc"])
+                                    )
+                                    pass
                             else:
                                 logger.info("Soc_calc not found in dbus")
 
-                        if "SocResetLastReached" in value and isinstance(
-                            value["SocResetLastReached"], int
+                        # check if the battery has SocResetLastReached set
+                        if (
+                            "SocResetLastReached" in value
+                            and value["SocResetLastReached"] != ""
                         ):
-                            self.battery.soc_reset_last_reached = int(
-                                value["SocResetLastReached"]
-                            )
+                            try:
+                                self.battery.soc_reset_last_reached = int(
+                                    value["SocResetLastReached"]
+                                )
+                            except Exception:
+                                logger.error(
+                                    "SocResetLastReached could not be converted to type int: "
+                                    + str(value["SocResetLastReached"])
+                                )
+                                pass
 
                     # check the last seen time and remove the battery it it was not seen for 30 days
                     elif "LastSeen" in value and int(value["LastSeen"]) < int(
@@ -284,15 +312,17 @@ class DbusHelper:
             ],
             "MaxVoltageStartTime": [
                 self.path_battery + "/MaxVoltageStartTime",
-                self.battery.max_voltage_start_time
-                if self.battery.max_voltage_start_time is not None
-                else "",
+                (
+                    self.battery.max_voltage_start_time
+                    if self.battery.max_voltage_start_time is not None
+                    else ""
+                ),
                 0,
                 0,
             ],
             "SocCalc": [
                 self.path_battery + "/SocCalc",
-                self.battery.soc_calc if self.battery.soc_calc is not None else "",
+                (self.battery.soc_calc if self.battery.soc_calc is not None else ""),
                 0,
                 0,
             ],
@@ -388,7 +418,9 @@ class DbusHelper:
 
         # Create static battery info
         self._dbusservice.add_path(
-            "/Info/BatteryLowVoltage", self.battery.min_battery_voltage, writeable=True
+            "/Info/BatteryLowVoltage",
+            self.battery.min_battery_voltage,
+            writeable=True,
         )
         self._dbusservice.add_path(
             "/Info/MaxChargeVoltage",
@@ -770,13 +802,13 @@ class DbusHelper:
             0 if self.battery.online else 1
         )
         self._dbusservice["/System/MinCellTemperature"] = self.battery.get_min_temp()
-        self._dbusservice[
-            "/System/MinTemperatureCellId"
-        ] = self.battery.get_min_temp_id()
+        self._dbusservice["/System/MinTemperatureCellId"] = (
+            self.battery.get_min_temp_id()
+        )
         self._dbusservice["/System/MaxCellTemperature"] = self.battery.get_max_temp()
-        self._dbusservice[
-            "/System/MaxTemperatureCellId"
-        ] = self.battery.get_max_temp_id()
+        self._dbusservice["/System/MaxTemperatureCellId"] = (
+            self.battery.get_max_temp_id()
+        )
         self._dbusservice["/System/MOSTemperature"] = self.battery.get_mos_temp()
         self._dbusservice["/System/Temperature1"] = self.battery.temp1
         self._dbusservice["/System/Temperature1Name"] = utils.TEMP_1_NAME
@@ -795,37 +827,37 @@ class DbusHelper:
         )
 
         # Charge control
-        self._dbusservice[
-            "/Info/MaxChargeCurrent"
-        ] = self.battery.control_charge_current
-        self._dbusservice[
-            "/Info/MaxDischargeCurrent"
-        ] = self.battery.control_discharge_current
+        self._dbusservice["/Info/MaxChargeCurrent"] = (
+            self.battery.control_charge_current
+        )
+        self._dbusservice["/Info/MaxDischargeCurrent"] = (
+            self.battery.control_discharge_current
+        )
 
         # Voltage and charge control info
         self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
         self._dbusservice["/Info/ChargeModeDebug"] = self.battery.charge_mode_debug
         self._dbusservice["/Info/ChargeLimitation"] = self.battery.charge_limitation
-        self._dbusservice[
-            "/Info/DischargeLimitation"
-        ] = self.battery.discharge_limitation
+        self._dbusservice["/Info/DischargeLimitation"] = (
+            self.battery.discharge_limitation
+        )
 
         # Updates from cells
         self._dbusservice["/System/MinVoltageCellId"] = self.battery.get_min_cell_desc()
         self._dbusservice["/System/MaxVoltageCellId"] = self.battery.get_max_cell_desc()
-        self._dbusservice[
-            "/System/MinCellVoltage"
-        ] = self.battery.get_min_cell_voltage()
-        self._dbusservice[
-            "/System/MaxCellVoltage"
-        ] = self.battery.get_max_cell_voltage()
+        self._dbusservice["/System/MinCellVoltage"] = (
+            self.battery.get_min_cell_voltage()
+        )
+        self._dbusservice["/System/MaxCellVoltage"] = (
+            self.battery.get_max_cell_voltage()
+        )
         self._dbusservice["/Balancing"] = self.battery.get_balancing()
 
         # Update the alarms
         self._dbusservice["/Alarms/LowVoltage"] = self.battery.protection.voltage_low
-        self._dbusservice[
-            "/Alarms/LowCellVoltage"
-        ] = self.battery.protection.voltage_cell_low
+        self._dbusservice["/Alarms/LowCellVoltage"] = (
+            self.battery.protection.voltage_cell_low
+        )
         # disable high voltage warning temporarly, if loading to bulk voltage and bulk voltage reached is 30 minutes ago
         self._dbusservice["/Alarms/HighVoltage"] = (
             self.battery.protection.voltage_high
@@ -836,36 +868,36 @@ class DbusHelper:
             else 0
         )
         self._dbusservice["/Alarms/LowSoc"] = self.battery.protection.soc_low
-        self._dbusservice[
-            "/Alarms/HighChargeCurrent"
-        ] = self.battery.protection.current_over
-        self._dbusservice[
-            "/Alarms/HighDischargeCurrent"
-        ] = self.battery.protection.current_under
-        self._dbusservice[
-            "/Alarms/CellImbalance"
-        ] = self.battery.protection.cell_imbalance
-        self._dbusservice[
-            "/Alarms/InternalFailure"
-        ] = self.battery.protection.internal_failure
-        self._dbusservice[
-            "/Alarms/HighChargeTemperature"
-        ] = self.battery.protection.temp_high_charge
-        self._dbusservice[
-            "/Alarms/LowChargeTemperature"
-        ] = self.battery.protection.temp_low_charge
-        self._dbusservice[
-            "/Alarms/HighTemperature"
-        ] = self.battery.protection.temp_high_discharge
-        self._dbusservice[
-            "/Alarms/LowTemperature"
-        ] = self.battery.protection.temp_low_discharge
+        self._dbusservice["/Alarms/HighChargeCurrent"] = (
+            self.battery.protection.current_over
+        )
+        self._dbusservice["/Alarms/HighDischargeCurrent"] = (
+            self.battery.protection.current_under
+        )
+        self._dbusservice["/Alarms/CellImbalance"] = (
+            self.battery.protection.cell_imbalance
+        )
+        self._dbusservice["/Alarms/InternalFailure"] = (
+            self.battery.protection.internal_failure
+        )
+        self._dbusservice["/Alarms/HighChargeTemperature"] = (
+            self.battery.protection.temp_high_charge
+        )
+        self._dbusservice["/Alarms/LowChargeTemperature"] = (
+            self.battery.protection.temp_low_charge
+        )
+        self._dbusservice["/Alarms/HighTemperature"] = (
+            self.battery.protection.temp_high_discharge
+        )
+        self._dbusservice["/Alarms/LowTemperature"] = (
+            self.battery.protection.temp_low_discharge
+        )
         self._dbusservice["/Alarms/BmsCable"] = (
             2 if self.block_because_disconnect else 0
         )
-        self._dbusservice[
-            "/Alarms/HighInternalTemperature"
-        ] = self.battery.protection.temp_high_internal
+        self._dbusservice["/Alarms/HighInternalTemperature"] = (
+            self.battery.protection.temp_high_internal
+        )
 
         # cell voltages
         if utils.BATTERY_CELL_DATA_FORMAT > 0:
@@ -880,9 +912,9 @@ class DbusHelper:
                     )
                     self._dbusservice[cellpath % (str(i + 1))] = voltage
                     if utils.BATTERY_CELL_DATA_FORMAT & 1:
-                        self._dbusservice[
-                            "/Balances/Cell%s" % (str(i + 1))
-                        ] = self.battery.get_cell_balancing(i)
+                        self._dbusservice["/Balances/Cell%s" % (str(i + 1))] = (
+                            self.battery.get_cell_balancing(i)
+                        )
                     if voltage:
                         voltage_sum += voltage
                 pathbase = (
@@ -949,7 +981,11 @@ class DbusHelper:
                     # Update TimeToGo item, has to be a positive int since it's used from dbus-systemcalc-py
                     time_to_go = self.battery.get_timeToSoc(
                         # switch value depending on charging/discharging
-                        utils.SOC_LOW_WARNING if self.battery.current_avg < 0 else 100,
+                        (
+                            utils.SOC_LOW_WARNING
+                            if self.battery.current_avg < 0
+                            else 100
+                        ),
                         percent_per_seconds,
                         True,
                     )
@@ -1017,7 +1053,8 @@ class DbusHelper:
                         if type(value) is not dbus.Dictionary:
                             # result[object_path] = str(value)
                             self.merge_dicts(
-                                result, self.create_nested_dict(object_path, str(value))
+                                result,
+                                self.create_nested_dict(object_path, str(value)),
                             )
                             # print(f"{object_path}: {value}")
                         if not recursive:
@@ -1101,9 +1138,9 @@ class DbusHelper:
             self.battery.allow_max_voltage
             != self.save_charge_details_last["allow_max_voltage"]
         ):
-            self.save_charge_details_last[
-                "allow_max_voltage"
-            ] = self.battery.allow_max_voltage
+            self.save_charge_details_last["allow_max_voltage"] = (
+                self.battery.allow_max_voltage
+            )
             result = result + self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
@@ -1120,17 +1157,19 @@ class DbusHelper:
             self.battery.max_voltage_start_time
             != self.save_charge_details_last["max_voltage_start_time"]
         ):
-            self.save_charge_details_last[
-                "max_voltage_start_time"
-            ] = self.battery.max_voltage_start_time
+            self.save_charge_details_last["max_voltage_start_time"] = (
+                self.battery.max_voltage_start_time
+            )
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
                 self.path_battery,
                 "MaxVoltageStartTime",
-                self.battery.max_voltage_start_time
-                if self.battery.max_voltage_start_time is not None
-                else "",
+                (
+                    self.battery.max_voltage_start_time
+                    if self.battery.max_voltage_start_time is not None
+                    else ""
+                ),
             )
             logger.info(
                 f"Saved MaxVoltageStartTime. Before {self.save_charge_details_last['max_voltage_start_time']}, "
@@ -1152,9 +1191,9 @@ class DbusHelper:
             self.battery.soc_reset_last_reached
             != self.save_charge_details_last["soc_reset_last_reached"]
         ):
-            self.save_charge_details_last[
-                "soc_reset_last_reached"
-            ] = self.battery.soc_reset_last_reached
+            self.save_charge_details_last["soc_reset_last_reached"] = (
+                self.battery.soc_reset_last_reached
+            )
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
