@@ -200,7 +200,10 @@ if [ "$bluetooth_length" -gt 0 ]; then
     export SKIP_CYTHON=false
 
     opkg update
-    opkg install python3-misc python3-pip
+    opkg install python3-misc
+
+    echo
+    opkg install python3-pip
 
     echo
     pip3 install bleak
@@ -472,5 +475,11 @@ echo "    3. Re-run \"/data/etc/dbus-serialbattery/reinstall-local.sh\", if the 
 echo
 echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"/data/etc/dbus-serialbattery/config.default.ini\""
 echo "                 and add them to \"/data/etc/dbus-serialbattery/config.ini\" to persist future driver updates."
+echo
+echo
+# print which version was installed
+# fetch line 40 from utils.py
+line=$(cat /data/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
+echo "*** dbus-serialbattery $line was installed. ***"
 echo
 echo
