@@ -194,6 +194,16 @@ class LltJbd_Ble(LltJbd):
 
         return result
 
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        If not provided by the BMS/driver then the hardware version and capacity is used,
+        since it can be changed by small amounts to make a battery unique.
+        On +/- 5 Ah you can identify 11 batteries
+        """
+        string = self.address.replace(":", "").lower()
+        return string
+
     async def send_command(self, command) -> Union[bytearray, bool]:
         if not self.bt_client:
             logger.error(">>> ERROR: No BLE client connection - returning")

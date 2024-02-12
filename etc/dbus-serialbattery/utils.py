@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.1.20240211dev"
+DRIVER_VERSION = "1.1.20240212dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
