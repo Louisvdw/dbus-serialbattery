@@ -3,23 +3,84 @@
 # remove comment for easier troubleshooting
 #set -x
 
-echo ""
+
+echo
+# fetch version numbers for different versions
+echo -n "Fetch current version numbers..."
+
+# louisvdw stable
+latest_release_louisvdw_stable=$(curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/latest | grep "tag_name" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \,)
+
+# louisvdw beta
+latest_release_louisvdw_beta=$(curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases | grep "tag_name.*beta" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \, | head -n 1)
+
+# louisvdw dev
+latest_release_louisvdw_dev=$(curl -s https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/dev/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
+
+# mr-manuel stable
+latest_release_mrmanuel_stable=$(curl -s https://api.github.com/repos/mr-manuel/venus-os_dbus-serialbattery/releases/latest | grep "tag_name" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \,)
+
+# mr-manuel beta
+latest_release_mrmanuel_beta=$(curl -s https://api.github.com/repos/mr-manuel/venus-os_dbus-serialbattery/releases | grep "tag_name.*beta" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \, | head -n 1)
+
+# mr-manuel dev
+latest_release_mrmanuel_dev=$(curl -s https://raw.githubusercontent.com/mr-manuel/venus-os_dbus-serialbattery/dev/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
+
+# done
+echo " done."
+
+
+
+echo
 PS3="Select which version you want to install and enter the corresponding number [1]: "
 
-select version in "latest release (recommended)" "specific version" "nightly build" "local tar file" "quit"
+# create list of versions
+version_list=(
+    "latest release \"$latest_release_louisvdw_stable\" (louisvdw's repo, stable)"
+    "latest release \"$latest_release_mrmanuel_stable\" (mr-manuel's repo, stable, most up to date)"
+    "beta build \"$latest_release_louisvdw_beta\" (louisvdw's repo)"
+    "beta build \"$latest_release_mrmanuel_beta\" (mr-manuel's repo, no errors after 72 h runtime, long time testing needed)"
+    "dev build \"$latest_release_louisvdw_dev\" (louisvdw's repo)"
+    "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)"
+    "specific version"
+    "local tar file"
+    "quit"
+)
+
+select version in "${version_list[@]}"
 do
     case $version in
-        "latest release (recommended)")
+        "latest release \"$latest_release_louisvdw_stable\" (louisvdw's repo, stable)")
+            echo "Selected: $version"
+            #echo "Selected number: $REPLY"
+            break
+            ;;
+        "latest release \"$latest_release_mrmanuel_stable\" (mr-manuel's repo, stable, most up to date)")
+            echo "Selected: $version"
+            #echo "Selected number: $REPLY"
+            break
+            ;;
+        "beta build \"$latest_release_louisvdw_beta\" (louisvdw's repo)")
+            echo "Selected: $version"
+            #echo "Selected number: $REPLY"
+            break
+            ;;
+        "beta build \"$latest_release_mrmanuel_beta\" (mr-manuel's repo, no errors after 72 h runtime, long time testing needed)")
+            echo "Selected: $version"
+            #echo "Selected number: $REPLY"
+            break
+            ;;
+        "dev build \"$latest_release_louisvdw_dev\" (louisvdw's repo)")
+            echo "Selected: $version"
+            #echo "Selected number: $REPLY"
+            break
+            ;;
+        "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)")
             echo "Selected: $version"
             #echo "Selected number: $REPLY"
             break
             ;;
         "specific version")
-            echo "Selected: $version"
-            #echo "Selected number: $REPLY"
-            break
-            ;;
-        "nightly build")
             echo "Selected: $version"
             #echo "Selected number: $REPLY"
             break
@@ -40,10 +101,30 @@ do
 done
 echo ""
 
+
+
 ## latest release
-if [ "$version" = "latest release (recommended)" ]; then
+if [ "$version" = "latest release \"$latest_release_louisvdw_stable\" (louisvdw's repo, stable)" ]; then
     # download latest release
     curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/latest | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/venus-data.tar.gz -qi -
+fi
+
+## latest release (mr-manuel, most up to date)
+if [ "$version" = "latest release \"$latest_release_mrmanuel_stable\" (mr-manuel's repo, stable, most up to date)" ]; then
+    # download latest release
+    curl -s https://api.github.com/repos/mr-manuel/venus-os_dbus-serialbattery/releases/latest | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/venus-data.tar.gz -qi -
+fi
+
+## beta release
+if [ "$version" = "beta build \"$latest_release_louisvdw_beta\" (louisvdw's repo)" ]; then
+    # download beta release
+    curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases/tags/$latest_release_louisvdw_beta | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/venus-data.tar.gz -qi -
+fi
+
+## beta release (mr-manuel, most up to date)
+if [ "$version" = "beta build \"$latest_release_mrmanuel_beta\" (mr-manuel's repo, no errors after 72 h runtime, long time testing needed)" ]; then
+    # download beta release
+    curl -s https://api.github.com/repos/mr-manuel/venus-os_dbus-serialbattery/releases/tags/$latest_release_mrmanuel_beta | grep "browser_download_url.*gz" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/venus-data.tar.gz -qi -
 fi
 
 ## specific version
@@ -70,7 +151,7 @@ fi
 
 
 ## extract the tar file
-if [ "$version" = "latest release (recommended)" ] || [ "$version" = "specific version" ] || [ "$version" = "local tar file" ]; then
+if [ "$version" = "latest release \"$latest_release_louisvdw_stable\" (louisvdw's repo, stable)" ] || [ "$version" = "latest release \"$latest_release_mrmanuel_stable\" (mr-manuel's repo, stable, most up to date)" ] || [ "$version" = "beta build \"$latest_release_louisvdw_beta\" (louisvdw's repo)" ] || [ "$version" = "beta build \"$latest_release_mrmanuel_beta\" (mr-manuel's repo, no errors after 72 h runtime, long time testing needed)" ] || [ "$version" = "specific version" ] || [ "$version" = "local tar file" ]; then
 
     # extract driver
     if [ -f "/tmp/venus-data.tar.gz" ]; then
@@ -89,43 +170,15 @@ if [ "$version" = "latest release (recommended)" ] || [ "$version" = "specific v
 fi
 
 
-## nightly build
-if [ "$version" = "nightly build" ]; then
 
-    PS3="Select the branch from wich you want to install the current code (possible bugs included): "
+## dev builds
+if [ "$version" = "dev build \"$latest_release_louisvdw_dev\" (louisvdw's repo)" ] || [ "$version" = "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)" ]; then
 
-    select branch in "master" "dev" "dev (mr-manuel's repo)" "quit"
-    do
-        case $branch in
-            "master")
-                echo "Selected branch: $branch"
-                #echo "Selected number: $REPLY"
-                break
-                ;;
-            "dev")
-                echo "Selected branch: $branch"
-                #echo "Selected number: $REPLY"
-                break
-                ;;
-            "dev (mr-manuel's repo)")
-                echo "Selected branch: $branch"
-                #echo "Selected number: $REPLY"
-                break
-                ;;
-            "quit")
-                exit 0
-                ;;
-            *)
-                echo "Invalid option $REPLY"
-                ;;
-        esac
-    done
-
+    branch="dev"
 
     cd /tmp
 
-    if [ "$branch" = "dev (mr-manuel's repo)" ]; then
-        branch="dev"
+    if [ "$version" = "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)" ]; then
 
         # clean already extracted folder
         rm -rf /tmp/venus-os_dbus-serialbattery-$branch
