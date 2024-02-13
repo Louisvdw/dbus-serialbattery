@@ -78,13 +78,13 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Download and copy the [latest release](https://github.com/Louisvdw/dbus-serialbattery/releases) `venus-data.tar.gz` to the root of a USB flash drive that is in FAT32 format (a SD card is also an option for GX devices, but not for Raspberry Pi).
 
-2. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
+1. OPTIONAL (`>= v1.0.0`): Create a `config.ini` file in the root of your USB flash drive with your custom settings. Put `[DEFAULT]` in the first line of the file and add all the values you want to change below. You only have to insert the values you want to change, all other values are fetched from the `config.default.ini`. In the [`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) you find all possible settings that you can copy over and change.
 
    > If you put a `config.ini` in the root of the USB flash drive, then an existing `config.ini` will be overwritten.
 
-3. Plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.
+1. Plug the flash drive/SD into the Venus device and reboot. It will automatically extract and install to the correct locations and try the driver on any connected devices.
 
-4. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`).
+1. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`).
 
 
 ### Install over SSH
@@ -93,7 +93,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. Log into your Venus OS device using a SSH client like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or bash.
 
-2. Run these commands to start the installer. You can then choos, if you want to install the [latest release (recommended)](#latest-release-recommended), a [specific version](#specific-versiontroubleshooting-option), the [nightly build](#nightly-build) (from `master` or `dev`), a [local tar file](#local-tar-file) or quit.
+1. Run these commands to start the installer.
 
   ```bash
   wget -O /tmp/install.sh https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/install.sh
@@ -101,35 +101,58 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
   bash /tmp/install.sh
   ```
 
-#### Latest release (recommended)
+1. You can now choose which version you want to install:
 
-Run the [install script ](#install-over-ssh) and select `1`.
+   1. [latest release](#latest-release)
+      Stable version, tested for over a week.
+
+   1. [beta release](#beta-release)
+      Beta version, tested for over 72 hours.
+
+   1. [dev build](#dev-build)
+      Development/Nightly version, tested for a few hours.
+
+   1. [specific version](#specific-versiontroubleshooting-option)
+
+   1. [local tar file](#local-tar-file)
+
+#### Latest release
+
+Stable version, tested for over a week.
+
+Run the [install script](#install-over-ssh) and select `1` or `2`.
+
+💡 Reboot the system after the installation finished with `reboot`.
+
+#### Beta release
+
+Beta version, tested for over 72 hours.
+
+Run the [install script](#install-over-ssh) and select `3` or `4`.
+
+💡 Reboot the system after the installation finished with `reboot`.
+
+#### Dev build
+
+Development/Nightly version, tested for a few hours. Issues might arise. Please keep your system monitored.
+
+> Not recommended in production environment, unless you know what you do. Testers are very welcome!
+
+Run the [install script](#install-over-ssh) and select `5` or `6`.
+
+💡 Reboot the system after the installation finished with `reboot`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
 #### Specific version/troubleshooting option
 
-Run the [install script ](#install-over-ssh) and select `2`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
-
-💡 Reboot the system after the installation finished with `reboot`.
-
-#### Nightly build
-
-> Not recommended in production environment, unless you know what you do. Testers are very welcome!
-
-Run the [install script ](#install-over-ssh) and select `3`.
-
-Then select `1` if you want to install from the `master` branch or select `2` if you want to install from the `dev` branch.
-
-The `master` branch can be seen as alpha version prior a pre-release or release is created.
-
-The `dev` branch can be seen as most recent version, but also as the most unstable.  It could be that everything works as expected, but it can also brick your system and you have to reinstall from zero.
+Run the [install script](#install-over-ssh) and select `7`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) or [releases](https://github.com/mr-manuel/venus-os_dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
 #### Local tar file
 
-Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script ](#install-over-ssh) and select `3`.
+Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script](#install-over-ssh) and select `8`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
