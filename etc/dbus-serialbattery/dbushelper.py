@@ -62,9 +62,13 @@ class DbusHelper:
         }
 
     def setup_instance(self):
-        # checks if the battery was already connected once
-        # if so, get the instance from the dbus settings and update last seen with current time
-        # if not, create the settings and set the instance to the next available one
+        """
+        Sets up the instance of the battery by checking if it was already connected once.
+        If the battery was already connected, it retrieves the instance from the dbus settings and
+            updates the last seen time.
+        If the battery was not connected before, it creates the settings and sets the instance to the
+            next available one.
+        """
 
         # bms_id = self.battery.production if self.battery.production is not None else \
         #     self.battery.port[self.battery.port.rfind('/') + 1:]
@@ -165,10 +169,19 @@ class DbusHelper:
                             "AllowMaxVoltage" in value
                             and value["AllowMaxVoltage"] != ""
                         ):
-                            self.battery.allow_max_voltage = (
-                                True if value["AllowMaxVoltage"] == 1 else False
-                            )
-                            self.battery.max_voltage_start_time = None
+
+                            try:
+                                self.battery.allow_max_voltage = (
+                                    True
+                                    if int(value["AllowMaxVoltage"]) == 1
+                                    else False
+                                )
+                            except Exception:
+                                logger.error(
+                                    "AllowMaxVoltage could not be converted to type int: "
+                                    + str(value["AllowMaxVoltage"])
+                                )
+                                pass
 
                         # check if the battery has CustomName set
                         if "CustomName" in value and value["CustomName"] != "":
@@ -1138,9 +1151,6 @@ class DbusHelper:
             self.battery.allow_max_voltage
             != self.save_charge_details_last["allow_max_voltage"]
         ):
-            self.save_charge_details_last["allow_max_voltage"] = (
-                self.battery.allow_max_voltage
-            )
             result = result + self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
@@ -1152,14 +1162,14 @@ class DbusHelper:
                 f"Saved AllowMaxVoltage. Before {self.save_charge_details_last['allow_max_voltage']}, "
                 + f"after {self.battery.allow_max_voltage}"
             )
+            self.save_charge_details_last["allow_max_voltage"] = (
+                self.battery.allow_max_voltage
+            )
 
         if (
             self.battery.max_voltage_start_time
             != self.save_charge_details_last["max_voltage_start_time"]
         ):
-            self.save_charge_details_last["max_voltage_start_time"] = (
-                self.battery.max_voltage_start_time
-            )
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
@@ -1175,9 +1185,11 @@ class DbusHelper:
                 f"Saved MaxVoltageStartTime. Before {self.save_charge_details_last['max_voltage_start_time']}, "
                 + f"after {self.battery.max_voltage_start_time}"
             )
+            self.save_charge_details_last["max_voltage_start_time"] = (
+                self.battery.max_voltage_start_time
+            )
 
         if self.battery.soc_calc != self.save_charge_details_last["soc_calc"]:
-            self.save_charge_details_last["soc_calc"] = self.battery.soc_calc
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
@@ -1186,14 +1198,12 @@ class DbusHelper:
                 self.battery.soc_calc,
             )
             logger.debug(f"soc_calc written to dbus: {self.battery.soc_calc}")
+            self.save_charge_details_last["soc_calc"] = self.battery.soc_calc
 
         if (
             self.battery.soc_reset_last_reached
             != self.save_charge_details_last["soc_reset_last_reached"]
         ):
-            self.save_charge_details_last["soc_reset_last_reached"] = (
-                self.battery.soc_reset_last_reached
-            )
             result = result and self.setSetting(
                 get_bus(),
                 "com.victronenergy.settings",
@@ -1204,6 +1214,9 @@ class DbusHelper:
             logger.info(
                 f"Saved SocResetLastReached. Before {self.save_charge_details_last['soc_reset_last_reached']}, "
                 + f"after {self.battery.soc_reset_last_reached}",
+            )
+            self.save_charge_details_last["soc_reset_last_reached"] = (
+                self.battery.soc_reset_last_reached
             )
 
         return result

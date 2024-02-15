@@ -26,6 +26,7 @@
 
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
+* Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
 * Changed: Install script now shows repositories and version numbers by @mr-manuel
 * Changed: JKBMS BLE - Fix driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
 * Changed: JKBMS BLE - Fix temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
