@@ -1031,7 +1031,7 @@ class Battery(ABC):
         if self.current > 0:
             soc_diff = soc_target - self.soc_calc
         else:
-            soc_diff = self.soc - soc_target
+            soc_diff = self.soc_calc - soc_target
 
         """
         calculate only positive SoC points, since negative points have no sense
