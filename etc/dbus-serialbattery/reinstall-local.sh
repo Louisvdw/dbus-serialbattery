@@ -165,7 +165,7 @@ bluetooth_length=${#bms_array[@]}
 
 # stop all dbus-blebattery services, if at least one exists
 if [ -d "/service/dbus-blebattery.0" ]; then
-    svc -u /service/dbus-blebattery.*
+    svc -t /service/dbus-blebattery.*
 
     # always remove existing blebattery services to cleanup
     rm -rf /service/dbus-blebattery.*
@@ -336,7 +336,7 @@ can_lenght=${#can_array[@]}
 
 # stop all dbus-canbattery services, if at least one exists
 if [ -d "/service/dbus-canbattery.0" ]; then
-    svc -u /service/dbus-canbattery.*
+    svc -t /service/dbus-canbattery.*
 
     # always remove existing canbattery services to cleanup
     rm -rf /service/dbus-canbattery.*
