@@ -854,6 +854,9 @@ class Battery(ABC):
                 False,
             )
         except Exception:
+            logger.warning(
+                "Error while executing calcMaxChargeCurrentReferringToCellVoltage(). Using default value instead."
+            )
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self) -> float:
@@ -871,6 +874,9 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            logger.warning(
+                "Error while executing calcMaxDischargeCurrentReferringToCellVoltage(). Using default value instead."
+            )
             return self.max_battery_charge_current
 
     def calcMaxChargeCurrentReferringToTemperature(self) -> float:
@@ -934,6 +940,9 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            logger.warning(
+                "Error while executing calcMaxChargeCurrentReferringToSoc(). Using default value instead."
+            )
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToSoc(self) -> float:
@@ -951,6 +960,9 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            logger.warning(
+                "Error while executing calcMaxDischargeCurrentReferringToSoc(). Using default value instead."
+            )
             return self.max_battery_discharge_current
 
     def get_min_cell(self) -> int:
