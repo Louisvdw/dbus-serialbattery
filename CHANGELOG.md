@@ -26,6 +26,22 @@
 
     `TEMPERATURES_WHILE_CHARGING`, `TEMPERATURES_WHILE_DISCHARGING`
 
+  * The SoC limitation variables where changed to match the cell voltage and temperature config.
+
+    **OLD**
+
+    `CC_SOC_LIMIT1`, `CC_SOC_LIMIT2`, `CC_SOC_LIMIT3`
+
+    `CC_CURRENT_LIMIT1_FRACTION`, `CC_CURRENT_LIMIT2_FRACTION`, `CC_CURRENT_LIMIT3_FRACTION`
+
+    `DC_SOC_LIMIT1`, `DC_SOC_LIMIT2`, `DC_SOC_LIMIT3`
+
+    `DC_CURRENT_LIMIT1_FRACTION`, `DC_CURRENT_LIMIT2_FRACTION`, `DC_CURRENT_LIMIT3_FRACTION`
+
+    **NEW**
+
+    `SOC_WHILE_CHARGING`, `MAX_CHARGE_CURRENT_SOC_FRACTION`, `SOC_WHILE_DISCHARGING`, `MAX_DISCHARGE_CURRENT_SOC_FRACTION`
+
 
 * Driver version greater or equal to `v1.1.20231223beta`
 
@@ -50,6 +66,7 @@
 
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
+* Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Fix Time-to-SoC and Time-to-Go calculation by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel

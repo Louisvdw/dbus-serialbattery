@@ -921,52 +921,37 @@ class Battery(ABC):
 
     def calcMaxChargeCurrentReferringToSoc(self) -> float:
         try:
-            # Create value list. Will more this to the settings object
-            SOC_WHILE_CHARGING = [
-                100,
-                utils.CC_SOC_LIMIT1,
-                utils.CC_SOC_LIMIT2,
-                utils.CC_SOC_LIMIT3,
-            ]
-            MAX_CHARGE_CURRENT_SOC = [
-                utils.CC_CURRENT_LIMIT1,
-                utils.CC_CURRENT_LIMIT2,
-                utils.CC_CURRENT_LIMIT3,
-                utils.MAX_BATTERY_CHARGE_CURRENT,
-            ]
             if utils.LINEAR_LIMITATION_ENABLE:
                 return utils.calcLinearRelationship(
-                    self.soc_calc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC
+                    self.soc_calc,
+                    utils.SOC_WHILE_CHARGING,
+                    utils.MAX_CHARGE_CURRENT_SOC,
                 )
             return utils.calcStepRelationship(
-                self.soc_calc, SOC_WHILE_CHARGING, MAX_CHARGE_CURRENT_SOC, True
+                self.soc_calc,
+                utils.SOC_WHILE_CHARGING,
+                utils.MAX_CHARGE_CURRENT_SOC,
+                True,
             )
         except Exception:
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToSoc(self) -> float:
         try:
-            # Create value list. Will more this to the settings object
-            SOC_WHILE_DISCHARGING = [
-                utils.DC_SOC_LIMIT3,
-                utils.DC_SOC_LIMIT2,
-                utils.DC_SOC_LIMIT1,
-            ]
-            MAX_DISCHARGE_CURRENT_SOC = [
-                utils.MAX_BATTERY_DISCHARGE_CURRENT,
-                utils.DC_CURRENT_LIMIT3,
-                utils.DC_CURRENT_LIMIT2,
-                utils.DC_CURRENT_LIMIT1,
-            ]
             if utils.LINEAR_LIMITATION_ENABLE:
                 return utils.calcLinearRelationship(
-                    self.soc_calc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC
+                    self.soc_calc,
+                    utils.SOC_WHILE_DISCHARGING,
+                    utils.MAX_DISCHARGE_CURRENT_SOC,
                 )
             return utils.calcStepRelationship(
-                self.soc_calc, SOC_WHILE_DISCHARGING, MAX_DISCHARGE_CURRENT_SOC, True
+                self.soc_calc,
+                utils.SOC_WHILE_DISCHARGING,
+                utils.MAX_DISCHARGE_CURRENT_SOC,
+                True,
             )
         except Exception:
-            return self.max_battery_charge_current
+            return self.max_battery_discharge_current
 
     def get_min_cell(self) -> int:
         min_voltage = 9999
