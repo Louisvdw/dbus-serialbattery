@@ -106,7 +106,6 @@ class Battery(ABC):
         self.temp4: float = None
         self.temp_mos: float = None
         self.cells: List[Cell] = []
-        # self.control_charging = None  # seems unused
         self.control_voltage: float = None
         self.soc_reset_requested: bool = False
         self.soc_reset_last_reached: int = 0  # save state to preserve on restart
@@ -116,7 +115,6 @@ class Battery(ABC):
         self.allow_max_voltage: bool = True  # save state to preserve on restart
         self.max_voltage_start_time: int = None  # save state to preserve on restart
         self.transition_start_time: int = None
-        # self.control_voltage_at_transition_start = None  # seems unused
         self.charge_mode: str = None
         self.charge_mode_debug: str = ""
         self.charge_limitation: str = None
@@ -124,9 +122,6 @@ class Battery(ABC):
         self.linear_cvl_last_set: int = 0
         self.linear_ccl_last_set: int = 0
         self.linear_dcl_last_set: int = 0
-        # self.control_current = None  # seems unused
-        # self.control_previous_total = None  # seems unused
-        # self.control_previous_max = None  # seems unused
         self.control_discharge_current: int = None
         self.control_charge_current: int = None
         self.control_allow_charge: bool = None
@@ -302,12 +297,14 @@ class Battery(ABC):
         )
 
         # limit SoC to 99% in absoprtion or bulk else the battery won't charge to 100%
-        if (
-            self.charge_mode
-            and ("Bulk" in self.charge_mode or "Absorption" in self.charge_mode)
-            and self.soc_calc > 99
-        ):
-            self.soc_calc = 99
+        # only needed if charging to SoC of 100%
+        # to test if this can be removed
+        # if (
+        #     self.charge_mode
+        #     and ("Bulk" in self.charge_mode or "Absorption" in self.charge_mode)
+        #     and self.soc_calc > 99
+        # ):
+        #     self.soc_calc = 99
 
     def prepare_voltage_management(self) -> None:
         soc_reset_last_reached_days_ago = (
