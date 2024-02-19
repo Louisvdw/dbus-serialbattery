@@ -14,9 +14,23 @@
 
 ## Breaking changes
 
+* Driver version greater or equal to `v1.2.20240219beta`
+
+  * The temperature limitation variables where changed to match the other variable names.
+
+    **OLD**
+
+    `TEMPERATURE_LIMITS_WHILE_CHARGING`, `TEMPERATURE_LIMITS_WHILE_DISCHARGING`
+
+    **NEW**
+
+    `TEMPERATURES_WHILE_CHARGING`, `TEMPERATURES_WHILE_DISCHARGING`
+
+
 * Driver version greater or equal to `v1.1.20231223beta`
 
   * `PUBLISH_CONFIG_VALUES` now has to be True or False
+
 
 * Driver version greater or equal to `v1.0.20231128beta`
 
@@ -24,16 +38,19 @@
 
   * If you selected a specific device in `Settings -> System setup -> Battery monitor` and/or `Settings -> DVCC -> Controlling BMS` you have to reselect it.
 
+
 * Driver version greater or equal to `v1.0.20230629beta` and smaller or equal to `v1.0.20230926beta`:
 
   With `v1.0.20230927beta` the following values changed names:
   * `BULK_CELL_VOLTAGE` -> `SOC_RESET_VOLTAGE`
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
-## v1.1.x
+
+## v1.2.x
 
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
+* Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Fix Time-to-SoC and Time-to-Go calculation by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
 * Changed: Install script now shows repositories and version numbers by @mr-manuel
@@ -42,12 +59,14 @@
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
 * Changed: SocResetLastReached not read from dbus settings. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 
+
 ## v1.1.20240121
 
 * Changed: Exit the driver with error, when port is excluded in config, else the serialstarter does not continue by @mr-manuel
 * Changed: Fix issue on first driver startup, when no device setting in dbus exists by @mr-manuel
 * Changed: Fixed some smaller errors by @mr-manuel
 * Changed: More detailed error output when an exception happens by @mr-manuel
+
 
 ## v1.0.20240102beta
 

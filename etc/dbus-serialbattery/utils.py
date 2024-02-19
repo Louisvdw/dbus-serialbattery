@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.1.20240217dev"
+DRIVER_VERSION = "1.2.20240219dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -151,8 +151,8 @@ CVL_ICONTROLLER_FACTOR = float(config["DEFAULT"]["CVL_ICONTROLLER_FACTOR"])
 CCCM_T_ENABLE = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
 DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
 
-TEMPERATURE_LIMITS_WHILE_CHARGING = _get_list_from_config(
-    "DEFAULT", "TEMPERATURE_LIMITS_WHILE_CHARGING", lambda v: float(v)
+TEMPERATURES_WHILE_CHARGING = _get_list_from_config(
+    "DEFAULT", "TEMPERATURES_WHILE_CHARGING", lambda v: float(v)
 )
 MAX_CHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT",
@@ -160,8 +160,8 @@ MAX_CHARGE_CURRENT_T = _get_list_from_config(
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
 )
 
-TEMPERATURE_LIMITS_WHILE_DISCHARGING = _get_list_from_config(
-    "DEFAULT", "TEMPERATURE_LIMITS_WHILE_DISCHARGING", lambda v: float(v)
+TEMPERATURES_WHILE_DISCHARGING = _get_list_from_config(
+    "DEFAULT", "TEMPERATURES_WHILE_DISCHARGING", lambda v: float(v)
 )
 MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT",

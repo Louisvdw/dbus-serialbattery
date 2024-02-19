@@ -883,13 +883,13 @@ class Battery(ABC):
             if utils.LINEAR_LIMITATION_ENABLE:
                 temps[key] = utils.calcLinearRelationship(
                     currentMaxTemperature,
-                    utils.TEMPERATURE_LIMITS_WHILE_CHARGING,
+                    utils.TEMPERATURES_WHILE_CHARGING,
                     utils.MAX_CHARGE_CURRENT_T,
                 )
             else:
                 temps[key] = utils.calcStepRelationship(
                     currentMaxTemperature,
-                    utils.TEMPERATURE_LIMITS_WHILE_CHARGING,
+                    utils.TEMPERATURES_WHILE_CHARGING,
                     utils.MAX_CHARGE_CURRENT_T,
                     False,
                 )
@@ -906,13 +906,13 @@ class Battery(ABC):
             if utils.LINEAR_LIMITATION_ENABLE:
                 temps[key] = utils.calcLinearRelationship(
                     currentMaxTemperature,
-                    utils.TEMPERATURE_LIMITS_WHILE_DISCHARGING,
+                    utils.TEMPERATURES_WHILE_DISCHARGING,
                     utils.MAX_DISCHARGE_CURRENT_T,
                 )
             else:
                 temps[key] = utils.calcStepRelationship(
                     currentMaxTemperature,
-                    utils.TEMPERATURE_LIMITS_WHILE_DISCHARGING,
+                    utils.TEMPERATURES_WHILE_DISCHARGING,
                     utils.MAX_DISCHARGE_CURRENT_T,
                     True,
                 )
