@@ -240,6 +240,7 @@ class Battery(ABC):
         current_time = time()
         voltage_sum = 0
         current_corrected = 0
+        current_min_cell_voltage = self.get_min_cell_voltage()
 
         # calculate battery voltage from cell voltages
         for i in range(self.cell_count):
@@ -263,19 +264,43 @@ class Battery(ABC):
             )
             self.soc_calc_capacity_remain_lasttime = current_time
 
-            # check if battery is fully charged
-            if (
-                self.current < utils.SOC_RESET_CURRENT
-                and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltage_sum)
-                and self.soc_calc_reset_starttime
-            ):
-                # set soc to 100%
+            # execute checks only if battery is nearly fully charged
+            # use lowest cell voltage, since it reaches as last the max voltage
+            if current_min_cell_voltage > utils.MAX_CELL_VOLTAGE * 0.99:
+                # check if battery is fully charged
                 if (
-                    int(current_time) - self.soc_calc_reset_starttime
-                ) > utils.SOC_RESET_TIME:
-                    self.soc_calc_capacity_remain = self.capacity
-            else:
-                self.soc_calc_reset_starttime = int(current_time)
+                    self.current < utils.SOC_RESET_CURRENT
+                    and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltage_sum)
+                    and self.soc_calc_reset_starttime
+                ):
+                    # set soc to 100%
+                    if (
+                        int(current_time) - self.soc_calc_reset_starttime
+                    ) > utils.SOC_RESET_TIME:
+                        self.soc_calc_capacity_remain = self.capacity
+                else:
+                    self.soc_calc_reset_starttime = int(current_time)
+
+            # execute checks only if battery is nearly fully discharged
+            # use lowest cell voltage, since the battery should not go undervoltage
+            if current_min_cell_voltage < utils.MIN_CELL_VOLTAGE * 1.01:
+                # check if battery is fully discharged
+                if (
+                    self.current < utils.SOC_RESET_CURRENT
+                    and (
+                        current_min_cell_voltage
+                        - (utils.VOLTAGE_DROP / self.cell_count)
+                        <= utils.MIN_CELL_VOLTAGE
+                    )
+                    and self.soc_calc_reset_starttime
+                ):
+                    # set soc to 0%
+                    if (
+                        int(current_time) - self.soc_calc_reset_starttime
+                    ) > utils.SOC_RESET_TIME:
+                        self.soc_calc_capacity_remain = 0
+                else:
+                    self.soc_calc_reset_starttime = int(current_time)
 
         else:
             # if soc_calc is not available from dbus then initialize it

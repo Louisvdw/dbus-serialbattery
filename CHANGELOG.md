@@ -65,6 +65,7 @@
 ## v1.2.x
 
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
+* Added: Reset calculated SoC to 0%, if battery is empty by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
 * Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
