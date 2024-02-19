@@ -933,10 +933,11 @@ class DbusHelper:
                 pathbase = (
                     "Cell" if (utils.BATTERY_CELL_DATA_FORMAT & 2) else "Voltages"
                 )
-                self._dbusservice["/%s/Sum" % pathbase] = voltage_sum
-                self._dbusservice["/%s/Diff" % pathbase] = (
+                self._dbusservice["/%s/Sum" % pathbase] = round(voltage_sum, 2)
+                self._dbusservice["/%s/Diff" % pathbase] = round(
                     self.battery.get_max_cell_voltage()
-                    - self.battery.get_min_cell_voltage()
+                    - self.battery.get_min_cell_voltage(),
+                    3,
                 )
             except Exception:
                 pass
