@@ -4,6 +4,20 @@
 #set -x
 
 
+# check if at least 5 MB free space is available on the system partition
+freeSpace=$(df -m /data | awk 'NR==2 {print $4}')
+if [ $freeSpace -lt 5 ]; then
+    echo
+    echo
+    echo "ERROR: Not enough free space on the data partition. At least 5 MB are required."
+    echo
+    echo "       Please free up some space and try again."
+    echo
+    echo
+    exit 1
+fi
+
+
 echo
 # fetch version numbers for different versions
 echo -n "Fetch current version numbers..."

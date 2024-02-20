@@ -60,6 +60,38 @@ fi
 # check if minimum required Venus OS is installed | end
 
 
+# check if at least 8 MB free space is available on the system partition
+freeSpace=$(df -m / | awk 'NR==2 {print $4}')
+if [ $freeSpace -lt 8 ]; then
+
+    # try to expand system partition
+    bash /opt/victronenergy/swupdate-scripts/resize2fs.sh
+
+    freeSpace=$(df -m / | awk 'NR==2 {print $4}')
+    if [ $freeSpace -lt 8 ]; then
+        echo
+        echo
+        echo "ERROR: Not enough free space on the system partition. At least 8 MB are required."
+        echo
+        echo "       Please please try to execute this command"
+        echo
+        echo "       bash /opt/victronenergy/swupdate-scripts/resize2fs.sh"
+        echo
+        echo "       and try the installation again after."
+        echo
+        echo
+        exit 1
+    else
+        echo
+        echo
+        echo "INFO: System partition was expanded. Now there are $freeSpace MB free space available."
+        echo
+        echo
+    fi
+
+fi
+
+
 # handle read only mounts
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 

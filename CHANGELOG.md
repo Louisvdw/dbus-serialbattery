@@ -64,6 +64,7 @@
 
 ## v1.2.x
 
+* Added: Check if there is enough space on system and data partitions before installation by @mr-manuel
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Reset calculated SoC to 0%, if battery is empty by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
