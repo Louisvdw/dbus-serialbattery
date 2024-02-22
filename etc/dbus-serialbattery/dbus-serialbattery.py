@@ -7,10 +7,12 @@ from dbus.mainloop.glib import DBusGMainLoop
 
 import sys
 
-if sys.version_info.major == 2:
-    import gobject
-else:
-    from gi.repository import GLib as gobject
+# not needed anymore since a few years
+# removed after next release > v1.2.x
+# if sys.version_info.major == 2:
+#     import gobject
+# else:
+from gi.repository import GLib as gobject
 
 # Victron packages
 # from ve_utils import exit_on_error

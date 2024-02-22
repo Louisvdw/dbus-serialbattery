@@ -77,6 +77,7 @@
 * Changed: JKBMS BLE - Fix temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
 * Changed: SocResetLastReached not read from dbus settings. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
+* Removed: Python 2 compatibility by @mr-manuel
 
 
 ## v1.1.20240121
