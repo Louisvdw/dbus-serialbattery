@@ -9,7 +9,7 @@
 * Driver version greater or equal to `v1.0.20231126dev`
 
   * If multiple batteries have the same `unique_identifier`, then they are displayed as one battery in the VRM portal and if you change the name,
-    it get changed for both battries. Please change the capacity of the batteries to be unique.
+    it get changed for all dbus-serialbattries. Please change the capacity of the batteries to be unique.
     E.g.: 278 Ah, 279 Ah,280 Ah,281 Ah and 282 Ah, if you have 5 batteries with 280 Ah.
 
 ## Breaking changes

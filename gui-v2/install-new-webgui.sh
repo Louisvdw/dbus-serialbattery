@@ -14,3 +14,9 @@ rm -rf /var/www/venus/gui-battery
 
 # move the new webassembly directory to the correct location
 mv /tmp/wasm /var/www/venus/gui-battery
+
+echo
+echo "The GUIv2 with the dbus-serialbattery mods was installed successfully."
+echo
+echo "Please check https://github.com/mr-manuel/venus-os_dbus-serialbattery/tree/dev/gui-v2 for more details."
+echo
