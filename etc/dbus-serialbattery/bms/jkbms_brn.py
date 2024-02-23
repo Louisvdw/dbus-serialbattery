@@ -21,6 +21,7 @@ else:
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
 CHAR_HANDLE = "0000ffe1-0000-1000-8000-00805f9b34fb"
+CHAR_HANDLE_FAILOVER = 4
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 
 COMMAND_CELL_INFO = 0x96
@@ -407,7 +408,26 @@ class Jkbms_Brn:
         frame[18] = 0x00
         frame[19] = self.crc(frame, len(frame) - 1)
         logger.debug("Write register: " + str(address) + " " + str(frame))
-        await bleakC.write_gatt_char(CHAR_HANDLE, frame, response=awaitresponse)
+
+        # some JKBMS trow an error
+        # BleakError('Multiple Characteristics with this UUID, refer to your desired
+        #             characteristic by the `handle` attribute instead.')
+        # failover in this case and use handle instead of UUID
+        try:
+            await bleakC.write_gatt_char(CHAR_HANDLE, frame, response=awaitresponse)
+        except exc.BleakError:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            logger.debug(
+                f'Error getting UUID "{CHAR_HANDLE}": {repr(exception_object)} -> failover'
+            )
+            await bleakC.write_gatt_char(
+                CHAR_HANDLE_FAILOVER, frame, response=awaitresponse
+            )
+
         if awaitresponse:
             await asyncio.sleep(5)
 
@@ -448,14 +468,44 @@ class Jkbms_Brn:
         while self.run and self.main_thread.is_alive():  # autoreconnect
             client = BleakClient(self.address)
             logger.debug("--> asy_connect_and_scrape(): btloop")
+
             try:
                 logger.debug("--> asy_connect_and_scrape(): reconnect")
                 await client.connect()
-                self.bms_status["model_nbr"] = (
-                    await client.read_gatt_char(MODEL_NBR_UUID)
-                ).decode("utf-8")
 
-                await client.start_notify(CHAR_HANDLE, self.ncallback)
+                # try to get MODEL_NBR_UUID, since not all JKBMS send it
+                try:
+                    self.bms_status["model_nbr"] = (
+                        await client.read_gatt_char(MODEL_NBR_UUID)
+                    ).decode("utf-8")
+                except exc.BleakError:
+                    (
+                        exception_type,
+                        exception_object,
+                        exception_traceback,
+                    ) = sys.exc_info()
+                    logger.debug(
+                        f'Error getting UUID "{MODEL_NBR_UUID}": {repr(exception_object)} -> failover'
+                    )
+                    self.bms_status["model_nbr"] = "JK-BMS-Unknown-Model"
+
+                # some JKBMS trow an error
+                # BleakError('Multiple Characteristics with this UUID, refer to your desired
+                #             characteristic by the `handle` attribute instead.')
+                # failover in this case and use handle instead of UUID
+                try:
+                    await client.start_notify(CHAR_HANDLE, self.ncallback)
+                except exc.BleakError:
+                    (
+                        exception_type,
+                        exception_object,
+                        exception_traceback,
+                    ) = sys.exc_info()
+                    logger.debug(
+                        f'Error getting UUID "{CHAR_HANDLE}": {repr(exception_object)} -> failover'
+                    )
+                    await client.start_notify(CHAR_HANDLE_FAILOVER, self.ncallback)
+
                 await self.request_bt("device_info", client)
 
                 await self.request_bt("cell_info", client)
@@ -466,11 +516,13 @@ class Jkbms_Brn:
                         self.trigger_soc_reset = False
                         await self.reset_soc_jk(client)
                     await asyncio.sleep(0.01)
+
             except exc.BleakDeviceNotFoundError:
                 logger.info(
                     f"--> asy_connect_and_scrape(): device not found: {self.address}"
                 )
                 self.run = False
+
             except Exception:
                 (
                     exception_type,
@@ -484,6 +536,7 @@ class Jkbms_Brn:
                     + f"of type {exception_type} in {file} line #{line}"
                 )
                 self.run = False
+
             finally:
                 self.run = False
                 if client.is_connected:
