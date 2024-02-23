@@ -77,6 +77,7 @@
 * Changed: JKBMS BLE - Fixed driver not starting for some BMS models that are not sending BLE data correctly https://github.com/Louisvdw/dbus-serialbattery/issues/819 by @mr-manuel
 * Changed: JKBMS BLE - Fixed temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
+* Changed: Reinstallation of the driver now checks, if packages are already installed for Bluetooth and CAN by @mr-manuel
 * Changed: SocResetLastReached not read from dbus settings. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 * Removed: Python 2 compatibility by @mr-manuel
 

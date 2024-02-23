@@ -222,8 +222,8 @@ if [ "$bluetooth_length" -gt 0 ]; then
     echo
 
     # install required packages
-    # TO DO: Check first if packages are already installed
-    echo "Installing required packages to use Bluetooth connection..."
+    echo "Checking required packages to use Bluetooth connection..."
+    echo
 
     # dbus-fast: skip compiling/building the wheel
     # else weak system crash and are not able to install it,
@@ -231,14 +231,30 @@ if [ "$bluetooth_length" -gt 0 ]; then
     # and https://github.com/Louisvdw/dbus-serialbattery/issues/785
     export SKIP_CYTHON=false
 
-    opkg update
-    opkg install python3-misc
+    if ! opkg list-installed | grep -q "python3-misc" || ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Update packages..."
+        opkg update
+        echo
+    fi
 
-    echo
-    opkg install python3-pip
+    if ! opkg list-installed | grep -q "python3-misc"; then
+        echo "Install python3-misc..."
+        opkg install python3-misc
+        echo
+    fi
 
-    echo
-    pip3 install bleak
+    if ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Install python3-pip..."
+        opkg install python3-pip
+        echo
+    fi
+
+    # fastest way to check if bleak is installed
+    if [ ! -f "/usr/lib/python3.8/site-packages/bleak/__init__.py" ]; then
+        echo "Install bleak..."
+        pip3 install bleak
+        echo
+    fi
 
     # # ONLY FOR TESTING if there are version issues
     # echo
@@ -390,17 +406,33 @@ if [ "$can_lenght" -gt 0 ]; then
     echo
 
     # install required packages
-    # TO DO: Check first if packages are already installed
-    echo "Installing required packages to use CAN connection..."
-
-    opkg update
-    opkg install python3-misc
-
+    echo "Checking required packages to use CAN connection..."
     echo
-    opkg install python3-pip
 
-    echo
-    pip3 install python-can
+    if ! opkg list-installed | grep -q "python3-misc" || ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Update packages..."
+        opkg update
+        echo
+    fi
+
+    if ! opkg list-installed | grep -q "python3-misc"; then
+        echo "Install python3-misc..."
+        opkg install python3-misc
+        echo
+    fi
+
+    if ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Install python3-pip..."
+        opkg install python3-pip
+        echo
+    fi
+
+    # fastest way to check if can is installed
+    if [ ! -f "/usr/lib/python3.8/site-packages/can/__init__.py" ]; then
+        echo "Install can..."
+        pip3 install can
+        echo
+    fi
 
     echo "done."
     echo
