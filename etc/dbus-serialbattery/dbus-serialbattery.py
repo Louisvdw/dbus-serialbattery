@@ -188,6 +188,7 @@ def main():
         if testbms.test_connection():
             logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
+
     elif port.startswith("can"):
         """
         Import CAN classes only, if it's a can port, else the driver won't start due to missing python modules
@@ -210,6 +211,7 @@ def main():
         ]
 
         battery = get_battery(port)
+
     else:
         battery = get_battery(port)
 

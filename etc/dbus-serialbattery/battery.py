@@ -1192,12 +1192,6 @@ class Battery(ABC):
                 return 1
         return 0
 
-    def get_temperatures(self) -> Union[List[float], None]:
-        temperatures = [self.temp1, self.temp2, self.temp3, self.temp4]
-        result = [(t, i) for (t, i) in enumerate(temperatures) if t is not None]
-        if not result:
-            return None
-
     def get_temp(self) -> Union[float, None]:
         try:
             if utils.TEMP_BATTERY == 1:
@@ -1352,6 +1346,9 @@ class Battery(ABC):
         )
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
+            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
+        )
+        logger.info(
             f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}A | "
             + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
         )
@@ -1369,9 +1366,6 @@ class Battery(ABC):
                 + f"MAX BATTERY DISCHARGE CURRENT: {self.max_battery_discharge_current}A (read from BMS)"
             )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
-        logger.info(
-            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
-        )
         logger.info(
             f"> CCCM CV:  {str(utils.CCCM_CV_ENABLE).ljust(5)} | DCCM CV:  {utils.DCCM_CV_ENABLE}"
         )

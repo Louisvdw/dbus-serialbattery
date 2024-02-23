@@ -394,7 +394,10 @@ if [ "$can_lenght" -gt 0 ]; then
     echo "Installing required packages to use CAN connection..."
 
     opkg update
-    opkg install python3-misc python3-pip
+    opkg install python3-misc
+
+    echo
+    opkg install python3-pip
 
     echo
     pip3 install python-can

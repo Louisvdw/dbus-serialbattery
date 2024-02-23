@@ -2,7 +2,7 @@
 import sys
 import os
 import platform
-import dbus  # pyright: ignore[reportMissingImports]
+import dbus
 import traceback
 from time import time
 from utils import logger, publish_config_variables
@@ -209,7 +209,7 @@ class DbusHelper:
                             if "SocCalc" in value:
                                 try:
                                     self.battery.soc_calc = float(value["SocCalc"])
-                                    logger.info(
+                                    logger.debug(
                                         f"Soc_calc read from dbus: {self.battery.soc_calc}"
                                     )
                                 except Exception:
@@ -219,7 +219,7 @@ class DbusHelper:
                                     )
                                     pass
                             else:
-                                logger.info("Soc_calc not found in dbus")
+                                logger.debug("Soc_calc not found in dbus")
 
                         # check if the battery has SocResetLastReached set
                         if (
@@ -366,16 +366,7 @@ class DbusHelper:
         self.settings.addSettings(settings)
         self.battery.role, self.instance = self.get_role_instance()
 
-        logger.info(f"Used device instances: {device_instances_used}")
-
-    def update_last_seen(self):
-        # update the last seen time
-        self.settings.addSetting(
-            "/Settings/Devices/serialbattery" + "_" + str(self.bms_id) + "/LastSeen",
-            int(time()),
-            0,
-            0,
-        )
+        logger.info(f"Used DeviceInstances = {device_instances_used}")
 
     def get_role_instance(self):
         val = self.settings["ClassAndVrmInstance"].split(":")
@@ -954,20 +945,6 @@ class DbusHelper:
                 if len(self.battery.current_avg_lst) > 300:
                     del self.battery.current_avg_lst[0]
 
-            """
-            logger.info(
-                str(self.battery.capacity)
-                + " - "
-                + str(utils.TIME_TO_GO_ENABLE)
-                + " - "
-                + str(len(utils.TIME_TO_SOC_POINTS))
-                + " - "
-                + str(int(time()) - self.battery.time_to_soc_update)
-                + " - "
-                + str(utils.TIME_TO_SOC_RECALCULATE_EVERY)
-            )
-            """
-
             if (
                 self.battery.capacity is not None
                 and (utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0)
@@ -1159,7 +1136,7 @@ class DbusHelper:
                 "AllowMaxVoltage",
                 1 if self.battery.allow_max_voltage else 0,
             )
-            logger.info(
+            logger.debug(
                 f"Saved AllowMaxVoltage. Before {self.save_charge_details_last['allow_max_voltage']}, "
                 + f"after {self.battery.allow_max_voltage}"
             )
@@ -1182,7 +1159,7 @@ class DbusHelper:
                     else ""
                 ),
             )
-            logger.info(
+            logger.debug(
                 f"Saved MaxVoltageStartTime. Before {self.save_charge_details_last['max_voltage_start_time']}, "
                 + f"after {self.battery.max_voltage_start_time}"
             )
@@ -1212,7 +1189,7 @@ class DbusHelper:
                 "SocResetLastReached",
                 self.battery.soc_reset_last_reached,
             )
-            logger.info(
+            logger.debug(
                 f"Saved SocResetLastReached. Before {self.save_charge_details_last['soc_reset_last_reached']}, "
                 + f"after {self.battery.soc_reset_last_reached}",
             )
