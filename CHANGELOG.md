@@ -6,7 +6,7 @@
 
 ## Known issues
 
-* Driver version greater or equal to `v1.0.20231126dev`
+* Driver version greater or equal to `v1.0.20231126dev` and smaller or equal to `v1.2.20240223dev`:
 
   * If multiple batteries have the same `unique_identifier`, then they are displayed as one battery in the VRM portal and if you change the name,
     it get changed for all dbus-serialbattries. Please change the capacity of the batteries to be unique.
@@ -70,11 +70,11 @@
 * Added: Venus OS version to logfile by @mr-manuel
 * Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
-* Changed: Fix Time-to-SoC and Time-to-Go calculation by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
+* Changed: Fixed Time-to-SoC and Time-to-Go calculation by @mr-manuel
 * Changed: Install script now shows repositories and version numbers by @mr-manuel
-* Changed: JKBMS BLE - Fix driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
-* Changed: JKBMS BLE - Fix temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
+* Changed: JKBMS BLE - Fixed driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
+* Changed: JKBMS BLE - Fixed temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
 * Changed: SocResetLastReached not read from dbus settings. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 * Removed: Python 2 compatibility by @mr-manuel
@@ -83,7 +83,7 @@
 ## v1.1.20240121
 
 * Changed: Exit the driver with error, when port is excluded in config, else the serialstarter does not continue by @mr-manuel
-* Changed: Fix issue on first driver startup, when no device setting in dbus exists by @mr-manuel
+* Changed: Fixed issue on first driver startup, when no device setting in dbus exists by @mr-manuel
 * Changed: Fixed some smaller errors by @mr-manuel
 * Changed: More detailed error output when an exception happens by @mr-manuel
 
@@ -116,8 +116,8 @@
 * Changed: `VOLTAGE_DROP` now behaves differently. Before it reduced the voltage for the check, now the voltage for the charger is increased in order to get the target voltage on the BMS by @mr-manuel
 * Changed: Battery disconnect behaviour. See `BLOCK_ON_DISCONNECT` option in the `config.default.ini` file by @mr-manuel
 * Changed: Condition for the CVL transition to float with https://github.com/Louisvdw/dbus-serialbattery/pull/895 by @cflenker
-* Changed: Daly BMS - Fix readsentence by @transistorgit
 * Changed: Daly BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/837 by @mr-manuel
+* Changed: Daly BMS - Fixed readsentence by @transistorgit
 * Changed: Enable BMS that are disabled by default by specifying it in the config file. No more need to edit scripts by @mr-manuel
 * Changed: Fixed Building wheel for dbus-fast won't finish on weak systems https://github.com/Louisvdw/dbus-serialbattery/issues/785 by @mr-manuel
 * Changed: Fixed error in `reinstall-local.sh` script for Bluetooth installation by @mr-manuel
@@ -133,7 +133,7 @@
 * Changed: JKBMS BLE - Fixed recognition of newer models where no data is shown by @mr-manuel
 * Changed: JKBMS BLE - Improved driver by @seidler2547 & @mr-manuel
 * Changed: LLT/JBD BLE BMS recover from lost BLE connection with https://github.com/Louisvdw/dbus-serialbattery/pull/830 by @Marvo2011
-* Changed: LLT/JBD BMS - Fix cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
+* Changed: LLT/JBD BMS - Fixed cycle capacity with https://github.com/Louisvdw/dbus-serialbattery/pull/762 by @idstein
 * Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/730 by @mr-manuel
 * Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/769 by @mr-manuel
 * Changed: LLT/JBD BMS - Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/778 with https://github.com/Louisvdw/dbus-serialbattery/pull/798 by @idstein
@@ -142,7 +142,7 @@
 * Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
 * Changed: Optimized CVL calculation on high cell voltage for smoother charging with https://github.com/Louisvdw/dbus-serialbattery/pull/882 by @cflenker
 * Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
-* Changed: Sinowealth BMS - Fix not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
+* Changed: Sinowealth BMS - Fixed not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
 * Changed: Time-to-SoC calculate only positive points by @mr-manuel
 * Removed: Cronjob to restart Bluetooth service every 12 hours by @mr-manuel
@@ -228,16 +228,16 @@
 * Changed: Disabled ANT BMS by default https://github.com/Louisvdw/dbus-serialbattery/issues/479 by @mr-manuel
 * Changed: Driver can now also start without serial adapter attached for Bluetooth BMS by @seidler2547
 * Changed: Feedback from BMS driver to know, if BMS is found or not by @mr-manuel
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/397 by @transistorgit
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/421 by @mr-manuel
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/450 by @mr-manuel
-* Changed: Fix for https://github.com/Louisvdw/dbus-serialbattery/issues/648 by @mr-manuel
 * Changed: Fixed black lint errors by @mr-manuel
 * Changed: Fixed cell balancing background for cells 17-24 by @mr-manuel
 * Changed: Fixed cell balancing display for JBD/LLT BMS https://github.com/Louisvdw/dbus-serialbattery/issues/359 by @mr-manuel
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/239 by @mr-manuel
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/311 by @mr-manuel
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/351 by @mr-manuel
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/397 by @transistorgit
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/421 by @mr-manuel
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/450 by @mr-manuel
+* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/648 by @mr-manuel
 * Changed: Fixed Time-To-Go is not working, if `TIME_TO_SOC_VALUE_TYPE` is set to other than `1` https://github.com/Louisvdw/dbus-serialbattery/pull/424#issuecomment-1440511018 by @mr-manuel
 * Changed: Improved install workflow via USB flash drive by @mr-manuel
 * Changed: Improved JBD BMS soc calculation https://github.com/Louisvdw/dbus-serialbattery/pull/439 by @aaronreek
