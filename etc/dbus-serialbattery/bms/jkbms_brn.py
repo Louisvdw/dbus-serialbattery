@@ -1,5 +1,5 @@
 from struct import unpack_from, calcsize
-from bleak import BleakScanner, BleakClient
+from bleak import BleakScanner, BleakClient, exc
 from time import sleep, time
 import asyncio
 import threading
@@ -466,6 +466,11 @@ class Jkbms_Brn:
                         self.trigger_soc_reset = False
                         await self.reset_soc_jk(client)
                     await asyncio.sleep(0.01)
+            except exc.BleakDeviceNotFoundError:
+                logger.info(
+                    f"--> asy_connect_and_scrape(): device not found: {self.address}"
+                )
+                self.run = False
             except Exception:
                 (
                     exception_type,

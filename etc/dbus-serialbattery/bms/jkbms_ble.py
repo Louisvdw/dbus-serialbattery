@@ -17,7 +17,10 @@ class Jkbms_Ble(Battery):
     resetting = False
 
     def __init__(self, port, baud, address):
-        super(Jkbms_Ble, self).__init__(address.replace(":", "").lower(), baud, address)
+        # add "ble_" to the port name, since only numbers are not valid
+        super(Jkbms_Ble, self).__init__(
+            "ble_" + address.replace(":", "").lower(), baud, address
+        )
         self.address = address
         self.type = self.BATTERYTYPE
         self.jk = Jkbms_Brn(address, lambda: self.reset_bluetooth())
