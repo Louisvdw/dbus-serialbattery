@@ -248,7 +248,7 @@ class Battery(ABC):
             if voltage:
                 voltage_sum += voltage
 
-        if self.soc_calc_capacity_remain:
+        if self.soc_calc_capacity_remain is not None:
             # calculate real current
             current_corrected = utils.calcLinearRelationship(
                 self.current,
@@ -261,6 +261,13 @@ class Battery(ABC):
                 + current_corrected
                 * (current_time - self.soc_calc_capacity_remain_lasttime)
                 / 3600
+            )
+
+            # limit soc_calc_capacity_remain to capacity and zero
+            # in case 100% is reached and the battery is not fully charged
+            # in case 0% is reached and the battery is not fully discharged
+            self.soc_calc_capacity_remain = max(
+                min(self.soc_calc_capacity_remain, self.capacity), 0
             )
             self.soc_calc_capacity_remain_lasttime = current_time
 
@@ -277,6 +284,7 @@ class Battery(ABC):
                     if (
                         int(current_time) - self.soc_calc_reset_starttime
                     ) > utils.SOC_RESET_TIME:
+                        logger.info("SOC set to 100%")
                         self.soc_calc_capacity_remain = self.capacity
                 else:
                     self.soc_calc_reset_starttime = int(current_time)
@@ -298,6 +306,7 @@ class Battery(ABC):
                     if (
                         int(current_time) - self.soc_calc_reset_starttime
                     ) > utils.SOC_RESET_TIME:
+                        logger.info("SOC set to 0%")
                         self.soc_calc_capacity_remain = 0
                 else:
                     self.soc_calc_reset_starttime = int(current_time)
@@ -308,11 +317,20 @@ class Battery(ABC):
                 # if there is a soc from bms then use it
                 if self.soc is not None:
                     self.soc_calc_capacity_remain = self.capacity * self.soc / 100
+                    logger.info(
+                        "SOC initialized from BMS and set to " + str(self.soc) + "%"
+                    )
                 # else set it to 100%
                 else:
                     self.soc_calc_capacity_remain = self.capacity
+                    logger.info("SOC initialized and set to 100%")
             else:
-                self.soc_calc_capacity_remain = self.capacity * self.soc_calc / 100
+                self.soc_calc_capacity_remain = (
+                    self.capacity * self.soc_calc / 100 if self.soc > 0 else 0
+                )
+                logger.info(
+                    "SOC initialized from dbus and set to " + str(self.soc_calc) + "%"
+                )
 
             self.soc_calc_capacity_remain_lasttime = current_time
 
@@ -604,6 +622,23 @@ class Battery(ABC):
                     + " d ago, next in "
                     + str(soc_reset_in_days)
                     + " d"
+                )
+
+                # soc calculation debug"
+                self.charge_mode_debug += (
+                    f"\nsoc_calc_capacity_remain: {self.soc_calc_capacity_remain}Ah"
+                )
+
+                self.charge_mode_debug += "\nsoc_calc_capacity_remain_lasttime: " + str(
+                    int(self.soc_calc_capacity_remain_lasttime)
+                    if self.soc_calc_capacity_remain_lasttime is not None
+                    else "None"
+                )
+
+                self.charge_mode_debug += "\nsoc_calc_reset_starttime: " + str(
+                    int(self.soc_calc_reset_starttime)
+                    if self.soc_calc_reset_starttime is not None
+                    else "None"
                 )
 
         except TypeError:

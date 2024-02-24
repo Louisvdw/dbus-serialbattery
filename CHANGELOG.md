@@ -71,6 +71,7 @@
 * Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
+* Changed: Fixed some SOC calculation issues by @mr-manuel
 * Changed: Fixed Time-to-SoC and Time-to-Go calculation by @mr-manuel
 * Changed: Install script now shows repositories and version numbers by @mr-manuel
 * Changed: JKBMS BLE - Fixed driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
