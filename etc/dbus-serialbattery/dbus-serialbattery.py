@@ -220,6 +220,12 @@ def main():
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)
 
+    # get SoC from battery, else None is displayed
+    if utils.SOC_CALCULATION:
+        battery.soc_calculation()
+    else:
+        battery.soc_calc = battery.soc
+
     battery.log_settings()
 
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus

@@ -64,12 +64,14 @@
 
 ## v1.2.x
 
+* Added: Check if a device instance is used multiple times by @mr-manuel
 * Added: Check if there is enough space on system and data partitions before installation by @mr-manuel
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Reset calculated SoC to 0%, if battery is empty by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
 * Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
+* Changed: Fixed showing None SoC in log in driver start by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
 * Changed: Fixed some SOC calculation issues by @mr-manuel
 * Changed: Fixed Time-to-SoC and Time-to-Go calculation by @mr-manuel
