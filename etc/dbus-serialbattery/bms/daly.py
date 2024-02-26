@@ -29,6 +29,11 @@ class Daly(Battery):
         self.trigger_force_disable_charge = None
         self.cells_volts_data_lastreadbad = False
         self.last_charge_mode = self.charge_mode
+        # list of available callbacks, in order to display the buttons in the GUI
+        self.available_callbacks = [
+            "force_charging_off_callback",
+            "force_discharging_off_callback",
+        ]
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"

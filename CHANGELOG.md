@@ -81,6 +81,7 @@
 * Changed: JKBMS BLE - Fixed temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
 * Changed: Reinstallation of the driver now checks, if packages are already installed for Bluetooth and CAN by @mr-manuel
+* Changed: Show ForceChargingOff, ForceDischargingOff and TurnBalancingOff only for BMS that support it by @mr-manuel
 * Changed: SocResetLastReached not read from dbus settings. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/840 by @mr-manuel
 * Removed: Python 2 compatibility by @mr-manuel
 

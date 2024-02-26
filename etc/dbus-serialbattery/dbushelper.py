@@ -554,19 +554,31 @@ class DbusHelper:
         self._dbusservice.add_path("/Io/AllowToBalance", 0, writeable=True)
         self._dbusservice.add_path(
             "/Io/ForceChargingOff",
-            0,
+            (
+                0
+                if "force_charging_off_callback" in self.battery.available_callbacks
+                else None
+            ),
             writeable=True,
             onchangecallback=self.battery.force_charging_off_callback,
         )
         self._dbusservice.add_path(
             "/Io/ForceDischargingOff",
-            0,
+            (
+                0
+                if "force_discharging_off_callback" in self.battery.available_callbacks
+                else None
+            ),
             writeable=True,
             onchangecallback=self.battery.force_discharging_off_callback,
         )
         self._dbusservice.add_path(
             "/Io/TurnBalancingOff",
-            0,
+            (
+                0
+                if "turn_balancing_off_callback" in self.battery.available_callbacks
+                else None
+            ),
             writeable=True,
             onchangecallback=self.battery.turn_balancing_off_callback,
         )

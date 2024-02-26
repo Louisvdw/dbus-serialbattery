@@ -126,6 +126,8 @@ class Battery(ABC):
         self.control_charge_current: int = None
         self.control_allow_charge: bool = None
         self.control_allow_discharge: bool = None
+        # list of available callbacks, in order to display the buttons in the GUI
+        self.available_callbacks: List[str] = []
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -1416,19 +1418,19 @@ class Battery(ABC):
 
     def reset_soc_callback(self, path: str, value: int) -> bool:
         # callback for handling reset soc request
-        return True
+        return False  # return False to indicate that the callback was not handled
 
     def force_charging_off_callback(self, path: str, value: int) -> bool:
-        return True
+        return False  # return False to indicate that the callback was not handled
 
     def force_discharging_off_callback(self, path: str, value: int) -> bool:
-        return True
+        return False  # return False to indicate that the callback was not handled
 
     def turn_balancing_off_callback(self, path: str, value: int) -> bool:
-        return True
+        return False  # return False to indicate that the callback was not handled
 
     def trigger_soc_reset(self) -> bool:
         """
         This method can be used to implement SOC reset when the battery is assumed to be full
         """
-        return True
+        return False  # return False to indicate that the callback was not handled
