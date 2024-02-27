@@ -6,10 +6,11 @@
 
 ## Known issues
 
-* Driver version greater or equal to `v1.0.20231126dev` and smaller or equal to `v1.2.20240223dev`:
+* Driver version greater or equal to `v1.0.20231126dev` and smaller or equal to `v1.2.20240227dev`:
 
   * If multiple batteries have the same `unique_identifier`, then they are displayed as one battery in the VRM portal and if you change the name,
-    it get changed for all dbus-serialbattries. Please change the capacity of the batteries to be unique.
+    it get changed for all dbus-serialbattries. Please change the capacity of the batteries to be unique (if the unique identifier ends with Ah)
+    or change the custom field on supported BMS.
     E.g.: 278 Ah, 279 Ah,280 Ah,281 Ah and 282 Ah, if you have 5 batteries with 280 Ah.
 
 ## Breaking changes
@@ -64,7 +65,7 @@
 
 ## v1.2.x
 
-* Added: Check if a device instance is used multiple times by @mr-manuel
+* Added: Check if the device instance is already used by @mr-manuel
 * Added: Check if there is enough space on system and data partitions before installation by @mr-manuel
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Reset calculated SoC to 0%, if battery is empty by @mr-manuel

@@ -4,7 +4,7 @@ import os
 import platform
 import dbus
 import traceback
-from time import time
+from time import sleep, time
 from utils import logger, publish_config_variables
 import utils
 from xml.etree import ElementTree
@@ -41,11 +41,11 @@ class DbusHelper:
         self.error = {"count": 0, "timestamp_first": None, "timestamp_last": None}
         self.block_because_disconnect = False
         self.cell_voltages_good = False
-        self._dbusservice = VeDbusService(
+        self._dbusname = (
             "com.victronenergy.battery."
-            + self.battery.port[self.battery.port.rfind("/") + 1 :],
-            get_bus(),
+            + self.battery.port[self.battery.port.rfind("/") + 1 :]
         )
+        self._dbusservice = VeDbusService(self._dbusname, get_bus())
         self.bms_id = "".join(
             # remove all non alphanumeric characters from the identifier
             c if c.isalnum() else "_"
@@ -60,6 +60,80 @@ class DbusHelper:
                 self.battery.soc_calc if self.battery.soc_calc is not None else ""
             ),
         }
+
+    def create_pid_file(self) -> None:
+        """
+        Create a pid file for the driver with the device instance as file name suffix.
+        Keep the file locked for the entire script runtime, to prevent another instance from running with
+        the same device instance. This is achieved by maintaining a reference to the "pid_file" object for
+        the entire script runtime storing "pid_file" as an instance variable "self.pid_file".
+        """
+        # only used for this function
+        import fcntl
+
+        # path to the PID file
+        pid_file_path = f"/var/tmp/dbus-serialbattery_{self.instance}.pid"
+
+        try:
+            # open file in append mode to not flush content, if the file is locked
+            self.pid_file = open(pid_file_path, "a")
+
+            # try to lock the file
+            fcntl.flock(self.pid_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        # fail, if the file is already locked
+        except OSError:
+            logger.error(
+                "** DRIVER STOPPED! Another battery with the same serial number/unique identifier "
+                + f'"{self.battery.unique_identifier()}" found! **'
+            )
+            logger.error("Please check that the batteries have unique identifiers.")
+
+            if "Ah" in self.battery.unique_identifier():
+                logger.error("Change the battery capacities to be unique.")
+                logger.error("Example for batteries with 280 Ah:")
+                logger.error("- Battery 1: 279 Ah")
+                logger.error("- Battery 2: 280 Ah")
+                logger.error("- Battery 3: 281 Ah")
+                logger.error("This little difference does not matter for the battery.")
+            else:
+                logger.error(
+                    "Change the customizable field in your BMS settings to be unique."
+                )
+            logger.error(
+                "To see which battery already uses this serial number/unique identifier check "
+                + f'this file "{pid_file_path}"'
+            )
+
+            self.pid_file.close()
+            sleep(60)
+            sys.exit(1)
+
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
+
+        # Seek to the beginning of the file
+        self.pid_file.seek(0)
+        # Truncate the file to 0 bytes
+        self.pid_file.truncate()
+        # Write content to file
+        self.pid_file.write(f"{self._dbusname}:{os.getpid()}\n")
+        # Flush the file buffer
+        self.pid_file.flush()
+
+        # Ensure the changes are written to the disk
+        # os.fsync(self.pid_file.fileno())
+
+        logger.info(f"PID file created successfully: {pid_file_path}")
 
     def setup_instance(self):
         """
@@ -366,6 +440,9 @@ class DbusHelper:
         self.settings.addSettings(settings)
         self.battery.role, self.instance = self.get_role_instance()
 
+        # create pid file
+        self.create_pid_file()
+
         logger.info(f"Used DeviceInstances = {device_instances_used}")
 
     def get_role_instance(self):
@@ -388,8 +465,7 @@ class DbusHelper:
         # and notify of all the attributes we intend to update
         # This is only called once when a battery is initiated
         self.setup_instance()
-        short_port = self.battery.port[self.battery.port.rfind("/") + 1 :]
-        logger.info("%s" % ("com.victronenergy.battery." + short_port))
+        logger.info("%s" % (self._dbusname))
 
         # Get the settings for the battery
         if not self.battery.get_settings():
