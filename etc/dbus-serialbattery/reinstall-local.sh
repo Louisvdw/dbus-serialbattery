@@ -166,16 +166,19 @@ pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 # get bluetooth mode integrated/usb
 bluetooth_use_usb=$(awk -F "=" '/^BLUETOOTH_USE_USB/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
 
+# works only for Raspberry Pi, since GX devices don't have a /u-boot/config.txt
 # replace dtoverlay in /u-boot/config.txt this needs a reboot!
-if [[ $bluetooth_use_usb == *"True"* ]]; then
-    if grep -q -r "miniuart-bt" /u-boot/config.txt; then
-        sed -i 's/miniuart-bt/disable-bt/g' /u-boot/config.txt
-        echo "ATTENTION! You have changed the bluetooth mode to USB! THIS NEEDS A MANUAL REBOOT!"
-    fi
-elif [[ $bluetooth_use_usb == *"False"* ]]; then
-    if grep -q -r "disable-bt" /u-boot/config.txt; then
-        sed -i 's/disable-bt/miniuart-bt/g' /u-boot/config.txt
-        echo "ATTENTION! You have changed the bluetooth mode to built in module! THIS NEEDS A MANUAL REBOOT!"
+if [ -f "/u-boot/config.txt" ]; then
+    if [[ $bluetooth_use_usb == *"True"* ]]; then
+        if grep -q -r "miniuart-bt" /u-boot/config.txt; then
+            sed -i 's/miniuart-bt/disable-bt/g' /u-boot/config.txt
+            echo "ATTENTION! You have changed the bluetooth mode to USB! THIS NEEDS A MANUAL REBOOT!"
+        fi
+    elif [[ $bluetooth_use_usb == *"False"* ]]; then
+        if grep -q -r "disable-bt" /u-boot/config.txt; then
+            sed -i 's/disable-bt/miniuart-bt/g' /u-boot/config.txt
+            echo "ATTENTION! You have changed the bluetooth mode to built in module! THIS NEEDS A MANUAL REBOOT!"
+        fi
     fi
 fi
 
