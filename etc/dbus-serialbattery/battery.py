@@ -284,8 +284,10 @@ class Battery(ABC):
                 ):
                     # set soc to 100%
                     if (
-                        int(current_time) - self.soc_calc_reset_starttime
-                    ) > utils.SOC_RESET_TIME:
+                        (int(current_time) - self.soc_calc_reset_starttime)
+                        > utils.SOC_RESET_TIME
+                        and self.soc_calc_capacity_remain != self.capacity
+                    ):
                         logger.info("SOC set to 100%")
                         self.soc_calc_capacity_remain = self.capacity
                 else:
@@ -307,7 +309,7 @@ class Battery(ABC):
                     # set soc to 0%
                     if (
                         int(current_time) - self.soc_calc_reset_starttime
-                    ) > utils.SOC_RESET_TIME:
+                    ) > utils.SOC_RESET_TIME and self.soc_calc_capacity_remain != 0:
                         logger.info("SOC set to 0%")
                         self.soc_calc_capacity_remain = 0
                 else:
