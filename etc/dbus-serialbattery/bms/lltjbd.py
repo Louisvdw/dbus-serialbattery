@@ -590,8 +590,12 @@ class LltJbd(Battery):
                     t,
                 )
                 return True
-            temp1 = unpack_from(">H", gen_data, 23 + (2 * t))[0]
-            self.to_temp(t, utils.kelvin_to_celsius(temp1 / 10))
+            temperature = unpack_from(">H", gen_data, 23 + (2 * t))[0]
+            # if there is only one sensor, use it as the main temperature sensor
+            if self.temp_sensors == 1:
+                self.to_temp(1, utils.kelvin_to_celsius(temperature / 10))
+            else:
+                self.to_temp(t, utils.kelvin_to_celsius(temperature / 10))
 
         return True
 

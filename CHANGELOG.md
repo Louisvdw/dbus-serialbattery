@@ -80,6 +80,7 @@
 * Changed: JKBMS BLE - Fixed driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
 * Changed: JKBMS BLE - Fixed driver not starting for some BMS models that are not sending BLE data correctly https://github.com/Louisvdw/dbus-serialbattery/issues/819 by @mr-manuel
 * Changed: JKBMS BLE - Fixed temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
+* Changed: LLT/JBD BMS & BLE - If only one temperature is available use it as battery temp. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/971 by @mr-manuel
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
 * Changed: Reinstallation of the driver now checks, if packages are already installed for Bluetooth and CAN by @mr-manuel
 * Changed: Show ForceChargingOff, ForceDischargingOff and TurnBalancingOff only for BMS that support it by @mr-manuel
