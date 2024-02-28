@@ -4,15 +4,6 @@
 
 * The Bluetooth and CAN connections are still not stable on some systems. If you want to have a stable connection use the serial connection.
 
-## Known issues
-
-* Driver version greater or equal to `v1.0.20231126dev` and smaller or equal to `v1.2.20240227dev`:
-
-  * If multiple batteries have the same `unique_identifier`, then they are displayed as one battery in the VRM portal and if you change the name,
-    it get changed for all dbus-serialbattries. Please change the capacity of the batteries to be unique (if the unique identifier ends with Ah)
-    or change the custom field on supported BMS.
-    E.g.: 278 Ah, 279 Ah,280 Ah,281 Ah and 282 Ah, if you have 5 batteries with 280 Ah.
-
 ## Breaking changes
 
 * Driver version greater or equal to `v1.2.20240219beta`
@@ -94,6 +85,13 @@
 * Changed: Fixed issue on first driver startup, when no device setting in dbus exists by @mr-manuel
 * Changed: Fixed some smaller errors by @mr-manuel
 * Changed: More detailed error output when an exception happens by @mr-manuel
+
+### Known issues for v1.1.20240121
+
+* If multiple batteries have the same `unique_identifier`, then they are displayed as one battery in the VRM portal and if you change the name,
+  it get changed for all dbus-serialbattries. Please change the capacity of the batteries to be unique (if the unique identifier ends with Ah)
+  or change the custom field on supported BMS.
+  E.g.: 278 Ah, 279 Ah,280 Ah,281 Ah and 282 Ah, if you have 5 batteries with 280 Ah.
 
 
 ## v1.0.20240102beta
