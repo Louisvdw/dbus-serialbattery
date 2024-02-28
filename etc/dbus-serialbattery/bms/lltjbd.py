@@ -198,12 +198,6 @@ class LltJbdProtection(Protection):
         self.short = False
         self.IC_inspection = False
         self.software_lock = False
-        # list of available callbacks, in order to display the buttons in the GUI
-        self.available_callbacks = [
-            "force_charging_off_callback",
-            "force_discharging_off_callback",
-            "turn_balancing_off_callback",
-        ]
 
     def set_voltage_high_cell(self, value):
         self.voltage_high_cell = value
@@ -251,6 +245,12 @@ class LltJbd(Battery):
         self.trigger_force_disable_charge = None
         self.trigger_disable_balancer = None
         self.cycle_capacity = None
+        # list of available callbacks, in order to display the buttons in the GUI
+        self.available_callbacks = [
+            "force_charging_off_callback",
+            "force_discharging_off_callback",
+            "turn_balancing_off_callback",
+        ]
 
     # degree_sign = u'\N{DEGREE SIGN}'
     BATTERYTYPE = "LLT/JBD"
