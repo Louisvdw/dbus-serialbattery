@@ -5,6 +5,7 @@ import functools
 import os
 import threading
 import sys
+import re
 from asyncio import CancelledError
 from time import sleep
 from typing import Union, Optional
@@ -24,8 +25,9 @@ class LltJbd_Ble(LltJbd):
     BATTERYTYPE = "LltJbd_Ble"
 
     def __init__(self, port: Optional[str], baud: Optional[int], address: str):
+        # add "ble_" to the port name, since only numbers are not valid
         super(LltJbd_Ble, self).__init__(
-            "ble" + address.replace(":", "").lower(), -1, address
+            "ble_" + address.replace(":", "").lower(), -1, address
         )
 
         self.address = address
@@ -42,6 +44,20 @@ class LltJbd_Ble(LltJbd):
         self.device: Optional[BLEDevice] = None
         self.response_queue: Optional[asyncio.Queue] = None
         self.ready_event: Optional[asyncio.Event] = None
+
+        self.hci_uart_ok = True
+        if not os.path.isfile("/tmp/dbus-blebattery-hciattach"):
+            execfile = open("/tmp/dbus-blebattery-hciattach", "w")
+            execpath = os.popen("ps -ww | grep hciattach | grep -v grep").read()
+            execpath = re.search("/usr/bin/hciattach.+", execpath)
+            execfile.write(execpath.group())
+            execfile.close()
+        else:
+            execpath = os.popen("ps -ww | grep hciattach | grep -v grep").read()
+            if not execpath:
+                execfile = open("/tmp/dbus-blebattery-hciattach", "r")
+                os.system(execfile.readline())
+                execfile.close()
 
         logger.info("Init of LltJbd_Ble at " + address)
 
@@ -64,10 +80,14 @@ class LltJbd_Ble(LltJbd):
             exception_type, exception_object, exception_traceback = sys.exc_info()
             file = exception_traceback.tb_frame.f_code.co_filename
             line = exception_traceback.tb_lineno
-            logger.error(
-                f"BleakScanner(): Exception occurred: {repr(exception_object)} of type {exception_type} "
-                f"in {file} line #{line}"
-            )
+            if "Bluetooth adapters" in repr(exception_object):
+                self.reset_hci_uart()
+            else:
+                logger.error(
+                    f"BleakScanner(): Exception occurred: {repr(exception_object)} of type {exception_type} "
+                    f"in {file} line #{line}"
+                )
+
             self.device = None
             await asyncio.sleep(0.5)
             # allow the bluetooth connection to recover
@@ -131,19 +151,22 @@ class LltJbd_Ble(LltJbd):
             asyncio.run(self.bt_main_loop())
 
     async def async_test_connection(self):
-        self.ready_event = asyncio.Event()
-        if not self.bt_thread.is_alive():
-            self.bt_thread.start()
+        if self.hci_uart_ok:
+            self.ready_event = asyncio.Event()
+            if not self.bt_thread.is_alive():
+                self.bt_thread.start()
 
-            def shutdown_ble_atexit(thread):
-                self.run = False
-                thread.join()
+                def shutdown_ble_atexit(thread):
+                    self.run = False
+                    thread.join()
 
-            atexit.register(shutdown_ble_atexit, self.bt_thread)
-        try:
-            return await asyncio.wait_for(self.ready_event.wait(), timeout=5)
-        except asyncio.TimeoutError:
-            logger.error(">>> ERROR: Unable to connect with BLE device")
+                atexit.register(shutdown_ble_atexit, self.bt_thread)
+            try:
+                return await asyncio.wait_for(self.ready_event.wait(), timeout=5)
+            except asyncio.TimeoutError:
+                logger.error(">>> ERROR: Unable to connect with BLE device")
+                return False
+        else:
             return False
 
     def test_connection(self):
@@ -171,6 +194,16 @@ class LltJbd_Ble(LltJbd):
             result = False
 
         return result
+
+    def unique_identifier(self) -> str:
+        """
+        Used to identify a BMS when multiple BMS are connected
+        If not provided by the BMS/driver then the hardware version and capacity is used,
+        since it can be changed by small amounts to make a battery unique.
+        On +/- 5 Ah you can identify 11 batteries
+        """
+        string = self.address.replace(":", "").lower()
+        return string
 
     async def send_command(self, command) -> Union[bytearray, bool]:
         if not self.bt_client:
@@ -201,32 +234,35 @@ class LltJbd_Ble(LltJbd):
         return result
 
     async def async_read_serial_data_llt(self, command):
-        try:
-            bt_task = asyncio.run_coroutine_threadsafe(
-                self.send_command(command), self.bt_loop
-            )
-            result = await asyncio.wait_for(asyncio.wrap_future(bt_task), 20)
-            return result
-        except asyncio.TimeoutError:
-            logger.error(">>> ERROR: No reply - returning")
-            return False
-        except BleakDBusError:
-            exception_type, exception_object, exception_traceback = sys.exc_info()
-            file = exception_traceback.tb_frame.f_code.co_filename
-            line = exception_traceback.tb_lineno
-            logger.error(
-                f"BleakDBusError: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
-            )
-            self.reset_bluetooth()
-            return False
-        except Exception:
-            exception_type, exception_object, exception_traceback = sys.exc_info()
-            file = exception_traceback.tb_frame.f_code.co_filename
-            line = exception_traceback.tb_lineno
-            logger.error(
-                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
-            )
-            self.reset_bluetooth()
+        if self.hci_uart_ok:
+            try:
+                bt_task = asyncio.run_coroutine_threadsafe(
+                    self.send_command(command), self.bt_loop
+                )
+                result = await asyncio.wait_for(asyncio.wrap_future(bt_task), 20)
+                return result
+            except asyncio.TimeoutError:
+                logger.error(">>> ERROR: No reply - returning")
+                return False
+            except BleakDBusError:
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                file = exception_traceback.tb_frame.f_code.co_filename
+                line = exception_traceback.tb_lineno
+                logger.error(
+                    f"BleakDBusError: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                )
+                self.reset_bluetooth()
+                return False
+            except Exception:
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                file = exception_traceback.tb_frame.f_code.co_filename
+                line = exception_traceback.tb_lineno
+                logger.error(
+                    f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                )
+                self.reset_bluetooth()
+                return False
+        else:
             return False
 
     def read_serial_data_llt(self, command):
@@ -267,6 +303,25 @@ class LltJbd_Ble(LltJbd):
         logger.error("System Bluetooth daemon should have been restarted")
         sleep(5)
         sys.exit(1)
+
+    def reset_hci_uart(self):
+        logger.error("Reset of hci_uart stack... Reconnecting to: " + self.address)
+        self.run = False
+        os.system("pkill -f 'hciattach'")
+        sleep(0.5)
+        os.system("rmmod hci_uart")
+        os.system("rmmod btbcm")
+        os.system("modprobe hci_uart")
+        os.system("modprobe btbcm")
+        sys.exit(1)
+        # execfile = open("/tmp/dbus-blebattery-hciattach", "r")
+        # sleep(5)
+        # os.system(execfile.readline())
+        # os.system(execfile.readline())
+        # execfile.close()
+        # sleep(0.5)
+        # os.system("bluetoothctl connect " + self.address)
+        # self.run = True
 
 
 if __name__ == "__main__":

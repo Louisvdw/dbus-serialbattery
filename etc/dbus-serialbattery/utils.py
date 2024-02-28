@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.0.20231117dev"
+DRIVER_VERSION = "1.2.20240227dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -102,6 +102,9 @@ CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL"]
 )
+CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART = float(
+    config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART"]
+)
 CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
@@ -139,12 +142,17 @@ MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
+# --------- Cell Voltage limitation (affecting CVL) ---------
+
+CVL_ICONTROLLER_MODE = "True" == config["DEFAULT"]["CVL_ICONTROLLER_MODE"]
+CVL_ICONTROLLER_FACTOR = float(config["DEFAULT"]["CVL_ICONTROLLER_FACTOR"])
+
 # --------- Temperature limitation (affecting CCL/DCL) ---------
 CCCM_T_ENABLE = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
 DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
 
-TEMPERATURE_LIMITS_WHILE_CHARGING = _get_list_from_config(
-    "DEFAULT", "TEMPERATURE_LIMITS_WHILE_CHARGING", lambda v: float(v)
+TEMPERATURES_WHILE_CHARGING = _get_list_from_config(
+    "DEFAULT", "TEMPERATURES_WHILE_CHARGING", lambda v: float(v)
 )
 MAX_CHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT",
@@ -152,8 +160,8 @@ MAX_CHARGE_CURRENT_T = _get_list_from_config(
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
 )
 
-TEMPERATURE_LIMITS_WHILE_DISCHARGING = _get_list_from_config(
-    "DEFAULT", "TEMPERATURE_LIMITS_WHILE_DISCHARGING", lambda v: float(v)
+TEMPERATURES_WHILE_DISCHARGING = _get_list_from_config(
+    "DEFAULT", "TEMPERATURES_WHILE_DISCHARGING", lambda v: float(v)
 )
 MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
     "DEFAULT",
@@ -165,32 +173,23 @@ MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
 CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
 DCCM_SOC_ENABLE = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
 
-CC_SOC_LIMIT1 = float(config["DEFAULT"]["CC_SOC_LIMIT1"])
-CC_SOC_LIMIT2 = float(config["DEFAULT"]["CC_SOC_LIMIT2"])
-CC_SOC_LIMIT3 = float(config["DEFAULT"]["CC_SOC_LIMIT3"])
 
-CC_CURRENT_LIMIT1 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT1_FRACTION"]
+SOC_WHILE_CHARGING = _get_list_from_config(
+    "DEFAULT", "SOC_WHILE_CHARGING", lambda v: float(v)
 )
-CC_CURRENT_LIMIT2 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT2_FRACTION"]
-)
-CC_CURRENT_LIMIT3 = MAX_BATTERY_CHARGE_CURRENT * float(
-    config["DEFAULT"]["CC_CURRENT_LIMIT3_FRACTION"]
+MAX_CHARGE_CURRENT_SOC = _get_list_from_config(
+    "DEFAULT",
+    "MAX_CHARGE_CURRENT_SOC_FRACTION",
+    lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
 )
 
-DC_SOC_LIMIT1 = float(config["DEFAULT"]["DC_SOC_LIMIT1"])
-DC_SOC_LIMIT2 = float(config["DEFAULT"]["DC_SOC_LIMIT2"])
-DC_SOC_LIMIT3 = float(config["DEFAULT"]["DC_SOC_LIMIT3"])
-
-DC_CURRENT_LIMIT1 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT1_FRACTION"]
+SOC_WHILE_DISCHARGING = _get_list_from_config(
+    "DEFAULT", "SOC_WHILE_DISCHARGING", lambda v: float(v)
 )
-DC_CURRENT_LIMIT2 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT2_FRACTION"]
-)
-DC_CURRENT_LIMIT3 = MAX_BATTERY_DISCHARGE_CURRENT * float(
-    config["DEFAULT"]["DC_CURRENT_LIMIT3_FRACTION"]
+MAX_DISCHARGE_CURRENT_SOC = _get_list_from_config(
+    "DEFAULT",
+    "MAX_DISCHARGE_CURRENT_SOC_FRACTION",
+    lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
 
 # --------- Time-To-Go ---------
@@ -208,6 +207,17 @@ TIME_TO_SOC_RECALCULATE_EVERY = (
 )
 TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
+# --------- SOC calculation ---------
+SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
+SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
+SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
+SOC_CALC_CURRENT_REPORTED_BY_BMS = _get_list_from_config(
+    "DEFAULT", "SOC_CALC_CURRENT_REPORTED_BY_BMS", lambda v: float(v)
+)
+SOC_CALC_CURRENT_MEASURED_BY_USER = _get_list_from_config(
+    "DEFAULT", "SOC_CALC_CURRENT_MEASURED_BY_USER", lambda v: float(v)
+)
+
 # --------- Additional settings ---------
 BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
@@ -215,16 +225,11 @@ EXCLUDED_DEVICES = _get_list_from_config(
     "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
 )
 
-CUSTOM_BATTERY_NAMES = _get_list_from_config(
-    "DEFAULT", "CUSTOM_BATTERY_NAMES", lambda v: str(v)
-)
-
 # Auto reset SoC
-# If on, then SoC is reset to 100%, if the value switches from absorption to float voltage
-# Currently only working for Daly BMS and JK BMS BLE
 AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
-PUBLISH_CONFIG_VALUES = int(config["DEFAULT"]["PUBLISH_CONFIG_VALUES"])
+# Publish the config settings to the dbus path "/Info/Config/"
+PUBLISH_CONFIG_VALUES = "True" == config["DEFAULT"]["PUBLISH_CONFIG_VALUES"]
 
 BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 
@@ -434,9 +439,6 @@ def read_serialport_data(
         return False
 
 
-locals_copy = locals().copy()
-
-
 # Publish config variables to dbus
 def publish_config_variables(dbusservice):
     for variable, value in locals_copy.items():
@@ -449,3 +451,6 @@ def publish_config_variables(dbusservice):
             or isinstance(value, List)
         ):
             dbusservice.add_path(f"/Info/Config/{variable}", value)
+
+
+locals_copy = locals().copy()

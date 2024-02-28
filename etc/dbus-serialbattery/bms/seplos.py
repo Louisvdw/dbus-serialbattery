@@ -3,6 +3,7 @@ from battery import Protection, Battery, Cell
 from utils import logger
 import utils
 import serial
+import sys
 
 
 class Seplos(Battery):
@@ -82,8 +83,17 @@ class Seplos(Battery):
         result = False
         try:
             result = self.read_status_data()
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         # give the user a feedback that no BMS was found

@@ -6,6 +6,7 @@ from struct import unpack_from, pack_into
 from time import sleep, time
 from datetime import datetime
 from re import sub
+import sys
 
 
 class Daly(Battery):
@@ -20,7 +21,7 @@ class Daly(Battery):
         self.cell_max_no = None
         self.poll_interval = 1000
         self.type = self.BATTERYTYPE
-        self.has_settings = 1
+        self.has_settings = True
         self.reset_soc = 0
         self.soc_to_set = None
         self.runtime = 0  # TROUBLESHOOTING for no reply errors
@@ -28,6 +29,11 @@ class Daly(Battery):
         self.trigger_force_disable_charge = None
         self.cells_volts_data_lastreadbad = False
         self.last_charge_mode = self.charge_mode
+        # list of available callbacks, in order to display the buttons in the GUI
+        self.available_callbacks = [
+            "force_charging_off_callback",
+            "force_discharging_off_callback",
+        ]
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
     command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
@@ -66,8 +72,17 @@ class Daly(Battery):
                     self.read_soc_data(ser)
                     self.read_battery_code(ser)
 
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         # give the user a feedback that no BMS was found

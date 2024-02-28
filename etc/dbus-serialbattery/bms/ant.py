@@ -8,6 +8,7 @@ from battery import Battery
 from utils import read_serial_data, logger
 import utils
 from struct import unpack_from
+import sys
 
 
 class ANT(Battery):
@@ -32,8 +33,17 @@ class ANT(Battery):
         try:
             result = self.read_status_data()
             result = result and self.refresh_data()
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         return result
@@ -105,9 +115,7 @@ class ANT(Battery):
         self.protection.voltage_cell_low = (
             2
             if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE - 0.1
-            else 1
-            if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE
-            else 0
+            else 1 if self.cell_min_voltage < utils.MIN_CELL_VOLTAGE else 0
         )
         self.protection.temp_high_charge = (
             1 if self.charge_fet == 3 or self.charge_fet == 6 else 0

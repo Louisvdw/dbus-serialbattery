@@ -49,11 +49,12 @@ class Jkbms_Can(Battery):
 
     MESSAGES_TO_READ = 100
 
+    # Changed from 0x0XF4 to 0x0XF5. See https://github.com/Louisvdw/dbus-serialbattery/issues/950
     CAN_FRAMES = {
-        BATT_STAT: 0x02F4,
-        CELL_VOLT: 0x04F4,
-        CELL_TEMP: 0x05F4,
-        ALM_INFO: 0x07F4,
+        BATT_STAT: 0x02F5,
+        CELL_VOLT: 0x04F5,
+        CELL_TEMP: 0x05F5,
+        ALM_INFO: 0x07F5,
     }
 
     def test_connection(self):
@@ -66,7 +67,7 @@ class Jkbms_Can(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_current = MAX_BATTERY_CHARGE_CURRENT
+        self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count

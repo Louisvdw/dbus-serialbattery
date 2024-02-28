@@ -7,6 +7,7 @@ from battery import Protection, Battery, Cell
 from utils import *
 from struct import *
 import struct
+import sys
 
 #    Author: L Sheed
 #    Date: 3 May 2022
@@ -57,8 +58,17 @@ class Revov(Battery):
             # get first data to show in startup log
             if result:
                 self.refresh_data()
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         return result

@@ -1,8 +1,9 @@
 from struct import unpack_from, calcsize
-from bleak import BleakScanner, BleakClient
+from bleak import BleakScanner, BleakClient, exc
 from time import sleep, time
 import asyncio
 import threading
+import sys
 
 # if used as standalone script then use custom logger
 # else import logger from utils
@@ -20,6 +21,7 @@ else:
 # zero means parse all incoming data (every second)
 CELL_INFO_REFRESH_S = 0
 CHAR_HANDLE = "0000ffe1-0000-1000-8000-00805f9b34fb"
+CHAR_HANDLE_FAILOVER = 4
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 
 COMMAND_CELL_INFO = 0x96
@@ -139,9 +141,14 @@ class Jkbms_Brn:
     # translate info placeholder, since it depends on the bms_max_cell_count
     translate_cell_info = []
 
-    def __init__(self, addr):
+    def __init__(self, addr, reset_bt_callback=None):
         self.address = addr
-        self.bt_thread = threading.Thread(target=self.connect_and_scrape)
+        self.bt_thread = None
+        self.bt_thread_monitor = threading.Thread(
+            target=self.monitor_scraping, name="Thread-JKBMS-Monitor"
+        )
+        self.bt_reset = reset_bt_callback
+        self.should_be_scraping = False
         self.trigger_soc_reset = False
 
     async def scanForDevices(self):
@@ -401,7 +408,26 @@ class Jkbms_Brn:
         frame[18] = 0x00
         frame[19] = self.crc(frame, len(frame) - 1)
         logger.debug("Write register: " + str(address) + " " + str(frame))
-        await bleakC.write_gatt_char(CHAR_HANDLE, frame, response=awaitresponse)
+
+        # some JKBMS trow an error
+        # BleakError('Multiple Characteristics with this UUID, refer to your desired
+        #             characteristic by the `handle` attribute instead.')
+        # failover in this case and use handle instead of UUID
+        try:
+            await bleakC.write_gatt_char(CHAR_HANDLE, frame, response=awaitresponse)
+        except exc.BleakError:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            logger.debug(
+                f'Error getting UUID "{CHAR_HANDLE}": {repr(exception_object)} -> failover'
+            )
+            await bleakC.write_gatt_char(
+                CHAR_HANDLE_FAILOVER, frame, response=awaitresponse
+            )
+
         if awaitresponse:
             await asyncio.sleep(5)
 
@@ -442,14 +468,44 @@ class Jkbms_Brn:
         while self.run and self.main_thread.is_alive():  # autoreconnect
             client = BleakClient(self.address)
             logger.debug("--> asy_connect_and_scrape(): btloop")
+
             try:
                 logger.debug("--> asy_connect_and_scrape(): reconnect")
                 await client.connect()
-                self.bms_status["model_nbr"] = (
-                    await client.read_gatt_char(MODEL_NBR_UUID)
-                ).decode("utf-8")
 
-                await client.start_notify(CHAR_HANDLE, self.ncallback)
+                # try to get MODEL_NBR_UUID, since not all JKBMS send it
+                try:
+                    self.bms_status["model_nbr"] = (
+                        await client.read_gatt_char(MODEL_NBR_UUID)
+                    ).decode("utf-8")
+                except exc.BleakError:
+                    (
+                        exception_type,
+                        exception_object,
+                        exception_traceback,
+                    ) = sys.exc_info()
+                    logger.debug(
+                        f'Error getting UUID "{MODEL_NBR_UUID}": {repr(exception_object)} -> failover'
+                    )
+                    self.bms_status["model_nbr"] = "JK-BMS-Unknown-Model"
+
+                # some JKBMS trow an error
+                # BleakError('Multiple Characteristics with this UUID, refer to your desired
+                #             characteristic by the `handle` attribute instead.')
+                # failover in this case and use handle instead of UUID
+                try:
+                    await client.start_notify(CHAR_HANDLE, self.ncallback)
+                except exc.BleakError:
+                    (
+                        exception_type,
+                        exception_object,
+                        exception_traceback,
+                    ) = sys.exc_info()
+                    logger.debug(
+                        f'Error getting UUID "{CHAR_HANDLE}": {repr(exception_object)} -> failover'
+                    )
+                    await client.start_notify(CHAR_HANDLE_FAILOVER, self.ncallback)
+
                 await self.request_bt("device_info", client)
 
                 await self.request_bt("cell_info", client)
@@ -460,38 +516,77 @@ class Jkbms_Brn:
                         self.trigger_soc_reset = False
                         await self.reset_soc_jk(client)
                     await asyncio.sleep(0.01)
-            except Exception as err:
-                self.run = False
+
+            except exc.BleakDeviceNotFoundError:
                 logger.info(
-                    f"--> asy_connect_and_scrape(): error while connecting to bt: {err}"
+                    f"--> asy_connect_and_scrape(): device not found: {self.address}"
                 )
+                self.run = False
+
+            except Exception:
+                (
+                    exception_type,
+                    exception_object,
+                    exception_traceback,
+                ) = sys.exc_info()
+                file = exception_traceback.tb_frame.f_code.co_filename
+                line = exception_traceback.tb_lineno
+                logger.info(
+                    f"--> asy_connect_and_scrape(): error while connecting to bt: {repr(exception_object)} "
+                    + f"of type {exception_type} in {file} line #{line}"
+                )
+                self.run = False
+
             finally:
                 self.run = False
                 if client.is_connected:
                     try:
                         await client.disconnect()
-                    except Exception as err:
+                    except Exception:
+                        (
+                            exception_type,
+                            exception_object,
+                            exception_traceback,
+                        ) = sys.exc_info()
+                        file = exception_traceback.tb_frame.f_code.co_filename
+                        line = exception_traceback.tb_lineno
                         logger.info(
-                            f"--> asy_connect_and_scrape(): error while disconnecting: {err}"
+                            f"--> asy_connect_and_scrape(): error while disconnecting: {repr(exception_object)} "
+                            + f"of type {exception_type} in {file} line #{line}"
                         )
 
         logger.info("--> asy_connect_and_scrape(): Exit")
 
+    def monitor_scraping(self):
+        while self.should_be_scraping is True:
+            self.bt_thread = threading.Thread(
+                target=self.connect_and_scrape, name="Thread-JKBMS-Connect-and-Scrape"
+            )
+            self.bt_thread.start()
+            logger.debug(
+                "scraping thread started -> main thread id: "
+                + str(self.main_thread.ident)
+                + " scraping thread: "
+                + str(self.bt_thread.ident)
+            )
+            self.bt_thread.join()
+            if self.should_be_scraping is True:
+                logger.debug("scraping thread ended: reseting bluetooth and restarting")
+                if self.bt_reset is not None:
+                    self.bt_reset()
+                sleep(2)
+
     def start_scraping(self):
         self.main_thread = threading.current_thread()
         if self.is_running():
-            logger.debug("screaping thread already running")
+            logger.debug("scraping thread already running")
             return
-        self.bt_thread.start()
-        logger.debug(
-            "scraping thread started -> main thread id: "
-            + str(self.main_thread.ident)
-            + " scraping thread: "
-            + str(self.bt_thread.ident)
-        )
+        self.should_be_scraping = True
+        self.bt_thread_monitor.start()
 
     def stop_scraping(self):
         self.run = False
+        self.should_be_scraping = False
         stop = time()
         while self.is_running():
             sleep(0.1)
@@ -500,7 +595,9 @@ class Jkbms_Brn:
         return True
 
     def is_running(self):
-        return self.bt_thread.is_alive()
+        if self.bt_thread is not None:
+            return self.bt_thread.is_alive()
+        return False
 
     async def enable_charging(self, c):
         # these are the registers for the control-buttons:
@@ -552,8 +649,6 @@ class Jkbms_Brn:
 
 
 if __name__ == "__main__":
-    import sys
-
     jk = Jkbms_Brn(sys.argv[1])
     if not jk.test_connection():
         logger.error(">>> ERROR: Unable to connect")
