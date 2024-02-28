@@ -60,6 +60,38 @@ fi
 # check if minimum required Venus OS is installed | end
 
 
+# check if at least 8 MB free space is available on the system partition
+freeSpace=$(df -m / | awk 'NR==2 {print $4}')
+if [ $freeSpace -lt 8 ]; then
+
+    # try to expand system partition
+    bash /opt/victronenergy/swupdate-scripts/resize2fs.sh
+
+    freeSpace=$(df -m / | awk 'NR==2 {print $4}')
+    if [ $freeSpace -lt 8 ]; then
+        echo
+        echo
+        echo "ERROR: Not enough free space on the system partition. At least 8 MB are required."
+        echo
+        echo "       Please please try to execute this command"
+        echo
+        echo "       bash /opt/victronenergy/swupdate-scripts/resize2fs.sh"
+        echo
+        echo "       and try the installation again after."
+        echo
+        echo
+        exit 1
+    else
+        echo
+        echo
+        echo "INFO: System partition was expanded. Now there are $freeSpace MB free space available."
+        echo
+        echo
+    fi
+
+fi
+
+
 # handle read only mounts
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
@@ -131,6 +163,25 @@ pkill -f "python .*/dbus-serialbattery.py /dev/tty.*"
 
 ### BLUETOOTH PART | START ###
 
+# get bluetooth mode integrated/usb
+bluetooth_use_usb=$(awk -F "=" '/^BLUETOOTH_USE_USB/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
+
+# works only for Raspberry Pi, since GX devices don't have a /u-boot/config.txt
+# replace dtoverlay in /u-boot/config.txt this needs a reboot!
+if [ -f "/u-boot/config.txt" ]; then
+    if [[ $bluetooth_use_usb == *"True"* ]]; then
+        if grep -q -r "miniuart-bt" /u-boot/config.txt; then
+            sed -i 's/miniuart-bt/disable-bt/g' /u-boot/config.txt
+            echo "ATTENTION! You have changed the bluetooth mode to USB! THIS NEEDS A MANUAL REBOOT!"
+        fi
+    elif [[ $bluetooth_use_usb == *"False"* ]]; then
+        if grep -q -r "disable-bt" /u-boot/config.txt; then
+            sed -i 's/disable-bt/miniuart-bt/g' /u-boot/config.txt
+            echo "ATTENTION! You have changed the bluetooth mode to built in module! THIS NEEDS A MANUAL REBOOT!"
+        fi
+    fi
+fi
+
 # get BMS list from config file
 bluetooth_bms=$(awk -F "=" '/^BLUETOOTH_BMS/ {print $2}' /data/etc/dbus-serialbattery/config.ini)
 #echo $bluetooth_bms
@@ -149,7 +200,7 @@ bluetooth_length=${#bms_array[@]}
 
 # stop all dbus-blebattery services, if at least one exists
 if [ -d "/service/dbus-blebattery.0" ]; then
-    svc -u /service/dbus-blebattery.*
+    svc -t /service/dbus-blebattery.*
 
     # always remove existing blebattery services to cleanup
     rm -rf /service/dbus-blebattery.*
@@ -174,8 +225,8 @@ if [ "$bluetooth_length" -gt 0 ]; then
     echo
 
     # install required packages
-    # TO DO: Check first if packages are already installed
-    echo "Installing required packages to use Bluetooth connection..."
+    echo "Checking required packages to use Bluetooth connection..."
+    echo
 
     # dbus-fast: skip compiling/building the wheel
     # else weak system crash and are not able to install it,
@@ -183,11 +234,30 @@ if [ "$bluetooth_length" -gt 0 ]; then
     # and https://github.com/Louisvdw/dbus-serialbattery/issues/785
     export SKIP_CYTHON=false
 
-    opkg update
-    opkg install python3-misc python3-pip
+    if ! opkg list-installed | grep -q "python3-misc" || ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Update packages..."
+        opkg update
+        echo
+    fi
 
-    echo
-    pip3 install bleak
+    if ! opkg list-installed | grep -q "python3-misc"; then
+        echo "Install python3-misc..."
+        opkg install python3-misc
+        echo
+    fi
+
+    if ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Install python3-pip..."
+        opkg install python3-pip
+        echo
+    fi
+
+    # fastest way to check if bleak is installed
+    if [ ! -f "/usr/lib/python3.8/site-packages/bleak/__init__.py" ]; then
+        echo "Install bleak..."
+        pip3 install bleak
+        echo
+    fi
 
     # # ONLY FOR TESTING if there are version issues
     # echo
@@ -317,7 +387,7 @@ can_lenght=${#can_array[@]}
 
 # stop all dbus-canbattery services, if at least one exists
 if [ -d "/service/dbus-canbattery.0" ]; then
-    svc -u /service/dbus-canbattery.*
+    svc -t /service/dbus-canbattery.*
 
     # always remove existing canbattery services to cleanup
     rm -rf /service/dbus-canbattery.*
@@ -339,14 +409,33 @@ if [ "$can_lenght" -gt 0 ]; then
     echo
 
     # install required packages
-    # TO DO: Check first if packages are already installed
-    echo "Installing required packages to use CAN connection..."
-
-    opkg update
-    opkg install python3-misc python3-pip
-
+    echo "Checking required packages to use CAN connection..."
     echo
-    pip3 install python-can
+
+    if ! opkg list-installed | grep -q "python3-misc" || ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Update packages..."
+        opkg update
+        echo
+    fi
+
+    if ! opkg list-installed | grep -q "python3-misc"; then
+        echo "Install python3-misc..."
+        opkg install python3-misc
+        echo
+    fi
+
+    if ! opkg list-installed | grep -q "python3-pip"; then
+        echo "Install python3-pip..."
+        opkg install python3-pip
+        echo
+    fi
+
+    # fastest way to check if can is installed
+    if [ ! -f "/usr/lib/python3.8/site-packages/can/__init__.py" ]; then
+        echo "Install can..."
+        pip3 install can
+        echo
+    fi
 
     echo "done."
     echo
@@ -456,5 +545,15 @@ echo "    3. Re-run \"/data/etc/dbus-serialbattery/reinstall-local.sh\", if the 
 echo
 echo "CUSTOM SETTINGS: If you want to add custom settings, then check the settings you want to change in \"/data/etc/dbus-serialbattery/config.default.ini\""
 echo "                 and add them to \"/data/etc/dbus-serialbattery/config.ini\" to persist future driver updates."
+echo
+echo
+echo "GUIv2: If you want to try the new GUIv2 follow this link:"
+echo "       https://github.com/mr-manuel/venus-os_dbus-serialbattery/tree/dev/gui-v2"
+echo
+echo
+# print which version was installed
+# fetch line 40 from utils.py
+line=$(cat /data/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
+echo "*** dbus-serialbattery $line was installed. ***"
 echo
 echo

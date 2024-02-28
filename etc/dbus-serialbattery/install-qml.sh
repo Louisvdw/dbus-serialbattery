@@ -48,18 +48,51 @@ fi
 if [ ! -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
     cp /opt/victronenergy/gui/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup
 fi
-# copy new PageBattery.qml
-cp /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/
-# copy new PageBatteryCellVoltages
-cp /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/
-# copy new PageBatteryParameters.qml
-cp /data/etc/dbus-serialbattery/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/
-# copy new PageBatterySettings.qml
-cp /data/etc/dbus-serialbattery/qml/PageBatterySettings.qml /opt/victronenergy/gui/qml/
-# copy new PageBatterySetup
-cp /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/
-# copy new PageLynxIonIo.qml
-cp /data/etc/dbus-serialbattery/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/
+
+# count changed files
+filesChanged=0
+
+# copy new PageBattery.qml if changed
+if ! cmp -s /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/PageBattery.qml
+then
+    cp /data/etc/dbus-serialbattery/qml/PageBattery.qml /opt/victronenergy/gui/qml/
+    ((filesChanged++))
+fi
+
+# copy new PageBatteryCellVoltages if changed
+if ! cmp -s /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/PageBatteryCellVoltages.qml
+then
+    cp /data/etc/dbus-serialbattery/qml/PageBatteryCellVoltages.qml /opt/victronenergy/gui/qml/
+    ((filesChanged++))
+fi
+
+# copy new PageBatteryParameters.qml if changed
+if ! cmp -s /data/etc/dbus-serialbattery/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/PageBatteryParameters.qml
+then
+    cp /data/etc/dbus-serialbattery/qml/PageBatteryParameters.qml /opt/victronenergy/gui/qml/
+    ((filesChanged++))
+fi
+
+# copy new PageBatterySettings.qml if changed
+if ! cmp -s /data/etc/dbus-serialbattery/qml/PageBatterySettings.qml /opt/victronenergy/gui/qml/PageBatterySettings.qml
+then
+    cp /data/etc/dbus-serialbattery/qml/PageBatterySettings.qml /opt/victronenergy/gui/qml/
+    ((filesChanged++))
+fi
+
+# copy new PageBatterySetup if changed
+if ! cmp -s /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/PageBatterySetup.qml
+then
+    cp /data/etc/dbus-serialbattery/qml/PageBatterySetup.qml /opt/victronenergy/gui/qml/
+    ((filesChanged++))
+fi
+
+# copy new PageLynxIonIo.qml if changed
+if ! cmp -s /data/etc/dbus-serialbattery/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/PageLynxIonIo.qml
+then
+    cp /data/etc/dbus-serialbattery/qml/PageLynxIonIo.qml /opt/victronenergy/gui/qml/
+    ((filesChanged++))
+fi
 
 
 # get current Venus OS version
@@ -86,10 +119,13 @@ if (( $venusVersionNumber < $versionNumber )); then
     echo "done."
 fi
 
-
-# stop gui
-svc -d /service/gui
-# sleep 1 sec
-sleep 1
-# start gui
-svc -u /service/gui
+# if files changed, restart gui
+if [ $filesChanged -gt 0 ]; then
+    # stop gui
+    svc -d /service/gui
+    # sleep 1 sec
+    sleep 1
+    # start gui
+    svc -u /service/gui
+    echo "New QML files were installed and the GUI was restarted."
+fi

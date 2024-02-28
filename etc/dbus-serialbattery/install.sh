@@ -4,6 +4,20 @@
 #set -x
 
 
+# check if at least 5 MB free space is available on the system partition
+freeSpace=$(df -m /data | awk 'NR==2 {print $4}')
+if [ $freeSpace -lt 5 ]; then
+    echo
+    echo
+    echo "ERROR: Not enough free space on the data partition. At least 5 MB are required."
+    echo
+    echo "       Please free up some space and try again."
+    echo
+    echo
+    exit 1
+fi
+
+
 echo
 # fetch version numbers for different versions
 echo -n "Fetch current version numbers..."
@@ -14,8 +28,8 @@ latest_release_louisvdw_stable=$(curl -s https://api.github.com/repos/Louisvdw/d
 # louisvdw beta
 latest_release_louisvdw_beta=$(curl -s https://api.github.com/repos/Louisvdw/dbus-serialbattery/releases | grep "tag_name.*beta" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \, | head -n 1)
 
-# louisvdw dev
-latest_release_louisvdw_dev=$(curl -s https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/dev/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
+# louisvdw master branch
+latest_release_louisvdw_nightly=$(curl -s https://raw.githubusercontent.com/Louisvdw/dbus-serialbattery/master/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
 
 # mr-manuel stable
 latest_release_mrmanuel_stable=$(curl -s https://api.github.com/repos/mr-manuel/venus-os_dbus-serialbattery/releases/latest | grep "tag_name" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \,)
@@ -23,8 +37,8 @@ latest_release_mrmanuel_stable=$(curl -s https://api.github.com/repos/mr-manuel/
 # mr-manuel beta
 latest_release_mrmanuel_beta=$(curl -s https://api.github.com/repos/mr-manuel/venus-os_dbus-serialbattery/releases | grep "tag_name.*beta" | cut -d : -f 2,3 | tr -d "\ " | tr -d \" | tr -d \, | head -n 1)
 
-# mr-manuel dev
-latest_release_mrmanuel_dev=$(curl -s https://raw.githubusercontent.com/mr-manuel/venus-os_dbus-serialbattery/dev/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
+# mr-manuel master branch
+latest_release_mrmanuel_nightly=$(curl -s https://raw.githubusercontent.com/mr-manuel/venus-os_dbus-serialbattery/master/etc/dbus-serialbattery/utils.py | grep DRIVER_VERSION | awk -F'"' '{print "v" $2}')
 
 # done
 echo " done."
@@ -40,8 +54,8 @@ version_list=(
     "latest release \"$latest_release_mrmanuel_stable\" (mr-manuel's repo, stable, most up to date)"
     "beta build \"$latest_release_louisvdw_beta\" (louisvdw's repo)"
     "beta build \"$latest_release_mrmanuel_beta\" (mr-manuel's repo, no errors after 72 h runtime, long time testing needed)"
-    "dev build \"$latest_release_louisvdw_dev\" (louisvdw's repo)"
-    "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)"
+    "nightly build \"$latest_release_louisvdw_nightly\" (louisvdw's repo)"
+    "nightly build \"$latest_release_mrmanuel_nightly\" (mr-manuel's repo, newest features and fixes, bugs possible)"
     "specific version"
     "local tar file"
     "quit"
@@ -70,12 +84,12 @@ do
             #echo "Selected number: $REPLY"
             break
             ;;
-        "dev build \"$latest_release_louisvdw_dev\" (louisvdw's repo)")
+        "nightly build \"$latest_release_louisvdw_nightly\" (louisvdw's repo)")
             echo "Selected: $version"
             #echo "Selected number: $REPLY"
             break
             ;;
-        "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)")
+        "nightly build \"$latest_release_mrmanuel_nightly\" (mr-manuel's repo, newest features and fixes, bugs possible)")
             echo "Selected: $version"
             #echo "Selected number: $REPLY"
             break
@@ -171,14 +185,14 @@ fi
 
 
 
-## dev builds
-if [ "$version" = "dev build \"$latest_release_louisvdw_dev\" (louisvdw's repo)" ] || [ "$version" = "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)" ]; then
+## nightly builds
+if [ "$version" = "nightly build \"$latest_release_louisvdw_nightly\" (louisvdw's repo)" ] || [ "$version" = "nightly build \"$latest_release_mrmanuel_nightly\" (mr-manuel's repo, newest features and fixes, bugs possible)" ]; then
 
-    branch="dev"
+    branch="master"
 
     cd /tmp
 
-    if [ "$version" = "dev build \"$latest_release_mrmanuel_dev\" (mr-manuel's repo, newest features and fixes, bugs possible)" ]; then
+    if [ "$version" = "nightly build \"$latest_release_mrmanuel_nightly\" (mr-manuel's repo, newest features and fixes, bugs possible)" ]; then
 
         # clean already extracted folder
         rm -rf /tmp/venus-os_dbus-serialbattery-$branch

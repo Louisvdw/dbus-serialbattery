@@ -7,10 +7,12 @@ from dbus.mainloop.glib import DBusGMainLoop
 
 import sys
 
-if sys.version_info.major == 2:
-    import gobject
-else:
-    from gi.repository import GLib as gobject
+# not needed anymore since a few years
+# removed after next release > v1.2.x
+# if sys.version_info.major == 2:
+#     import gobject
+# else:
+from gi.repository import GLib as gobject
 
 # Victron packages
 # from ve_utils import exit_on_error
@@ -146,16 +148,28 @@ def main():
                     + " is excluded trough the config file"
                 )
                 sleep(60)
-                sys.exit(0)
+                # exit with error in order that the serialstarter goes on
+                sys.exit(1)
         else:
             # just for MNB-SPI
             logger.info("No Port needed")
             return "/dev/ttyUSB9"
 
+    with open("/opt/victronenergy/version", "r") as f:
+        venus_version = f.readline().strip()
+    # show Venus OS version
+    logger.info("Venus OS " + venus_version)
+
+    # show the version of the driver
     logger.info("dbus-serialbattery v" + str(utils.DRIVER_VERSION))
 
     port = get_port()
     battery = None
+
+    # wait some seconds to be sure that the serial connection is ready
+    # else the error throw a lot of timeouts
+    sleep(16)
+
     if port.endswith("_Ble") and len(sys.argv) > 2:
         """
         Import ble classes only, if it's a ble port, else the driver won't start due to missing python modules
@@ -174,6 +188,7 @@ def main():
         if testbms.test_connection():
             logger.info("Connection established to " + testbms.__class__.__name__)
             battery = testbms
+
     elif port.startswith("can"):
         """
         Import CAN classes only, if it's a can port, else the driver won't start due to missing python modules
@@ -196,16 +211,20 @@ def main():
         ]
 
         battery = get_battery(port)
+
     else:
-        # wait some seconds to be sure that the serial connection is ready
-        # else the error throw a lot of timeouts
-        sleep(16)
         battery = get_battery(port)
 
     # exit if no battery could be found
     if battery is None:
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)
+
+    # get SoC from battery, else None is displayed
+    if utils.SOC_CALCULATION:
+        battery.soc_calculation()
+    else:
+        battery.soc_calc = battery.soc
 
     battery.log_settings()
 

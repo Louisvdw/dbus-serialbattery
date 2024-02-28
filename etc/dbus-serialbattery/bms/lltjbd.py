@@ -4,6 +4,7 @@ from utils import is_bit_set, read_serial_data, logger
 import utils
 from struct import unpack_from, pack
 import struct
+import sys
 
 # Protocol registers
 REG_ENTER_FACTORY = 0x00
@@ -235,7 +236,7 @@ class LltJbd(Battery):
         self.protection = LltJbdProtection()
         self.type = self.BATTERYTYPE
         self._product_name: str = ""
-        self.has_settings = 0
+        self.has_settings = False
         self.reset_soc = 100
         self.soc_to_set = None
         self.factory_mode = False
@@ -244,6 +245,12 @@ class LltJbd(Battery):
         self.trigger_force_disable_charge = None
         self.trigger_disable_balancer = None
         self.cycle_capacity = None
+        # list of available callbacks, in order to display the buttons in the GUI
+        self.available_callbacks = [
+            "force_charging_off_callback",
+            "force_discharging_off_callback",
+            "turn_balancing_off_callback",
+        ]
 
     # degree_sign = u'\N{DEGREE SIGN}'
     BATTERYTYPE = "LLT/JBD"
@@ -268,8 +275,17 @@ class LltJbd(Battery):
                 and self.get_settings()
                 and self.refresh_data()
             )
-        except Exception as err:
-            logger.error(f"Unexpected {err=}, {type(err)=}")
+        except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             result = False
 
         return result
@@ -288,13 +304,13 @@ class LltJbd(Battery):
                 self.cycle_capacity = float(unpack_from(">H", cycle_cap)[0])
             charge_over_current = self.read_serial_data_llt(readCmd(REG_CHGOC))
             if charge_over_current:
-                self.max_battery_charge_current = float(
-                    unpack_from(">h", charge_over_current)[0] / 100.0
+                self.max_battery_charge_current = abs(
+                    float(unpack_from(">h", charge_over_current)[0] / 100.0)
                 )
             discharge_over_current = self.read_serial_data_llt(readCmd(REG_DSGOC))
             if discharge_over_current:
-                self.max_battery_discharge_current = float(
-                    unpack_from(">h", discharge_over_current)[0] / -100.0
+                self.max_battery_discharge_current = abs(
+                    float(unpack_from(">h", discharge_over_current)[0] / -100.0)
                 )
             func_config = self.read_serial_data_llt(readCmd(REG_FUNC_CONFIG))
             if func_config:
@@ -459,9 +475,7 @@ class LltJbd(Battery):
         self.protection.soc_low = (
             2
             if self.soc < utils.SOC_LOW_ALARM
-            else 1
-            if self.soc < utils.SOC_LOW_WARNING
-            else 0
+            else 1 if self.soc < utils.SOC_LOW_WARNING else 0
         )
 
         # extra protection flags for LltJbd
@@ -576,8 +590,12 @@ class LltJbd(Battery):
                     t,
                 )
                 return True
-            temp1 = unpack_from(">H", gen_data, 23 + (2 * t))[0]
-            self.to_temp(t, utils.kelvin_to_celsius(temp1 / 10))
+            temperature = unpack_from(">H", gen_data, 23 + (2 * t))[0]
+            # if there is only one sensor, use it as the main temperature sensor
+            if self.temp_sensors == 1:
+                self.to_temp(1, utils.kelvin_to_celsius(temperature / 10))
+            else:
+                self.to_temp(t, utils.kelvin_to_celsius(temperature / 10))
 
         return True
 
@@ -622,7 +640,7 @@ class LltJbd(Battery):
                 ">>> ERROR: Invalid response packet. Expected begin packet character 0xDD"
             )
         if status != 0x0:
-            logger.warn(">>> WARN: BMS rejected request. Status " + status)
+            logger.warn(">>> WARN: BMS rejected request. Status " + str(status))
             return False
         if len(data) != payload_length + 7:
             logger.error(
