@@ -72,7 +72,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 [![dbus-serialbattery install](https://img.youtube.com/vi/Juht6XGLcu0/0.jpg)](https://www.youtube.com/watch?v=Juht6XGLcu0)
 
-### Install automatically with USB/SD card
+### Install or update automatically with USB/SD card
 
 > It might be, that this doesn't work on older CerboGX devices. In this case use SSH option instead.
 
@@ -87,7 +87,7 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 1. Reboot the GX (in the Remote Console go to `Settings` &rarr; `General` &rarr; `Reboot?`).
 
 
-### Install over SSH
+### Install or update over SSH
 
 > Require [root access](https://www.victronenergy.com/live/ccgx:root_access#root_access)
 
@@ -103,56 +103,54 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
 
 1. You can now choose which version you want to install:
 
-   1. [latest release](#latest-release)
-      Stable version, tested for over a week.
+   1. [Latest release](#latest-release)
+      Stable version, tested for more then a week.
 
-   1. [beta release](#beta-release)
-      Beta version, tested for over 72 hours.
+   1. [Beta release](#beta-release)
+      Beta version, no errors after 72 h runtime, long time testing needed.
 
-   1. [dev build](#dev-build)
-      Development/Nightly version, tested for a few hours.
+   1. [Nightly build](#nightly-build)
+      Nightly version, newest features and fixes, bugs possible.
 
-   1. [specific version](#specific-versiontroubleshooting-option)
+   1. [Specific version](#specific-versiontroubleshooting-option)
 
-   1. [local tar file](#local-tar-file)
+   1. [Local tar file](#local-tar-file)
 
 #### Latest release
 
-Stable version, tested for over a week.
+Stable version, tested for more then a week.
 
-Run the [install script](#install-over-ssh) and select `1` or `2`.
+Run the [install script](#install-or-update-over-ssh) and select `1` or `2`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
 #### Beta release
 
-Beta version, tested for over 72 hours.
+Beta version, no errors after 72 h runtime, long time testing needed.
 
-Run the [install script](#install-over-ssh) and select `3` or `4`.
+Run the [install script](#install-or-update-over-ssh) and select `3` or `4`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
-#### Dev build
+#### Nightly build
 
-Development/Nightly version, tested for a few hours. Issues might arise. Please keep your system monitored.
+Nightly version, newest features and fixes, bugs possible. Please keep your system monitored.
 
 > Not recommended in production environment, unless you know what you do. Testers are very welcome!
 
-Run the [install script](#install-over-ssh) and select `5` or `6`.
-
-💡 Reboot the system after the installation finished with `reboot`.
+Run the [install script](#install-or-update-over-ssh) and select `5` or `6`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
 #### Specific version/troubleshooting option
 
-Run the [install script](#install-over-ssh) and select `7`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) or [releases](https://github.com/mr-manuel/venus-os_dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
+Run the [install script](#install-or-update-over-ssh) and select `7`. Go to [releases](https://github.com/Louisvdw/dbus-serialbattery/releases) or [releases](https://github.com/mr-manuel/venus-os_dbus-serialbattery/releases) and copy the link to the `venus-data.tar.gz` version you like to install. Paste the link with a right click and press enter.
 
 💡 Reboot the system after the installation finished with `reboot`.
 
 #### Local tar file
 
-Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script](#install-over-ssh) and select `8`.
+Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/uploading it. Run the [install script](#install-or-update-over-ssh) and select `8`.
 
 💡 Reboot the system after the installation finished with `reboot`.
 

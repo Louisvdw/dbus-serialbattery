@@ -64,18 +64,18 @@ You can view the current [BMS requests](https://github.com/Louisvdw/dbus-serialb
 There are two possibilities to add a new BMS.
 
 ### Add by opening a pull request
-Fork the repository and use the [`battery_template.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/bms/battery_template.py) as template to add a new battery. As soon as the BMS works you can open a pull request (PR) to merge it. Please use the `dev` branch for adding your BMS/feature and opening the PR.
+Fork the repository and use the [`battery_template.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/bms/battery_template.py) as template to add a new battery. As soon as the BMS works you can open a pull request (PR) to merge it.
 
 Here is a short checklist that should help you:
 
-  - [ ] Add your battery class and battery class import in alphabetical order in the [`etc/dbus-serialbattery/dbus-serialbattery.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/dbus-serialbattery.py)
-  - [ ] Add your BMS to the [BMS feature comparison](../general/features#bms-feature-comparison) page by editing [`docs/docs/general/features.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/docs/docs/general/features.md)
-  - [ ] Add your BMS to the [Supported BMS](../general/supported-bms) page by editing [`docs/docs/general/supported-bms.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/docs/docs/general/supported-bms.md)
+  - [ ] Add your battery class and battery class import in alphabetical order in the [`etc/dbus-serialbattery/dbus-serialbattery.py`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/dbus-serialbattery.py)
+  - [ ] Add your BMS to the [BMS feature comparison](../general/features#bms-feature-comparison) page by editing [`docs/docs/general/features.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/docs/docs/general/features.md)
+  - [ ] Add your BMS to the [Supported BMS](../general/supported-bms) page by editing [`docs/docs/general/supported-bms.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/docs/docs/general/supported-bms.md)
   - [ ] Do not import wildcards `*`
   - [ ] If available populate `self.max_battery_charge_current` and `self.max_battery_discharge_current` with values read from the BMS
   - [ ] If available populate `self.unique_identifier` with a unique value to distinguish the BMS in a multiple battery setup
-  - [ ] If your BMS don't run with the default settings add installation notes to the [How to install, update, disable, enable and uninstall](../general/install#bms-specific-settings) [`docs/docs/general/install.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/docs/docs/general/install.md)
-  - [ ] If your BMS needs custom settings that the user should be able to change, add it below the `; --------- BMS specific settings ---------` section in the [`etc/dbus-serialbattery/config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/dev/etc/dbus-serialbattery/config.default.ini)
+  - [ ] If your BMS don't run with the default settings add installation notes to the [How to install, update, disable, enable and uninstall](../general/install#bms-specific-settings) [`docs/docs/general/install.md`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/docs/docs/general/install.md)
+  - [ ] If your BMS needs custom settings that the user should be able to change, add it below the `; --------- BMS specific settings ---------` section in the [`etc/dbus-serialbattery/config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini)
   - [ ] Make sure the GitHub Actions run fine in your repository. In order to make the GitHub Actions run please select in your repository settings under `Actions` -> `General` -> `Actions permissions` the option `Allow all actions and reusable workflows`. Check also in your repository settings under `Actions` -> `General` -> `Workflow permissions` if `Read and write permissions` are selected. After this changes you have to make a new commit, if you don't see any Actions run. This will check your code for Flake8 and Black Lint errors. [Here](https://py-vscode.readthedocs.io/en/latest/files/linting.html) is a short instruction on how to set up Flake8 and Black Lint checks in VS Code. This will save you a lot of time.
 
 
