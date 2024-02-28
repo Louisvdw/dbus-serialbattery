@@ -10,7 +10,7 @@
 ## Install
 
 ```bash
-wget -O - https://raw.githubusercontent.com/mr-manuel/venus-os_dbus-serialbattery/dev/gui-v2/install-new-webgui.sh | bash
+wget -O - https://raw.githubusercontent.com/mr-manuel/venus-os_dbus-serialbattery_gui-v2/master/install-new-webgui.sh | bash
 ```
 
 ## How to open
