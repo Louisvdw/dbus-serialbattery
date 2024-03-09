@@ -83,6 +83,7 @@ class Battery(ABC):
         self.current: float = None
         self.current_avg: float = None
         self.current_avg_lst: list = []
+        self.current_corrected: float = None
         self.capacity_remain: float = None
         self.capacity: float = None
         self.cycles: float = None
@@ -241,7 +242,7 @@ class Battery(ABC):
     def soc_calculation(self) -> None:
         current_time = time()
         voltage_sum = 0
-        current_corrected = 0
+        self.current_corrected = 0
         current_min_cell_voltage = self.get_min_cell_voltage()
 
         # calculate battery voltage from cell voltages
@@ -252,15 +253,18 @@ class Battery(ABC):
 
         if self.soc_calc_capacity_remain is not None:
             # calculate real current
-            current_corrected = utils.calcLinearRelationship(
-                self.current,
-                utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
-                utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
+            self.current_corrected = round(
+                utils.calcLinearRelationship(
+                    self.current,
+                    utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
+                    utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
+                ),
+                2,
             )
 
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
-                + current_corrected
+                + self.current_corrected
                 * (current_time - self.soc_calc_capacity_remain_lasttime)
                 / 3600
             )
@@ -601,8 +605,9 @@ class Battery(ABC):
                 )
                 self.charge_mode_debug += f" • Reset voltage limit SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
                 self.charge_mode_debug += (
-                    f"\nSoC: {self.soc}% • SoC_Calc {self.soc_calc}%"
+                    f"\nSoC: {self.soc}% • SoC_Calc: {self.soc_calc}%"
                 )
+                self.charge_mode_debug += f"\ncurrent: {self.current}A • current_corrected: {self.current_corrected}A"
                 self.charge_mode_debug += (
                     f"\nallow_max_voltage: {self.allow_max_voltage}"
                 )
