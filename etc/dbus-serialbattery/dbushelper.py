@@ -1150,6 +1150,10 @@ class DbusHelper:
     def setSetting(
         self, bus, service: str, object_path: str, setting_name: str, value
     ) -> bool:
+        # check if value is None
+        if value is None:
+            return False
+
         obj = bus.get_object(service, object_path + "/" + setting_name)
         # iface = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
         # xml_string = iface.Introspect()
