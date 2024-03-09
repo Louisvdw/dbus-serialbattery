@@ -7,6 +7,7 @@ import logging
 import math
 from time import time
 from abc import ABC, abstractmethod
+import sys
 
 
 class Protection(object):
@@ -923,6 +924,17 @@ class Battery(ABC):
             logger.warning(
                 "Error while executing calcMaxChargeCurrentReferringToCellVoltage(). Using default value instead."
             )
+            logger.warning(
+                f"CELL_VOLTAGES_WHILE_CHARGING: {utils.CELL_VOLTAGES_WHILE_CHARGING}"
+                + f" • MAX_CHARGE_CURRENT_CV: {utils.MAX_CHARGE_CURRENT_CV}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self) -> float:
@@ -942,6 +954,17 @@ class Battery(ABC):
         except Exception:
             logger.warning(
                 "Error while executing calcMaxDischargeCurrentReferringToCellVoltage(). Using default value instead."
+            )
+            logger.warning(
+                f"CELL_VOLTAGES_WHILE_DISCHARGING: {utils.CELL_VOLTAGES_WHILE_DISCHARGING}"
+                + f" • MAX_DISCHARGE_CURRENT_CV: {utils.MAX_DISCHARGE_CURRENT_CV}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
             return self.max_battery_charge_current
 
@@ -1009,6 +1032,17 @@ class Battery(ABC):
             logger.warning(
                 "Error while executing calcMaxChargeCurrentReferringToSoc(). Using default value instead."
             )
+            logger.warning(
+                f"SOC_WHILE_CHARGING: {utils.SOC_WHILE_CHARGING}"
+                + f" • MAX_CHARGE_CURRENT_SOC: {utils.MAX_CHARGE_CURRENT_SOC}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToSoc(self) -> float:
@@ -1028,6 +1062,17 @@ class Battery(ABC):
         except Exception:
             logger.warning(
                 "Error while executing calcMaxDischargeCurrentReferringToSoc(). Using default value instead."
+            )
+            logger.warning(
+                f"SOC_WHILE_DISCHARGING: {utils.SOC_WHILE_DISCHARGING}"
+                + f" • MAX_DISCHARGE_CURRENT_SOC: {utils.MAX_DISCHARGE_CURRENT_SOC}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
             return self.max_battery_discharge_current
 
