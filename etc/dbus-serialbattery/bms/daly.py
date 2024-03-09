@@ -35,8 +35,9 @@ class Daly(Battery):
             "force_discharging_off_callback",
         ]
 
-    # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x zero bytes][checksum]
-    command_base = b"\xA5\x40\x94\x08\x00\x00\x00\x00\x00\x00\x00\x00\x81"
+    # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x fill bytes][checksum]
+    # use 0xAA (or 0x55) as fill bytes to allow the daly's "weak" uart to sync better - this reduces read errors dramatically
+    command_base = b"\xA5\x40\x94\x08\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\x00"
     command_set_soc = b"\x21"
     command_rated_params = b"\x50"
     command_batt_details = b"\x53"
@@ -71,6 +72,8 @@ class Daly(Battery):
                 if result:
                     self.read_soc_data(ser)
                     self.read_battery_code(ser)
+                    self.read_capacity(ser)
+                    self.read_production_date(ser)
 
         except Exception:
             (
@@ -92,7 +95,7 @@ class Daly(Battery):
         return result
 
     def get_settings(self):
-        self.capacity = utils.BATTERY_CAPACITY
+        self.capacity = utils.BATTERY_CAPACITY if not None else 0.0
         with open_serial_port(self.port, self.baud_rate) as ser:
             self.read_capacity(ser)
             self.read_production_date(ser)
@@ -198,6 +201,7 @@ class Daly(Battery):
 
         if not result:  # TROUBLESHOOTING for no reply errors
             logger.info("refresh_data: result: " + str(result))
+
         return result
 
     def update_soc(self, ser):
@@ -217,14 +221,17 @@ class Daly(Battery):
             logger.debug("No data received in read_status_data()")
             return False
 
-        (
-            self.cell_count,
-            self.temp_sensors,
-            self.charger_connected,
-            self.load_connected,
-            state,
-            self.cycles,
-        ) = unpack_from(">bb??bhx", status_data)
+        try:
+            (
+                self.cell_count,
+                self.temp_sensors,
+                self.charger_connected,
+                self.load_connected,
+                state,
+                self.cycles,
+            ) = unpack_from(">bb??bhx", status_data)
+        except Exception:
+            return False
 
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
@@ -505,7 +512,6 @@ class Daly(Battery):
         self.capacity_remain = capacity_remain / 1000
         return True
 
-    # new
     def read_capacity(self, ser):
         capa_data = self.request_data(ser, self.command_rated_params)
         # check if connection success
@@ -514,13 +520,12 @@ class Daly(Battery):
             return False
 
         (capacity, cell_volt) = unpack_from(">LL", capa_data)
-        if capacity and capacity > 0:
+        if capacity is not None and capacity > 0:
             self.capacity = capacity / 1000
             return True
         else:
             return False
 
-    # new
     def read_production_date(self, ser):
         production = self.request_data(ser, self.command_batt_details)
         # check if connection success
@@ -532,7 +537,6 @@ class Daly(Battery):
         self.production = f"{year + 2000}{month:02d}{day:02d}"
         return True
 
-    # new
     def read_battery_code(self, ser):
         data = self.request_data(ser, self.command_batt_code, sentences_to_receive=5)
 
@@ -560,7 +564,7 @@ class Daly(Battery):
         """
         Used to identify a BMS when multiple BMS are connected
         """
-        if self.custom_field != "":
+        if self.custom_field is not None and self.custom_field != "":
             return self.custom_field.replace(" ", "_")
         else:
             return str(self.production) + "_" + str(int(self.capacity))
