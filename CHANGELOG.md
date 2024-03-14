@@ -61,8 +61,11 @@
 * Added: LLT/JBD BLE BMS - Added MAC address as unique identifier. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/970 by @mr-manuel
 * Added: Reset calculated SoC to 0%, if battery is empty by @mr-manuel
 * Added: Venus OS version to logfile by @mr-manuel
+* Changed: Config: SoC limitation is now disabled by default, since in most use cases it's very inaccurate by @mr-manuel
 * Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
+* Changed: Daly BMS - Fixed some smaller errory with https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/22 and https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/23 by @transistorgit
+* Changed: Fixed non-working can-bus dependency with https://github.com/Louisvdw/dbus-serialbattery/pull/1007 by @p0l0us
 * Changed: Fixed showing None SoC in log in driver start by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
 * Changed: Fixed some SOC calculation issues by @mr-manuel

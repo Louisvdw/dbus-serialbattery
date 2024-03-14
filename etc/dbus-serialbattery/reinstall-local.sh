@@ -433,7 +433,9 @@ if [ "$can_lenght" -gt 0 ]; then
     # fastest way to check if can is installed
     if [ ! -f "/usr/lib/python3.8/site-packages/can/__init__.py" ]; then
         echo "Install can..."
-        pip3 install can
+        # Note: 4.x version of python-can causes pip dependency issue on VenusOS v3.22, so using python-can 3.x
+        #     "ERROR: Could not build wheels for msgpack which use PEP 517 and cannot be installed directly"
+        pip3 install python-can==3.3.4
         echo
     fi
 
