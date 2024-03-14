@@ -433,7 +433,8 @@ if [ "$can_lenght" -gt 0 ]; then
     # fastest way to check if can is installed
     if [ ! -f "/usr/lib/python3.8/site-packages/can/__init__.py" ]; then
         echo "Install can..."
-        pip3 install can
+        # Note: Latest version causes pip dependency issues on VenusOS v3.22
+        pip3 install python-can==3
         echo
     fi
 
