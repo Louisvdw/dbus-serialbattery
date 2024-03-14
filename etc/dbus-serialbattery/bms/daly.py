@@ -757,7 +757,10 @@ class Daly(Battery):
                 return False
 
         reply += ser.read(12)
-        _, id, cmd, length = unpack_from(">BBBB", reply)
+        try:
+            _, id, cmd, length = unpack_from(">BBBB", reply)
+        except exception:
+            return False
 
         # logger.info(f"reply: {utils.bytearray_to_string(reply)}")  # debug
 
