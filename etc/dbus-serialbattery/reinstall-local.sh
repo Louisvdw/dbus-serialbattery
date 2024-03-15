@@ -199,7 +199,8 @@ bluetooth_length=${#bms_array[@]}
 # echo $bluetooth_length
 
 # stop all dbus-blebattery services, if at least one exists
-if [ -d "/service/dbus-blebattery.0" ]; then
+if ls /service/dbus-blebattery.* 1> /dev/null 2>&1; then
+    echo "Killing old BLE battery services..."
     svc -t /service/dbus-blebattery.*
 
     # always remove existing blebattery services to cleanup
@@ -386,7 +387,8 @@ can_lenght=${#can_array[@]}
 # echo $can_lenght
 
 # stop all dbus-canbattery services, if at least one exists
-if [ -d "/service/dbus-canbattery.0" ]; then
+if ls /service/dbus-canbattery.* 1> /dev/null 2>&1; then
+    echo "Killing old CAN battery services..."
     svc -t /service/dbus-canbattery.*
 
     # always remove existing canbattery services to cleanup
@@ -395,10 +397,7 @@ if [ -d "/service/dbus-canbattery.0" ]; then
     # kill all canbattery processes that remain
     pkill -f "supervise dbus-canbattery.*"
     pkill -f "multilog .* /var/log/dbus-canbattery.*"
-    pkill -f "python .*/dbus-serialbattery.py .*_Ble"
-
-    # kill opened bluetoothctl processes
-    pkill -f "^bluetoothctl "
+    pkill -f "python .*/dbus-serialbattery.py can.*"
 fi
 
 

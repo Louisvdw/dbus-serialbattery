@@ -53,6 +53,7 @@ else:
 
 # save config values to constants
 
+
 # --------- Battery Current limits ---------
 MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
 MAX_BATTERY_DISCHARGE_CURRENT = float(
@@ -249,6 +250,9 @@ SOC_LOW_ALARM = float(config["DEFAULT"]["SOC_LOW_ALARM"])
 # -- Daly settings
 BATTERY_CAPACITY = float(config["DEFAULT"]["BATTERY_CAPACITY"])
 INVERT_CURRENT_MEASUREMENT = int(config["DEFAULT"]["INVERT_CURRENT_MEASUREMENT"])
+
+# -- JK BMS settings
+JKBMS_CAN_CELL_COUNT = int(config["DEFAULT"]["JKBMS_CAN_CELL_COUNT"])
 
 # -- ESC GreenMeter and Lipro device settings
 GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])

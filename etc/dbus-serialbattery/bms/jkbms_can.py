@@ -8,6 +8,7 @@ from utils import (
     MAX_BATTERY_DISCHARGE_CURRENT,
     MAX_CELL_VOLTAGE,
     MIN_CELL_VOLTAGE,
+    JKBMS_CAN_CELL_COUNT,
     zero_char,
 )
 from struct import unpack_from
@@ -49,12 +50,14 @@ class Jkbms_Can(Battery):
 
     MESSAGES_TO_READ = 100
 
-    # Changed from 0x0XF4 to 0x0XF5. See https://github.com/Louisvdw/dbus-serialbattery/issues/950
+    # B2A... Black is using 0x0XF4
+    # B2A... Silver is using 0x0XF5
+    # See https://github.com/Louisvdw/dbus-serialbattery/issues/950
     CAN_FRAMES = {
-        BATT_STAT: 0x02F5,
-        CELL_VOLT: 0x04F5,
-        CELL_TEMP: 0x05F5,
-        ALM_INFO: 0x07F5,
+        BATT_STAT: [0x02F4,0x02F5],
+        CELL_VOLT: [0x04F4,0x04F5],
+        CELL_TEMP: [0x05F4,0x05F5],
+        ALM_INFO: [0x07F4,0x07F5]
     }
 
     def test_connection(self):
@@ -67,6 +70,7 @@ class Jkbms_Can(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
+        self.cell_count = JKBMS_CAN_CELL_COUNT
         self.max_battery_charge_current = MAX_BATTERY_CHARGE_CURRENT
         self.max_battery_discharge_current = MAX_BATTERY_DISCHARGE_CURRENT
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
@@ -204,7 +208,7 @@ class Jkbms_Can(Battery):
                 # print("message received")
                 messages_to_read -= 1
                 # print(messages_to_read)
-                if msg.arbitration_id == self.CAN_FRAMES[self.BATT_STAT]:
+                if msg.arbitration_id in self.CAN_FRAMES[self.BATT_STAT]:
                     voltage = unpack_from("<H", bytes([msg.data[0], msg.data[1]]))[0]
                     self.voltage = voltage / 10
 
@@ -222,7 +226,7 @@ class Jkbms_Can(Battery):
                     # print(self.soc)
                     # print(self.time_to_go)
 
-                elif msg.arbitration_id == self.CAN_FRAMES[self.CELL_VOLT]:
+                elif msg.arbitration_id in self.CAN_FRAMES[self.CELL_VOLT]:
                     max_cell_volt = (
                         unpack_from("<H", bytes([msg.data[0], msg.data[1]]))[0] / 1000
                     )
@@ -249,14 +253,14 @@ class Jkbms_Can(Battery):
                         self.cells[min_cell_nr - 1].voltage = min_cell_volt
                         self.cells[min_cell_nr - 1].balance = True
 
-                elif msg.arbitration_id == self.CAN_FRAMES[self.CELL_TEMP]:
+                elif msg.arbitration_id in self.CAN_FRAMES[self.CELL_TEMP]:
                     max_temp = unpack_from("<B", bytes([msg.data[0]]))[0] - 50
                     min_temp = unpack_from("<B", bytes([msg.data[2]]))[0] - 50
                     self.to_temp(1, max_temp if max_temp <= 100 else 100)
                     self.to_temp(2, min_temp if min_temp <= 100 else 100)
                     # print(max_temp)
                     # print(min_temp)
-                elif msg.arbitration_id == self.CAN_FRAMES[self.ALM_INFO]:
+                elif msg.arbitration_id in self.CAN_FRAMES[self.ALM_INFO]:
                     alarms = unpack_from(
                         "<L",
                         bytes([msg.data[0], msg.data[1], msg.data[2], msg.data[3]]),
