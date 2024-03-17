@@ -104,19 +104,9 @@ class Seplosv3(Battery):
                             found = True
 
                     except Exception as e:
-                        logger.info(e)
+                        logger.info(f"Seplos v3 testing failed ({e})")
                         logger.debug(
-                            "testing failed ("
-                            + str(e)
-                            + ") "
-                            + str(n)
-                            + "/"
-                            + str(RETRYCNT)
-                            + " for "
-                            + self.port
-                            + "("
-                            + str(self.address)
-                            + ")"
+                            f"Seplos v3 testing failed ({e}) {n}/{RETRYCNT} for {self.port}({str(self.address)})"
                         )
                         continue
                     break
@@ -155,27 +145,36 @@ class Seplosv3(Battery):
         self.battery_type = "LiFePO4"
         self.charger_connected = True
         self.load_connected = True
-
         return self.refresh_data()
 
     def read_device_date(self):
         try:
             mb = self.get_modbus()
-            spa = mb.read_registers(registeraddress=0x1300, number_of_registers=0x6a , functioncode=4)
-            pia = mb.read_registers(registeraddress=0x1000, number_of_registers=0x12 , functioncode=4)
-            pib = mb.read_registers(registeraddress=0x1100, number_of_registers=0x1a , functioncode=4)
-            sca = mb.read_registers(registeraddress=0x1500,  number_of_registers=0x04 , functioncode=4)
-            pic = mb.read_bits(0x1200,number_of_bits=0x90, functioncode=1)
-            sfa = mb.read_bits(0x1400,number_of_bits=0x50, functioncode=1)
-            logger.info (f"pic {pic}")
-            # spa= [4, 16, 5400, 5600, 5400, 5760, 4800, 4640, 4800, 4320, 3400, 3500, 3400, 3650, 3100, 2900, 3100, 2700, 2000, 1000, 500, 203, 205, 210, 100, 300, 300, >
-            # pia=[5236, 1301, 3800, 30400, 64, 125, 1000, 2, 3272, 2837, 3275, 3268, 2845, 2831, 0, 180, 180, 1000]
-            # pib= [3273, 3273, 3268, 3272, 3274, 3274, 3275, 3275, 3274, 3273, 3273, 3270, 3271, 3271, 3270, 3272, 2842, 2833, 2831, 2845, 2731, 2731, 2731, 2731, 2833, >
-            # sca= [59399, 776, 4141, 7710]
-            # sfa = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0]
+            spa = mb.read_registers(registeraddress=0x1300, number_of_registers=0x6A, functioncode=4)
+            pia = mb.read_registers(registeraddress=0x1000, number_of_registers=0x12, functioncode=4)
+            pib = mb.read_registers(registeraddress=0x1100, number_of_registers=0x1A, functioncode=4)
+            sca = mb.read_registers(registeraddress=0x1500, number_of_registers=0x04, functioncode=4)
+            pic = mb.read_bits(0x1200, number_of_bits=0x90, functioncode=1)
+            sfa = mb.read_bits(0x1400, number_of_bits=0x50, functioncode=1)
+            logger.debug(f"spa: {spa}")
+            logger.debug(f"pia: {pia}")
+            logger.debug(f"pib: {pib}")
+            logger.debug(f"sca: {sca}")
+            logger.debug(f"sfa: {sfa}")
+            logger.debug(f"pic: {pic}")
         except Exception as e:
             logger.info(f"Error getting data {e}")
-            return None, None, None, None, None, None
+            USE_MOCK = True
+            if USE_MOCK:
+                logger.warning(f"Using Mock data")
+                spa= [4, 16, 5400, 5600, 5400, 5760, 4800, 4640, 4800, 4320, 3400, 3500, 3400, 3650, 3100, 2900, 3100, 2700, 2000, 1000, 500, 203, 205, 210, 100, 300, 300, 65333, 65331, 65326, 100, 65186, 300, 65236, 106, 600, 5, 3000, 205, 10, 3500, 3400, 1500, 1000, 800, 200, 30, 3201, 3231, 3231, 3281, 2781, 2751, 2731, 2631, 3231, 3281, 3281, 3331, 2761, 2631, 2731, 2581, 3201, 3231, 3281, 3331, 2761, 2731, 2731, 2631, 3581, 3681, 3581, 3831, 2831, 2731, 3231, 2731, 10, 3400, 50, 30, 960, 150, 100, 70, 50, 30400, 30400, 3800, 48, 60, 240, 10, 7, 0, 13, 0, 500, 300, 5760, 180, 65356, 5, 8]
+                pia=[5236, 1301, 3800, 30400, 64, 125, 1000, 2, 3272, 2837, 3275, 3268, 2845, 2831, 0, 180, 180, 1000]
+                pib=  [0,0x0,0x0,0x0,0x1,0x0,0x0,0x1,0x1,0x1,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
+                sca= [59399, 776, 4141, 7710]
+                sfa = [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0]
+                pic = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            else:
+                return None, None, None, None, None, None
         return spa, pia, pib, sca, pic, sfa
 
     @staticmethod
@@ -205,7 +204,7 @@ class Seplosv3(Battery):
         try:
             self.voltage = pia[0] / 100
             self.current = self.signed(pia[1]) / 100
-            #self.capacity_remain = pia[2] / 100   # check if this is from pia or from spa
+            self.capacity_remain = pia[2] / 100  # check if this is from pia or from spa
             #        self.capacity = pia[2]/100    # check if this is from pia or from spa
             self.soc = pia[5] / 10
             self.total_ah_drawn = pia[4] * 10
@@ -219,11 +218,6 @@ class Seplosv3(Battery):
 
         # self.production = None
         # self.version = None
-
-        # self.charge_fet: bool = None
-        # self.discharge_fet: bool = None
-        # self.balance_fet: bool = None
-        # self.temp_sensors: int = None
 
         # self.control_voltage: float = None
         # self.soc_reset_requested: bool = False
@@ -251,9 +245,12 @@ class Seplosv3(Battery):
             self.temp_sensors = spa[0x00]
             self.cell_count = spa[1]
             self.capacity = spa[0x59] / 100
-            self.capacity_remain = spa[0x5A] / 100
+            # self.capacity_remain = spa[0x5A] / 100
             self.max_battery_voltage = spa[0x05] / 100
             self.min_battery_voltage = spa[0x11] / 100
+            self.control_voltage = spa[0x65] / 100
+            self.control_charge_current = spa[0x66]
+            self.control_discharge_current = spa[0x67]
         except Exception as e:
             logger.info(f"Error updating sys info {e}")
             return False
@@ -263,24 +260,24 @@ class Seplosv3(Battery):
         try:
             self.protection = Protection()
             #   ALARM = 2 , WARNING = 1 , OK = 0
-            self.protection.voltage_high = 1 if sfa[0x04] == 0 else 0 + 1 if sfa[0x05] == 0 else 0
-            self.protection.voltage_low = 1 if sfa[0x06] == 0 else 0 + 1 if sfa[0x06] == 0 else 0
+            self.protection.voltage_high = 2 if sfa[0x05] == 0 else 1 if sfa[0x04] == 0 else 0
+            self.protection.voltage_low = 2 if sfa[0x06] == 0 else 1 if sfa[0x06] == 0 else 0
             # self.protection.voltage_cell_high =  1 if  sfa[0x00] == 0 else 0 + 1 if  sfa[0x01] == 0 else 0
-            self.protection.voltage_cell_low = 1 if sfa[0x02] == 0 else 0 + 1 if sfa[0x03] == 0 else 0
+            self.protection.voltage_cell_low = 2 if sfa[0x03] == 0 else 1 if sfa[0x02] == 0 else 0
             self.protection.soc_low = 2 if sfa[0x30] == 0 else 0
-            self.protection.current_over = 1 if sfa[0x20] == 0 else 0 + 1 if sfa[0x21] == 0 else 0
-            self.protection.current_under = 1 if sfa[0x23] == 0 else 0 + 1 if sfa[0x24] == 0 else 0
+            self.protection.current_over = 2 if sfa[0x21] == 0 else 1 if sfa[0x20] == 0 else 0
+            self.protection.current_under = 2 if sfa[0x24] == 0 else 1 if sfa[0x23] == 0 else 0
             # self.protection.cell_imbalance = 2 if  sfa[0x4c] == 0 else 0   # Need to doiuble check logic as this is set unexpectedly
             # substittute with cell voltage failure
             self.protection.cell_imbalance = 2 if sfa[0x14] == 0 else 0
             self.protection.internal_failure = (
                 2 if (sfa[0x48] + sfa[0x49] + sfa[0x4A] + sfa[0x4B] + sfa[0x4D] + sfa[53]) < 5 else 0
             )
-            self.protection.temp_high_charge = 1 if sfa[0x08] == 0 else 0 + 1 if sfa[0x09] == 0 else 0
-            self.protection.temp_low_charge = 1 if sfa[0x0A] == 0 else 0 + 1 if sfa[0x0B] == 0 else 0
-            self.protection.temp_high_discharge = 1 if sfa[0x0C] == 0 else 0 + 1 if sfa[0x0D] == 0 else 0
-            self.protection.temp_low_discharge = 1 if sfa[0x0E] == 0 else 0 + 1 if sfa[0x0F] == 0 else 0
-            self.protection.temp_high_internal = 1 if sfa[0x14] == 0 else 0 + 1 if sfa[0x15] == 0 else 0
+            self.protection.temp_high_charge = 2 if sfa[0x09] == 0 else 1 if sfa[0x08] == 0 else 0
+            self.protection.temp_low_charge = 2 if sfa[0x0B] == 0 else 1 if sfa[0x0A] == 0 else 0
+            self.protection.temp_high_discharge = 2 if sfa[0x0D] == 0 else 1 if sfa[0x0C] == 0 else 0
+            self.protection.temp_low_discharge = 2 if sfa[0x0F] == 0 else 1 if sfa[0x0E] == 0 else 0
+            self.protection.temp_high_internal = 2 if sfa[0x15] == 0 else 1 if sfa[0x14] == 0 else 0
         except Exception as e:
             logger.info(f"Error updating alarm info {e}")
             return False
@@ -289,18 +286,17 @@ class Seplosv3(Battery):
     def update_system_control(self, pic, sca) -> bool:
         try:
             # TODO: set based on the pic and sca
-            self.control_allow_charge = True
-            self.control_allow_discharge = True
-            self.charge_fet = True
-            self.discharge_fet = True
-#            self.charge_fet = sca[0x10]
-#            self.discharge_fet = sca[0x11]
-#            self.balance_fet = sca[2]
+            #            self.control_allow_charge = True
+            #            self.control_allow_discharge = True
+            self.discharge_fet = True if pic[0x78] == 1 else False
+            self.charge_fet = True if pic[0x79] == 1 else False
+            self.balance_fet = True if pic[0x80] == 1 else False
+            self.protection.cell_imbalance = 2 if pic[0x74] == 0 else 0
         except Exception as e:
             logger.info(f"Error updating fets {e}")
             return False
         return True
-    
+
     def refresh_data(self) -> bool:
         # call all functions that will refresh the battery data.
         # This will be called for every iteration (1 second)
@@ -325,7 +321,7 @@ class Seplosv3(Battery):
         if sca is None or pic is None:
             results.append(False)
         else:
-            results.append(self.update_system_control(pic,sca))
+            results.append(self.update_system_control(pic, sca))
             pass
 
         if sfa is None:
