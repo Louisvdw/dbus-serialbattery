@@ -65,6 +65,7 @@
 * Changed: Config: SoC limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Config: Temperature limitation variables where changed to match other setting variables by @mr-manuel
 * Changed: Daly BMS - Fixed some smaller errory with https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/22 and https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/23 by @transistorgit
+* Changed: Fixed CAN installation with https://github.com/Louisvdw/dbus-serialbattery/pull/1007 by @p0l0us
 * Changed: Fixed non-working can-bus dependency with https://github.com/Louisvdw/dbus-serialbattery/pull/1007 by @p0l0us
 * Changed: Fixed showing None SoC in log in driver start by @mr-manuel
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
@@ -74,6 +75,7 @@
 * Changed: JKBMS BLE - Fixed driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
 * Changed: JKBMS BLE - Fixed driver not starting for some BMS models that are not sending BLE data correctly https://github.com/Louisvdw/dbus-serialbattery/issues/819 by @mr-manuel
 * Changed: JKBMS BLE - Fixed temperature issue https://github.com/Louisvdw/dbus-serialbattery/issues/916 by @mr-manuel
+* Changed: JKBMS CAN - Fixed different BMS versions with https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/24 by @p0l0us
 * Changed: LLT/JBD BMS & BLE - If only one temperature is available use it as battery temp. Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/971 by @mr-manuel
 * Changed: Optimized reinstall-local.sh. Show installed version and restart GUI only on changes by @mr-manuel
 * Changed: Reinstallation of the driver now checks, if packages are already installed for Bluetooth and CAN by @mr-manuel
