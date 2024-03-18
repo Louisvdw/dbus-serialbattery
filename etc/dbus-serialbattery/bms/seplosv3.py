@@ -97,9 +97,15 @@ class Seplosv3(Battery):
                             sn = mbdev.read_string(
                                 registeraddress=0x1715, number_of_registers=15, functioncode=4
                             )
-                            logger.info(f"Serial nr: {sn}")
-
                             self.serialnumber = sn.rstrip("\x00")
+                            logger.info(f"Serial nr: {self.serialnumber}")
+
+                            sw_version = mbdev.read_string(
+                                registeraddress=0x1714, number_of_registers=1, functioncode=4
+                            )                            
+                            sw_version = sw_version.rstrip("\x00")
+                            self.version = sw_version[0] + "." + sw_version[1]
+                            logger.info(f"Firmware Version: {self.version}")
                             time.sleep(SLPTIME)
                             found = True
 
@@ -216,18 +222,9 @@ class Seplosv3(Battery):
             return False
         return True
 
+        # These fields most likely not expected to be set by a BMS implementation
         # self.production = None
-        # self.version = None
-
-        # self.control_voltage: float = None
-        # self.soc_reset_requested: bool = False
-        # self.soc_reset_last_reached: int = 0  # save state to preserve on restart
-        # self.soc_reset_battery_voltage: int = None
-        # self.max_battery_voltage: float = None
-        # self.min_battery_voltage: float = None
         # self.allow_max_voltage: bool = True  # save state to preserve on restart
-        # self.max_voltage_start_time: int = None  # save state to preserve on restart
-        # self.transition_start_time: int = None
         # self.charge_mode: str = None
         # self.charge_mode_debug: str = ""
         # self.charge_limitation: str = None
@@ -235,6 +232,9 @@ class Seplosv3(Battery):
         # self.linear_cvl_last_set: int = 0
         # self.linear_ccl_last_set: int = 0
         # self.linear_dcl_last_set: int = 0
+
+        # These fields to be checked f they need to be set by a BMS implementation
+        # self.control_voltage: float = None
         # self.control_discharge_current: int = None
         # self.control_charge_current: int = None
         # self.control_allow_charge: bool = None
@@ -268,8 +268,7 @@ class Seplosv3(Battery):
             self.protection.current_over = 2 if sfa[0x21] == 0 else 1 if sfa[0x20] == 0 else 0
             self.protection.current_under = 2 if sfa[0x24] == 0 else 1 if sfa[0x23] == 0 else 0
             # self.protection.cell_imbalance = 2 if  sfa[0x4c] == 0 else 0   # Need to doiuble check logic as this is set unexpectedly
-            # substittute with cell voltage failure
-            self.protection.cell_imbalance = 2 if sfa[0x14] == 0 else 0
+            # set by pic 0x74 --> validated in seplos UI
             self.protection.internal_failure = (
                 2 if (sfa[0x48] + sfa[0x49] + sfa[0x4A] + sfa[0x4B] + sfa[0x4D] + sfa[53]) < 5 else 0
             )
@@ -285,9 +284,6 @@ class Seplosv3(Battery):
 
     def update_system_control(self, pic, sca) -> bool:
         try:
-            # TODO: set based on the pic and sca
-            #            self.control_allow_charge = True
-            #            self.control_allow_discharge = True
             self.discharge_fet = True if pic[0x78] == 1 else False
             self.charge_fet = True if pic[0x79] == 1 else False
             self.balance_fet = True if pic[0x80] == 1 else False
@@ -329,8 +325,9 @@ class Seplosv3(Battery):
         else:
             results.append(self.update_alarms(sfa))
 
-        logger.info(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber}: {results}")
         for result in results:
             if result is False:
+                logger.info(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber} failed: {results}")
                 return False
+        logger.info(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber}")
         return True
