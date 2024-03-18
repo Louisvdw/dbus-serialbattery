@@ -57,7 +57,7 @@ class Jkbms_Can(Battery):
         BATT_STAT: [0x02F4, 0x02F5],
         CELL_VOLT: [0x04F4, 0x04F5],
         CELL_TEMP: [0x05F4, 0x05F5],
-        ALM_INFO: [0x07F4, 0x07F5]
+        ALM_INFO: [0x07F4, 0x07F5],
     }
 
     def test_connection(self):
