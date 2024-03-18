@@ -54,10 +54,10 @@ class Jkbms_Can(Battery):
     # B2A... Silver is using 0x0XF5
     # See https://github.com/Louisvdw/dbus-serialbattery/issues/950
     CAN_FRAMES = {
-        BATT_STAT: [0x02F4,0x02F5],
-        CELL_VOLT: [0x04F4,0x04F5],
-        CELL_TEMP: [0x05F4,0x05F5],
-        ALM_INFO: [0x07F4,0x07F5]
+        BATT_STAT: [0x02F4, 0x02F5],
+        CELL_VOLT: [0x04F4, 0x04F5],
+        CELL_TEMP: [0x05F4, 0x05F5],
+        ALM_INFO: [0x07F4, 0x07F5]
     }
 
     def test_connection(self):
