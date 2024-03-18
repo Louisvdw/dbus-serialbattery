@@ -36,7 +36,8 @@ class Daly(Battery):
         ]
 
     # command bytes [StartFlag=A5][Address=40][Command=94][DataLength=8][8x fill bytes][checksum]
-    # use 0xAA (or 0x55) as fill bytes to allow the daly's "weak" uart to sync better - this reduces read errors dramatically
+    # use 0xAA (or 0x55) as fill bytes to allow the daly's "weak" uart to sync better
+    # this reduces read errors dramatically
     command_base = b"\xA5\x40\x94\x08\xAA\xAA\xAA\xAA\xAA\xAA\xAA\xAA\x00"
     command_set_soc = b"\x21"
     command_rated_params = b"\x50"
@@ -759,7 +760,7 @@ class Daly(Battery):
         reply += ser.read(12)
         try:
             _, id, cmd, length = unpack_from(">BBBB", reply)
-        except exception:
+        except Exception:
             return False
 
         # logger.info(f"reply: {utils.bytearray_to_string(reply)}")  # debug
