@@ -25,6 +25,18 @@ class Seplosv3(Battery):
             self.slaveaddress: int = 0
             self.slaveaddresses = list(range(16))
 
+    @staticmethod
+    def to_signed_int(value):
+        """
+        Converts an unsigned value to a signed value.
+        Args:
+            value (int): The unsigned value to be converted.
+        Returns:
+            int: The signed value.
+        """
+        packval = struct.pack("<H", value)
+        return struct.unpack("<h", packval)[0]
+
     def get_modbus(self, slaveaddress=0) -> minimalmodbus.Instrument:
         if self.mbdev is not None and slaveaddress == self.slaveaddress:
             return self.mbdev
@@ -123,19 +135,12 @@ class Seplosv3(Battery):
         return self.serialnumber
 
     def get_settings(self):
-        # After successful  connection get_settings will be call to set up the battery.
-        # Set the current limits, populate cell count, etc
-        # Return True if success, False for failure
-
-        # Values:  battery_type, version, hardware_version, min_battery_voltage, max_battery_voltage,
-        # MAX_BATTERY_CHARGE_CURRENT, MAX_BATTERY_DISCHARGE_CURRENT, cell_count, capacity
-
-        self.battery_type = "LiFePO4"
         self.charger_connected = True
         self.load_connected = True
         return self.refresh_data()
 
     def read_device_date(self):
+        spa, pia, pib, sca, pic, sfa = None, None, None, None, None, None
         try:
             mb = self.get_modbus(self.slaveaddress)
             spa = mb.read_registers(
@@ -171,21 +176,7 @@ class Seplosv3(Battery):
                 sfa = [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0] # noqa E501, E231
                 pic = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # noqa E501, E231
                 # fmt: on
-            else:
-                return None, None, None, None, None, None
         return spa, pia, pib, sca, pic, sfa
-
-    @staticmethod
-    def to_signed_int(value):
-        """
-        Converts an unsigned value to a signed value.
-        Args:
-            value (int): The unsigned value to be converted.
-        Returns:
-            int: The signed value.
-        """
-        packval = struct.pack("<H", value)
-        return struct.unpack("<h", packval)[0]
 
     def update_cells(self, pib) -> bool:
         try:
@@ -334,5 +325,5 @@ class Seplosv3(Battery):
                     f"Updating Seplos v3 {self.hardware_version} {self.serialnumber} failed: {results}"
                 )
                 return False
-        logger.info(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber}")
+        logger.debug(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber}")
         return True
