@@ -56,7 +56,9 @@ class Seplosv3(Battery):
         # This will cycle trhough all the slave addresses to find the BMS.
         for self.slaveaddress in self.slaveaddresses:
             mbdev = self.get_modbus(self.slaveaddress)
-            logger.info(f"Start testing for Seplos v3 on slave address {self.slaveaddress}")
+            logger.info(
+                f"Start testing for Seplos v3 on slave address {self.slaveaddress}"
+            )
 
             for n in range(1, RETRYCNT):
                 try:
@@ -68,18 +70,26 @@ class Seplosv3(Battery):
                             f"Identified Seplos v3 by '{factory}' on slave address {self.slaveaddress}"
                         )
                         model = mbdev.read_string(
-                            registeraddress=0x170A, number_of_registers=10, functioncode=4
+                            registeraddress=0x170A,
+                            number_of_registers=10,
+                            functioncode=4,
                         )
                         logger.info(f"Model: {model}")
                         self.model = model.rstrip("\x00")
                         self.hardware_version = model.rstrip("\x00")
 
-                        sn = mbdev.read_string(registeraddress=0x1715, number_of_registers=15, functioncode=4)
+                        sn = mbdev.read_string(
+                            registeraddress=0x1715,
+                            number_of_registers=15,
+                            functioncode=4,
+                        )
                         self.serialnumber = sn.rstrip("\x00")
                         logger.info(f"Serial nr: {self.serialnumber}")
 
                         sw_version = mbdev.read_string(
-                            registeraddress=0x1714, number_of_registers=1, functioncode=4
+                            registeraddress=0x1714,
+                            number_of_registers=1,
+                            functioncode=4,
                         )
                         sw_version = sw_version.rstrip("\x00")
                         self.version = sw_version[0] + "." + sw_version[1]
@@ -128,10 +138,18 @@ class Seplosv3(Battery):
     def read_device_date(self):
         try:
             mb = self.get_modbus(self.slaveaddress)
-            spa = mb.read_registers(registeraddress=0x1300, number_of_registers=0x6A, functioncode=4)
-            pia = mb.read_registers(registeraddress=0x1000, number_of_registers=0x12, functioncode=4)
-            pib = mb.read_registers(registeraddress=0x1100, number_of_registers=0x1A, functioncode=4)
-            sca = mb.read_registers(registeraddress=0x1500, number_of_registers=0x04, functioncode=4)
+            spa = mb.read_registers(
+                registeraddress=0x1300, number_of_registers=0x6A, functioncode=4
+            )
+            pia = mb.read_registers(
+                registeraddress=0x1000, number_of_registers=0x12, functioncode=4
+            )
+            pib = mb.read_registers(
+                registeraddress=0x1100, number_of_registers=0x1A, functioncode=4
+            )
+            sca = mb.read_registers(
+                registeraddress=0x1500, number_of_registers=0x04, functioncode=4
+            )
             pic = mb.read_bits(0x1200, number_of_bits=0x90, functioncode=1)
             sfa = mb.read_bits(0x1400, number_of_bits=0x50, functioncode=1)
             logger.debug(f"spa: {spa}")
@@ -241,23 +259,46 @@ class Seplosv3(Battery):
         try:
             self.protection = Protection()
             #   ALARM = 2 , WARNING = 1 , OK = 0
-            self.protection.voltage_high = 2 if sfa[0x05] == 0 else 1 if sfa[0x04] == 0 else 0
-            self.protection.voltage_low = 2 if sfa[0x06] == 0 else 1 if sfa[0x06] == 0 else 0
+            self.protection.voltage_high = (
+                2 if sfa[0x05] == 0 else 1 if sfa[0x04] == 0 else 0
+            )
+            self.protection.voltage_low = (
+                2 if sfa[0x06] == 0 else 1 if sfa[0x06] == 0 else 0
+            )
             # self.protection.voltage_cell_high =  1 if  sfa[0x00] == 0 else 0 + 1 if  sfa[0x01] == 0 else 0
-            self.protection.voltage_cell_low = 2 if sfa[0x03] == 0 else 1 if sfa[0x02] == 0 else 0
+            self.protection.voltage_cell_low = (
+                2 if sfa[0x03] == 0 else 1 if sfa[0x02] == 0 else 0
+            )
             self.protection.soc_low = 2 if sfa[0x30] == 0 else 0
-            self.protection.current_over = 2 if sfa[0x21] == 0 else 1 if sfa[0x20] == 0 else 0
-            self.protection.current_under = 2 if sfa[0x24] == 0 else 1 if sfa[0x23] == 0 else 0
+            self.protection.current_over = (
+                2 if sfa[0x21] == 0 else 1 if sfa[0x20] == 0 else 0
+            )
+            self.protection.current_under = (
+                2 if sfa[0x24] == 0 else 1 if sfa[0x23] == 0 else 0
+            )
             # self.protection.cell_imbalance = 2 if  sfa[0x4c] == 0 else 0   # Need to doiuble check logic as this is set unexpectedly
             # set by pic 0x74 --> validated in seplos UI
             self.protection.internal_failure = (
-                2 if (sfa[0x48] + sfa[0x49] + sfa[0x4A] + sfa[0x4B] + sfa[0x4D] + sfa[53]) < 5 else 0
+                2
+                if (sfa[0x48] + sfa[0x49] + sfa[0x4A] + sfa[0x4B] + sfa[0x4D] + sfa[53])
+                < 5
+                else 0
             )
-            self.protection.temp_high_charge = 2 if sfa[0x09] == 0 else 1 if sfa[0x08] == 0 else 0
-            self.protection.temp_low_charge = 2 if sfa[0x0B] == 0 else 1 if sfa[0x0A] == 0 else 0
-            self.protection.temp_high_discharge = 2 if sfa[0x0D] == 0 else 1 if sfa[0x0C] == 0 else 0
-            self.protection.temp_low_discharge = 2 if sfa[0x0F] == 0 else 1 if sfa[0x0E] == 0 else 0
-            self.protection.temp_high_internal = 2 if sfa[0x15] == 0 else 1 if sfa[0x14] == 0 else 0
+            self.protection.temp_high_charge = (
+                2 if sfa[0x09] == 0 else 1 if sfa[0x08] == 0 else 0
+            )
+            self.protection.temp_low_charge = (
+                2 if sfa[0x0B] == 0 else 1 if sfa[0x0A] == 0 else 0
+            )
+            self.protection.temp_high_discharge = (
+                2 if sfa[0x0D] == 0 else 1 if sfa[0x0C] == 0 else 0
+            )
+            self.protection.temp_low_discharge = (
+                2 if sfa[0x0F] == 0 else 1 if sfa[0x0E] == 0 else 0
+            )
+            self.protection.temp_high_internal = (
+                2 if sfa[0x15] == 0 else 1 if sfa[0x14] == 0 else 0
+            )
         except Exception as e:
             logger.info(f"Error updating alarm info {e}")
             return False
