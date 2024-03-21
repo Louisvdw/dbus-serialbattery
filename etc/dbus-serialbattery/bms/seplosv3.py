@@ -1,27 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import math
-import re
 import struct
-import threading
-import time
-from typing import Dict
+from typing import Dict, Union
 
 import minimalmodbus
 import serial
-import utils
 from battery import Battery, Cell, Protection
 from utils import logger
 
-# the Heltec BMS is not always as responsive as it should, so let's try it up to (RETRYCNT - 1) times to talk to it
-RETRYCNT = 10
-
-# the wait time after a communication - normally this should be as defined by modbus RTU and handled in minimalmodbus,
-# but yeah, it seems we need it for the Heltec BMS
-SLPTIME = 0.03
-
-mbdevs: Dict[int, minimalmodbus.Instrument] = {}
-locks: Dict[int, any] = {}
+RETRYCNT = 3
 
 
 class Seplosv3(Battery):
@@ -29,15 +17,27 @@ class Seplosv3(Battery):
         super(Seplosv3, self).__init__(port, baud, address)
         self.type = "Seplosv3_BMS_modbus"
         self.serialnumber = ""
-        self.mbdev: Union(minimalmodbus.Instrument, None) = None
+        self.mbdev: Union[minimalmodbus.Instrument, None] = None
+        if address is not None and len(address) > 0:
+            self.slaveaddress: int = int(address)
+            self.slaveaddresses: list[int] = [self.slaveaddress]
+        else:
+            self.slaveaddress: int = 0
+            self.slaveaddresses = list(range(16))
 
-    def get_modbus(self) -> minimalmodbus.Instrument:
-        if self.mbdev is not None:
+    def get_modbus(self, slaveaddress=0) -> minimalmodbus.Instrument:
+        if self.mbdev is not None and slaveaddress == self.slaveaddress:
             return self.mbdev
+
+        # hack to allow communication to the Seplos BMS using minimodbus which uses slaveaddress 0 as broadcast
+        if slaveaddress == 0:
+            minimalmodbus._SLAVEADDRESS_BROADCAST = 0xF0
+        else:
+            minimalmodbus._SLAVEADDRESS_BROADCAST = 0
 
         mbdev = minimalmodbus.Instrument(
             self.port,
-            slaveaddress=0,
+            slaveaddress=slaveaddress,
             mode="rtu",
             close_port_after_each_call=True,
             debug=False,
@@ -45,91 +45,63 @@ class Seplosv3(Battery):
         mbdev.serial.parity = minimalmodbus.serial.PARITY_NONE
         mbdev.serial.stopbits = serial.STOPBITS_ONE
         mbdev.serial.baudrate = 19200
-        # yes, 400ms is long but the BMS is sometimes really slow in responding, so this is a good compromise
-        mbdev.serial.timeout = 0.6
+        mbdev.serial.timeout = 0.4
         return mbdev
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
-        for self.address in [0]:  # utils.SEPLOSV3_MODBUS_ADDR:
-            logger.debug("Testing on slave address " + str(self.address))
-            found = False
-            if self.address not in locks:
-                locks[self.address] = threading.Lock()
 
-            # TODO: We need to lock not only based on the address, but based on the port as soon as multiple BMSs
-            # are supported on the same serial interface. Then locking on the port will be enough.
+        # This will cycle trhough all the slave addresses to find the BMS.
+        for self.slaveaddress in self.slaveaddresses:
+            mbdev = self.get_modbus(self.slaveaddress)
+            logger.info(f"Start testing for Seplos v3 on slave address {self.slaveaddress}")
 
-            with locks[self.address]:
-                mbdev = minimalmodbus.Instrument(
-                    self.port,
-                    slaveaddress=self.address,
-                    mode="rtu",
-                    close_port_after_each_call=True,
-                    debug=False,
-                )
-                mbdev.serial.parity = minimalmodbus.serial.PARITY_NONE
-                mbdev.serial.stopbits = serial.STOPBITS_ONE
-                mbdev.serial.baudrate = 19200
-                # yes, 400ms is long but the BMS is sometimes really slow in responding, so this is a good compromise
-                mbdev.serial.timeout = 0.8
-                mbdevs[self.address] = mbdev
-
-                logger.info("Start testing for Seplos v3")
-
-                for n in range(1, RETRYCNT):
-                    try:
-                        factory = mbdev.read_string(
-                            registeraddress=0x1700, number_of_registers=10, functioncode=4
+            for n in range(1, RETRYCNT):
+                try:
+                    factory = mbdev.read_string(
+                        registeraddress=0x1700, number_of_registers=10, functioncode=4
+                    )
+                    if "XZH-ElecTech Co.,Ltd" in factory:
+                        logger.info(
+                            f"Identified Seplos v3 by '{factory}' on slave address {self.slaveaddress}"
                         )
-                        if "XZH-ElecTech Co.,Ltd" in factory:
-                            logger.info(f"Identified Seplos v3 by '{factory}'")
-
-                            model = mbdev.read_string(
-                                registeraddress=0x170A, number_of_registers=10, functioncode=4
-                            )
-                            logger.info(f"Model: {model}")
-                            self.model = model.rstrip("\x00")
-                            self.hardware_version = model.rstrip("\x00")
-
-                            sn = mbdev.read_string(
-                                registeraddress=0x1715, number_of_registers=15, functioncode=4
-                            )
-                            self.serialnumber = sn.rstrip("\x00")
-                            logger.info(f"Serial nr: {self.serialnumber}")
-
-                            sw_version = mbdev.read_string(
-                                registeraddress=0x1714, number_of_registers=1, functioncode=4
-                            )                            
-                            sw_version = sw_version.rstrip("\x00")
-                            self.version = sw_version[0] + "." + sw_version[1]
-                            logger.info(f"Firmware Version: {self.version}")
-                            time.sleep(SLPTIME)
-                            found = True
-
-                    except Exception as e:
-                        logger.info(f"Seplos v3 testing failed ({e})")
-                        logger.debug(
-                            f"Seplos v3 testing failed ({e}) {n}/{RETRYCNT} for {self.port}({str(self.address)})"
+                        model = mbdev.read_string(
+                            registeraddress=0x170A, number_of_registers=10, functioncode=4
                         )
-                        continue
-                    break
-                if found:
-                    self.type = f"{self.hardware_version}"
-                    break
+                        logger.info(f"Model: {model}")
+                        self.model = model.rstrip("\x00")
+                        self.hardware_version = model.rstrip("\x00")
+
+                        sn = mbdev.read_string(registeraddress=0x1715, number_of_registers=15, functioncode=4)
+                        self.serialnumber = sn.rstrip("\x00")
+                        logger.info(f"Serial nr: {self.serialnumber}")
+
+                        sw_version = mbdev.read_string(
+                            registeraddress=0x1714, number_of_registers=1, functioncode=4
+                        )
+                        sw_version = sw_version.rstrip("\x00")
+                        self.version = sw_version[0] + "." + sw_version[1]
+                        logger.info(f"Firmware Version: {self.version}")
+                        found = True
+                        self.mbdev = mbdev
+
+                except Exception as e:
+                    logger.debug(
+                        f"Seplos v3 testing failed ({e}) {n}/{RETRYCNT} for {self.port}({str(self.slaveaddress)})"
+                    )
+                    continue
+                break
+            if found:
+                self.type = f"{self.hardware_version}"
+                break
 
         # give the user a feedback that no BMS was found
         if not found:
-            logger.error(">>> ERROR: No reply - returning")
+            logger.error(">>> ERROR: No Seplos v3 found - returning")
 
-        return (
-            found
-            #      and self.read_status_data()
-            #       and self.get_settings()
-            #       and self.refresh_data()
-        )
+        return found
 
     def unique_identifier(self) -> str:
         """
@@ -155,7 +127,7 @@ class Seplosv3(Battery):
 
     def read_device_date(self):
         try:
-            mb = self.get_modbus()
+            mb = self.get_modbus(self.slaveaddress)
             spa = mb.read_registers(registeraddress=0x1300, number_of_registers=0x6A, functioncode=4)
             pia = mb.read_registers(registeraddress=0x1000, number_of_registers=0x12, functioncode=4)
             pib = mb.read_registers(registeraddress=0x1100, number_of_registers=0x1A, functioncode=4)
@@ -170,21 +142,30 @@ class Seplosv3(Battery):
             logger.debug(f"pic: {pic}")
         except Exception as e:
             logger.info(f"Error getting data {e}")
-            USE_MOCK = True
+            USE_MOCK = False
             if USE_MOCK:
+                # fmt: off
                 logger.warning(f"Using Mock data")
-                spa= [4, 16, 5400, 5600, 5400, 5760, 4800, 4640, 4800, 4320, 3400, 3500, 3400, 3650, 3100, 2900, 3100, 2700, 2000, 1000, 500, 203, 205, 210, 100, 300, 300, 65333, 65331, 65326, 100, 65186, 300, 65236, 106, 600, 5, 3000, 205, 10, 3500, 3400, 1500, 1000, 800, 200, 30, 3201, 3231, 3231, 3281, 2781, 2751, 2731, 2631, 3231, 3281, 3281, 3331, 2761, 2631, 2731, 2581, 3201, 3231, 3281, 3331, 2761, 2731, 2731, 2631, 3581, 3681, 3581, 3831, 2831, 2731, 3231, 2731, 10, 3400, 50, 30, 960, 150, 100, 70, 50, 30400, 30400, 3800, 48, 60, 240, 10, 7, 0, 13, 0, 500, 300, 5760, 180, 65356, 5, 8]
-                pia=[5236, 1301, 3800, 30400, 64, 125, 1000, 2, 3272, 2837, 3275, 3268, 2845, 2831, 0, 180, 180, 1000]
-                pib=  [0,0x0,0x0,0x0,0x1,0x0,0x0,0x1,0x1,0x1,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
-                sca= [59399, 776, 4141, 7710]
+                spa = [4, 16, 5400, 5600, 5400, 5760, 4800, 4640, 4800, 4320, 3400, 3500, 3400, 3650, 3100, 2900, 3100, 2700, 2000, 1000, 500, 203, 205, 210, 100, 300, 300, 65333, 65331, 65326, 100, 65186, 300, 65236, 106, 600, 5, 3000, 205, 10, 3500, 3400, 1500, 1000, 800, 200, 30, 3201, 3231, 3231, 3281, 2781, 2751, 2731, 2631, 3231, 3281, 3281, 3331, 2761, 2631, 2731, 2581, 3201, 3231, 3281, 3331, 2761, 2731, 2731, 2631, 3581, 3681, 3581, 3831, 2831, 2731, 3231, 2731, 10, 3400, 50, 30, 960, 150, 100, 70, 50, 30400, 30400, 3800, 48, 60, 240, 10, 7, 0, 13, 0, 500, 300, 5760, 180, 65356, 5, 8]
+                pia = [5236, 1301, 3800, 30400, 64, 125, 1000, 2, 3272, 2837, 3275, 3268, 2845, 2831, 0, 180, 180, 1000]
+                pib = [0,0x0,0x0,0x0,0x1,0x0,0x0,0x1,0x1,0x1,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0]
+                sca = [59399, 776, 4141, 7710]
                 sfa = [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0]
                 pic = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                # fmt: on
             else:
                 return None, None, None, None, None, None
         return spa, pia, pib, sca, pic, sfa
 
     @staticmethod
-    def signed(value):
+    def to_signed_int(value):
+        """
+        Converts an unsigned value to a signed value.
+        Args:
+            value (int): The unsigned value to be converted.
+        Returns:
+            int: The signed value.
+        """
         packval = struct.pack("<H", value)
         return struct.unpack("<h", packval)[0]
 
@@ -209,7 +190,7 @@ class Seplosv3(Battery):
     def update_pack_info(self, pia) -> bool:
         try:
             self.voltage = pia[0] / 100
-            self.current = self.signed(pia[1]) / 100
+            self.current = self.to_signed_int(pia[1]) / 100
             self.capacity_remain = pia[2] / 100  # check if this is from pia or from spa
             #        self.capacity = pia[2]/100    # check if this is from pia or from spa
             self.soc = pia[5] / 10
@@ -327,7 +308,9 @@ class Seplosv3(Battery):
 
         for result in results:
             if result is False:
-                logger.info(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber} failed: {results}")
+                logger.info(
+                    f"Updating Seplos v3 {self.hardware_version} {self.serialnumber} failed: {results}"
+                )
                 return False
         logger.info(f"Updating Seplos v3 {self.hardware_version} {self.serialnumber}")
         return True
