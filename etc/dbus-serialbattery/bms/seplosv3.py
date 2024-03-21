@@ -163,7 +163,7 @@ class Seplosv3(Battery):
             USE_MOCK = False
             if USE_MOCK:
                 # fmt: off
-                logger.warning(f"Using Mock data")
+                logger.warning("Using Mock data")
                 spa = [4, 16, 5400, 5600, 5400, 5760, 4800, 4640, 4800, 4320, 3400, 3500, 3400, 3650, 3100, 2900, 3100, 2700, 2000, 1000, 500, 203, 205, 210, 100, 300, 300, 65333, 65331, 65326, 100, 65186, 300, 65236, 106, 600, 5, 3000, 205, 10, 3500, 3400, 1500, 1000, 800, 200, 30, 3201, 3231, 3231, 3281, 2781, 2751, 2731, 2631, 3231, 3281, 3281, 3331, 2761, 2631, 2731, 2581, 3201, 3231, 3281, 3331, 2761, 2731, 2731, 2631, 3581, 3681, 3581, 3831, 2831, 2731, 3231, 2731, 10, 3400, 50, 30, 960, 150, 100, 70, 50, 30400, 30400, 3800, 48, 60, 240, 10, 7, 0, 13, 0, 500, 300, 5760, 180, 65356, 5, 8]  # noqa E501, E231
                 pia = [5236, 1301, 3800, 30400, 64, 125, 1000, 2, 3272, 2837, 3275, 3268, 2845, 2831, 0, 180, 180, 1000] # noqa E501, E231
                 pib = [0,0x0,0x0,0x0,0x1,0x0,0x0,0x1,0x1,0x1,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0] # noqa E501, E231
@@ -221,24 +221,6 @@ class Seplosv3(Battery):
             return False
         return True
 
-        # These fields most likely not expected to be set by a BMS implementation
-        # self.production = None
-        # self.allow_max_voltage: bool = True  # save state to preserve on restart
-        # self.charge_mode: str = None
-        # self.charge_mode_debug: str = ""
-        # self.charge_limitation: str = None
-        # self.discharge_limitation: str = None
-        # self.linear_cvl_last_set: int = 0
-        # self.linear_ccl_last_set: int = 0
-        # self.linear_dcl_last_set: int = 0
-
-        # These fields to be checked f they need to be set by a BMS implementation
-        # self.control_voltage: float = None
-        # self.control_discharge_current: int = None
-        # self.control_charge_current: int = None
-        # self.control_allow_charge: bool = None
-        # self.control_allow_discharge: bool = None
-
     def update_sysinfo(self, spa) -> bool:
         try:
             self.temp_sensors = spa[0x00]
@@ -247,9 +229,10 @@ class Seplosv3(Battery):
             # self.capacity_remain = spa[0x5A] / 100
             self.max_battery_voltage = spa[0x05] / 100
             self.min_battery_voltage = spa[0x11] / 100
-            self.control_voltage = spa[0x65] / 100
-            self.control_charge_current = spa[0x66]
-            self.control_discharge_current = spa[0x67]
+            # below does not seem required to be set by BMS
+            # self.control_voltage = spa[0x65] / 100
+            # self.control_charge_current = spa[0x66]
+            # self.control_discharge_current = spa[0x67]
         except Exception as e:
             logger.info(f"Error updating sys info {e}")
             return False
@@ -276,8 +259,6 @@ class Seplosv3(Battery):
             self.protection.current_under = (
                 2 if sfa[0x24] == 0 else 1 if sfa[0x23] == 0 else 0
             )
-            # self.protection.cell_imbalance = 2 if  sfa[0x4c] == 0 else 0   # Need to doiuble check logic as this is set unexpectedly
-            # set by pic 0x74 --> validated in seplos UI
             self.protection.internal_failure = (
                 2
                 if (sfa[0x48] + sfa[0x49] + sfa[0x4A] + sfa[0x4B] + sfa[0x4D] + sfa[53])
