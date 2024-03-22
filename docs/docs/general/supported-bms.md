@@ -43,6 +43,9 @@ Disabled by default as it requires additional manual steps to install.
 ### &bull; Seplos
 So far only tested on version `16E`.
 
+### &bull; Seplos v3
+Working on the Seplos v3 BMS which uses different (modbus) protocol than the earlier Seplos models.
+
 ### &bull; Smart BMS <img src="../img/bluetooth.svg" className="h-1em" />
 Bluetooth connection supported
 
