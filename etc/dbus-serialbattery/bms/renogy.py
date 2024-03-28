@@ -41,6 +41,9 @@ class Renogy(Battery):
     )
     # BMS warning and protection config
 
+    def unique_identifier(self) -> str:
+        return self.serial_number
+
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
@@ -124,6 +127,9 @@ class Renogy(Battery):
 
         capacity = self.read_serial_data_renogy(self.command_capacity)
         self.capacity = unpack(">L", capacity)[0] / 1000.0
+
+        serial_number = self.read_serial_data_renogy(self.command_serial_number)
+        self.serial_number = unpack("16s", serial_number)[0].decode("utf-8")
 
         return True
 
