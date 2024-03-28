@@ -32,6 +32,7 @@ from bms.lifepower import Lifepower
 from bms.lltjbd import LltJbd
 from bms.renogy import Renogy
 from bms.seplos import Seplos
+from bms.seplosv3 import Seplosv3
 
 # enabled only if explicitly set in config under "BMS_TYPE"
 if "ANT" in utils.BMS_TYPE:
@@ -53,6 +54,7 @@ supported_bms_types = [
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
     {"bms": Renogy, "baud": 9600, "address": b"\xF7"},
     {"bms": Seplos, "baud": 19200},
+    {"bms": Seplosv3, "baud": 19200},
 ]
 
 # enabled only if explicitly set in config under "BMS_TYPE"
