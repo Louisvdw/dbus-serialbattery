@@ -30,6 +30,9 @@ Communication to the Heltec SmartBMS (which is a rebranded YYBMS) via Modbus/RS4
 ### &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS <img src="../img/bluetooth.svg" className="h-1em" />
 Bluetooth connection supported
 
+### &bull; EG4-LL 12v 400ah
+  driver -> egll
+
 ### &bull; Life/Tian Power
 Including:
 
