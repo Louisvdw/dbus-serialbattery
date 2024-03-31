@@ -71,6 +71,7 @@
 * Changed: Fixed some other errors when restoring values from dbus settings by @mr-manuel
 * Changed: Fixed some SOC calculation issues by @mr-manuel
 * Changed: Fixed Time-to-SoC and Time-to-Go calculation by @mr-manuel
+* Changed: Set CCL/DCL to 0, if allow to charge/discharge is no, fixes https://github.com/Louisvdw/dbus-serialbattery/issues/1024 by @mr-manuel
 * Changed: Install script now shows repositories and version numbers by @mr-manuel
 * Changed: JKBMS BLE - Fixed driver gets unresponsive, if connection is lost https://github.com/Louisvdw/dbus-serialbattery/issues/720 with https://github.com/Louisvdw/dbus-serialbattery/pull/941 by @cupertinomiranda
 * Changed: JKBMS BLE - Fixed driver not starting for some BMS models that are not sending BLE data correctly https://github.com/Louisvdw/dbus-serialbattery/issues/819 by @mr-manuel

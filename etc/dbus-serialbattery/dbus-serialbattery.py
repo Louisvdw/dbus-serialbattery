@@ -128,7 +128,8 @@ def main():
                     file = exception_traceback.tb_frame.f_code.co_filename
                     line = exception_traceback.tb_lineno
                     logger.error(
-                        f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                        "Non blocking exception occurred: "
+                        + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
                     )
                     # Ignore any malfunction test_function()
                     pass

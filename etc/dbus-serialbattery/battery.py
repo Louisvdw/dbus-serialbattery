@@ -70,6 +70,22 @@ class Battery(ABC):
         self.max_battery_discharge_current: float = None
         self.has_settings: bool = False
 
+        # this values should only be initialized once,
+        # else the BMS turns off the inverter on disconnect
+        self.soc_calc_capacity_remain: float = None
+        self.soc_calc_capacity_remain_lasttime: float = None
+        self.soc_calc_reset_starttime: int = None
+        self.soc_calc: float = None  # save soc_calc to preserve on restart
+        self.soc: float = None
+        self.charge_fet: bool = None
+        self.discharge_fet: bool = None
+        self.balance_fet: bool = None
+        self.block_because_disconnect: bool = False
+        self.control_charge_current: int = None
+        self.control_discharge_current: int = None
+        self.control_allow_charge: bool = None
+        self.control_allow_discharge: bool = None
+
         # fetched from the BMS from a field where the user can input a custom string
         # only if available
         self.custom_field: str = None
@@ -92,15 +108,7 @@ class Battery(ABC):
         self.production = None
         self.protection = Protection()
         self.version = None
-        self.soc_calc_capacity_remain: float = None
-        self.soc_calc_capacity_remain_lasttime: float = None
-        self.soc_calc_reset_starttime: int = None
-        self.soc_calc: float = None  # save soc_calc to preserve on restart
-        self.soc: float = None
         self.time_to_soc_update: int = 0
-        self.charge_fet: bool = None
-        self.discharge_fet: bool = None
-        self.balance_fet: bool = None
         self.temp_sensors: int = None
         self.temp1: float = None
         self.temp2: float = None
@@ -124,10 +132,6 @@ class Battery(ABC):
         self.linear_cvl_last_set: int = 0
         self.linear_ccl_last_set: int = 0
         self.linear_dcl_last_set: int = 0
-        self.control_discharge_current: int = None
-        self.control_charge_current: int = None
-        self.control_allow_charge: bool = None
-        self.control_allow_discharge: bool = None
         # list of available callbacks, in order to display the buttons in the GUI
         self.available_callbacks: List[str] = []
 
@@ -789,11 +793,18 @@ class Battery(ABC):
                 else:
                     charge_limits.update({tmp: "SoC"})
 
+        # set CCL to 0, if BMS does not allow to charge
+        if self.charge_fet is False and self.block_because_disconnect:
+            if 0 in charge_limits:
+                charge_limits.update({0: charge_limits[0] + ", BMS"})
+            else:
+                charge_limits.update({0: "BMS"})
+
         # do not set CCL immediately, but only
         # - after LINEAR_RECALCULATION_EVERY passed
         # - if CCL changes to 0
         # - if CCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
-        ccl = round(min(charge_limits), 3)  # gets changed after finished testing
+        ccl = round(min(charge_limits), 3)
         diff = (
             abs(self.control_charge_current - ccl)
             if self.control_charge_current is not None
@@ -815,6 +826,7 @@ class Battery(ABC):
 
             self.charge_limitation = charge_limits[min(charge_limits)]
 
+        # set allow to charge to no, if CCL is 0
         if self.control_charge_current == 0:
             self.control_allow_charge = False
         else:
@@ -875,11 +887,18 @@ class Battery(ABC):
                 else:
                     discharge_limits.update({tmp: "SoC"})
 
+        # set DCL to 0, if BMS does not allow to discharge
+        if self.discharge_fet is False and self.block_because_disconnect:
+            if 0 in discharge_limits:
+                discharge_limits.update({0: discharge_limits[0] + ", BMS"})
+            else:
+                discharge_limits.update({0: "BMS"})
+
         # do not set DCL immediately, but only
         # - after LINEAR_RECALCULATION_EVERY passed
         # - if DCL changes to 0
         # - if DCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
-        dcl = round(min(discharge_limits), 3)  # gets changed after finished testing
+        dcl = round(min(discharge_limits), 3)
         diff = (
             abs(self.control_discharge_current - dcl)
             if self.control_discharge_current is not None
@@ -901,6 +920,7 @@ class Battery(ABC):
 
             self.discharge_limitation = discharge_limits[min(discharge_limits)]
 
+        # set allow to discharge to no, if DCL is 0
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False
         else:
@@ -1382,6 +1402,27 @@ class Battery(ABC):
             return self.temp_mos
         else:
             return None
+
+    def get_allow_to_charge(self) -> bool:
+        return (
+            True
+            if self.charge_fet
+            and self.control_allow_charge
+            and self.block_because_disconnect is False
+            else False
+        )
+
+    def get_allow_to_discharge(self) -> bool:
+        return (
+            True
+            if self.discharge_fet
+            and self.control_allow_discharge
+            and self.block_because_disconnect is False
+            else False
+        )
+
+    def get_allow_to_balance(self) -> bool:
+        return True if self.balance_fet else False
 
     def validate_data(self) -> bool:
         """
