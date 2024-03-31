@@ -15,7 +15,9 @@ body:
 
         * Please carefully read all the instructions below including the descriptions! Very often we have to request the data again, because it was not provided in the first place.
 
-        * Please try the `nightly` build from the `dev` first, if you are not already using it. It's very likely that the bug is already fixed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+        * Please try the `nightly` build first, if you are not already using it. It's very likely that the bug is already fixed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+
+        * Please read the complete [changelog](https://github.com/Louisvdw/dbus-serialbattery/blob/master/CHANGELOG.md).
 
   - type: textarea
     id: description
