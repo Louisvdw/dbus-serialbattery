@@ -794,7 +794,7 @@ class Battery(ABC):
                     charge_limits.update({tmp: "SoC"})
 
         # set CCL to 0, if BMS does not allow to charge
-        if self.charge_fet is False and self.block_because_disconnect:
+        if self.charge_fet is False or self.block_because_disconnect:
             if 0 in charge_limits:
                 charge_limits.update({0: charge_limits[0] + ", BMS"})
             else:
@@ -888,7 +888,7 @@ class Battery(ABC):
                     discharge_limits.update({tmp: "SoC"})
 
         # set DCL to 0, if BMS does not allow to discharge
-        if self.discharge_fet is False and self.block_because_disconnect:
+        if self.discharge_fet is False or self.block_because_disconnect:
             if 0 in discharge_limits:
                 discharge_limits.update({0: discharge_limits[0] + ", BMS"})
             else:

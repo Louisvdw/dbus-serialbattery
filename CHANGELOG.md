@@ -54,7 +54,8 @@
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
 
-## v1.2.x
+
+## v1.2.20240401
 
 * Added: Check if the device instance is already used by @mr-manuel
 * Added: Check if there is enough space on system and data partitions before installation by @mr-manuel
