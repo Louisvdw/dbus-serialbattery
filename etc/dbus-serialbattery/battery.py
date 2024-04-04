@@ -623,6 +623,11 @@ class Battery(ABC):
                 self.charge_mode_debug += (
                     f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
                 )
+                self.charge_mode_debug += (
+                    f"\ncharge_fet: {self.charge_fet} • control_allow_charge: {self.control_allow_charge}"
+                    + f"\ndischarge_fet: {self.discharge_fet} • control_allow_discharge: {self.control_allow_discharge}"
+                    + f"\nblock_because_disconnect: {self.block_because_disconnect}"
+                )
                 soc_reset_days_ago = round(
                     (current_time - self.soc_reset_last_reached) / 60 / 60 / 24, 2
                 )
