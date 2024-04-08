@@ -13,7 +13,9 @@ body:
 
         ## 🚨 IMPORTANT 🚨
 
-        * Please try the `nightly` build from the `dev` first, if you are not already using it. Maybe the feature was already developed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+        * Please try the `nightly` build first, if you are not already using it. Maybe the feature was already developed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+
+        * Please read the complete [changelog](https://github.com/Louisvdw/dbus-serialbattery/blob/master/CHANGELOG.md).
 
   - type: textarea
     id: idea

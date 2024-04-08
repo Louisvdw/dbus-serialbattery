@@ -377,7 +377,7 @@ class LltJbd(Battery):
             return False
 
         charge_disabled = 0 if self.charge_fet else 1
-        if self.trigger_force_disable_charge is not None and self.control_allow_charge:
+        if self.trigger_force_disable_charge is not None:
             charge_disabled = 1 if self.trigger_force_disable_charge else 0
             logger.info(
                 f"write force disable charging: {'true' if self.trigger_force_disable_charge else 'false'}"
@@ -385,15 +385,25 @@ class LltJbd(Battery):
         self.trigger_force_disable_charge = None
 
         discharge_disabled = 0 if self.discharge_fet else 1
-        if (
-            self.trigger_force_disable_discharge is not None
-            and self.control_allow_discharge
-        ):
+        if self.trigger_force_disable_discharge is not None:
             discharge_disabled = 1 if self.trigger_force_disable_discharge else 0
             logger.info(
                 f"write force disable discharging: {'true' if self.trigger_force_disable_discharge else 'false'}"
             )
         self.trigger_force_disable_discharge = None
+
+        logger.debug(
+            f"trigger_force_disable_charge: {self.trigger_force_disable_charge} - "
+            + f"trigger_force_disable_discharge: {self.trigger_force_disable_discharge}"
+        )
+        logger.debug(
+            f"CHARGE: charge_disabled: {charge_disabled} - "
+            + f"charge_fet: {self.charge_fet}"
+        )
+        logger.debug(
+            f"DISCHARGE: discharge_disabled: {discharge_disabled} - "
+            + f"discharge_fet: {self.discharge_fet}"
+        )
 
         mosdata = pack(">BB", 0, charge_disabled | (discharge_disabled << 1))
 

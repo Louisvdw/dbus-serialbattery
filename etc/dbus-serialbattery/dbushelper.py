@@ -39,7 +39,6 @@ class DbusHelper:
         self.instance = 1
         self.settings = None
         self.error = {"count": 0, "timestamp_first": None, "timestamp_last": None}
-        self.block_because_disconnect = False
         self.cell_voltages_good = False
         self._dbusname = (
             "com.victronenergy.battery."
@@ -228,15 +227,20 @@ class DbusHelper:
                         # set found_bms to true
                         found_bms = True
 
-                        # get the instance from the object name
-                        device_instance = int(
-                            value["ClassAndVrmInstance"][
-                                value["ClassAndVrmInstance"].rfind(":") + 1 :
-                            ]
-                        )
-                        logger.info(
-                            f"Found existing battery with DeviceInstance = {device_instance}"
-                        )
+                        # check if the battery has ClassAndVrmInstance set
+                        if (
+                            "ClassAndVrmInstance" in value
+                            and value["ClassAndVrmInstance"] != ""
+                        ):
+                            # get the instance from the object name
+                            device_instance = int(
+                                value["ClassAndVrmInstance"][
+                                    value["ClassAndVrmInstance"].rfind(":") + 1 :
+                                ]
+                            )
+                            logger.info(
+                                f"Found existing battery with DeviceInstance = {device_instance}"
+                            )
 
                         # check if the battery has AllowMaxVoltage set
                         if (
@@ -480,7 +484,9 @@ class DbusHelper:
 
         # Create the mandatory objects
         self._dbusservice.add_path("/DeviceInstance", self.instance)
-        self._dbusservice.add_path("/ProductId", 0x0)
+        self._dbusservice.add_path(
+            "/ProductId", 0xBA77
+        )  # set to "BATT", little gimmick
         self._dbusservice.add_path("/ProductName", self.battery.product_name())
         self._dbusservice.add_path("/FirmwareVersion", str(utils.DRIVER_VERSION))
         self._dbusservice.add_path("/HardwareVersion", self.battery.hardware_version)
@@ -759,7 +765,7 @@ class DbusHelper:
 
                 # unblock charge/discharge, if it was blocked when battery went offline
                 if utils.BLOCK_ON_DISCONNECT:
-                    self.block_because_disconnect = False
+                    self.battery.block_because_disconnect = False
 
             else:
                 # update error variables
@@ -789,7 +795,7 @@ class DbusHelper:
 
                     # block charge/discharge
                     if utils.BLOCK_ON_DISCONNECT:
-                        self.block_because_disconnect = True
+                        self.battery.block_because_disconnect = True
 
                 # if the battery did not update in 60 second, it's assumed to be completely failed
                 if time_since_first_error >= 60 and (
@@ -860,34 +866,19 @@ class DbusHelper:
         self._dbusservice["/History/ChargeCycles"] = self.battery.cycles
         self._dbusservice["/History/TotalAhDrawn"] = self.battery.total_ah_drawn
         self._dbusservice["/Io/AllowToCharge"] = (
-            1
-            if self.battery.charge_fet
-            and self.battery.control_allow_charge
-            and self.block_because_disconnect is False
-            else 0
+            1 if self.battery.get_allow_to_charge() else 0
         )
         self._dbusservice["/Io/AllowToDischarge"] = (
-            1
-            if self.battery.discharge_fet
-            and self.battery.control_allow_discharge
-            and self.block_because_disconnect is False
-            else 0
+            1 if self.battery.get_allow_to_discharge() else 0
         )
-        self._dbusservice["/Io/AllowToBalance"] = 1 if self.battery.balance_fet else 0
+        self._dbusservice["/Io/AllowToBalance"] = (
+            1 if self.battery.get_allow_to_balance() else 0
+        )
         self._dbusservice["/System/NrOfModulesBlockingCharge"] = (
-            0
-            if (
-                self.battery.charge_fet is None
-                or (self.battery.charge_fet and self.battery.control_allow_charge)
-            )
-            and self.block_because_disconnect is False
-            else 1
+            0 if self.battery.get_allow_to_charge() else 1
         )
         self._dbusservice["/System/NrOfModulesBlockingDischarge"] = (
-            0
-            if (self.battery.discharge_fet is None or self.battery.discharge_fet)
-            and self.block_because_disconnect is False
-            else 1
+            0 if self.battery.get_allow_to_discharge() else 1
         )
         self._dbusservice["/System/NrOfModulesOnline"] = 1 if self.battery.online else 0
         self._dbusservice["/System/NrOfModulesOffline"] = (
@@ -926,7 +917,7 @@ class DbusHelper:
             self.battery.control_discharge_current
         )
 
-        # Voltage and charge control info
+        # Voltage and charge control info (custom dbus paths)
         self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
         self._dbusservice["/Info/ChargeModeDebug"] = self.battery.charge_mode_debug
         self._dbusservice["/Info/ChargeLimitation"] = self.battery.charge_limitation
@@ -985,7 +976,7 @@ class DbusHelper:
             self.battery.protection.temp_low_discharge
         )
         self._dbusservice["/Alarms/BmsCable"] = (
-            2 if self.block_because_disconnect else 0
+            2 if self.battery.block_because_disconnect else 0
         )
         self._dbusservice["/Alarms/HighInternalTemperature"] = (
             self.battery.protection.temp_high_internal
@@ -1019,6 +1010,13 @@ class DbusHelper:
                     3,
                 )
             except Exception:
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                file = exception_traceback.tb_frame.f_code.co_filename
+                line = exception_traceback.tb_lineno
+                logger.error(
+                    "Non blocking exception occurred: "
+                    + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                )
                 pass
 
         # Update TimeToGo and/or TimeToSoC
@@ -1091,7 +1089,8 @@ class DbusHelper:
             file = exception_traceback.tb_frame.f_code.co_filename
             line = exception_traceback.tb_lineno
             logger.error(
-                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                "Non blocking exception occurred: "
+                + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
             pass
 
@@ -1148,6 +1147,10 @@ class DbusHelper:
     def setSetting(
         self, bus, service: str, object_path: str, setting_name: str, value
     ) -> bool:
+        # check if value is None
+        if value is None:
+            return False
+
         obj = bus.get_object(service, object_path + "/" + setting_name)
         # iface = dbus.Interface(obj, "org.freedesktop.DBus.Introspectable")
         # xml_string = iface.Introspect()

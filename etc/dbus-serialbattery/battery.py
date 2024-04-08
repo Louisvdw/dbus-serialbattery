@@ -7,6 +7,7 @@ import logging
 import math
 from time import time
 from abc import ABC, abstractmethod
+import sys
 
 
 class Protection(object):
@@ -69,6 +70,22 @@ class Battery(ABC):
         self.max_battery_discharge_current: float = None
         self.has_settings: bool = False
 
+        # this values should only be initialized once,
+        # else the BMS turns off the inverter on disconnect
+        self.soc_calc_capacity_remain: float = None
+        self.soc_calc_capacity_remain_lasttime: float = None
+        self.soc_calc_reset_starttime: int = None
+        self.soc_calc: float = None  # save soc_calc to preserve on restart
+        self.soc: float = None
+        self.charge_fet: bool = None
+        self.discharge_fet: bool = None
+        self.balance_fet: bool = None
+        self.block_because_disconnect: bool = False
+        self.control_charge_current: int = None
+        self.control_discharge_current: int = None
+        self.control_allow_charge: bool = None
+        self.control_allow_discharge: bool = None
+
         # fetched from the BMS from a field where the user can input a custom string
         # only if available
         self.custom_field: str = None
@@ -83,6 +100,7 @@ class Battery(ABC):
         self.current: float = None
         self.current_avg: float = None
         self.current_avg_lst: list = []
+        self.current_corrected: float = None
         self.capacity_remain: float = None
         self.capacity: float = None
         self.cycles: float = None
@@ -90,15 +108,7 @@ class Battery(ABC):
         self.production = None
         self.protection = Protection()
         self.version = None
-        self.soc_calc_capacity_remain: float = None
-        self.soc_calc_capacity_remain_lasttime: float = None
-        self.soc_calc_reset_starttime: int = None
-        self.soc_calc: float = None  # save soc_calc to preserve on restart
-        self.soc: float = None
         self.time_to_soc_update: int = 0
-        self.charge_fet: bool = None
-        self.discharge_fet: bool = None
-        self.balance_fet: bool = None
         self.temp_sensors: int = None
         self.temp1: float = None
         self.temp2: float = None
@@ -122,10 +132,6 @@ class Battery(ABC):
         self.linear_cvl_last_set: int = 0
         self.linear_ccl_last_set: int = 0
         self.linear_dcl_last_set: int = 0
-        self.control_discharge_current: int = None
-        self.control_charge_current: int = None
-        self.control_allow_charge: bool = None
-        self.control_allow_discharge: bool = None
         # list of available callbacks, in order to display the buttons in the GUI
         self.available_callbacks: List[str] = []
 
@@ -241,7 +247,7 @@ class Battery(ABC):
     def soc_calculation(self) -> None:
         current_time = time()
         voltage_sum = 0
-        current_corrected = 0
+        self.current_corrected = 0
         current_min_cell_voltage = self.get_min_cell_voltage()
 
         # calculate battery voltage from cell voltages
@@ -252,15 +258,18 @@ class Battery(ABC):
 
         if self.soc_calc_capacity_remain is not None:
             # calculate real current
-            current_corrected = utils.calcLinearRelationship(
-                self.current,
-                utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
-                utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
+            self.current_corrected = round(
+                utils.calcLinearRelationship(
+                    self.current,
+                    utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
+                    utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
+                ),
+                2,
             )
 
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
-                + current_corrected
+                + self.current_corrected
                 * (current_time - self.soc_calc_capacity_remain_lasttime)
                 / 3600
             )
@@ -601,8 +610,9 @@ class Battery(ABC):
                 )
                 self.charge_mode_debug += f" • Reset voltage limit SoC: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%"
                 self.charge_mode_debug += (
-                    f"\nSoC: {self.soc}% • SoC_Calc {self.soc_calc}%"
+                    f"\nSoC: {self.soc}% • SoC_Calc: {self.soc_calc}%"
                 )
+                self.charge_mode_debug += f"\ncurrent: {self.current}A • current_corrected: {self.current_corrected}A"
                 self.charge_mode_debug += (
                     f"\nallow_max_voltage: {self.allow_max_voltage}"
                 )
@@ -612,6 +622,11 @@ class Battery(ABC):
                 self.charge_mode_debug += f"\ncurrent_time: {current_time}"
                 self.charge_mode_debug += (
                     f"\nlinear_cvl_last_set: {self.linear_cvl_last_set}"
+                )
+                self.charge_mode_debug += (
+                    f"\ncharge_fet: {self.charge_fet} • control_allow_charge: {self.control_allow_charge}"
+                    + f"\ndischarge_fet: {self.discharge_fet} • control_allow_discharge: {self.control_allow_discharge}"
+                    + f"\nblock_because_disconnect: {self.block_because_disconnect}"
                 )
                 soc_reset_days_ago = round(
                     (current_time - self.soc_reset_last_reached) / 60 / 60 / 24, 2
@@ -783,11 +798,18 @@ class Battery(ABC):
                 else:
                     charge_limits.update({tmp: "SoC"})
 
+        # set CCL to 0, if BMS does not allow to charge
+        if self.charge_fet is False or self.block_because_disconnect:
+            if 0 in charge_limits:
+                charge_limits.update({0: charge_limits[0] + ", BMS"})
+            else:
+                charge_limits.update({0: "BMS"})
+
         # do not set CCL immediately, but only
         # - after LINEAR_RECALCULATION_EVERY passed
         # - if CCL changes to 0
         # - if CCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
-        ccl = round(min(charge_limits), 3)  # gets changed after finished testing
+        ccl = round(min(charge_limits), 3)
         diff = (
             abs(self.control_charge_current - ccl)
             if self.control_charge_current is not None
@@ -809,6 +831,7 @@ class Battery(ABC):
 
             self.charge_limitation = charge_limits[min(charge_limits)]
 
+        # set allow to charge to no, if CCL is 0
         if self.control_charge_current == 0:
             self.control_allow_charge = False
         else:
@@ -869,11 +892,18 @@ class Battery(ABC):
                 else:
                     discharge_limits.update({tmp: "SoC"})
 
+        # set DCL to 0, if BMS does not allow to discharge
+        if self.discharge_fet is False or self.block_because_disconnect:
+            if 0 in discharge_limits:
+                discharge_limits.update({0: discharge_limits[0] + ", BMS"})
+            else:
+                discharge_limits.update({0: "BMS"})
+
         # do not set DCL immediately, but only
         # - after LINEAR_RECALCULATION_EVERY passed
         # - if DCL changes to 0
         # - if DCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
-        dcl = round(min(discharge_limits), 3)  # gets changed after finished testing
+        dcl = round(min(discharge_limits), 3)
         diff = (
             abs(self.control_discharge_current - dcl)
             if self.control_discharge_current is not None
@@ -895,6 +925,7 @@ class Battery(ABC):
 
             self.discharge_limitation = discharge_limits[min(discharge_limits)]
 
+        # set allow to discharge to no, if DCL is 0
         if self.control_discharge_current == 0:
             self.control_allow_discharge = False
         else:
@@ -918,6 +949,17 @@ class Battery(ABC):
             logger.warning(
                 "Error while executing calcMaxChargeCurrentReferringToCellVoltage(). Using default value instead."
             )
+            logger.warning(
+                f"CELL_VOLTAGES_WHILE_CHARGING: {utils.CELL_VOLTAGES_WHILE_CHARGING}"
+                + f" • MAX_CHARGE_CURRENT_CV: {utils.MAX_CHARGE_CURRENT_CV}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToCellVoltage(self) -> float:
@@ -937,6 +979,17 @@ class Battery(ABC):
         except Exception:
             logger.warning(
                 "Error while executing calcMaxDischargeCurrentReferringToCellVoltage(). Using default value instead."
+            )
+            logger.warning(
+                f"CELL_VOLTAGES_WHILE_DISCHARGING: {utils.CELL_VOLTAGES_WHILE_DISCHARGING}"
+                + f" • MAX_DISCHARGE_CURRENT_CV: {utils.MAX_DISCHARGE_CURRENT_CV}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
             return self.max_battery_charge_current
 
@@ -1004,6 +1057,17 @@ class Battery(ABC):
             logger.warning(
                 "Error while executing calcMaxChargeCurrentReferringToSoc(). Using default value instead."
             )
+            logger.warning(
+                f"SOC_WHILE_CHARGING: {utils.SOC_WHILE_CHARGING}"
+                + f" • MAX_CHARGE_CURRENT_SOC: {utils.MAX_CHARGE_CURRENT_SOC}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             return self.max_battery_charge_current
 
     def calcMaxDischargeCurrentReferringToSoc(self) -> float:
@@ -1023,6 +1087,17 @@ class Battery(ABC):
         except Exception:
             logger.warning(
                 "Error while executing calcMaxDischargeCurrentReferringToSoc(). Using default value instead."
+            )
+            logger.warning(
+                f"SOC_WHILE_DISCHARGING: {utils.SOC_WHILE_DISCHARGING}"
+                + f" • MAX_DISCHARGE_CURRENT_SOC: {utils.MAX_DISCHARGE_CURRENT_SOC}"
+            )
+
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
             return self.max_battery_discharge_current
 
@@ -1332,6 +1407,27 @@ class Battery(ABC):
             return self.temp_mos
         else:
             return None
+
+    def get_allow_to_charge(self) -> bool:
+        return (
+            True
+            if self.charge_fet
+            and self.control_allow_charge
+            and self.block_because_disconnect is False
+            else False
+        )
+
+    def get_allow_to_discharge(self) -> bool:
+        return (
+            True
+            if self.discharge_fet
+            and self.control_allow_discharge
+            and self.block_because_disconnect is False
+            else False
+        )
+
+    def get_allow_to_balance(self) -> bool:
+        return True if self.balance_fet else False
 
     def validate_data(self) -> bool:
         """

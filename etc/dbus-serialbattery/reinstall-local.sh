@@ -199,7 +199,8 @@ bluetooth_length=${#bms_array[@]}
 # echo $bluetooth_length
 
 # stop all dbus-blebattery services, if at least one exists
-if [ -d "/service/dbus-blebattery.0" ]; then
+if ls /service/dbus-blebattery.* 1> /dev/null 2>&1; then
+    echo "Killing old BLE battery services..."
     svc -t /service/dbus-blebattery.*
 
     # always remove existing blebattery services to cleanup
@@ -386,7 +387,8 @@ can_lenght=${#can_array[@]}
 # echo $can_lenght
 
 # stop all dbus-canbattery services, if at least one exists
-if [ -d "/service/dbus-canbattery.0" ]; then
+if ls /service/dbus-canbattery.* 1> /dev/null 2>&1; then
+    echo "Killing old CAN battery services..."
     svc -t /service/dbus-canbattery.*
 
     # always remove existing canbattery services to cleanup
@@ -395,10 +397,7 @@ if [ -d "/service/dbus-canbattery.0" ]; then
     # kill all canbattery processes that remain
     pkill -f "supervise dbus-canbattery.*"
     pkill -f "multilog .* /var/log/dbus-canbattery.*"
-    pkill -f "python .*/dbus-serialbattery.py .*_Ble"
-
-    # kill opened bluetoothctl processes
-    pkill -f "^bluetoothctl "
+    pkill -f "python .*/dbus-serialbattery.py can.*"
 fi
 
 
@@ -434,7 +433,7 @@ if [ "$can_lenght" -gt 0 ]; then
     if [ ! -f "/usr/lib/python3.8/site-packages/can/__init__.py" ]; then
         echo "Install can..."
         # Note: 4.x version of python-can causes pip dependency issue on VenusOS v3.22, so using python-can 3.x
-	# "ERROR: Could not build wheels for msgpack which use PEP 517 and cannot be installed directly"
+        #     "ERROR: Could not build wheels for msgpack which use PEP 517 and cannot be installed directly"
         pip3 install python-can==3.3.4
         echo
     fi
@@ -550,7 +549,7 @@ echo "                 and add them to \"/data/etc/dbus-serialbattery/config.ini
 echo
 echo
 echo "GUIv2: If you want to try the new GUIv2 follow this link:"
-echo "       https://github.com/mr-manuel/venus-os_dbus-serialbattery/tree/dev/gui-v2"
+echo "       https://github.com/mr-manuel/venus-os_dbus-serialbattery/tree/master/gui-v2"
 echo
 echo
 # print which version was installed

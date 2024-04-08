@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.2.20240227dev"
+DRIVER_VERSION = "1.2.20240404dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -52,6 +52,7 @@ else:
     logger.setLevel(logging.INFO)
 
 # save config values to constants
+
 
 # --------- Battery Current limits ---------
 MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
@@ -249,6 +250,9 @@ SOC_LOW_ALARM = float(config["DEFAULT"]["SOC_LOW_ALARM"])
 # -- Daly settings
 BATTERY_CAPACITY = float(config["DEFAULT"]["BATTERY_CAPACITY"])
 INVERT_CURRENT_MEASUREMENT = int(config["DEFAULT"]["INVERT_CURRENT_MEASUREMENT"])
+
+# -- JK BMS settings
+JKBMS_CAN_CELL_COUNT = int(config["DEFAULT"]["JKBMS_CAN_CELL_COUNT"])
 
 # -- ESC GreenMeter and Lipro device settings
 GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])

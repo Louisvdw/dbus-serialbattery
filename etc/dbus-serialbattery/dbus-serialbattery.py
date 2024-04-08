@@ -128,7 +128,8 @@ def main():
                     file = exception_traceback.tb_frame.f_code.co_filename
                     line = exception_traceback.tb_lineno
                     logger.error(
-                        f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+                        "Non blocking exception occurred: "
+                        + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
                     )
                     # Ignore any malfunction test_function()
                     pass
@@ -222,14 +223,6 @@ def main():
         logger.error("ERROR >>> No battery connection at " + port)
         sys.exit(1)
 
-    # get SoC from battery, else None is displayed
-    if utils.SOC_CALCULATION:
-        battery.soc_calculation()
-    else:
-        battery.soc_calc = battery.soc
-
-    battery.log_settings()
-
     # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
     DBusGMainLoop(set_as_default=True)
     if sys.version_info.major == 2:
@@ -247,6 +240,9 @@ def main():
     if not battery.use_callback(lambda: poll_battery(mainloop)):
         # if not possible, poll the battery every poll_interval milliseconds
         gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
+
+    # print log at this point, else not all data is correctly populated
+    battery.log_settings()
 
     # Run the main loop
     try:

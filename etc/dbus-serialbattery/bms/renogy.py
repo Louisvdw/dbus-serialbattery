@@ -41,7 +41,6 @@ class Renogy(Battery):
     )
     # BMS warning and protection config
 
-
     def unique_identifier(self) -> str:
         return self.serial_number
 
