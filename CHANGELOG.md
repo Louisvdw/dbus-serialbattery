@@ -55,7 +55,7 @@
 
 
 
-## v1.2.20240401
+## v1.2.20240408
 
 * Added: Check if the device instance is already used by @mr-manuel
 * Added: Check if there is enough space on system and data partitions before installation by @mr-manuel
