@@ -101,6 +101,7 @@ class Battery(ABC):
         self.current_avg: float = None
         self.current_avg_lst: list = []
         self.current_corrected: float = None
+        self.current_external: float = None
         self.capacity_remain: float = None
         self.capacity: float = None
         self.cycles: float = None
@@ -260,7 +261,7 @@ class Battery(ABC):
             # calculate real current
             self.current_corrected = round(
                 utils.calcLinearRelationship(
-                    self.current,
+                    self.get_current(),
                     utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
                     utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
                 ),
@@ -277,8 +278,8 @@ class Battery(ABC):
             # limit soc_calc_capacity_remain to capacity and zero
             # in case 100% is reached and the battery is not fully charged
             # in case 0% is reached and the battery is not fully discharged
-            self.soc_calc_capacity_remain = max(
-                min(self.soc_calc_capacity_remain, self.capacity), 0
+            self.soc_calc_capacity_remain = round(
+                max(min(self.soc_calc_capacity_remain, self.capacity), 0), 3
             )
             self.soc_calc_capacity_remain_lasttime = current_time
 
@@ -287,7 +288,7 @@ class Battery(ABC):
             if current_min_cell_voltage > utils.MAX_CELL_VOLTAGE * 0.99:
                 # check if battery is fully charged
                 if (
-                    self.current < utils.SOC_RESET_CURRENT
+                    self.get_current() < utils.SOC_RESET_CURRENT
                     and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltage_sum)
                     and self.soc_calc_reset_starttime
                 ):
@@ -307,7 +308,7 @@ class Battery(ABC):
             if current_min_cell_voltage < utils.MIN_CELL_VOLTAGE * 1.01:
                 # check if battery is fully discharged
                 if (
-                    self.current < utils.SOC_RESET_CURRENT
+                    self.get_current() < utils.SOC_RESET_CURRENT
                     and (
                         current_min_cell_voltage
                         - (utils.VOLTAGE_DROP / self.cell_count)
@@ -1168,7 +1169,7 @@ class Battery(ABC):
     def get_timeToSoc(
         self, soc_target: float, percent_per_second: float, only_number: bool = False
     ) -> str:
-        if self.current > 0:
+        if self.get_current() > 0:
             soc_diff = soc_target - self.soc_calc
         else:
             soc_diff = self.soc_calc - soc_target
@@ -1463,6 +1464,58 @@ class Battery(ABC):
             return False
 
         return True
+
+    def monitor_external_current(self) -> None:
+        """
+        Start monitoring the external current sensor
+        """
+        from dbusmonitor import DbusMonitor
+
+        logger.info(
+            "Monitoring external current using: "
+            + f"{utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE}/{utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH}"
+        )
+
+        # ### read values from battery
+        # Why this dummy? Because DbusMonitor expects these values to be there, even though we don't
+        # need them. So just add some dummy data. This can go away when DbusMonitor is more generic.
+        dummy = {"code": None, "whenToLog": "configChange", "accessLevel": None}
+
+        # remove device name from dbus service name
+        device_splitted = utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE.split(".")
+        dbus_service = ".".join(device_splitted[:3])
+
+        dbus_tree = {
+            dbus_service: {
+                utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH: dummy,
+            }
+        }
+
+        # start monitoring
+        self._dbusmonitor = DbusMonitor(
+            dbus_tree, valueChangedCallback=self._dbus_value_changed
+        )
+
+    def _dbus_value_changed(
+        self, dbusServiceName, dbusPath, dict, changes, deviceInstance
+    ):
+        if (
+            dbusServiceName == utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE
+            and dbusPath == utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH
+        ):
+            self.current_external = round(changes["Value"], 2)
+            logger.debug(
+                f"dbusServiceName: {dbusServiceName} - dbusPath: {dbusPath} - value: {changes['Value']}"
+            )
+
+    def get_current(self) -> Union[float, None]:
+        """
+        Get the current from the battery.
+        If an external current sensor is connected, use that value.
+        """
+        if self.current_external is not None:
+            return self.current_external
+        return self.current
 
     def log_cell_data(self) -> bool:
         if logger.getEffectiveLevel() > logging.INFO and len(self.cells) == 0:

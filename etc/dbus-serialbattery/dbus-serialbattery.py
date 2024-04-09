@@ -244,6 +244,29 @@ def main():
     # print log at this point, else not all data is correctly populated
     battery.log_settings()
 
+    # use external current sensor if configured
+    try:
+        if (
+            utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE != ""
+            and utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH != ""
+        ):
+            battery.monitor_external_current()
+    except Exception:
+        # set to None to avoid crashing, fallback to battery current
+        utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE = ""
+        utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH = ""
+        (
+            exception_type,
+            exception_object,
+            exception_traceback,
+        ) = sys.exc_info()
+        file = exception_traceback.tb_frame.f_code.co_filename
+        line = exception_traceback.tb_lineno
+        logger.error(
+            "Exception occurred: "
+            + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
+        )
+
     # Run the main loop
     try:
         mainloop.run()

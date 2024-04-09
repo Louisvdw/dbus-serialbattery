@@ -54,6 +54,9 @@
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
 
+## v1.3.x
+* Added: Use current measurement from other dbus path by @mr-manuel
+
 
 ## v1.2.20240408
 

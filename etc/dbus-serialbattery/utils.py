@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.2.20240404dev"
+DRIVER_VERSION = "1.2.20240409dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -96,6 +96,18 @@ LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE
 LINEAR_RECALCULATION_EVERY = int(config["DEFAULT"]["LINEAR_RECALCULATION_EVERY"])
 LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
     config["DEFAULT"]["LINEAR_RECALCULATION_ON_PERC_CHANGE"]
+)
+
+# --------- External current sensor ---------
+EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE = (
+    config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE"]
+    if config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE"] != ""
+    else None
+)
+EXTERNAL_CURRENT_SENSOR_DBUS_PATH = (
+    config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_PATH"]
+    if config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_PATH"] != ""
+    else None
 )
 
 # --------- Charge Voltage limitation (affecting CVL) ---------

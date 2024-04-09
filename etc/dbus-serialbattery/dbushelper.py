@@ -841,11 +841,14 @@ class DbusHelper:
             round(self.battery.voltage, 2) if self.battery.voltage is not None else None
         )
         self._dbusservice["/Dc/0/Current"] = (
-            round(self.battery.current, 2) if self.battery.current is not None else None
+            round(self.battery.get_current(), 2)
+            if self.battery.get_current() is not None
+            else None
         )
         self._dbusservice["/Dc/0/Power"] = (
-            round(self.battery.voltage * self.battery.current, 2)
-            if self.battery.current is not None and self.battery.current is not None
+            round(self.battery.voltage * self.battery.get_current(), 2)
+            if self.battery.get_current() is not None
+            and self.battery.get_current() is not None
             else None
         )
         self._dbusservice["/Dc/0/Temperature"] = self.battery.get_temp()
@@ -1024,8 +1027,8 @@ class DbusHelper:
             # calculate current average for the last 300 cycles
             # if Time-To-Go or Time-To-SoC is enabled
             if utils.TIME_TO_GO_ENABLE or len(utils.TIME_TO_SOC_POINTS) > 0:
-                if self.battery.current is not None:
-                    self.battery.current_avg_lst.append(self.battery.current)
+                if self.battery.get_current() is not None:
+                    self.battery.current_avg_lst.append(self.battery.get_current())
 
                 # delete oldest value
                 if len(self.battery.current_avg_lst) > 300:
