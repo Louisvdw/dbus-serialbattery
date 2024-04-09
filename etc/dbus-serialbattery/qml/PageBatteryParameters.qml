@@ -16,13 +16,6 @@ MbPage {
             show: item.valid
         }
 
-		// show debug informations
-		MbItemText {
-			text: chargeModeDebug.value
-			wrapMode: Text.WordWrap
-			show: chargeModeDebug.value != ""
-		}
-
 		MbItemValue {
 			description: qsTr("Charge Voltage Limit (CVL)")
 			item.bind: service.path("/Info/MaxChargeVoltage")
@@ -55,5 +48,19 @@ MbPage {
 			item.bind: service.path("/Info/BatteryLowVoltage")
 			showAccessLevel: User.AccessService
 		}
+
+		// show debug informations
+		MbItemText {
+			text: chargeModeDebug.value.split('\n').slice(0, 10).join('\n') // Display first 10 lines
+			wrapMode: Text.WordWrap
+			show: chargeModeDebug.value != ""
+		}
+
+		MbItemText {
+			text: chargeModeDebug.value.split('\n').slice(10).join('\n') // Display remaining lines
+			wrapMode: Text.WordWrap
+			show: chargeModeDebug.value.split('\n').length > 10 // Show only if there are more than 10 lines
+		}
+
 	}
 }

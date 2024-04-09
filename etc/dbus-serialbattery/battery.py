@@ -594,17 +594,17 @@ class Battery(ABC):
 
             if logger.isEnabledFor(logging.DEBUG):
                 self.charge_mode_debug = (
-                    f"max_battery_voltage: {round(self.max_battery_voltage, 2)}V"
+                    f"max_battery_voltage: {round(self.max_battery_voltage, 2)} V"
                 )
                 self.charge_mode_debug += (
-                    f" - VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)}V"
+                    f" - VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)} V"
                 )
-                self.charge_mode_debug += f"\nvoltage_sum: {round(voltage_sum, 2)}V"
-                self.charge_mode_debug += f" • voltageDiff: {round(voltageDiff, 3)}V"
+                self.charge_mode_debug += f"\nvoltage_sum: {round(voltage_sum, 2)} V"
+                self.charge_mode_debug += f" • voltageDiff: {round(voltageDiff, 3)} V"
                 self.charge_mode_debug += (
-                    f"\ncontrol_voltage: {round(self.control_voltage, 2)}V"
+                    f"\ncontrol_voltage: {round(self.control_voltage, 2)} V"
                 )
-                self.charge_mode_debug += f" • penalty_sum: {round(penalty_sum, 3)}V"
+                self.charge_mode_debug += f" • penalty_sum: {round(penalty_sum, 3)} V"
                 self.charge_mode_debug += (
                     f"\ntime_diff: {time_diff}/{utils.MAX_VOLTAGE_TIME_SEC}"
                 )
@@ -612,7 +612,14 @@ class Battery(ABC):
                 self.charge_mode_debug += (
                     f"\nSoC: {self.soc}% • SoC_Calc: {self.soc_calc}%"
                 )
-                self.charge_mode_debug += f"\ncurrent: {self.current}A • current_corrected: {self.current_corrected}A"
+                self.charge_mode_debug += (
+                    f"\ncurrent: {self.current}A • current_corrected: {self.current_corrected} A"
+                    + (
+                        f" • current_external: {self.current_external} A"
+                        if self.current_external is not None
+                        else ""
+                    )
+                )
                 self.charge_mode_debug += (
                     f"\nallow_max_voltage: {self.allow_max_voltage}"
                 )
@@ -645,7 +652,7 @@ class Battery(ABC):
 
                 # soc calculation debug"
                 self.charge_mode_debug += (
-                    f"\nsoc_calc_capacity_remain: {self.soc_calc_capacity_remain}Ah"
+                    f"\nsoc_calc_capacity_remain: {self.soc_calc_capacity_remain} Ah"
                 )
 
                 self.charge_mode_debug += "\nsoc_calc_capacity_remain_lasttime: " + str(
@@ -1474,18 +1481,18 @@ class Battery(ABC):
         logger.info(f"Battery {self.type} connected to dbus from {self.port}")
         logger.info("========== Settings ==========")
         logger.info(
-            f"> Connection voltage: {self.voltage}V | Current: {self.current}A | SoC: {self.soc_calc}%"
+            f"> Connection voltage: {self.voltage} V | Current: {self.get_current()} A | SoC: {self.soc_calc}%"
         )
         logger.info(
             f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}"
         )
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
-            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE}V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE}V"
+            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE} V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE} V"
         )
         logger.info(
-            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT}A | "
-            + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT}A"
+            f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT} A | "
+            + f"MAX BATTERY DISCHARGE CURRENT: {utils.MAX_BATTERY_DISCHARGE_CURRENT} A"
         )
         if (
             (
@@ -1497,8 +1504,8 @@ class Battery(ABC):
             and self.max_battery_discharge_current is not None
         ):
             logger.info(
-                f"> MAX BATTERY CHARGE CURRENT: {self.max_battery_charge_current}A | "
-                + f"MAX BATTERY DISCHARGE CURRENT: {self.max_battery_discharge_current}A (read from BMS)"
+                f"> MAX BATTERY CHARGE CURRENT: {self.max_battery_charge_current} A | "
+                + f"MAX BATTERY DISCHARGE CURRENT: {self.max_battery_discharge_current} A (read from BMS)"
             )
         logger.info(f"> CVCM:     {utils.CVCM_ENABLE}")
         logger.info(
@@ -1509,6 +1516,9 @@ class Battery(ABC):
         )
         logger.info(
             f"> CCCM SOC: {str(utils.CCCM_SOC_ENABLE).ljust(5)} | DCCM SOC: {utils.DCCM_SOC_ENABLE}"
+        )
+        logger.info(
+            f"> CHARGE FET: {self.charge_fet} | DISCHARGE FET: {self.discharge_fet} | BALANCE FET: {self.balance_fet}"
         )
         logger.info(f"Serial Number/Unique Identifier: {self.unique_identifier()}")
 
