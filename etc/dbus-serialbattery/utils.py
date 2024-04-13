@@ -112,6 +112,12 @@ EXTERNAL_CURRENT_SENSOR_DBUS_PATH = (
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
 CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
+"""
+Charge voltage control management
+
+Limits max charging voltage (CVL). Switch from max to float voltage and back.
+"""
+
 CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL"]
 )
@@ -126,8 +132,16 @@ MAX_VOLTAGE_TIME_SEC = int(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
 SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = int(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
+
 CCCM_CV_ENABLE = "True" == config["DEFAULT"]["CCCM_CV_ENABLE"]
+"""
+Charge current control management referring to cell-voltage
+"""
+
 DCCM_CV_ENABLE = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
+"""
+Discharge current control management referring to cell-voltage
+"""
 
 CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
@@ -162,7 +176,14 @@ CVL_ICONTROLLER_FACTOR = float(config["DEFAULT"]["CVL_ICONTROLLER_FACTOR"])
 
 # --------- Temperature limitation (affecting CCL/DCL) ---------
 CCCM_T_ENABLE = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
+"""
+Charge current control management referring to temperature
+"""
+
 DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
+"""
+Discharge current control management referring to temperature
+"""
 
 TEMPERATURES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "TEMPERATURES_WHILE_CHARGING", lambda v: float(v)
@@ -184,8 +205,14 @@ MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
 
 # --------- SOC limitation (affecting CCL/DCL) ---------
 CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
-DCCM_SOC_ENABLE = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
+"""
+Charge current control management referring to SoC
+"""
 
+DCCM_SOC_ENABLE = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
+"""
+Discharge current control management referring to SoC
+"""
 
 SOC_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "SOC_WHILE_CHARGING", lambda v: float(v)
