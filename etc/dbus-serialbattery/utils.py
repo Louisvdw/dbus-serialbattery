@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.2.20240409dev"
+DRIVER_VERSION = "1.2.20240413dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -230,6 +230,12 @@ SOC_CALC_CURRENT_REPORTED_BY_BMS = _get_list_from_config(
 SOC_CALC_CURRENT_MEASURED_BY_USER = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_MEASURED_BY_USER", lambda v: float(v)
 )
+# check if lists are different
+# this allows to calculate linear relationship between the two lists only if needed
+if SOC_CALC_CURRENT_REPORTED_BY_BMS == SOC_CALC_CURRENT_MEASURED_BY_USER:
+    SOC_CALC_CURRENT = False
+else:
+    SOC_CALC_CURRENT = True
 
 # --------- Additional settings ---------
 BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))

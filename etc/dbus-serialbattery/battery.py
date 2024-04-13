@@ -247,26 +247,34 @@ class Battery(ABC):
 
     def soc_calculation(self) -> None:
         current_time = time()
-        voltage_sum = 0
         self.current_corrected = 0
-        current_min_cell_voltage = self.get_min_cell_voltage()
+
+        # ### only needed, if the SOC should be reset to 100% after the battery was balanced
+        """
+        voltage_sum = 0
 
         # calculate battery voltage from cell voltages
         for i in range(self.cell_count):
             voltage = self.get_cell_voltage(i)
             if voltage:
                 voltage_sum += voltage
+        """
 
         if self.soc_calc_capacity_remain is not None:
-            # calculate real current
-            self.current_corrected = round(
-                utils.calcLinearRelationship(
-                    self.get_current(),
-                    utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
-                    utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
-                ),
-                2,
-            )
+            # calculate current only, if lists are different
+            if utils.SOC_CALC_CURRENT:
+                # calculate current from real current
+                self.current_corrected = round(
+                    utils.calcLinearRelationship(
+                        self.get_current(),
+                        utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
+                        utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
+                    ),
+                    2,
+                )
+            else:
+                # use current as it is
+                self.current_corrected = self.get_current()
 
             self.soc_calc_capacity_remain = (
                 self.soc_calc_capacity_remain
@@ -285,59 +293,58 @@ class Battery(ABC):
 
             # execute checks only if battery is nearly fully charged
             # use lowest cell voltage, since it reaches as last the max voltage
-            if current_min_cell_voltage > utils.MAX_CELL_VOLTAGE * 0.99:
+            if self.get_max_cell_voltage() > utils.MAX_CELL_VOLTAGE * 0.99:
                 # check if battery is fully charged
                 if (
                     self.get_current() < utils.SOC_RESET_CURRENT
-                    and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltage_sum)
                     and self.soc_calc_reset_starttime
+                    # ### only needed, if the SOC should be reset to 100% after the battery was balanced
+                    # ### in off grid situations and winter time, this will not always be the case
+                    # and (self.max_battery_voltage - utils.VOLTAGE_DROP <= voltage_sum)
                 ):
-                    # set soc to 100%
+                    # set soc to 100%, if SOC_RESET_TIME is reached and soc_calc is not rounded 100% anymore
                     if (
-                        (int(current_time) - self.soc_calc_reset_starttime)
-                        > utils.SOC_RESET_TIME
-                        and self.soc_calc_capacity_remain != self.capacity
-                    ):
+                        int(current_time) - self.soc_calc_reset_starttime
+                    ) > utils.SOC_RESET_TIME and round(self.soc_calc, 0) != 100:
                         logger.info("SOC set to 100%")
                         self.soc_calc_capacity_remain = self.capacity
+                        self.soc_calc_reset_starttime = None
                 else:
                     self.soc_calc_reset_starttime = int(current_time)
 
             # execute checks only if battery is nearly fully discharged
             # use lowest cell voltage, since the battery should not go undervoltage
-            if current_min_cell_voltage < utils.MIN_CELL_VOLTAGE * 1.01:
+            if self.get_min_cell_voltage() < utils.MIN_CELL_VOLTAGE * 1.01:
                 # check if battery is fully discharged
                 if (
                     self.get_current() < utils.SOC_RESET_CURRENT
-                    and (
-                        current_min_cell_voltage
-                        - (utils.VOLTAGE_DROP / self.cell_count)
-                        <= utils.MIN_CELL_VOLTAGE
-                    )
                     and self.soc_calc_reset_starttime
                 ):
-                    # set soc to 0%
+                    # set soc to 0%, if SOC_RESET_TIME is reached and soc_calc is not rounded 0% anymore
                     if (
                         int(current_time) - self.soc_calc_reset_starttime
-                    ) > utils.SOC_RESET_TIME and self.soc_calc_capacity_remain != 0:
+                    ) > utils.SOC_RESET_TIME and round(self.soc_calc, 0) != 0:
                         logger.info("SOC set to 0%")
                         self.soc_calc_capacity_remain = 0
+                        self.soc_calc_reset_starttime = None
                 else:
                     self.soc_calc_reset_starttime = int(current_time)
-
         else:
-            # if soc_calc is not available from dbus then initialize it
+            # if soc_calc is not available initialize it from the BMS
             if self.soc_calc is None:
-                # if there is a soc from bms then use it
+                # if there is a SOC from the BMS then use it
                 if self.soc is not None:
                     self.soc_calc_capacity_remain = self.capacity * self.soc / 100
                     logger.info(
                         "SOC initialized from BMS and set to " + str(self.soc) + "%"
                     )
                 # else set it to 100%
+                # this is currently (2024.04.13) not possible, since then the driver won't start, if there is no SOC
+                # but leave it in case a BMS without SOC should be added
                 else:
                     self.soc_calc_capacity_remain = self.capacity
                     logger.info("SOC initialized and set to 100%")
+            # else initialize it from dbus
             else:
                 self.soc_calc_capacity_remain = (
                     self.capacity * self.soc_calc / 100 if self.soc > 0 else 0
@@ -348,7 +355,7 @@ class Battery(ABC):
 
             self.soc_calc_capacity_remain_lasttime = current_time
 
-        # Calculate the SOC based on remaining capacity
+        # calculate the SOC based on remaining capacity
         self.soc_calc = round(
             max(min((self.soc_calc_capacity_remain / self.capacity) * 100, 100), 0), 2
         )
