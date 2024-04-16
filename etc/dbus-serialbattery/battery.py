@@ -254,7 +254,7 @@ class Battery(ABC):
                 self.manage_charge_voltage_step()
         # apply fixed charging voltage
         else:
-            self.control_voltage = round(self.max_battery_voltage, 3)
+            self.control_voltage = round(self.max_battery_voltage, 2)
             self.charge_mode = "Keep always max voltage"
 
     def soc_calculation(self) -> None:
@@ -310,7 +310,7 @@ class Battery(ABC):
 
             # execute checks only if battery is nearly fully charged
             # use lowest cell voltage, since it reaches as last the max voltage
-            if self.get_max_cell_voltage() > utils.MAX_CELL_VOLTAGE * 0.99:
+            if self.get_max_cell_voltage() > utils.MAX_CELL_VOLTAGE:
                 # check if battery is fully charged
                 if (
                     self.get_current() < utils.SOC_RESET_CURRENT
@@ -331,7 +331,7 @@ class Battery(ABC):
 
             # execute checks only if battery is nearly fully discharged
             # use lowest cell voltage, since the battery should not go undervoltage
-            if self.get_min_cell_voltage() < utils.MIN_CELL_VOLTAGE * 1.01:
+            if self.get_min_cell_voltage() < utils.MIN_CELL_VOLTAGE:
                 # check if battery is fully discharged
                 if (
                     self.get_current() < utils.SOC_RESET_CURRENT
@@ -471,7 +471,6 @@ class Battery(ABC):
                     and self.allow_max_voltage
                 ):
                     self.max_voltage_start_time = current_time
-
                 # allow max voltage again, if cells are unbalanced or SoC threshold is reached
                 elif (
                     utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT > self.soc_calc
@@ -481,7 +480,6 @@ class Battery(ABC):
                     self.allow_max_voltage = True
                 else:
                     pass
-
             else:
                 if (
                     voltage_cell_diff
@@ -494,6 +492,7 @@ class Battery(ABC):
                 if utils.MAX_VOLTAGE_TIME_SEC < time_diff:
                     self.allow_max_voltage = False
                     self.max_voltage_start_time = None
+
                     if self.soc_calc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
                         # write to log, that reset to float was not possible
                         logger.error(
@@ -511,77 +510,82 @@ class Battery(ABC):
                 ):
                     self.max_voltage_start_time = None
 
-            if utils.CVL_ICONTROLLER_MODE:
-                if self.control_voltage:
-                    control_voltage = self.control_voltage - (
-                        (
-                            self.get_max_cell_voltage()
+            # Bulk or Absorption mode
+            if self.allow_max_voltage:
+
+                # use I-Controller
+                if utils.CVL_ICONTROLLER_MODE:
+                    if self.control_voltage:
+                        control_voltage = round(
+                            self.control_voltage
                             - (
-                                utils.SOC_RESET_VOLTAGE
-                                if self.soc_reset_requested
-                                else utils.MAX_CELL_VOLTAGE
-                            )
-                            - utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+                                (
+                                    self.get_max_cell_voltage()
+                                    - (
+                                        utils.SOC_RESET_VOLTAGE
+                                        if self.soc_reset_requested
+                                        else utils.MAX_CELL_VOLTAGE
+                                    )
+                                    - utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
+                                )
+                                * utils.CVL_ICONTROLLER_FACTOR
+                            ),
+                            2,
                         )
-                        * utils.CVL_ICONTROLLER_FACTOR
-                    )
-                else:
-                    control_voltage = self.max_battery_voltage
+                    else:
+                        control_voltage = self.max_battery_voltage
 
-                control_voltage = min(
-                    max(control_voltage, self.min_battery_voltage),
-                    self.max_battery_voltage,
-                )
-
-            # INFO: battery will only switch to Absorption, if all cells are balanced.
-            #       Reach MAX_CELL_VOLTAGE * cell count if they are all balanced.
-            if found_high_cell_voltage and self.allow_max_voltage:
-                # Keep penalty above min battery voltage and below max battery voltage
-                control_voltage = round(
-                    min(
-                        max(
-                            voltage_sum - penalty_sum,
-                            self.min_battery_voltage,
-                        ),
+                    control_voltage = min(
+                        max(control_voltage, self.min_battery_voltage),
                         self.max_battery_voltage,
-                    ),
-                    3,
-                )
-                if utils.CVL_ICONTROLLER_MODE:
-                    self.control_voltage = control_voltage
+                    )
+
+                # use P-Controller
                 else:
-                    self.set_cvl_linear(control_voltage)
+                    if found_high_cell_voltage:
+                        # reduce voltage by penalty sum
+                        # keep penalty above min battery voltage and below max battery voltage
+                        control_voltage = round(
+                            min(
+                                max(
+                                    voltage_sum - penalty_sum,
+                                    self.min_battery_voltage,
+                                ),
+                                self.max_battery_voltage,
+                            ),
+                            2,
+                        )
+                    else:
+                        control_voltage = self.max_battery_voltage
 
-                self.charge_mode = (
-                    "Bulk dynamic"
-                    if self.max_voltage_start_time is None
-                    else "Absorption dynamic"
-                )
-
-                if self.max_battery_voltage == self.soc_reset_battery_voltage:
-                    self.charge_mode += " & SoC Reset"
-
-            elif self.allow_max_voltage:
-                if utils.CVL_ICONTROLLER_MODE:
-                    self.control_voltage = control_voltage
-                else:
-                    self.control_voltage = round(self.max_battery_voltage, 3)
+                self.set_cvl_linear(control_voltage)
 
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
                 )
+                if found_high_cell_voltage:
+                    self.charge_mode += " Dynamic"
 
                 if self.max_battery_voltage == self.soc_reset_battery_voltage:
                     self.charge_mode += " & SoC Reset"
 
+                if (
+                    self.get_balancing()
+                    and voltage_cell_diff
+                    >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
+                ):
+                    self.charge_mode += " + Balancing"
+            # Float mode
             else:
-                float_voltage = round((utils.FLOAT_CELL_VOLTAGE * self.cell_count), 3)
+                float_voltage = round((utils.FLOAT_CELL_VOLTAGE * self.cell_count), 2)
                 charge_mode = "Float"
+
                 # reset bulk when going into float
                 if self.soc_reset_requested:
                     # logger.info("set soc_reset_requested to False")
                     self.soc_reset_requested = False
                     self.soc_reset_last_reached = current_time
+
                 if self.control_voltage:
                     # check if battery changed from bulk/absoprtion to float
                     if not self.charge_mode.startswith("Float"):
@@ -608,14 +612,8 @@ class Battery(ABC):
                             charge_mode = "Float Transition"
                 else:
                     self.control_voltage = float_voltage
-                self.charge_mode = charge_mode
 
-            if (
-                self.allow_max_voltage
-                and self.get_balancing()
-                and voltage_cell_diff >= utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT
-            ):
-                self.charge_mode += " + Balancing"
+                self.charge_mode = charge_mode
 
             self.charge_mode += " (Linear Mode)"
 
@@ -636,7 +634,7 @@ class Battery(ABC):
                     + f"VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)} V\n"
                     + f"voltage_sum: {round(voltage_sum, 2)} V • "
                     + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} V\n"
-                    # + f"penalty_sum: {round(penalty_sum, 3)} V\n"
+                    + f"max_cell_voltage: {self.get_max_cell_voltage()} V • penalty_sum: {round(penalty_sum, 3)} V\n"
                     + f"time_diff: {time_diff}/{utils.MAX_VOLTAGE_TIME_SEC} • "
                     + f"SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%\n"
                     + f"soc: {self.soc}% • soc_calc: {self.soc_calc}%\n"
@@ -675,15 +673,32 @@ class Battery(ABC):
 
     def set_cvl_linear(self, control_voltage: float) -> bool:
         """
-        Set CVL only once every LINEAR_RECALCULATION_EVERY seconds
+        Set CVL only once every LINEAR_RECALCULATION_EVERY seconds or if the CVL changes more than
+        LINEAR_RECALCULATION_ON_PERC_CHANGE percent
 
         :return: The status, if the CVL was set
         """
         current_time = int(time())
-        if utils.LINEAR_RECALCULATION_EVERY <= current_time - self.linear_cvl_last_set:
+        diff = (
+            abs(self.control_voltage - control_voltage)
+            if self.control_voltage is not None
+            else 0
+        )
+
+        if (
+            utils.LINEAR_RECALCULATION_EVERY <= current_time - self.linear_cvl_last_set
+            or (
+                diff
+                >= self.control_voltage
+                * utils.LINEAR_RECALCULATION_ON_PERC_CHANGE
+                / 100
+                / 10  # for more precision, since the changes are small in this case
+            )
+        ):
             self.control_voltage = control_voltage
             self.linear_cvl_last_set = current_time
             return True
+
         return False
 
     def manage_charge_voltage_step(self) -> None:
@@ -823,10 +838,12 @@ class Battery(ABC):
             else:
                 charge_limits.update({0: "BMS"})
 
-        # do not set CCL immediately, but only
-        # - after LINEAR_RECALCULATION_EVERY passed
-        # - if CCL changes to 0
-        # - if CCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        """
+        do not set CCL immediately, but only
+        - after LINEAR_RECALCULATION_EVERY passed
+        - if CCL changes to 0
+        - if CCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        """
         ccl = round(min(charge_limits), 3)
         diff = (
             abs(self.control_charge_current - ccl)
@@ -917,10 +934,12 @@ class Battery(ABC):
             else:
                 discharge_limits.update({0: "BMS"})
 
-        # do not set DCL immediately, but only
-        # - after LINEAR_RECALCULATION_EVERY passed
-        # - if DCL changes to 0
-        # - if DCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        """
+        do not set DCL immediately, but only
+        - after LINEAR_RECALCULATION_EVERY passed
+        - if DCL changes to 0
+        - if DCL changes more than LINEAR_RECALCULATION_ON_PERC_CHANGE
+        """
         dcl = round(min(discharge_limits), 3)
         diff = (
             abs(self.control_discharge_current - dcl)
