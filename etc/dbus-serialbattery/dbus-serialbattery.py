@@ -247,14 +247,14 @@ def main():
     # use external current sensor if configured
     try:
         if (
-            utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE != ""
-            and utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH != ""
+            utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE is not None
+            and utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH is not None
         ):
             battery.monitor_external_current()
     except Exception:
         # set to None to avoid crashing, fallback to battery current
-        utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE = ""
-        utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH = ""
+        utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE = None
+        utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH = None
         (
             exception_type,
             exception_object,

@@ -588,7 +588,10 @@ class Battery(ABC):
 
                 if self.control_voltage:
                     # check if battery changed from bulk/absoprtion to float
-                    if not self.charge_mode.startswith("Float"):
+                    if (
+                        self.charge_mode is not None
+                        and not self.charge_mode.startswith("Float")
+                    ):
                         self.transition_start_time = current_time
                         self.initial_control_voltage = self.control_voltage
                         charge_mode = "Float Transition"
@@ -757,7 +760,9 @@ class Battery(ABC):
 
             else:
                 # check if battery changed from bulk/absoprtion to float
-                if not self.charge_mode.startswith("Float"):
+                if self.charge_mode is not None and not self.charge_mode.startswith(
+                    "Float"
+                ):
                     # Assume battery SOC ist 100% at this stage
                     self.trigger_soc_reset()
                 self.control_voltage = round(
