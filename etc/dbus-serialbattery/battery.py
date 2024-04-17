@@ -157,15 +157,22 @@ class Battery(ABC):
         since it can be changed by small amounts to make a battery unique.
         On +/- 5 Ah you can identify 11 batteries
 
+        It's not possible to change the capacity or other values in some BMS
+        therefore the port has to be used as unique identifier
+        See https://github.com/Louisvdw/dbus-serialbattery/issues/1035
+
         :return: the unique identifier
         """
-        string = (
-            "".join(filter(str.isalnum, str(self.hardware_version))) + "_"
-            if self.hardware_version is not None and self.hardware_version != ""
-            else ""
-        )
-        string += str(self.capacity) + "Ah"
-        return string
+        if utils.USE_PORT_AS_UNIQUE_ID:
+            return self.port
+        else:
+            string = (
+                "".join(filter(str.isalnum, str(self.hardware_version))) + "_"
+                if self.hardware_version is not None and self.hardware_version != ""
+                else ""
+            )
+            string += str(self.capacity) + "Ah"
+            return string
 
     def connection_name(self) -> str:
         return "Serial " + self.port

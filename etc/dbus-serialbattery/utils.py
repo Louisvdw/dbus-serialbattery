@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.3.20240416dev"
+DRIVER_VERSION = "1.3.20240417dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -289,6 +289,11 @@ TEMP_3_NAME = config["DEFAULT"]["TEMP_3_NAME"]
 TEMP_4_NAME = config["DEFAULT"]["TEMP_4_NAME"]
 
 # --------- BMS specific settings ---------
+
+# -- Unique ID settings
+USE_PORT_AS_UNIQUE_ID = "True" == config["DEFAULT"]["USE_PORT_AS_UNIQUE_ID"]
+
+# -- LltJbd settings
 SOC_LOW_WARNING = float(config["DEFAULT"]["SOC_LOW_WARNING"])
 SOC_LOW_ALARM = float(config["DEFAULT"]["SOC_LOW_ALARM"])
 
