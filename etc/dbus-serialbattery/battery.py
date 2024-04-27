@@ -315,9 +315,10 @@ class Battery(ABC):
             )
             self.soc_calc_capacity_remain_lasttime = current_time
 
-            # execute checks only if battery is nearly fully charged
-            # use lowest cell voltage, since it reaches as last the max voltage
-            if self.get_max_cell_voltage() > utils.MAX_CELL_VOLTAGE:
+            # execute checks only if one cell reaches max voltage
+            # use highest cell voltage, since in this case the battery is full
+            # else a unbalanced battery won't reach 100%
+            if self.get_max_cell_voltage() >= utils.MAX_CELL_VOLTAGE:
                 # check if battery is fully charged
                 if (
                     self.get_current() < utils.SOC_RESET_CURRENT
@@ -336,14 +337,12 @@ class Battery(ABC):
                 else:
                     self.soc_calc_reset_starttime = int(current_time)
 
-            # execute checks only if battery is nearly fully discharged
-            # use lowest cell voltage, since the battery should not go undervoltage
-            if self.get_min_cell_voltage() < utils.MIN_CELL_VOLTAGE:
-                # check if battery is fully discharged
-                if (
-                    self.get_current() < utils.SOC_RESET_CURRENT
-                    and self.soc_calc_reset_starttime
-                ):
+            # execute checks only if one cell reaches min voltage
+            # use lowest cell voltage, since in this case the battery is empty
+            # else a unbalanced battery won't reach 0% and the BMS will shut down
+            if self.get_min_cell_voltage() <= utils.MIN_CELL_VOLTAGE:
+                # check if battery is still being discharged
+                if self.get_current() < 0 and self.soc_calc_reset_starttime:
                     # set soc to 0%, if SOC_RESET_TIME is reached and soc_calc is not rounded 0% anymore
                     if (
                         int(current_time) - self.soc_calc_reset_starttime
