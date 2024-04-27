@@ -565,7 +565,7 @@ class Battery(ABC):
                     else:
                         control_voltage = self.max_battery_voltage
 
-                self.set_cvl_linear(control_voltage)
+                self.control_voltage = control_voltage
 
                 self.charge_mode = (
                     "Bulk" if self.max_voltage_start_time is None else "Absorption"
@@ -612,9 +612,10 @@ class Battery(ABC):
                             VOLTAGE_REDUCTION_PER_SECOND * elapsed_time,
                             self.initial_control_voltage - float_voltage,
                         )
-                        self.set_cvl_linear(
+                        self.control_voltage = (
                             self.initial_control_voltage - voltage_reduction
                         )
+
                         if self.control_voltage <= float_voltage:
                             self.control_voltage = float_voltage
                             charge_mode = "Float"
@@ -685,6 +686,8 @@ class Battery(ABC):
         """
         Set CVL only once every LINEAR_RECALCULATION_EVERY seconds or if the CVL changes more than
         LINEAR_RECALCULATION_ON_PERC_CHANGE percent
+
+        TODO: Seems to not be needed anymore. Will be removed in future.
 
         :return: The status, if the CVL was set
         """

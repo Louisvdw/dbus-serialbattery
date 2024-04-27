@@ -57,7 +57,8 @@
 ## v1.3.x
 * Added: Possibillity to use port name as unique identifier https://github.com/Louisvdw/dbus-serialbattery/issues/1035 by @mr-manuel
 * Added: Use current measurement from other dbus path by @mr-manuel
-* Changed: Fixed https://github.com/Louisvdw/dbus-serialbattery/issues/1037 by @mr-manuel
+* Changed: Fixed problem with linear limitation disabled https://github.com/Louisvdw/dbus-serialbattery/issues/1037 by @mr-manuel
+* Changed: Fixed problem with P-Controller https://github.com/Louisvdw/dbus-serialbattery/issues/1041 by @mr-manuel
 * Changed: Optimized SOC reset to 100% and 0% when `SOC_CALCULATION` is enabled by @mr-manuel
 
 
