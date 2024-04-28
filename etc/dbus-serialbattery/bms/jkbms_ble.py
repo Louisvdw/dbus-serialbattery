@@ -191,7 +191,7 @@ class Jkbms_Ble(Battery):
         self.to_temp(1, temp1 if temp1 < 32767 else (65535 - temp1) * -1)
 
         temp2 = st["cell_info"]["temperature_sensor_2"]
-        self.to_temp(1, temp2 if temp2 < 32767 else (65535 - temp2) * -1)
+        self.to_temp(2, temp2 if temp2 < 32767 else (65535 - temp2) * -1)
 
         self.current = round(st["cell_info"]["current"], 1)
         self.voltage = round(st["cell_info"]["total_voltage"], 2)
