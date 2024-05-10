@@ -58,7 +58,7 @@
 * Added: Possibillity to use port name as unique identifier https://github.com/Louisvdw/dbus-serialbattery/issues/1035 by @mr-manuel
 * Added: Use current measurement from other dbus path by @mr-manuel
 * Changed: Fixed problem with linear limitation disabled https://github.com/Louisvdw/dbus-serialbattery/issues/1037 by @mr-manuel
-* Changed: Fixed problem with P-Controller https://github.com/Louisvdw/dbus-serialbattery/issues/1041 by @mr-manuel
+* Changed: Fixed problem with I-Controller https://github.com/Louisvdw/dbus-serialbattery/issues/1041 by @mr-manuel
 * Changed: JKBMS BLE - Fixed problem with second temperature sensor, which was introduced with `v1.1.20240128dev` https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/26 by @mr-manuel
 * Changed: Optimized SOC reset to 100% and 0% when `SOC_CALCULATION` is enabled by @mr-manuel
 

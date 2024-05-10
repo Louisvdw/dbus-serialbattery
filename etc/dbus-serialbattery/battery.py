@@ -294,7 +294,7 @@ class Battery(ABC):
                         utils.SOC_CALC_CURRENT_REPORTED_BY_BMS,
                         utils.SOC_CALC_CURRENT_MEASURED_BY_USER,
                     ),
-                    2,
+                    3,
                 )
             else:
                 # use current as it is
@@ -522,6 +522,8 @@ class Battery(ABC):
                 # use I-Controller
                 if utils.CVL_ICONTROLLER_MODE:
                     if self.control_voltage:
+                        # 6 decimals are needed for a proper I-controller working
+                        # https://github.com/Louisvdw/dbus-serialbattery/issues/1041
                         control_voltage = round(
                             self.control_voltage
                             - (
@@ -536,7 +538,7 @@ class Battery(ABC):
                                 )
                                 * utils.CVL_ICONTROLLER_FACTOR
                             ),
-                            2,
+                            6,
                         )
                     else:
                         control_voltage = self.max_battery_voltage
@@ -559,7 +561,7 @@ class Battery(ABC):
                                 ),
                                 self.max_battery_voltage,
                             ),
-                            2,
+                            6,
                         )
                     else:
                         control_voltage = self.max_battery_voltage
