@@ -7,7 +7,7 @@ from typing import Union
 import minimalmodbus
 import serial
 from battery import Battery, Cell, Protection
-from utils import logger
+from utils import logger, SEPLOS_USE_BMS_VALUES
 
 RETRYCNT = 3
 
@@ -207,12 +207,15 @@ class Seplosv3(Battery):
             self.cell_count = spa[1]
             self.capacity = spa[0x59] / 100
             # self.capacity_remain = spa[0x5A] / 100
-            self.max_battery_voltage = spa[0x05] / 100
-            self.min_battery_voltage = spa[0x11] / 100
-            # below does not seem required to be set by BMS
-            # self.control_voltage = spa[0x65] / 100
-            # self.control_charge_current = spa[0x66]
-            # self.control_discharge_current = spa[0x67]
+
+            # use BMS values instead of driver calculated values
+            if SEPLOS_USE_BMS_VALUES:
+                self.max_battery_voltage = spa[0x05] / 100
+                self.min_battery_voltage = spa[0x11] / 100
+                # below does not seem required to be set by BMS
+                self.control_voltage = spa[0x65] / 100
+                self.control_charge_current = spa[0x66]
+                self.control_discharge_current = spa[0x67]
         except Exception as e:
             logger.info(f"Error updating sys info {e}")
             return False

@@ -315,6 +315,9 @@ HELTEC_MODBUS_ADDR = _get_list_from_config(
     "DEFAULT", "HELTEC_MODBUS_ADDR", lambda v: int(v)
 )
 
+# -- Seplos V3 settings
+SEPLOS_USE_BMS_VALUES = "True" == config["DEFAULT"]["SEPLOS_USE_BMS_VALUES"]
+
 # --------- Battery monitor specific settings ---------
 VOLTAGE_DROP = float(config["DEFAULT"]["VOLTAGE_DROP"])
 
