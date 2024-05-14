@@ -1587,7 +1587,7 @@ class Battery(ABC):
 
         logger.info(
             "Monitoring external current using: "
-            + f"{utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE}/{utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH}"
+            + f"{utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE}{utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH}"
         )
 
         # ### read values from battery

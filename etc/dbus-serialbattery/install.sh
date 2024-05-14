@@ -253,6 +253,10 @@ if [ "$version" = "nightly build \"$latest_release_louisvdw_nightly\" (louisvdw'
 fi
 
 
+# fix owner and group
+chown -R root:root /data/etc/dbus-serialbattery
+
+
 # restore config.ini
 if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
     mv /data/etc/dbus-serialbattery_config.ini.backup /data/etc/dbus-serialbattery/config.ini

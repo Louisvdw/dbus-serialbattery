@@ -1099,7 +1099,7 @@ class DbusHelper:
 
         # save settings every 15 seconds to dbus
         if int(time()) % 15:
-            self.saveBatteryOptions()
+            self.saveCurrentBatteryState()
 
         if self.battery.soc is not None:
             logger.debug("logged to dbus [%s]" % str(round(self.battery.soc, 2)))
@@ -1215,8 +1215,8 @@ class DbusHelper:
         )
         return value if result else None
 
-    # save battery options to dbus
-    def saveBatteryOptions(self) -> bool:
+    # save current battery states to dbus
+    def saveCurrentBatteryState(self) -> bool:
         result = True
 
         if (
