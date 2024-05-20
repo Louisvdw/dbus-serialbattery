@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.3.20240514dev"
+DRIVER_VERSION = "1.3.20240520dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -269,6 +269,12 @@ BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
 EXCLUDED_DEVICES = _get_list_from_config(
     "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
+)
+
+POLL_INTERVAL = (
+    float(config["DEFAULT"]["POLL_INTERVAL"]) * 1000
+    if config["DEFAULT"]["POLL_INTERVAL"] != ""
+    else None
 )
 
 # Auto reset SoC

@@ -158,6 +158,7 @@ def main():
             logger.info("No Port needed")
             return "/dev/ttyUSB9"
 
+    # read the version of Venus OS
     with open("/opt/victronenergy/version", "r") as f:
         venus_version = f.readline().strip()
     # show Venus OS version
@@ -238,6 +239,9 @@ def main():
 
     # try using active callback on this battery
     if not battery.use_callback(lambda: poll_battery(mainloop)):
+        # change poll interval if set in config
+        if utils.POLL_INTERVAL is not None:
+            battery.poll_interval = utils.POLL_INTERVAL
         # if not possible, poll the battery every poll_interval milliseconds
         gobject.timeout_add(battery.poll_interval, lambda: poll_battery(mainloop))
 
