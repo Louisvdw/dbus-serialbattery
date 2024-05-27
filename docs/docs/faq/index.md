@@ -38,15 +38,15 @@ You check check the installed version in the [driver log files](../troubleshoot/
 
 You need an additional driver for that. Here are a few listed:
 
+### [dbus-aggregate-batteries](https://github.com/Dr-Gigavolt/dbus-aggregate-batteries) by [Dr-Gigavolt](https://github.com/Dr-Gigavolt)
+
+Automatically merges connected batteries. Takes consideration of SmartShunt, Multies, Quattros, SmartSolars, BlueSolars and MPPT for current calculation. Additional configuration possible. Currently the only driver, which switches to float AFTER all batteries are fully charged. See `KEEP_MAX_CVL`, default is `False`.
+
 ### [BatteryAggregator](https://github.com/pulquero/BatteryAggregator) by [pulquero](https://github.com/pulquero)
 
 Automatically merges connected batteries. Additional configuration for excluded batteries, total capacity and custom merging possible.
 
 Can be installed through the [SetupHelper](https://github.com/kwindrem/SetupHelper) of [kwindrem](https://github.com/kwindrem).
-
-### [dbus-aggregate-batteries](https://github.com/Dr-Gigavolt/dbus-aggregate-batteries) by [Dr-Gigavolt](https://github.com/Dr-Gigavolt)
-
-Automatically merges connected batteries. Takes consideration of SmartShunt, Multies, Quattros, SmartSolars, BlueSolars and MPPT for current calculation. Additional configuration possible.
 
 ### [venus-os_dbus-mqtt-battery](https://github.com/mr-manuel/venus-os_dbus-mqtt-battery) by [mr-manuel](https://github.com/mr-manuel)
 

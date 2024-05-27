@@ -44,3 +44,7 @@ This command updates Docusaurus to the latest version.
 ```bash
 npm install --global yarn
 ```
+
+## Install npm if not installed
+
+Download and install it from [nodejs.org](https://nodejs.org/en).
