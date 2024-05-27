@@ -32,7 +32,7 @@ See the Victron Energy documentation how to get [root access](https://www.victro
 
 ## Which version do I have installed?
 
-You check check the installed version in the [driver log files](../troubleshoot/#driver-log-files) or in the remote console/GUI under SerialBattery -> Device -> Firmware version
+You check the installed version in the [driver log files](../troubleshoot/#driver-log-files) or in the remote console/GUI under SerialBattery -> Device -> Firmware version
 
 ## How to aggregate multiple batteries?
 
@@ -173,6 +173,18 @@ The limits are based on percentages of `MAX_BATTERY_CHARGE_CURRENT` and `MAX_BAT
 
 ## Why is the displayed charging/discharging current limit (CCL/DCL) not applied?
 Navigate to `Settings -> DVCC`, check that `DVCC` is enabled and that under `Controlling BMS` your BMS or battery aggregator is selected. On this page normally only `DVCC` should be enabled.
+
+## Why is my battery not switching to float/bulk?
+
+Make sure you have set this options in the `config.ini`:
+```ini
+LOGGING = DEBUG  # needed to show debugging in the remote console/GUI
+CVCM_ENABLE = True
+```
+
+Go to the remote console/GUI under SerialBattery -> Parameters and go to the bottom. Here you see the requirements which are met/not met to do the switch. The advanced pages are available since `v1.3.20240527dev`.
+
+![VenusOS](../../screenshots/venus-os_dbus-serialbattery_parameters.gif)
 
 ## Does the driver work for `3.7V` based cells also?
 
