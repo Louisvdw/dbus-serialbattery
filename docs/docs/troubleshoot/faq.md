@@ -10,4 +10,4 @@ sidebar_class_name: hidden
 
 # FAQ (Frequently Asked Questions)
 
-This page has been moved to [here](../faq/).
+This page has been moved to [here](../faq/index.md).

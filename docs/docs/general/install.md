@@ -13,9 +13,9 @@ toc_max_heading_level: 4
 
 > The driver does not do any setup of your BMS/battery. You need to have a working battery before you start.
 
-> It is always recommended to use the latest Venus OS version with the latest driver version. To avoid a [white screen](../faq/#fix-white-screen-after-install) after install check the compatibility matrix below.
+> It is always recommended to use the latest Venus OS version with the latest driver version. To avoid a [white screen](../faq/index.md#fix-white-screen-after-install) after install check the compatibility matrix below.
 
-> Multi battery setup: If you are using multiple batteries you need to use a battery aggregator else you cannot use the full system power. See [How to aggregate multiple batteries?](../faq/#how-to-aggregate-multiple-batteries)
+> Multi battery setup: If you are using multiple batteries you need to use a battery aggregator else you cannot use the full system power. See [How to aggregate multiple batteries?](../faq/index.md#how-to-aggregate-multiple-batteries)
 
 > The Bluetooth and CAN connections are still not stable on some systems. If you want to have a stable connection use the serial connection.
 
@@ -67,10 +67,6 @@ In [VRM](https://vrm.victronenergy.com/) look under the device list for your ins
   > 🚨 **NB! Only connect Rx & Tx or A & B to the BMS,** if you are NOT using an isolated ([galvanic isolation](https://en.wikipedia.org/wiki/Galvanic_isolation)) cable or adapter. This prevents the current to flow through the adapter, if the BMS cuts the ground. Else it will destroy your BMS, GX device or Raspberry Pi.
 
 ## Install or update
-
-### Installation video (`<= v0.14.3`)
-
-[![dbus-serialbattery install](https://img.youtube.com/vi/Juht6XGLcu0/0.jpg)](https://www.youtube.com/watch?v=Juht6XGLcu0)
 
 ### Install or update automatically with USB/SD card
 
@@ -157,7 +153,7 @@ Place a `venus-data.tar.gz` file in the folder `/var/volatile/tmp/` by copying/u
 
 ### BMS specific settings
 
-* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/#why-is-the-battery-current-inverted) and [Daly Lost Connection because of standby](https://github.com/Louisvdw/dbus-serialbattery/issues/731#issuecomment-1613580083)
+* Daly BMS &rarr; Check [Why is the battery current inverted?](../faq/index.md#why-is-the-battery-current-inverted) and [Daly Lost Connection because of standby](https://github.com/Louisvdw/dbus-serialbattery/issues/731#issuecomment-1613580083)
 * ECS BMS &rarr; Check [#254 ECS BMS (comment)](https://github.com/Louisvdw/dbus-serialbattery/issues/254#issuecomment-1275924313)
 * MNB BMS &rarr; Check [MNB BMS setup](https://github.com/Louisvdw/dbus-serialbattery/issues/590)
 
@@ -234,19 +230,19 @@ MAX_BATTERY_DISCHARGE_CURRENT = 60.0
 
 See [Settings location/path](#settings-locationpath).
 
-If you use the cell voltage limits, temperature limits and/or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also [Why is the charging/discharging current limit (CCL/DCL) smaller than the set one?](../faq/#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
+If you use the cell voltage limits, temperature limits and/or SoC limits you also need to adjust their values to match the new current, else CCL and DCL will not change. See also [Why is the charging/discharging current limit (CCL/DCL) smaller than the set one?](../faq/index.md#why-is-the-chargingdischarging-current-limit-ccldcl-smaller-than-the-set-one).
 
 ## Settings location/path
 
-💡 After updating the settings reboot the device or run `/data/etc/dbus-serialbattery/reinstall-local.sh` to apply the changes.
+💡 After updating the settings, reboot the device or run `/data/etc/dbus-serialbattery/reinstall-local.sh` to apply the changes.
 
-The path of the settings file depends on you driver version. If you don't know which driver version you have installed see [Which version do I have installed?](../faq/#which-version-do-i-have-installed)
+The path of the settings file depends on you driver version. If you don't know which driver version you have installed see [Which version do I have installed?](../faq/index.md#which-version-do-i-have-installed)
 
 ### Driver version `<= v0.14.3` (`utils.py`)
 Edit `/data/etc/dbus-serialbattery/utils.py` to update the constants. Note that any updates will override this change.
 
 ### Driver version `>= v1.0.0` (`config.ini`)
-Copy the values you want to change from `/data/etc/dbus-serialbattery/config.default.ini` and insert in the `/data/etc/dbus-serialbattery/config.ini`.
+Copy the values you want to change from `/data/etc/dbus-serialbattery/config.default.ini` and insert them in the `/data/etc/dbus-serialbattery/config.ini`.
 
 All available options can also be found [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini).
 
@@ -254,12 +250,14 @@ All available options can also be found [here](https://github.com/Louisvdw/dbus-
 
 There are two ways to edit the files. You can edit them:
 
-1. Inside the GX device/Raspberry Pi over SSH
-2. On your PC and then copy only the `utils.py` or `config.ini` over to the GX device/Raspberry Pi
+* Directly on the GX device/Raspberry Pi over SSH
+* On your PC and then copy only the `utils.py` or `config.ini` over to the GX device/Raspberry Pi
+
+See [Settings location/path](#settings-locationpath) to know which file is relevant for you.
 
 ### SSH edit using Nano editor (recommended)
 
-Log into your GX device/Raspberry Pi using SSH and run this command. Replace `FILE_NAME` with the file name you want to edit.
+Log into your GX device/Raspberry Pi using SSH and run this command. Replace `FILE_NAME` with the file name you want to edit, e.g. `utils.py` or `config.ini`.
 
 ```bash
 nano /data/etc/dbus-serialbattery/FILE_NAME
@@ -275,7 +273,7 @@ You can edit the file in a plain text editor on you PC like Notepad (Windows) or
 
 Connect to your GX using the same login as with SSH and copy your edited file over the existing one at `/data/etc/dbus-serialbattery/utils.py` or `/data/etc/dbus-serialbattery/config.ini`.
 
-⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../faq/#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
+⚠️ Sometimes it happens, that the line endings get changed from `LF` to `CRLF` with this method. Check the [FAQ --> `$'\r': command not found` or `syntax error: unexpected end of file`](../faq/index.md#r-command-not-found-or-syntax-error-unexpected-end-of-file) to solve.
 
 > Don't copy all the files as the required file permissions will be destroyed and your driver might fail to start.
 

@@ -8,23 +8,23 @@ sidebar_position: 3
 
 ## How to change the default limits
 
-See [this page](../general/install#how-to-change-the-default-limits).
+See [this page](../general/install.md#how-to-change-the-default-limits).
 
 ## What is the `config.ini` and `config.default.ini`?
 
-The `config.ini` is a file where you can specify your own configuration changes. Like when you want to change default values, e.g. increase the charge and discharge limits. Lookup the `config.default.ini` to see which settings are available. This file is preserved after a version update.
+The `config.ini` is a file where you can specify your own configuration changes. Like when you want to change default values, e.g. increase the charge and discharge limits. This file is preserved after a version update. Lookup the `config.default.ini` to see which settings are available.
 
-The `config.default.ini` is a file where all possible configuration settings are stored with their default values. Every setting is also well documented in order to understand what the setting does. This file is overwritten after a version update.
+The `config.default.ini` is a file where all possible configuration settings are stored with their default values. Every setting is also well documented in order to understand what the setting does. This file is overwritten every time you update the driver.
 
 Click [here](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) to see the `config.default.ini`.
 
 ## How to edit `utils.py` or `config.ini`
 
-See [this page](../general/install#how-to-edit-utilspy-or-configini).
+See [this page](../general/install.md#how-to-edit-utilspy-or-configini).
 
 ## How to enable a disabled BMS
 
-See [this page](../general/install#how-to-enable-a-disabled-bms).
+See [this page](../general/install.md#how-to-enable-a-disabled-bms).
 
 ## What is the username and password of the SSH connection?
 
@@ -32,15 +32,17 @@ See the Victron Energy documentation how to get [root access](https://www.victro
 
 ## Which version do I have installed?
 
-You check the installed version in the [driver log files](../troubleshoot/#driver-log-files) or in the remote console/GUI under SerialBattery -> Device -> Firmware version
+You check the installed version in the [driver log files](../troubleshoot/index.md#driver-log-files) or in the remote console/GUI under SerialBattery -> Device -> Firmware version
 
 ## How to aggregate multiple batteries?
 
 You need an additional driver for that. Here are a few listed:
 
-### [dbus-aggregate-batteries](https://github.com/Dr-Gigavolt/dbus-aggregate-batteries) by [Dr-Gigavolt](https://github.com/Dr-Gigavolt)
+### [dbus-aggregate-batteries](https://github.com/Dr-Gigavolt/dbus-aggregate-batteries) by [Dr-Gigavolt](https://github.com/Dr-Gigavolt) (recommended)
 
-Automatically merges connected batteries. Takes consideration of SmartShunt, Multies, Quattros, SmartSolars, BlueSolars and MPPT for current calculation. Additional configuration possible. Currently the only driver, which switches to float AFTER all batteries are fully charged. See `KEEP_MAX_CVL`, default is `False`.
+Automatically merges connected batteries. Takes consideration of SmartShunt, Multies, Quattros, SmartSolars, BlueSolars and MPPT for current calculation. Additional configuration possible.
+
+💡 Currently the only driver, which switches to float AFTER all batteries are fully charged. See `KEEP_MAX_CVL`, default is `False`.
 
 ### [BatteryAggregator](https://github.com/pulquero/BatteryAggregator) by [pulquero](https://github.com/pulquero)
 
@@ -60,7 +62,7 @@ The BMS will prevent your battery reaching an unsafe situation (it will disconne
 
 ## Which BMS should I buy?
 
-Most of the BMS that the driver support will work fine and the driver does support most features for all the BMS brands. See the [comparison table](../general/features#bms-feature-comparison) for any small differenaces.
+Most of the BMS that the driver support will work fine and the driver does support most features for all the BMS brands. See the [comparison table](../general/features.md#bms-feature-comparison) for any small differenaces.
 
 Find the BMS that fits your budget with the features that you need.
 
@@ -104,7 +106,7 @@ You can add both to your system and in the newer Venus OS firmwares you can sele
 
 ## Can the driver be used as monitor only?
 
-> Please also read [Should I set the Smartshunt or the BMS as the Battery Monitor?](../faq/#should-i-set-the-smartshunt-or-the-bms-as-the-battery-monitor)
+> Please also read [Should I set the Smartshunt or the BMS as the Battery Monitor?](../faq/index.md#should-i-set-the-smartshunt-or-the-bms-as-the-battery-monitor)
 
 Yes it can, but there are certain limitations.
 
@@ -188,7 +190,7 @@ Go to the remote console/GUI under SerialBattery -> Parameters and go to the bot
 
 ## Does the driver work for `3.7V` based cells also?
 
-Yes, but you will [need to adjust](../general/install#how-to-change-the-default-limits) the `MAX_CELL_VOLTAGE` and `MIN_CELL_VOLTAGE` values for `3.7V` cells instead of the default `3.2V` cells.
+Yes, but you will [need to adjust](../general/install.md#how-to-change-the-default-limits) the `MAX_CELL_VOLTAGE` and `MIN_CELL_VOLTAGE` values for `3.7V` cells instead of the default `3.2V` cells.
 
 Recommended values for `3.7V` cells are:
 
@@ -247,7 +249,7 @@ The Daly BMS alarms did not work in driver versions before `v1.0.20230531` and t
 
 ## Why is the battery current inverted?
 
-Some Daly BMS send the current as inverted value. This can be corrected by setting `INVERT_CURRENT_MEASUREMENT` to `-1` in the `utils.py` or `config.ini` (depending on the installed driver version). See [How to edit `utils.py` or `config.ini`](../general/install#how-to-edit-utilspy-or-configini).
+Some Daly BMS send the current as inverted value. This can be corrected by setting `INVERT_CURRENT_MEASUREMENT` to `-1` in the `utils.py` or `config.ini` (depending on the installed driver version). See [How to edit `utils.py` or `config.ini`](../general/install.md#how-to-edit-utilspy-or-configini).
 
 ## What can I do, if the BMS communication is unstable?
 
@@ -330,4 +332,4 @@ Now reboot the device. If this doesn't help, then download/unpack and reinstall 
 
 ## `tar: conf/serial-starter.d: Cannot open: File exists`
 
-See [this page](../general/install#downgrade-from--v100-to--v0143).
+See [this page](../general/install.md#downgrade-from--v100-to--v0143).

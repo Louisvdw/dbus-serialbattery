@@ -12,9 +12,9 @@ toc_max_heading_level: 4
 
 ## 🚨 IMPORTANT 🚨
 
-* If you think it could be a bug and you did not already tested the `nightly` build, then install it and see if the error persists. See [here](../general/install#nightly-build) how to install it.
+* If you think it could be a bug and you did not already tested the `nightly` build, then install it and see if the error persists. See [here](../general/install.md#nightly-build) how to install it.
 
-* If the logs don't give you enough valuable data, then change the logging from `INFO` to `DEBUG` in the config file. See [here](../general/install#how-to-edit-utilspy-or-configini) how to edit the `config.ini`.
+* If the logs don't give you enough valuable data, then change the logging from `INFO` to `DEBUG` in the config file. See [here](../general/install.md#how-to-edit-utilspy-or-configini) how to edit the `config.ini`.
 
 
 ## How the driver works
@@ -23,11 +23,16 @@ toc_max_heading_level: 4
     This allows the `serial starter` to create services for `dbus-serialbattery`, if a new serial adapter is connected. The `serial starter` service (`/service/serial-starter`) then creates a
     service (`/service/dbus-serialbattery.*`) for each found serial port.
 
-    Additionally during installation a service (`/service/dbus-blebattery.*`) for each Bluetooth BMS is created.
+    Additionally during installation a service (`/service/dbus-blebattery.*`) for each Bluetooth BMS and (`/service/dbus-canbattery.*`) for each CAN BMS is created.
 
-2. Each created service in `/service/dbus-serialbattery.*` or `/service/dbus-serialbattery.*` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh *` where the `*` stands for the serial port.
+2. Each created service in `/service/dbus-serialbattery.*`, `/service/dbus-blebattery.*` or `/service/dbus-canbattery.*` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh *`.
 
-    For example: The service `/service/dbus-serialbattery.ttyUSB0` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh ttyUSB0`
+   * For `dbus-serialbattery` the `*` stands for the serial port, e.g. the service `/service/dbus-serialbattery.ttyUSB0` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh ttyUSB0`.
+
+   * For `dbus-blebattery` the `*` stands for an incremental number, e.g. the service `/service/dbus-blebattery.0` runs `/opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py Jkbms_Ble C8:47:8C:00:00:00`, where the BMS type `Jkbms_Ble` and the BMS Bluetooth MAC address `C8:47:8C:00:00:00` is fetched from the config file during installation.
+
+   * For `dbus-canbattery` the `*` stands for the can port, e.g. the service `/service/dbus-canbattery.can0` runs `/opt/victronenergy/dbus-serialbattery/start-serialbattery.sh can0`, where the CAN port `can0` is fetched from the config file during installation.
+
 
 
 ## Driver log files
@@ -69,6 +74,17 @@ INFO: Start service dbus-serialbattery.ttyUSB0 once
 
 ✅ This indicates, that the driver was successfully started against the `USB0` port.
 
+❌ If there is no `dbus-serialbattery.tty*` entry check with `lsusb`, if your USB to serial converter is recognized from Venus OS.
+
+Here are some partial `lsusb` outputs which show a few different adapters. If you have attached only one adapter you will see only one similar entry as below:
+
+`Bus 001 Device 002: ID 0403:6015 Future Technology Devices International, Ltd Bridge(I2C/SPI/UART/FIFO)`
+`Bus 001 Device 003: ID 0403:6001 Future Technology Devices International, Ltd FT232 Serial (UART) IC`
+`Bus 001 Device 004: ID 0403:6015 Future Technology Devices International, Ltd Bridge(I2C/SPI/UART/FIFO)`
+`Bus 001 Device 005: ID 0403:6011 Future Technology Devices International, Ltd FT4232H Quad HS USB-UART/FIFO IC`
+`Bus 002 Device 002: ID 1a86:7523 QinHeng Electronics HL-340 USB-Serial adapter`
+
+
 #### `/data/log/dbus-serialbattery.ttyUSB*/current` or `/data/log/dbus-serialbattery.ttyAMA0/current`
 Where `*` is the number of your USB port (e.g. `ttyUSB0`, `ttyUSB1`, `ttyUSB2`, ...) or `ttyAMA0`, if you are using a Raspberry Pi hat.
 
@@ -85,14 +101,15 @@ tail -F -n 100 /data/log/dbus-serialbattery.ttyUSB0/current | tai64nlocal
 ```bash
 ...
 INFO:SerialBattery:Starting dbus-serialbattery
-INFO:SerialBattery:dbus-serialbattery v1.0.0
+INFO:SerialBattery:Venus OS v3.40
+INFO:SerialBattery:dbus-serialbattery v1.3.0
+INFO:SerialBattery:-- Testing BMS: 1 of 3 rounds
 INFO:SerialBattery:Testing BMS_NAME
 ...
 INFO:SerialBattery:Connection established to BMS_NAME
 INFO:SerialBattery:Battery BMS_NAME connected to dbus from /dev/ttyUSB0
 ...
-INFO:SerialBattery:DeviceInstance = 1
-INFO:SerialBattery:com.victronenergy.battery.ttyUSB0
+INFO:SerialBattery:Serial Number/Unique Identifier: UNIQUE_IDENTIFIER
 ...
 ```
 ✅ This indicates, that your driver started successfully and connected to your BMS. You can see now the BMS in the GUI.
@@ -107,7 +124,7 @@ ERROR:SerialBattery:ERROR >>> No battery connection at /dev/ttyUSB0
 ### Bluetooth BMS connection
 
 #### `/data/log/dbus-blebattery.*/current`
-Where `*` is a unique number starting from 0.
+Where `*` is an incremental number.
 
 **Execute**
 
@@ -121,15 +138,16 @@ tail -F -n 100 /data/log/dbus-blebattery.*/current | tai64nlocal
 **Output**
 ```bash
 ...
-INFO:SerialBattery:dbus-serialbattery v1.0.0
+INFO:SerialBattery:Starting dbus-serialbattery
+INFO:SerialBattery:Venus OS v3.40
+INFO:SerialBattery:dbus-serialbattery v1.3.0
 INFO:SerialBattery:init of BMS_NAME at BMS_MAC_ADDRESS
 INFO:SerialBattery:test of BMS_NAME at BMS_MAC_ADDRESS
 INFO:SerialBattery:BMS_NAME found!
 INFO:SerialBattery:Connection established to BMS_NAME
 INFO:SerialBattery:Battery BMS_NAME connected to dbus from BMS_MAC_ADDRESS
 ...
-INFO:SerialBattery:DeviceInstance = 1
-INFO:SerialBattery:com.victronenergy.battery.BMS_MAC_ADDRESS
+INFO:SerialBattery:Serial Number/Unique Identifier: UNIQUE_IDENTIFIER
 ...
 ```
 ✅ This indicates, that your driver started successfully and connected to your BMS. You can see now the BMS in the GUI.
@@ -143,6 +161,44 @@ INFO:SerialBattery:init of BMS_NAME at BMS_MAC_ADDRESS
 INFO:SerialBattery:test of BMS_NAME at BMS_MAC_ADDRESS
 ERROR:SerialBattery:no BMS found at BMS_MAC_ADDRESS
 ERROR:SerialBattery:ERROR >>> No battery connection at BMS_NAME
+```
+
+
+### CAN BMS connection
+
+#### `/data/log/dbus-canbattery.*/current`
+Where `*` is the number of your CAN port (e.g. `can0`, `can5`, `can9`, ...).
+
+**Execute**
+
+💡 The `tail` command with the parameter `-F` does not quit automatically, since it waits for new log entries.
+You can exit by pressing `CTRL + C`.
+
+```bash
+tail -F -n 100 /data/log/dbus-canbattery.*/current | tai64nlocal
+```
+
+**Output**
+```bash
+...
+INFO:SerialBattery:Starting dbus-serialbattery
+INFO:SerialBattery:Venus OS v3.40
+INFO:SerialBattery:dbus-serialbattery v1.3.0
+INFO:SerialBattery:-- Testing BMS: 1 of 3 rounds
+INFO:SerialBattery:Testing BMS_NAME
+...
+INFO:SerialBattery:Connection established to BMS_NAME
+INFO:SerialBattery:Battery BMS_NAME connected to dbus from can0
+...
+INFO:SerialBattery:Serial Number/Unique Identifier: UNIQUE_IDENTIFIER
+...
+```
+✅ This indicates, that your driver started successfully and connected to your BMS. You can see now the BMS in the GUI.
+
+❌ If you see an error like below, then your battery is most likely connected to a different `can` port.
+
+```bash
+ERROR:SerialBattery:ERROR >>> No battery connection at can0
 ```
 
 
@@ -319,7 +375,7 @@ root@raspberrypi2:~# svstat /service/dbus-serialbattery.*
 
 ## FAQ (Frequently Asked Questions)
 
-Check the [FAQ (Frequently Asked Questions)](../faq) for answers
+Check the [FAQ (Frequently Asked Questions)](../faq/index.md) for answers
 
 ## Alarm logs (VRM Portal)
 
