@@ -181,8 +181,17 @@ class Jkbms_Ble(Battery):
         else:
             self.resetting = False
 
+        # update cell voltages
         for c in range(self.cell_count):
-            self.cells[c].voltage = st["cell_info"]["voltages"][c]
+            if (
+                st["cell_info"]["voltages"][c] >= 1
+                and st["cell_info"]["voltages"][c] <= 5
+            ):
+                self.cells[c].voltage = st["cell_info"]["voltages"][c]
+            else:
+                logger.warning(
+                    f"Jkbms_Ble: Cell {c} voltage out of range (1 - 5 V): {st['cell_info']['voltages'][c]}"
+                )
 
         temp_mos = st["cell_info"]["temperature_mos"]
         self.to_temp(0, temp_mos if temp_mos < 32767 else (65535 - temp_mos) * -1)

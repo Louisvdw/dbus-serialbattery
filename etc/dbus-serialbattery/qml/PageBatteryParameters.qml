@@ -7,6 +7,8 @@ MbPage {
 	property variant service
 
 	property VBusItem chargeModeDebug: VBusItem { bind: service.path("/Info/ChargeModeDebug") }
+	property VBusItem chargeModeDebugFloat: VBusItem { bind: service.path("/Info/ChargeModeDebugFloat") }
+	property VBusItem chargeModeDebugBulk: VBusItem { bind: service.path("/Info/ChargeModeDebugBulk") }
 
 	model: VisibleItemModel {
 
@@ -51,15 +53,27 @@ MbPage {
 
 		// show debug informations
 		MbItemText {
-			text: chargeModeDebug.value.split('\n').slice(0, 10).join('\n') // Display first 10 lines
+			text: chargeModeDebug.value.split('\n').slice(0, 8).join('\n') // Display first 8 lines
 			wrapMode: Text.WordWrap
 			show: chargeModeDebug.value != ""
 		}
 
 		MbItemText {
-			text: chargeModeDebug.value.split('\n').slice(10).join('\n') // Display remaining lines
+			text: chargeModeDebug.value.split('\n').slice(8).join('\n') // Display remaining lines
 			wrapMode: Text.WordWrap
-			show: chargeModeDebug.value.split('\n').length > 10 // Show only if there are more than 10 lines
+			show: chargeModeDebug.value.split('\n').length > 8 // Show only if there are more than 8 lines
+		}
+
+		MbItemText {
+			text: chargeModeDebugFloat.value
+			wrapMode: Text.WordWrap
+			show: chargeModeDebugFloat.value != ""
+		}
+
+		MbItemText {
+			text: chargeModeDebugBulk.value
+			wrapMode: Text.WordWrap
+			show: chargeModeDebugBulk.value != ""
 		}
 
 	}

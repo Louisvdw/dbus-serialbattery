@@ -93,6 +93,7 @@ fi
 
 
 # handle read only mounts
+# TODO: system should not remain in read-only mode
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
 # install

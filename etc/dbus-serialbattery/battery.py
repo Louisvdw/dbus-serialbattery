@@ -130,6 +130,8 @@ class Battery(ABC):
         self.transition_start_time: int = None
         self.charge_mode: str = None
         self.charge_mode_debug: str = ""
+        self.charge_mode_debug_float: str = ""
+        self.charge_mode_debug_bulk: str = ""
         self.charge_limitation: str = None
         self.discharge_limitation: str = None
         self.linear_cvl_last_set: int = 0
@@ -647,8 +649,6 @@ class Battery(ABC):
                     + f"voltage_sum: {round(voltage_sum, 2)} V • "
                     + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} V\n"
                     + f"max_cell_voltage: {self.get_max_cell_voltage()} V • penalty_sum: {round(penalty_sum, 3)} V\n"
-                    + f"time_diff: {time_diff}/{utils.MAX_VOLTAGE_TIME_SEC} • "
-                    + f"SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: {utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT}%\n"
                     + f"soc: {self.soc}% • soc_calc: {self.soc_calc}%\n"
                     + f"current: {self.current}A • current_corrected: {self.current_corrected} A • "
                     + (
@@ -656,8 +656,6 @@ class Battery(ABC):
                         if self.current_external is not None
                         else "\n"
                     )
-                    + f"allow_max_voltage: {self.allow_max_voltage}\n"
-                    + f"max_voltage_start_time: {self.max_voltage_start_time}\n"
                     + f"current_time: {current_time}\n"
                     + f"linear_cvl_last_set: {self.linear_cvl_last_set}\n"
                     + f"charge_fet: {self.charge_fet} • control_allow_charge: {self.control_allow_charge}\n"
@@ -677,6 +675,31 @@ class Battery(ABC):
                         if self.soc_calc_reset_starttime is not None
                         else "None"
                     )
+                )
+
+                self.charge_mode_debug_float = (
+                    "-- switch to float requirements (Linear Mode) --\n"
+                    + f"max_battery_voltage: {self.max_battery_voltage} <= voltage_sum: {round(voltage_sum, 2)}\n"
+                    + "AND\n"
+                    + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} <= "
+                    + "CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL: "
+                    + f"{utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL}\n"
+                    + "AND\n"
+                    + f"allow_max_voltage: {self.allow_max_voltage} == True\n"
+                    + "AND\n"
+                    + f"time_diff: {utils.MAX_VOLTAGE_TIME_SEC} < {time_diff}"
+                )
+
+                self.charge_mode_debug_bulk = (
+                    "-- switch to bulk requirements (Linear Mode) --\n"
+                    + "a) SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: "
+                    + f"{utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT} > {self.soc_calc}\n"
+                    + "OR\n"
+                    + f"b) voltage_cell_diff: {round(voltage_cell_diff, 3)} >= "
+                    + "CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT: "
+                    + f"{utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT}\n"
+                    + "AND\n"
+                    + f"allow_max_voltage: {self.allow_max_voltage} == False"
                 )
 
         except TypeError:
@@ -731,6 +754,10 @@ class Battery(ABC):
                 voltage = self.get_cell_voltage(i)
                 if voltage:
                     voltage_sum += voltage
+
+            voltage_cell_diff = (
+                self.get_max_cell_voltage() - self.get_min_cell_voltage()
+            )
 
             if self.max_voltage_start_time is None:
                 # check if max voltage is reached and start timer to keep max voltage
@@ -787,6 +814,68 @@ class Battery(ABC):
                     self.soc_reset_last_reached = current_time
 
             self.charge_mode += " (Step Mode)"
+
+            # debug information
+            if logger.isEnabledFor(logging.DEBUG):
+
+                soc_reset_days_ago = round(
+                    (current_time - self.soc_reset_last_reached) / 60 / 60 / 24, 2
+                )
+                soc_reset_in_days = round(
+                    utils.SOC_RESET_AFTER_DAYS - soc_reset_days_ago, 2
+                )
+
+                self.charge_mode_debug = (
+                    f"max_battery_voltage: {round(self.max_battery_voltage, 2)} V • "
+                    + f"control_voltage: {round(self.control_voltage, 2)} V\n"
+                    + f"voltage: {round(self.voltage, 2)} V • "
+                    + f"VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)} V\n"
+                    + f"voltage_sum: {round(voltage_sum, 2)} V\n"
+                    + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} V\n"
+                    + f"soc: {self.soc}% • soc_calc: {self.soc_calc}%\n"
+                    + f"current: {self.current}A • current_corrected: {self.current_corrected} A • "
+                    + (
+                        f"current_external: {self.current_external} A\n"
+                        if self.current_external is not None
+                        else "\n"
+                    )
+                    + f"current_time: {current_time}\n"
+                    + f"linear_cvl_last_set: {self.linear_cvl_last_set}\n"
+                    + f"charge_fet: {self.charge_fet} • control_allow_charge: {self.control_allow_charge}\n"
+                    + f"discharge_fet: {self.discharge_fet} • control_allow_discharge: {self.control_allow_discharge}\n"
+                    + f"block_because_disconnect: {self.block_because_disconnect}\n"
+                    + "soc_reset_last_reached: "
+                    + (
+                        "Never"
+                        if self.soc_reset_last_reached == 0
+                        else f"{soc_reset_days_ago}"
+                    )
+                    + f" d ago, next in {soc_reset_in_days} d\n"
+                    + f"soc_calc_capacity_remain: {self.soc_calc_capacity_remain}/{self.capacity} Ah\n"
+                    + "soc_calc_reset_starttime: "
+                    + (
+                        f"{int(current_time - self.soc_calc_reset_starttime)}/{utils.SOC_RESET_TIME}"
+                        if self.soc_calc_reset_starttime is not None
+                        else "None"
+                    )
+                )
+
+                self.charge_mode_debug_float = (
+                    "-- switch to float requirements (Step Mode) --\n"
+                    + f"max_battery_voltage: {self.max_battery_voltage} <= voltage_sum: {round(voltage_sum, 2)}\n"
+                    + "AND\n"
+                    + f"allow_max_voltage: {self.allow_max_voltage} == True\n"
+                    + "AND\n"
+                    + f"time_diff: {utils.MAX_VOLTAGE_TIME_SEC} < {time_diff}"
+                )
+
+                self.charge_mode_debug_bulk = (
+                    "-- switch to bulk requirements (Step Mode) --\n"
+                    + "SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: "
+                    + f"{utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT} > {self.soc_calc}\n"
+                    + "AND\n"
+                    + f"allow_max_voltage: {self.allow_max_voltage} == False"
+                )
 
         except TypeError:
             self.control_voltage = None

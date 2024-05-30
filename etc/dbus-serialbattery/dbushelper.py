@@ -529,6 +529,8 @@ class DbusHelper:
 
         self._dbusservice.add_path("/Info/ChargeMode", None, writeable=True)
         self._dbusservice.add_path("/Info/ChargeModeDebug", None, writeable=True)
+        self._dbusservice.add_path("/Info/ChargeModeDebugFloat", None, writeable=True)
+        self._dbusservice.add_path("/Info/ChargeModeDebugBulk", None, writeable=True)
         self._dbusservice.add_path("/Info/ChargeLimitation", None, writeable=True)
         self._dbusservice.add_path("/Info/DischargeLimitation", None, writeable=True)
 
@@ -923,6 +925,12 @@ class DbusHelper:
         # Voltage and charge control info (custom dbus paths)
         self._dbusservice["/Info/ChargeMode"] = self.battery.charge_mode
         self._dbusservice["/Info/ChargeModeDebug"] = self.battery.charge_mode_debug
+        self._dbusservice["/Info/ChargeModeDebugFloat"] = (
+            self.battery.charge_mode_debug_float
+        )
+        self._dbusservice["/Info/ChargeModeDebugBulk"] = (
+            self.battery.charge_mode_debug_bulk
+        )
         self._dbusservice["/Info/ChargeLimitation"] = self.battery.charge_limitation
         self._dbusservice["/Info/DischargeLimitation"] = (
             self.battery.discharge_limitation
