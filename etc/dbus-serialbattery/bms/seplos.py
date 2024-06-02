@@ -233,18 +233,35 @@ class Seplos(Battery):
                 )
                 self.cells[i].voltage = voltage
                 logger.debug("Voltage cell[{}]={}V".format(i, voltage))
-            for i in range(min(4, self.cell_count)):
-                temp = (
-                    Seplos.int_from_2byte_hex_ascii(data, temps_offset + i * 4) - 2731
-                ) / 10
-                self.cells[i].temp = temp
-                logger.debug("Temp cell[{}]={}°C".format(i, temp))
+
         self.temp1 = (
-            Seplos.int_from_2byte_hex_ascii(data, temps_offset + 4 * 4) - 2731
+            Seplos.int_from_2byte_hex_ascii(data, temps_offset + 0 * 4) - 2731
         ) / 10
         self.temp2 = (
+            Seplos.int_from_2byte_hex_ascii(data, temps_offset + 1 * 4) - 2731
+        ) / 10
+        self.temp3 = (
+            Seplos.int_from_2byte_hex_ascii(data, temps_offset + 2 * 4) - 2731
+        ) / 10
+        self.temp4 = (
+            Seplos.int_from_2byte_hex_ascii(data, temps_offset + 3 * 4) - 2731
+        ) / 10
+        temp_environment = (
+            Seplos.int_from_2byte_hex_ascii(data, temps_offset + 4 * 4) - 2731
+        ) / 10
+        self.temp_mos = (
             Seplos.int_from_2byte_hex_ascii(data, temps_offset + 5 * 4) - 2731
         ) / 10
+        logger.debug("Temp cell1={}°C".format(self.temp1))
+        logger.debug("Temp cell2={}°C".format(self.temp2))
+        logger.debug("Temp cell3={}°C".format(self.temp3))
+        logger.debug("Temp cell4={}°C".format(self.temp4))
+        logger.debug(
+            "Environment temp = {}°C ,  Power/MOSFET temp = {}°C".format(
+                temp_environment, self.temp_mos
+            )
+        )
+
         self.current = (
             Seplos.int_from_2byte_hex_ascii(data, offset=96, signed=True) / 100
         )
@@ -261,11 +278,6 @@ class Seplos(Battery):
             )
         )
         logger.debug("Cycles = {}".format(self.cycles))
-        logger.debug(
-            "Environment temp = {}°C ,  Power temp = {}°C".format(
-                self.temp1, self.temp2
-            )
-        )
         logger.debug("HW:" + self.hardware_version)
 
         return True
