@@ -65,6 +65,7 @@
 * Changed: Fixed SoC is None on driver startup https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/32 by @mr-manuel
 * Changed: JKBMS BLE - Fixed problem with second temperature sensor, which was introduced with `v1.1.20240128dev` https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/26 by @mr-manuel
 * Changed: Optimized SOC reset to 100% and 0% when `SOC_CALCULATION` is enabled by @mr-manuel
+* Changed: Seplos BMS - Fixed temperature display https://github.com/Louisvdw/dbus-serialbattery/issues/1072 by @wollew
 
 
 ## v1.2.20240408
