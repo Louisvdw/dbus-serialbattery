@@ -1435,9 +1435,9 @@ class Battery(ABC):
         If the data is in the thresholds return True,
         else return False since it's very probably not a BMS
         """
-        if self.capacity is not None and (self.capacity < 0 or self.capacity > 1000):
+        if self.capacity is not None and (self.capacity < 0 or self.capacity > 2000):
             logger.debug(
-                "Capacity outside of thresholds (from 0 to 1000): " + str(self.capacity)
+                "Capacity outside of thresholds (from 0 to 2000): " + str(self.capacity)
             )
             return False
         if self.current is not None and abs(self.current) > 1000:
