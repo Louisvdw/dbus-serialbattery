@@ -85,6 +85,14 @@ class Battery(ABC):
         self.control_allow_charge: bool = None
         self.control_allow_discharge: bool = None
 
+        # display errors in the GUI
+        # throw Error if error_in_config is True
+        # see https://github.com/victronenergy/node-red-contrib-victron/blob/dbb2003818ec37115c1d1d568366b351c3770337/src/nodes/config-client.html#L869-L886  # noqa
+        self.state = 0
+        # throw #31 Settings invalid if error_in_config is True
+        # see https://github.com/victronenergy/node-red-contrib-victron/blob/dbb2003818ec37115c1d1d568366b351c3770337/src/nodes/config-client.html#L638-L673  # noqa
+        self.error_code = None
+
         # fetched from the BMS from a field where the user can input a custom string
         # only if available
         self.custom_field: str = None
@@ -359,7 +367,7 @@ class Battery(ABC):
                 # if there is a SOC from the BMS then use it
                 if self.soc is not None:
                     self.soc_calc_capacity_remain = self.capacity * self.soc / 100
-                    logger.info(
+                    logger.debug(
                         "SOC initialized from BMS and set to " + str(self.soc) + "%"
                     )
                 # else set it to 100%
@@ -367,13 +375,13 @@ class Battery(ABC):
                 # but leave it in case a BMS without SOC should be added
                 else:
                     self.soc_calc_capacity_remain = self.capacity
-                    logger.info("SOC initialized and set to 100%")
+                    logger.debug("SOC initialized and set to 100%")
             # else initialize it from dbus
             else:
                 self.soc_calc_capacity_remain = (
                     self.capacity * self.soc_calc / 100 if self.soc > 0 else 0
                 )
-                logger.info(
+                logger.debug(
                     "SOC initialized from dbus and set to " + str(self.soc_calc) + "%"
                 )
 
@@ -501,6 +509,10 @@ class Battery(ABC):
                     self.max_voltage_start_time = None
 
                     if self.soc_calc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
+                        # set state to error, to show in the GUI that something is wrong
+                        self.state = 10
+                        self.error_code = 31
+
                         # write to log, that reset to float was not possible
                         logger.error(
                             f"Could not change to float voltage. Battery SoC ({self.soc_calc}%) is lower"
@@ -1092,6 +1104,10 @@ class Battery(ABC):
                 False,
             )
         except Exception:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             logger.warning(
                 "Error while executing calcMaxChargeCurrentReferringToCellVoltage(). Using default value instead."
             )
@@ -1128,6 +1144,10 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             logger.warning(
                 "Error while executing calcMaxDischargeCurrentReferringToCellVoltage(). Using default value instead."
             )
@@ -1220,6 +1240,10 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             logger.warning(
                 "Error while executing calcMaxChargeCurrentReferringToSoc(). Using default value instead."
             )
@@ -1256,6 +1280,10 @@ class Battery(ABC):
                 True,
             )
         except Exception:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             logger.warning(
                 "Error while executing calcMaxDischargeCurrentReferringToSoc(). Using default value instead."
             )

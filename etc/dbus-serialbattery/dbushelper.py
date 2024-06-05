@@ -255,6 +255,10 @@ class DbusHelper:
                                     else False
                                 )
                             except Exception:
+                                # set state to error, to show in the GUI that something is wrong
+                                self.state = 10
+                                self.error_code = 8
+
                                 logger.error(
                                     "AllowMaxVoltage could not be converted to type int: "
                                     + str(value["AllowMaxVoltage"])
@@ -275,6 +279,10 @@ class DbusHelper:
                                     value["MaxVoltageStartTime"]
                                 )
                             except Exception:
+                                # set state to error, to show in the GUI that something is wrong
+                                self.state = 10
+                                self.error_code = 8
+
                                 logger.error(
                                     "MaxVoltageStartTime could not be converted to type int: "
                                     + str(value["MaxVoltageStartTime"])
@@ -291,6 +299,10 @@ class DbusHelper:
                                         f"Soc_calc read from dbus: {self.battery.soc_calc}"
                                     )
                                 except Exception:
+                                    # set state to error, to show in the GUI that something is wrong
+                                    self.state = 10
+                                    self.error_code = 8
+
                                     logger.error(
                                         "SocCalc could not be converted to type float: "
                                         + str(value["SocCalc"])
@@ -309,6 +321,10 @@ class DbusHelper:
                                     value["SocResetLastReached"]
                                 )
                             except Exception:
+                                # set state to error, to show in the GUI that something is wrong
+                                self.state = 10
+                                self.error_code = 8
+
                                 logger.error(
                                     "SocResetLastReached could not be converted to type int: "
                                     + str(value["SocResetLastReached"])
@@ -500,6 +516,10 @@ class DbusHelper:
         self._dbusservice.add_path("/Serial", self.bms_id, writeable=True)
         self._dbusservice.add_path(
             "/DeviceName", self.battery.custom_field, writeable=True
+        )
+        self._dbusservice.add_path("/State", self.battery.state, writeable=True)
+        self._dbusservice.add_path(
+            "/ErrorCode", self.battery.error_code, writeable=True
         )
 
         # Create static battery info
@@ -815,6 +835,26 @@ class DbusHelper:
             # This is to mannage CCL\DCL
             self.battery.manage_charge_current()
 
+            # Manage battery state, if not set to error (10)
+            # change state from initializing to running, if there is no error
+            if self.battery.state == 0:
+                self.battery.state = 9
+
+            # change state from running to standby, if charging and discharging is not allowed
+            if (
+                self.battery.state == 9
+                and not self.battery.get_allow_to_charge()
+                and not self.battery.get_allow_to_discharge()
+            ):
+                self.battery.state = 14
+
+            # change state from standby to running, if charging or discharging is allowed
+            if self.battery.state == 14 and (
+                self.battery.get_allow_to_charge()
+                or self.battery.get_allow_to_discharge()
+            ):
+                self.battery.state = 9
+
             # publish all the data from the battery object to dbus
             self.publish_dbus()
 
@@ -868,6 +908,8 @@ class DbusHelper:
             self._dbusservice["/Dc/0/MidVoltageDeviation"] = deviation
 
         # Update battery extras
+        self._dbusservice["/State"] = self.battery.state
+        self._dbusservice["/ErrorCode"] = self.battery.error_code
         self._dbusservice["/History/ChargeCycles"] = self.battery.cycles
         self._dbusservice["/History/TotalAhDrawn"] = self.battery.total_ah_drawn
         self._dbusservice["/Io/AllowToCharge"] = (
@@ -1021,6 +1063,10 @@ class DbusHelper:
                     3,
                 )
             except Exception:
+                # set state to error, to show in the GUI that something is wrong
+                self.state = 10
+                self.error_code = 8
+
                 exception_type, exception_object, exception_traceback = sys.exc_info()
                 file = exception_traceback.tb_frame.f_code.co_filename
                 line = exception_traceback.tb_lineno
@@ -1096,6 +1142,10 @@ class DbusHelper:
                         )
 
         except Exception:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             exception_type, exception_object, exception_traceback = sys.exc_info()
             file = exception_traceback.tb_frame.f_code.co_filename
             line = exception_traceback.tb_lineno
@@ -1149,6 +1199,10 @@ class DbusHelper:
                         if not recursive:
                             return value
                     except dbus.exceptions.DBusException as e:
+                        # set state to error, to show in the GUI that something is wrong
+                        self.state = 10
+                        self.error_code = 8
+
                         logger.error(
                             f"getSettingsWithValues(): Failed to get value: {e}"
                         )
@@ -1172,6 +1226,10 @@ class DbusHelper:
             logger.debug(f"Setted setting {object_path}/{setting_name} to {value}")
             return True if method(value) == 0 else False
         except dbus.exceptions.DBusException as e:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             logger.error(f"Failed to set setting: {e}")
 
     def removeSetting(
@@ -1187,6 +1245,10 @@ class DbusHelper:
             logger.debug(f"Removed setting at {object_path}")
             return True if method(setting_name) == 0 else False
         except dbus.exceptions.DBusException as e:
+            # set state to error, to show in the GUI that something is wrong
+            self.state = 10
+            self.error_code = 8
+
             logger.error(f"Failed to remove setting: {e}")
 
     def create_nested_dict(self, path, value) -> dict:

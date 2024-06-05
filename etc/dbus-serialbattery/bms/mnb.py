@@ -151,7 +151,6 @@ class MNB(Battery):
         # used once in init...
         self.charger_connected = True
         self.load_connected = True
-        self.state = True
         self.cycles = None
 
         return True

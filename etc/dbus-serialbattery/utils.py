@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.3.20240603dev"
+DRIVER_VERSION = "1.3.20240605dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -51,36 +51,66 @@ elif config["DEFAULT"]["LOGGING"].upper() == "DEBUG":
 else:
     logger.setLevel(logging.INFO)
 
-# save config values to constants
+# list to store config errors
+# this is needed else the errors are not instantly visible
+errors_in_config = []
 
+# save config values to constants
 
 # --------- Battery Current limits ---------
 MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
+"""
+Defines the maximum charge current that the battery can accept.
+"""
 MAX_BATTERY_DISCHARGE_CURRENT = float(
     config["DEFAULT"]["MAX_BATTERY_DISCHARGE_CURRENT"]
 )
+"""
+Defines the maximum discharge current that the battery can deliver.
+"""
 
 # --------- Cell Voltages ---------
 MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
+"""
+Defines the minimum cell voltage that the battery can have.
+Used for:
+- Limit CVL range
+- SoC calculation (if enabled)
+"""
 MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
+"""
+Defines the maximum cell voltage that the battery can have.
+Used for:
+- Limit CVL range
+- SoC calculation (if enabled)
+"""
 
 FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
+"""
+Defines the cell voltage that the battery should have when it is fully charged.
+"""
+# make some checks for most common missconfigurations
 if FLOAT_CELL_VOLTAGE > MAX_CELL_VOLTAGE:
     FLOAT_CELL_VOLTAGE = MAX_CELL_VOLTAGE
-    logger.error(
-        ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value greater than MAX_CELL_VOLTAGE. Please check the configuration."
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: FLOAT_CELL_VOLTAGE ({FLOAT_CELL_VOLTAGE} V) is greater than MAX_CELL_VOLTAGE ({MAX_CELL_VOLTAGE} V). "
+        + "To ensure that the driver still works correctly, FLOAT_CELL_VOLTAGE was set to MAX_CELL_VOLTAGE. Please check the configuration."
     )
+# make some checks for most common missconfigurations
 if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
     FLOAT_CELL_VOLTAGE = MIN_CELL_VOLTAGE
-    logger.error(
-        ">>> ERROR: FLOAT_CELL_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+    errors_in_config.append(
+        "**CONFIG ISSUE**: FLOAT_CELL_VOLTAGE ({FLOAT_CELL_VOLTAGE} V) is less than MIN_CELL_VOLTAGE ({MIN_CELL_VOLTAGE} V). "
+        + "To ensure that the driver still works correctly, FLOAT_CELL_VOLTAGE was set to MIN_CELL_VOLTAGE. Please check the configuration."
     )
 
 SOC_RESET_VOLTAGE = float(config["DEFAULT"]["SOC_RESET_VOLTAGE"])
+# make some checks for most common missconfigurations
 if SOC_RESET_VOLTAGE < MAX_CELL_VOLTAGE:
     SOC_RESET_VOLTAGE = MAX_CELL_VOLTAGE
-    logger.error(
-        ">>> ERROR: SOC_RESET_VOLTAGE is set to a value less than MAX_CELL_VOLTAGE. Please check the configuration."
+    errors_in_config.append(
+        "**CONFIG ISSUE**: SOC_RESET_VOLTAGE ({SOC_RESET_VOLTAGE} V) is less than MAX_CELL_VOLTAGE ({MAX_CELL_VOLTAGE} V). "
+        + "To ensure that the driver still works correctly, SOC_RESET_VOLTAGE was set to MAX_CELL_VOLTAGE. Please check the configuration."
     )
 SOC_RESET_AFTER_DAYS = (
     int(config["DEFAULT"]["SOC_RESET_AFTER_DAYS"])
@@ -146,28 +176,60 @@ Discharge current control management referring to cell-voltage
 CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
 )
-if CELL_VOLTAGES_WHILE_CHARGING[0] < MAX_CELL_VOLTAGE:
-    logger.error(
-        ">>> ERROR: Maximum value of CELL_VOLTAGES_WHILE_CHARGING is set to a value lower than MAX_CELL_VOLTAGE. Please check the configuration."
-    )
 MAX_CHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
     "MAX_CHARGE_CURRENT_CV_FRACTION",
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
 )
+# make some checks for most common missconfigurations
+if CELL_VOLTAGES_WHILE_CHARGING[0] < MAX_CELL_VOLTAGE and MAX_CHARGE_CURRENT_CV[0] == 0:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: Maximum value of CELL_VOLTAGES_WHILE_CHARGING ({CELL_VOLTAGES_WHILE_CHARGING[0]} V) "
+        + f"is lower than MAX_CELL_VOLTAGE ({MAX_CELL_VOLTAGE} V). MAX_CELL_VOLTAGE will never be reached this way "
+        + "and battery will not change to float. Please check the configuration."
+    )
+# make some checks for most common missconfigurations
+if (
+    SOC_RESET_AFTER_DAYS is not False
+    and CELL_VOLTAGES_WHILE_CHARGING[0] < SOC_RESET_VOLTAGE
+    and MAX_CHARGE_CURRENT_CV[0] == 0
+):
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: Maximum value of CELL_VOLTAGES_WHILE_CHARGING ({CELL_VOLTAGES_WHILE_CHARGING[0]} V) "
+        + f"is lower than SOC_RESET_VOLTAGE ({SOC_RESET_VOLTAGE} V). SOC_RESET_VOLTAGE will never be reached this way "
+        + "and battery will not change to float. Please check the configuration."
+    )
+# make some checks for most common missconfigurations
+if MAX_BATTERY_CHARGE_CURRENT not in MAX_CHARGE_CURRENT_CV:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: In MAX_CHARGE_CURRENT_CV_FRACTION ({', '.join(map(str, _get_list_from_config('DEFAULT', 'MAX_CHARGE_CURRENT_CV_FRACTION', lambda v: float(v))))}) "
+        + "there is no value set to 1. This means that the battery will never use the maximum charge current. Please check the configuration."
+    )
 
 CELL_VOLTAGES_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_DISCHARGING", lambda v: float(v)
 )
-if CELL_VOLTAGES_WHILE_DISCHARGING[0] > MIN_CELL_VOLTAGE:
-    logger.error(
-        ">>> ERROR: Minimum value of CELL_VOLTAGES_WHILE_DISCHARGING is set to a value greater than MIN_CELL_VOLTAGE. Please check the configuration."
-    )
 MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
     "DEFAULT",
     "MAX_DISCHARGE_CURRENT_CV_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
+# make some checks for most common missconfigurations
+if (
+    CELL_VOLTAGES_WHILE_DISCHARGING[0] > MIN_CELL_VOLTAGE
+    and MAX_DISCHARGE_CURRENT_CV[0] == 0
+):
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: Minimum value of CELL_VOLTAGES_WHILE_DISCHARGING ({CELL_VOLTAGES_WHILE_DISCHARGING[0]} V) "
+        + f"is higher than MIN_CELL_VOLTAGE ({MIN_CELL_VOLTAGE} V). MIN_CELL_VOLTAGE will never be reached this way. "
+        + "Please check the configuration."
+    )
+# make some checks for most common missconfigurations
+if MAX_BATTERY_DISCHARGE_CURRENT not in MAX_DISCHARGE_CURRENT_CV:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: In MAX_DISCHARGE_CURRENT_CV_FRACTION ({', '.join(map(str, _get_list_from_config('DEFAULT', 'MAX_DISCHARGE_CURRENT_CV_FRACTION', lambda v: float(v))))}) "
+        + "there is no value set to 1. This means that the battery will never use the maximum discharge current. Please check the configuration."
+    )
 
 # --------- Cell Voltage limitation (affecting CVL) ---------
 
@@ -193,6 +255,12 @@ MAX_CHARGE_CURRENT_T = _get_list_from_config(
     "MAX_CHARGE_CURRENT_T_FRACTION",
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
 )
+# make some checks for most common missconfigurations
+if MAX_BATTERY_CHARGE_CURRENT not in MAX_CHARGE_CURRENT_T:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: In MAX_CHARGE_CURRENT_T_FRACTION ({', '.join(map(str, _get_list_from_config('DEFAULT', 'MAX_CHARGE_CURRENT_T_FRACTION', lambda v: float(v))))}) "
+        + "there is no value set to 1. This means that the battery will never use the maximum discharge current. Please check the configuration."
+    )
 
 TEMPERATURES_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "TEMPERATURES_WHILE_DISCHARGING", lambda v: float(v)
@@ -202,6 +270,12 @@ MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
     "MAX_DISCHARGE_CURRENT_T_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
+# make some checks for most common missconfigurations
+if MAX_BATTERY_DISCHARGE_CURRENT not in MAX_DISCHARGE_CURRENT_T:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: In MAX_DISCHARGE_CURRENT_T_FRACTION ({', '.join(map(str, _get_list_from_config('DEFAULT', 'MAX_DISCHARGE_CURRENT_T_FRACTION', lambda v: float(v))))}) "
+        + "there is no value set to 1. This means that the battery will never use the maximum discharge current. Please check the configuration."
+    )
 
 # --------- SOC limitation (affecting CCL/DCL) ---------
 CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
@@ -222,6 +296,12 @@ MAX_CHARGE_CURRENT_SOC = _get_list_from_config(
     "MAX_CHARGE_CURRENT_SOC_FRACTION",
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
 )
+# make some checks for most common missconfigurations
+if MAX_BATTERY_CHARGE_CURRENT not in MAX_CHARGE_CURRENT_SOC:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: In MAX_CHARGE_CURRENT_SOC_FRACTION ({', '.join(map(str, _get_list_from_config('DEFAULT', 'MAX_CHARGE_CURRENT_SOC_FRACTION', lambda v: float(v))))}) "
+        + "there is no value set to 1. This means that the battery will never use the maximum charge current. Please check the configuration."
+    )
 
 SOC_WHILE_DISCHARGING = _get_list_from_config(
     "DEFAULT", "SOC_WHILE_DISCHARGING", lambda v: float(v)
@@ -231,6 +311,12 @@ MAX_DISCHARGE_CURRENT_SOC = _get_list_from_config(
     "MAX_DISCHARGE_CURRENT_SOC_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
 )
+# make some checks for most common missconfigurations
+if MAX_BATTERY_DISCHARGE_CURRENT not in MAX_DISCHARGE_CURRENT_SOC:
+    errors_in_config.append(
+        f"**CONFIG ISSUE**: In MAX_DISCHARGE_CURRENT_SOC_FRACTION ({', '.join(map(str, _get_list_from_config('DEFAULT', 'MAX_DISCHARGE_CURRENT_SOC_FRACTION', lambda v: float(v))))}) "
+        + "there is no value set to 1. This means that the battery will never use the maximum discharge current. Please check the configuration."
+    )
 
 # --------- Time-To-Go ---------
 TIME_TO_GO_ENABLE = "True" == config["DEFAULT"]["TIME_TO_GO_ENABLE"]
@@ -514,6 +600,20 @@ def publish_config_variables(dbusservice):
             or isinstance(value, List)
         ):
             dbusservice.add_path(f"/Info/Config/{variable}", value)
+
+
+# Validate config values
+def validate_config_values() -> bool:
+    """
+    Validate the config values and log any issues.
+    Has to be called in a function, otherwise the error messages are not instantly visible.
+    """
+    # loop through all errors and log them
+    for error in errors_in_config:
+        logger.error(error)
+
+    # return True if there are no errors
+    return len(errors_in_config) == 0
 
 
 locals_copy = locals().copy()

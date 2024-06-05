@@ -59,6 +59,7 @@
 * Added: Possibility to add custom polling interval to reduce the CPU load. Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/1022 by @mr-manuel
 * Added: Possibility to select if min/max battery voltage, CVL, CCL and DCL are used from driver or BMS. Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/1056 by @mr-manuel
 * Added: Possibility to use port name as unique identifier https://github.com/Louisvdw/dbus-serialbattery/issues/1035 by @mr-manuel
+* Added: Show in the remote console/GUI if a non blocking error was triggered by @mr-manuel
 * Added: Use current measurement from other dbus path by @mr-manuel
 * Changed: Fixed problem with I-Controller https://github.com/Louisvdw/dbus-serialbattery/issues/1041 by @mr-manuel
 * Changed: Fixed problem with linear limitation disabled https://github.com/Louisvdw/dbus-serialbattery/issues/1037 by @mr-manuel

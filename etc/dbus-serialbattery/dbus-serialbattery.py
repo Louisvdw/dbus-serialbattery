@@ -248,6 +248,11 @@ def main():
     # print log at this point, else not all data is correctly populated
     battery.log_settings()
 
+    # check config, if there are any invalid values trigger "settings incorrect" error
+    if not utils.validate_config_values():
+        battery.state = 10
+        battery.error_code = 31
+
     # use external current sensor if configured
     try:
         if (
