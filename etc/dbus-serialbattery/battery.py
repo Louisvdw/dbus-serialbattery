@@ -480,7 +480,7 @@ class Battery(ABC):
             if self.max_voltage_start_time is None:
                 # start timer, if max voltage is reached and cells are balanced
                 if (
-                    self.max_battery_voltage <= voltage_sum
+                    (self.max_battery_voltage - utils.VOLTAGE_DROP) <= voltage_sum
                     and voltage_cell_diff
                     <= utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL
                     and self.allow_max_voltage
@@ -653,17 +653,17 @@ class Battery(ABC):
                 )
 
                 self.charge_mode_debug = (
-                    f"max_battery_voltage: {round(self.max_battery_voltage, 2)} V • "
-                    + f"control_voltage: {round(self.control_voltage, 2)} V\n"
-                    + f"voltage: {round(self.voltage, 2)} V • "
-                    + f"VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)} V\n"
-                    + f"voltage_sum: {round(voltage_sum, 2)} V • "
-                    + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} V\n"
-                    + f"max_cell_voltage: {self.get_max_cell_voltage()} V • penalty_sum: {round(penalty_sum, 3)} V\n"
+                    f"max_battery_voltage: {(self.max_battery_voltage):.2f} V • "
+                    + f"control_voltage: {self.control_voltage:.2f} V\n"
+                    + f"voltage: {self.voltage:.2f} V • "
+                    + f"VOLTAGE_DROP: {utils.VOLTAGE_DROP:.2f} V\n"
+                    + f"voltage_sum: {voltage_sum:.2f} V • "
+                    + f"voltage_cell_diff: {voltage_cell_diff:.3f} V\n"
+                    + f"max_cell_voltage: {self.get_max_cell_voltage()} V • penalty_sum: {penalty_sum:.3f} V\n"
                     + f"soc: {self.soc}% • soc_calc: {self.soc_calc}%\n"
-                    + f"current: {self.current}A • current_corrected: {self.current_corrected} A • "
+                    + f"current: {self.current:.2f}A • current_corrected: {self.current_corrected:.2f} A • "
                     + (
-                        f"current_external: {self.current_external} A\n"
+                        f"current_external: {self.current_external:.2f} A\n"
                         if self.current_external is not None
                         else "\n"
                     )
@@ -679,7 +679,7 @@ class Battery(ABC):
                         else f"{soc_reset_days_ago}"
                     )
                     + f" d ago, next in {soc_reset_in_days} d\n"
-                    + f"soc_calc_capacity_remain: {self.soc_calc_capacity_remain}/{self.capacity} Ah\n"
+                    + f"soc_calc_capacity_remain: {self.soc_calc_capacity_remain:.3f}/{self.capacity} Ah\n"
                     + "soc_calc_reset_starttime: "
                     + (
                         f"{int(current_time - self.soc_calc_reset_starttime)}/{utils.SOC_RESET_TIME}"
@@ -690,25 +690,26 @@ class Battery(ABC):
 
                 self.charge_mode_debug_float = (
                     "-- switch to float requirements (Linear Mode) --\n"
-                    + f"max_battery_voltage: {self.max_battery_voltage} <= voltage_sum: {round(voltage_sum, 2)}\n"
+                    + f"max_battery_voltage: {(self.max_battery_voltage - utils.VOLTAGE_DROP):.2f} <= "
+                    + f"{voltage_sum:.2f} :voltage_sum\n"
                     + "AND\n"
-                    + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} <= "
-                    + "CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL: "
-                    + f"{utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL}\n"
+                    + f"voltage_cell_diff: {voltage_cell_diff:.3f} <= "
+                    + f"{utils.CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL:.3f} "
+                    + ":CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL\n"
                     + "AND\n"
                     + f"allow_max_voltage: {self.allow_max_voltage} == True\n"
                     + "AND\n"
-                    + f"time_diff: {utils.MAX_VOLTAGE_TIME_SEC} < {time_diff}"
+                    + f"MAX_VOLTAGE_TIME_SEC: {utils.MAX_VOLTAGE_TIME_SEC} < {time_diff} :time_diff"
                 )
 
                 self.charge_mode_debug_bulk = (
                     "-- switch to bulk requirements (Linear Mode) --\n"
                     + "a) SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: "
-                    + f"{utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT} > {self.soc_calc}\n"
+                    + f"{utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT} > {self.soc_calc} :soc_calc\n"
                     + "OR\n"
-                    + f"b) voltage_cell_diff: {round(voltage_cell_diff, 3)} >= "
-                    + "CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT: "
-                    + f"{utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT}\n"
+                    + f"b) voltage_cell_diff: {voltage_cell_diff:.3f} >= "
+                    + f"{utils.CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT:.3f} "
+                    + ":CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT\n"
                     + "AND\n"
                     + f"allow_max_voltage: {self.allow_max_voltage} == False"
                 )
@@ -772,7 +773,9 @@ class Battery(ABC):
 
             if self.max_voltage_start_time is None:
                 # check if max voltage is reached and start timer to keep max voltage
-                if self.max_battery_voltage <= voltage_sum and self.allow_max_voltage:
+                if (
+                    self.max_battery_voltage - utils.VOLTAGE_DROP
+                ) <= voltage_sum and self.allow_max_voltage:
                     # example 2
                     self.max_voltage_start_time = current_time
 
@@ -837,16 +840,17 @@ class Battery(ABC):
                 )
 
                 self.charge_mode_debug = (
-                    f"max_battery_voltage: {round(self.max_battery_voltage, 2)} V • "
-                    + f"control_voltage: {round(self.control_voltage, 2)} V\n"
-                    + f"voltage: {round(self.voltage, 2)} V • "
-                    + f"VOLTAGE_DROP: {round(utils.VOLTAGE_DROP, 2)} V\n"
-                    + f"voltage_sum: {round(voltage_sum, 2)} V\n"
-                    + f"voltage_cell_diff: {round(voltage_cell_diff, 3)} V\n"
+                    f"max_battery_voltage: {(self.max_battery_voltage):.2f} V • "
+                    + f"control_voltage: {self.control_voltage:.2f} V\n"
+                    + f"voltage: {self.voltage:.2f} V • "
+                    + f"VOLTAGE_DROP: {utils.VOLTAGE_DROP:.2f} V\n"
+                    + f"voltage_sum: {voltage_sum:.2f} V • "
+                    + f"voltage_cell_diff: {voltage_cell_diff:.3f} V\n"
+                    + f"max_cell_voltage: {self.get_max_cell_voltage()} V\n"
                     + f"soc: {self.soc}% • soc_calc: {self.soc_calc}%\n"
-                    + f"current: {self.current}A • current_corrected: {self.current_corrected} A • "
+                    + f"current: {self.current:.2f}A • current_corrected: {self.current_corrected:.2f} A • "
                     + (
-                        f"current_external: {self.current_external} A\n"
+                        f"current_external: {self.current_external:.2f} A\n"
                         if self.current_external is not None
                         else "\n"
                     )
@@ -862,7 +866,7 @@ class Battery(ABC):
                         else f"{soc_reset_days_ago}"
                     )
                     + f" d ago, next in {soc_reset_in_days} d\n"
-                    + f"soc_calc_capacity_remain: {self.soc_calc_capacity_remain}/{self.capacity} Ah\n"
+                    + f"soc_calc_capacity_remain: {self.soc_calc_capacity_remain:.3f}/{self.capacity} Ah\n"
                     + "soc_calc_reset_starttime: "
                     + (
                         f"{int(current_time - self.soc_calc_reset_starttime)}/{utils.SOC_RESET_TIME}"
@@ -873,17 +877,18 @@ class Battery(ABC):
 
                 self.charge_mode_debug_float = (
                     "-- switch to float requirements (Step Mode) --\n"
-                    + f"max_battery_voltage: {self.max_battery_voltage} <= voltage_sum: {round(voltage_sum, 2)}\n"
+                    + f"max_battery_voltage: {(self.max_battery_voltage - utils.VOLTAGE_DROP):.2f} <= "
+                    + f"{voltage_sum:.2f} :voltage_sum\n"
                     + "AND\n"
                     + f"allow_max_voltage: {self.allow_max_voltage} == True\n"
                     + "AND\n"
-                    + f"time_diff: {utils.MAX_VOLTAGE_TIME_SEC} < {time_diff}"
+                    + f"MAX_VOLTAGE_TIME_SEC: {utils.MAX_VOLTAGE_TIME_SEC} < {time_diff} :time_diff"
                 )
 
                 self.charge_mode_debug_bulk = (
                     "-- switch to bulk requirements (Step Mode) --\n"
                     + "SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: "
-                    + f"{utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT} > {self.soc_calc}\n"
+                    + f"{utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT} > {self.soc_calc} :soc_calc\n"
                     + "AND\n"
                     + f"allow_max_voltage: {self.allow_max_voltage} == False"
                 )
@@ -1764,14 +1769,21 @@ class Battery(ABC):
         logger.info(f"Battery {self.type} connected to dbus from {self.port}")
         logger.info("========== Settings ==========")
         logger.info(
-            f"> Connection voltage: {self.voltage} V | Current: {self.get_current()} A | SoC (Battery): {self.soc}%"
+            f"> Connection voltage: {self.voltage} V | Current: {self.get_current()} A | SoC: {self.soc}%"
+            + (
+                f" | SoC calc: {self.soc_calc:.0f}%"
+                if self.soc_calc is not None
+                else ""
+            )
         )
         logger.info(
             f"> Cell count: {self.cell_count} | Cells populated: {cell_counter}"
         )
         logger.info(f"> LINEAR LIMITATION ENABLE: {utils.LINEAR_LIMITATION_ENABLE}")
         logger.info(
-            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE} V | MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE} V"
+            f"> MIN CELL VOLTAGE: {utils.MIN_CELL_VOLTAGE:.3f} V "
+            + f"| MAX CELL VOLTAGE: {utils.MAX_CELL_VOLTAGE:.3f} V"
+            + f"| FLOAT CELL VOLTAGE: {utils.FLOAT_CELL_VOLTAGE:.3f} V"
         )
         logger.info(
             f"> MAX BATTERY CHARGE CURRENT: {utils.MAX_BATTERY_CHARGE_CURRENT} A | "
