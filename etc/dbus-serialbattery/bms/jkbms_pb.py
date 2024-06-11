@@ -7,18 +7,16 @@ from re import sub
 import sys
 
 
-class Jkbms(Battery):
+class Jkbms_pb(Battery):
     def __init__(self, port, baud, address):
-        super(Jkbms, self).__init__(port, baud, address)
+        super(Jkbms_pb, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
         self.unique_identifier_tmp = ""
-        self.cell_count = 16
 
-    BATTERYTYPE = "Jkbms"
+    BATTERYTYPE = "Jkbms_pb"
     LENGTH_CHECK = 0
     LENGTH_POS = 2
     LENGTH_SIZE = "H"
-    CURRENT_ZERO_CONSTANT = 32768
     command_status = b"\x01\x10\x16\x20\x00\x01\x02\x00\x00\xD6\xF1"
 
     def test_connection(self):
@@ -52,7 +50,7 @@ class Jkbms(Battery):
             self.cells.append(Cell(False))
 
         self.hardware_version = (
-            "JKBMS "
+            "JKBMS_pb "
             + str(self.cell_count)
             + " cells"
             + (" (" + self.production + ")" if self.production else "")
@@ -321,7 +319,7 @@ class Jkbms(Battery):
         data = read_serial_data(
             command,
             self.port,
-            115200,
+            self.baud,
             self.LENGTH_POS,
             0,
             307,
