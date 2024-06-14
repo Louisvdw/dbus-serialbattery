@@ -119,31 +119,56 @@ Detailed info can be found here: [CCL/DCL depending on cell-voltage does not tur
 ### Float voltage emulation
 If the `MAX_CELL_VOLTAGE` \* `cell count` is reached for `MAX_VOLTAGE_TIME_SEC` then the CVL changes to `FLOAT_CELL_VOLTAGE` \* `cell count`. Max voltage could be reached again if the SoC gets under `SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT`.
 
+### SOC reset voltage
+Some BMS need a higher voltage to trigger a reset to 100% SOC. `SOC_RESET_VOLTAGE` allows you to trigger this voltage once
+in a while. The driver will supress high voltage warnings from the driver when it switches to this voltage. It might be that
+other systems (like the MultiPlus or Solar Charger) trigger a high voltage warning in this case when not properly configured.
+
+See the `SOC reset voltage` section in the
+[`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) for more informations.
+
+This has nothing to do with the `SOC calculation based on coloumb-counting` or `SOC reset via driver on BMS`.
+
+
+## SOC calculation based on coloumb-counting
+Many BMS have problems to manage a SOC reset properly. To workaround this you can enable the SOC calculation of the driver.
+This ignores the SOC of the BMS and calculates it based on coloumb-counting (count the current flowing in and out).
+It's also possible to create a map to correct wrong current measurements.
+
+See the `SOC calculation` section in the
+[`config.default.ini`](https://github.com/Louisvdw/dbus-serialbattery/blob/master/etc/dbus-serialbattery/config.default.ini) for more informations.
+
+This has nothing to do with the `SOC reset voltage` or `SOC reset via driver on BMS`.
+
 ## BMS feature comparison
 
-| Feature                                                                                  | Ant   | Daly  | ECS                | Heltec | HLPdataBMS4S | JK BMS | Life/Tian Power | LLT/JBD | MNB <sup>(1)</sup> | Renogy | Seplos | Seplos v3 | Sinowealth <sup>(1)</sup> |
-| ---:                                                                                     | :---: | :---: | :---:              | :---:  | :---:        | :---:  | :---:           | :---:   | :---:              | :---:  | :---:  | :---:     | :---:                     |
-| Voltage                                                                                  | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Current                                                                                  | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Power                                                                                    | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| State Of Charge                                                                          | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Battery temperature                                                                      | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| MOSFET temperature                                                                       | No    | No    | No                 | Yes    | No           | Yes    | No              | Yes     | No                 | No     | No     | Yes       | No                        |
-| Consumed Ah                                                                              | Yes   | Yes   | Yes                | No     | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Time-to-go                                                                               | Calc  | Calc  | Calc               | Calc   | Calc         | Calc   | Calc            | Calc    | Calc               | Calc   | Calc   | Calc      | Calc                      |
-| Min/max cell voltages                                                                    | Yes   | Yes   | No                 | Yes    | Yes          | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes       | Yes                       |
-| Min/max temperature                                                                      | Yes   | Yes   | Yes                | No     | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Installed capacity                                                                       | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Available capacity                                                                       | Yes   | Yes   | Yes                | No     | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Cell details                                                                             | No    | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes       | ?                         |
-| Balancing status                                                                         | Yes   | No    | Yes                | Yes    | No           | Yes    | Yes             | No      | No                 | No     | No     | Yes       | ?                         |
-| Raise alarms from the BMS                                                                | Yes   | Yes   | Yes <sup>(2)</sup> | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | ?                         |
-| History of charge cycles                                                                 | Yes   | Yes   | No                 | No     | No           | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes       | Yes                       |
-| Get CCL/DCL from the BMS                                                                 | No    | No    | No                 | Yes    | No           | Yes    | No              | No      | No                 | No     | No     | Yes       | No                        |
-| Charge current control management (CCCM)                                                 | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
-| Set battery parameters (DVCC)                                                            | Calc  | Calc  | Yes                | Calc   | Yes          | Calc   | Calc            | Calc    | Yes                | Calc   | Calc   | Calc      | Calc                      |
-| Bluetooth connection <sup>(3)</sup> <img src="../img/bluetooth.svg" className="h-1em" /> | No    | No    | No                 | No     | No           | Yes    | No              | Yes     | No                 | No     | No     | No        | No                        |
-| CAN connection <sup>(3)</sup>                                                            | No    | Yes   | No                 | No     | No           | Yes    | No              | No      | No                 | No     | No     | No        | No                        |
+| Feature                                                                                            | Ant   | Daly  | ECS                | Heltec | HLPdataBMS4S | JK BMS | Life/Tian Power | LLT/JBD | MNB <sup>(1)</sup> | Renogy | Seplos | Seplos v3 | Sinowealth <sup>(1)</sup> |
+| ---:                                                                                               | :---: | :---: | :---:              | :---:  | :---:        | :---:  | :---:           | :---:   | :---:              | :---:  | :---:  | :---:     | :---:                     |
+| Voltage                                                                                            | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Current                                                                                            | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Power                                                                                              | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| State Of Charge                                                                                    | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Battery temperature                                                                                | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| MOSFET temperature                                                                                 | No    | No    | No                 | Yes    | No           | Yes    | No              | Yes     | No                 | No     | No     | Yes       | No                        |
+| Consumed Ah                                                                                        | Yes   | Yes   | Yes                | No     | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Time-to-go                                                                                         | Calc  | Calc  | Calc               | Calc   | Calc         | Calc   | Calc            | Calc    | Calc               | Calc   | Calc   | Calc      | Calc                      |
+| Min/max cell voltages                                                                              | Yes   | Yes   | No                 | Yes    | Yes          | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes       | Yes                       |
+| Min/max temperature                                                                                | Yes   | Yes   | Yes                | No     | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Installed capacity                                                                                 | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Available capacity                                                                                 | Yes   | Yes   | Yes                | No     | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Cell details                                                                                       | No    | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes       | ?                         |
+| Balancing status                                                                                   | Yes   | No    | Yes                | Yes    | No           | Yes    | Yes             | No      | No                 | No     | No     | Yes       | ?                         |
+| Raise alarms from the BMS                                                                          | Yes   | Yes   | Yes <sup>(2)</sup> | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | ?                         |
+| History of charge cycles                                                                           | Yes   | Yes   | No                 | No     | No           | Yes    | Yes             | Yes     | No                 | Yes    | Yes    | Yes       | Yes                       |
+| Get CCL/DCL from the BMS                                                                           | No    | No    | No                 | Yes    | No           | Yes    | No              | No      | No                 | No     | No     | Yes       | No                        |
+| Charge current control management (CCCM)                                                           | Yes   | Yes   | Yes                | Yes    | Yes          | Yes    | Yes             | Yes     | Yes                | Yes    | Yes    | Yes       | Yes                       |
+| Set battery parameters (DVCC)                                                                      | Calc  | Calc  | Yes                | Calc   | Yes          | Calc   | Calc            | Calc    | Yes                | Calc   | Calc   | Calc      | Calc                      |
+| Bluetooth connection <sup>(3)</sup> <img src="/dbus-serialbattery/img/bluetooth.svg" className="h-1em" /> | No    | No    | No                 | No     | No           | Yes    | No              | Yes     | No                 | No     | No     | No        | No                        |
+| CAN connection <sup>(3)</sup>                                                                      | No    | Yes   | No                 | No     | No           | Yes    | No              | No      | No                 | No     | No     | No        | No                        |
+| SOC reset via driver on BMS                                                                        | No    | Yes   | No                 | No     | No           | BLE    | No              | Yes     | No                 | No     | No     | No        | No                        |
+| Disable charging via driver on BMS                                                                 | No    | Yes   | No                 | No     | No           | No     | No              | Yes     | No                 | No     | No     | No        | No                        |
+| Disable discharging via driver on BMS                                                              | No    | Yes   | No                 | No     | No           | No     | No              | Yes     | No                 | No     | No     | No        | No                        |
+| Disable balancing via driver on BMS                                                                | No    | Yes   | No                 | No     | No           | No     | No              | Yes     | No                 | No     | No     | No        | No                        |
 
 
 `Calc` means that the value is calculated by the driver.

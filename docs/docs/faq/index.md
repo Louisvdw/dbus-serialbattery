@@ -261,7 +261,11 @@ Most unstable communications arise due to:
 * Cheap USB Hubs: Make sure you are using a qualitative USB Hub with enough power.
 * Raspberry Pi: Do not use a charger for powering the Raspberry Pi. Instead buy a power supply with enough power.
 
-## Why is my `utils.py` always reset to default values?
+## How can I reset the SOC to 100%?
+
+See the SOC sections on the [features page](../general/features.md#soc-reset-voltage).
+
+## Why is my `config.ini` always reset to default values?
 
 Probably you forgot to remove the USB/SD card with the `venus-data.tar.gz` after successful installation. Please delete the file or remove the USB/SD card. This is fixed with `>= v1.0.20230512`.
 

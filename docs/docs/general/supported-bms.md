@@ -27,7 +27,7 @@ Communication to the Heltec SmartBMS (which is a rebranded YYBMS) via Modbus/RS4
 
 ### &bull; HLPdataBMS4S
 
-### &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS <img src="../img/bluetooth.svg" className="h-1em" />
+### &bull; [JKBMS](https://www.jkbms.com/products/) / Heltec BMS <img src="/dbus-serialbattery/img/bluetooth.svg" className="h-1em" />
 Bluetooth connection supported
 
 ### &bull; Life/Tian Power
@@ -46,7 +46,7 @@ So far only tested on version `16E`.
 ### &bull; Seplos v3
 Working on the Seplos v3 BMS which uses different (modbus) protocol than the earlier Seplos models.
 
-### &bull; Smart BMS <img src="../img/bluetooth.svg" className="h-1em" />
+### &bull; Smart BMS <img src="/dbus-serialbattery/img/bluetooth.svg" className="h-1em" />
 Bluetooth connection supported
 
 Including:
