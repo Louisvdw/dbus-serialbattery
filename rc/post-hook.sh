@@ -26,7 +26,8 @@ bash /data/etc/dbus-serialbattery/reinstall-local.sh
 
 # rename the venus-data.tar.gz else the data is overwritten, if the USB is not removed
 for dir in /media/*; do
-    if [ -f "/media/$dir/venus-data.tar.gz" ]; then
-        mv "/media/$dir/venus-data.tar.gz" "/media/$dir/venus-data_installed.tar.gz"
+    if [ -f "$dir/venus-data.tar.gz" ]; then
+        echo "renaming $dir/venus-data.tar.gz to $dir/venus-data_installed.tar.gz"
+        mv "$dir/venus-data.tar.gz" "$dir/venus-data_installed.tar.gz"
     fi
 done
