@@ -6,8 +6,8 @@
 
 # search for config.ini in USB root and copy it, if found
 for dir in /media/*; do
-    if [ -f "/media/$dir/config.ini" ]; then
-        cp -f /media/$dir/config.ini /data/etc/dbus-serialbattery/config.ini
+    if [ -f "$dir/config.ini" ]; then
+        cp -f "$dir/config.ini" "/data/etc/dbus-serialbattery/config.ini"
 
         # remove backup config.ini
         if [ -f "/data/etc/dbus-serialbattery_config.ini.backup" ]; then
@@ -26,7 +26,7 @@ bash /data/etc/dbus-serialbattery/reinstall-local.sh
 
 # rename the venus-data.tar.gz else the data is overwritten, if the USB is not removed
 for dir in /media/*; do
-    if [ -f "/media/$dir/venus-data.tar.gz" ]; then
-        mv "/media/$dir/venus-data.tar.gz" "/media/$dir/venus-data_installed.tar.gz"
+    if [ -f "$dir/venus-data.tar.gz" ]; then
+        mv "$dir/venus-data.tar.gz" "$dir/venus-data_installed.tar.gz"
     fi
 done
