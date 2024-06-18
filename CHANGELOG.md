@@ -61,6 +61,7 @@
 * Added: Possibility to use port name as unique identifier https://github.com/Louisvdw/dbus-serialbattery/issues/1035 by @mr-manuel
 * Added: Show in the remote console/GUI if a non blocking error was triggered by @mr-manuel
 * Added: Use current measurement from other dbus path by @mr-manuel
+* Changed: Fixed failed GUI restart on some GX devices by @SenH
 * Changed: Fixed problem with I-Controller https://github.com/Louisvdw/dbus-serialbattery/issues/1041 by @mr-manuel
 * Changed: Fixed problem with linear limitation disabled https://github.com/Louisvdw/dbus-serialbattery/issues/1037 by @mr-manuel
 * Changed: Fixed SoC is None on driver startup https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/32 by @mr-manuel

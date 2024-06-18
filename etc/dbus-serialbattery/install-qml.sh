@@ -121,11 +121,21 @@ fi
 
 # if files changed, restart gui
 if [ $filesChanged -gt 0 ]; then
+
+    # check if /service/gui exists
+    if [ -d "/service/gui" ]; then
+        # nanopi, raspberrypi
+        servicePath="/service/gui"
+    else
+        # cerbo gx
+        servicePath="/service/start-gui"
+    fi
+
     # stop gui
-    svc -d /service/gui
+    svc -d $servicePath
     # sleep 1 sec
     sleep 1
     # start gui
-    svc -u /service/gui
+    svc -u $servicePath
     echo "New QML files were installed and the GUI was restarted."
 fi

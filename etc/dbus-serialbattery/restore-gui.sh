@@ -24,9 +24,19 @@ if [ -f /opt/victronenergy/gui/qml/PageLynxIonIo.qml.backup ]; then
     echo "PageLynxIonIo.qml was restored."
 fi
 
-#stop gui
-svc -d /service/gui
-#sleep 1 sec
+
+# check if /service/gui exists
+if [ -d "/service/gui" ]; then
+    # nanopi, raspberrypi
+    servicePath="/service/gui"
+else
+    # cerbo gx
+    servicePath="/service/start-gui"
+fi
+
+# stop gui
+svc -d $servicePath
+# sleep 1 sec
 sleep 1
-#start gui
-svc -u /service/gui
+# start gui
+svc -u $servicePath
