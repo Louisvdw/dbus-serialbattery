@@ -12,18 +12,23 @@ class Jkbms_pb(Battery):
         super(Jkbms_pb, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
         self.unique_identifier_tmp = ""
+        self.cell_count = 0
 
     BATTERYTYPE = "Jkbms_pb"
-    LENGTH_CHECK = 0
-    LENGTH_POS = 2
-    LENGTH_SIZE = "H"
+    LENGTH_CHECK = 0 # ignored
+    LENGTH_POS = 2 # ignored
+    LENGTH_SIZE = "H" # ignored
+    CURRENT_ZERO_CONSTANT = 32768
     command_status = b"\x01\x10\x16\x20\x00\x01\x02\x00\x00\xD6\xF1"
+    command_settings = b"\x01\x10\x16\x1E\x00\x01\x02\x00\x00\xD2\x2F"
+    command_about = b"\x01\x10\x16\x1C\x00\x01\x02\x00\x00\xD3\xCD"
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
         try:
+            self.get_settings()
             return self.read_status_data()
         except Exception:
             (
@@ -42,6 +47,101 @@ class Jkbms_pb(Battery):
         # After successful  connection get_settings will be call to set up the battery.
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
+        status_data = self.read_serial_data_jkbms_pb(self.command_settings,300)
+        VolSmartSleep = unpack_from("<i", status_data, 6)[0]/1000
+        VolCellUV = unpack_from("<i", status_data, 10)[0]/1000
+        VolCellUVPR = unpack_from("<i", status_data, 14)[0]/1000
+        VolCellOV = unpack_from("<i", status_data, 18)[0]/1000
+        VolCellOVPR = unpack_from("<i", status_data, 22)[0]/1000
+        VolBalanTrig = unpack_from("<i", status_data, 26)[0]/1000
+        VolSOC_full = unpack_from("<i", status_data, 30)[0]/1000
+        VolSOC_empty = unpack_from("<i", status_data, 34)[0]/1000
+        VolSysPwrOff = unpack_from("<i", status_data, 46)[0]/1000
+        CurBatCOC = unpack_from("<i", status_data, 50)[0]/1000
+        TIMBatCOCPDly = unpack_from("<i", status_data, 54)[0]
+        TIMBatCOCPRDly = unpack_from("<i", status_data, 58)[0]
+        CurBatDcOC = unpack_from("<i", status_data, 62)[0]/1000
+        TIMBatDcOCPDly = unpack_from("<i", status_data, 66)[0]
+        TIMBatDcOCPRDly = unpack_from("<i", status_data, 70)[0]
+        TIMBatSCPRDly = unpack_from("<i", status_data, 74)[0]
+        CurBalanMax = unpack_from("<i", status_data, 78)[0]/1000
+        TMPBatCOT = unpack_from("<I", status_data, 82)[0]/10
+        TMPBatCOTPR = unpack_from("<I", status_data, 96)[0]/10
+        TMPBatDcOT = unpack_from("<I", status_data, 90)[0]/10
+        TMPBatDcOTPR = unpack_from("<I", status_data, 94)[0]/10
+        TMPBatCUT = unpack_from("<I", status_data, 98)[0]/10
+        TMPBatCUTPR = unpack_from("<I", status_data, 102)[0]/10
+        TMPMosOT = unpack_from("<I", status_data, 106)[0]/10
+        TMPMosOTPR = unpack_from("<I", status_data, 110)[0]/10
+        CellCount = unpack_from("<i", status_data, 114)[0]
+        BatChargeEN = unpack_from("<i", status_data, 118)[0]
+        BatDisChargeEN = unpack_from("<i", status_data, 122)[0]
+        BalanEN = unpack_from("<i", status_data, 126)[0]
+        CapBatCell = unpack_from("<i", status_data, 130)[0]/1000
+        SCPDelay = unpack_from("<i", status_data, 134)[0]
+
+        # count of all cells in pack
+        self.cell_count = CellCount
+
+        # total Capaity in Ah
+        self.capacity = CapBatCell
+
+        # Continued discharge current
+        self.max_battery_discharge_current = CurBatDcOC
+
+        # Continued charge current
+        self.max_battery_charge_current = CurBatCOC
+
+
+        logger.error("VolSmartSleep:"+str(VolSmartSleep))
+        logger.error("VolCellUV:"+str(VolCellUV))
+        logger.error("VolCellUVPR:"+str(VolCellUVPR))
+        logger.error("VolCellOV:"+str(VolCellOV))
+        logger.error("VolCellOVPR:"+str(VolCellOVPR))
+        logger.error("VolBalanTrig:"+str(VolBalanTrig))
+        logger.error("VolBalanTrig:"+str(VolBalanTrig))
+        logger.error("VolSOC_full:"+str(VolSOC_full))
+        logger.error("VolSOC_empty:"+str(VolSOC_empty))
+        logger.error("VolSysPwrOff:"+str(VolSysPwrOff))
+        logger.error("CurBatCOC:"+str(CurBatCOC))
+        logger.error("TIMBatCOCPDly:"+str(TIMBatCOCPDly))
+        logger.error("TIMBatCOCPRDly:"+str(TIMBatCOCPRDly))
+        logger.error("CurBatDcOC:"+str(CurBatDcOC))
+        logger.error("TIMBatDcOCPDly:"+str(TIMBatDcOCPDly))
+        logger.error("TIMBatDcOCPRDly:"+str(TIMBatDcOCPRDly))
+        logger.error("TIMBatSCPRDly:"+str(TIMBatSCPRDly))
+        logger.error("CurBalanMax:"+str(CurBalanMax))
+        logger.error("TMPBatCOT:"+str(TMPBatCOT))
+        logger.error("TMPBatCOTPR:"+str(TMPBatCOTPR))
+        logger.error("TMPBatDcOT:"+str(TMPBatDcOT))
+        logger.error("TMPBatDcOTPR:"+str(TMPBatDcOTPR))
+        logger.error("TMPBatCUT:"+str(TMPBatCUT))
+        logger.error("TMPBatCUTPR:"+str(TMPBatCUTPR))
+        logger.error("TMPMosOT:"+str(TMPMosOT))
+        logger.error("TMPMosOTPR:"+str(TMPMosOTPR))
+        logger.error("CellCount:"+str(CellCount))
+        logger.error("BatChargeEN:"+str(BatChargeEN))
+        logger.error("BatDisChargeEN:"+str(BatDisChargeEN))
+        logger.error("BalanEN:"+str(BalanEN))
+        logger.error("CapBatCell:"+str(CapBatCell))
+        logger.error("SCPDelay:"+str(SCPDelay))
+
+        status_data = self.read_serial_data_jkbms_pb(self.command_about,300)
+        serial_nr = status_data[86:96].decode("utf-8")
+        vendor_id = status_data[6:18].decode("utf-8")
+        hw_version = status_data[22:26].decode("utf-8")+" / "+ status_data[30:34].decode("utf-8")
+        sw_version = status_data[30:34].decode("utf-8") # will be overridden 
+
+        self.unique_identifier_tmp = serial_nr
+        self.version = sw_version
+        self.hardware_version = hw_version
+
+        logger.error("Serial Nr: "+str(serial_nr))
+        logger.error("Vendor ID: "+str(vendor_id))
+        logger.error("HW Version: "+str(hw_version))
+        logger.error("SW Version: "+str(sw_version))
+
+
         self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
@@ -49,12 +149,6 @@ class Jkbms_pb(Battery):
         for _ in range(self.cell_count):
             self.cells.append(Cell(False))
 
-        self.hardware_version = (
-            "JKBMS_pb "
-            + str(self.cell_count)
-            + " cells"
-            + (" (" + self.production + ")" if self.production else "")
-        )
         return True
 
     def refresh_data(self):
@@ -74,7 +168,7 @@ class Jkbms_pb(Battery):
         return bytes[start + 1 : start + length + 1]
 
     def read_status_data(self):
-        status_data = self.read_serial_data_jkbms(self.command_status)
+        status_data = self.read_serial_data_jkbms_pb(self.command_status,299) #307)
         # check if connection success
         if status_data is False:
             return False
@@ -116,13 +210,10 @@ class Jkbms_pb(Battery):
 #[200] 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 00 01 00 00 00 9D 03 00 00 00 00 EC 70 3F 40 00 00 00 00 D5 14 00 00 00 01 01 01 04 06 00 00 95 0C 02 00 00 00 00 00 D1 00 C5 00 CD 00 E8 03 B0 56 5B 08 11 00 00 00 80 51 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FE FF 7F DC 2F 01 01 B0 07 00 00 00 62 01 10 16 20 00 01 04 4B
 
         # cell voltages
-        for c in range(32):
+        for c in range(self.cell_count):
                 if((unpack_from("<H", status_data, c * 2 + 6)[0] / 1000)!=0):
-                        if(len(self.cells)<=c):
-                                self.cells.append(Cell(False))
                         self.cells[c].voltage = (
                                 unpack_from("<H", status_data, c * 2 + 6)[0] / 1000)
-                        self.cell_count = len(self.cells)
                         logger.error("Cell "+str(c)+" voltage:"+str(self.cells[c].voltage)+"V")
 
         # MOSFET temperature
@@ -139,40 +230,25 @@ class Jkbms_pb(Battery):
         logger.error("Temp 3:"+str(temp2))
 
         # Battery voltage
-        self.voltage = unpack_from("<I", status_data, 150)[0] / 1000
+        self.voltage = unpack_from("<i", status_data, 150)[0] / 1000
         logger.error("voltage: "+str(self.voltage)+"V")
 
         # Battery ampere
         self.current = unpack_from("<i", status_data, 154)[0] / 1000
         logger.error("Current:"+str(self.current))
 
-        # Continued discharge current
-#        offset = cellbyte_count + 66
-#        self.max_battery_discharge_current = float(
-#            unpack_from(">H", self.get_data(status_data, b"\x97", offset, 2))[0]
-#        )
-
-        # Continued charge current
-#        offset = cellbyte_count + 72
-#        self.max_battery_charge_current = float(
-#            unpack_from(">H", self.get_data(status_data, b"\x99", offset, 2))[0]
-#        )
-
         # SOC
         self.soc = unpack_from("<B", status_data, 173)[0]
         logger.error("SOC: "+str(self.soc)+"%")
 
         # cycles
-        self.cycles = unpack_from("<I", status_data, 182)[0]
+        self.cycles = unpack_from("<i", status_data, 182)[0]
 
-#        self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', offset, 4))[0]
-#        self.capacity = unpack_from(
-#            ">L", self.get_data(status_data, b"\xAA", offset, 4)
-#        )[0]
+        # capacity
+        self.capacity_remain = unpack_from("<i", status_data, 186)[0]
 
-#        self.to_protection_bits(
-#            unpack_from(">H", self.get_data(status_data, b"\x8B", offset, 2))[0]
-#        )
+        # fuses
+        self.to_protection_bits(unpack_from("<I", status_data, 166)[0])
 
         # bits
         bal = unpack_from("<B", status_data, 172)[0]
@@ -182,21 +258,6 @@ class Jkbms_pb(Battery):
         self.discharge_fet = 1 if discharge !=0 else 0
         self.balancing = 1 if bal !=0 else 0
 
-#        self.version = unpack_from(
-#            ">15s", self.get_data(status_data, b"\xB7", offset, 15)
-#        )[0].decode()
-
-#        self.unique_identifier_tmp = sub(
-#            " +",
-#            "_",
-#            (
-#                unpack_from(">24s", self.get_data(status_data, b"\xBA", offset, 24))[0]
-#                .decode()
-#                .replace("\x00", " ")
-#                .replace("Input Userda", "")
-#                .strip()
-#            ),
-#        )
 
         # show wich cells are balancing
         if self.get_min_cell() is not None and self.get_max_cell() is not None:
@@ -208,7 +269,6 @@ class Jkbms_pb(Battery):
                 else:
                     self.cells[c].balance = False
 
-        # logger.info(self.hardware_version)
         return True
 
     def unique_identifier(self) -> str:
@@ -216,10 +276,6 @@ class Jkbms_pb(Battery):
         Used to identify a BMS when multiple BMS are connected
         """
         return self.unique_identifier_tmp
-
-    def to_balance_bits(self, byte_data):
-        tmp = bin(byte_data)[2:]
-        self.balance_fet = is_bit_set(tmp)
 
     def get_balancing(self):
         return 1 if self.balancing else 0
@@ -250,67 +306,54 @@ class Jkbms_pb(Battery):
 
     def to_protection_bits(self, byte_data):
         """
-        Bit 0: Low capacity alarm: 1 warning only, 0 nomal -> OK
-        Bit 1: MOS tube overtemperature alarm: 1 alarm, 0 nomal -> OK
-        Bit 2: Charge over voltage alarm: 1 alarm, 0 nomal -> OK
-        Bit 3: Discharge undervoltage alarm: 1 alarm, 0 nomal -> OK
-        Bit 4: Battery overtemperature alarm: 1 alarm, 0 nomal -> OK
-        Bit 5: Charge overcurrent alarm: 1 alarm, 0 nomal -> OK
-        Bit 6: discharge over current alarm: 1 alarm, 0 nomal -> OK
-        Bit 7: core differential pressure alarm: 1 alarm, 0 nomal -> OK
-        Bit 8: overtemperature alarm in the battery box: 1 alarm, 0 nomal -> OK
-        Bit 9: Battery low temperature alarm: 1 alarm, 0 nomal -> OK
-        Bit 10: Unit overvoltage: 1 alarm, 0 nomal -> OK
-        Bit 11: Unit undervoltage: 1 alarm, 0 nomal -> OK
-        Bit 12:309_A protection: 1 alarm, 0 nomal
-        Bit 13:309_B protection: 1 alarm, 0 nomal
+        Bit 0x00000001: Wire resistance alarm: 1 warning only, 0 nomal -> OK
+        Bit 0x00000002: MOS overtemperature alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000004: Cell quantity alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000008: Current sensor error alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000010: Cell OVP alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000020: Bat OVP alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000040: Charge Over current alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000080: Charge SCP alarm: 1 alarm, 0 nomal -> OK
+        Bit 0x00000100: Charge OTP: 1 alarm, 0 nomal -> OK
+        Bit 0x00000200: Charge UTP: 1 alarm, 0 nomal -> OK
+        Bit 0x00000400: CPU Aux Communication: 1 alarm, 0 nomal -> OK
+        Bit 0x00000800: Cell UVP: 1 alarm, 0 nomal -> OK
+        Bit 0x00001000: Batt UVP: 1 alarm, 0 nomal
+        Bit 0x00002000: Discharge Over current: 1 alarm, 0 nomal
+        Bit 0x00004000: Discharge SCP: 1 alarm, 0 nomal
+        Bit 0x00008000: Discharge OTP: 1 alarm, 0 nomal
+        Bit 0x00010000: Charge MOS: 1 alarm, 0 nomal
+        Bit 0x00020000: Discharge MOS: 1 alarm, 0 nomal
+        Bit 0x00040000: GPS disconnected: 1 alarm, 0 nomal
+        Bit 0x00080000: Modify PWD in time: 1 alarm, 0 nomal
+        Bit 0x00100000: Discharg on Faied: 1 alarm, 0 nomal
+        Bit 0x00200000: Battery over Temp: 1 alarm, 0 nomal
         """
-        pos = 13
-        tmp = bin(byte_data)[15 - pos :].rjust(pos + 1, utils.zero_char)
-        # logger.debug(tmp)
 
         # low capacity alarm
-        self.protection.soc_low = 2 if is_bit_set(tmp[pos - 0]) else 0
+        self.protection.soc_low = (byte_data & 0x00001000)*2
         # MOSFET temperature alarm
-        self.protection.temp_high_internal = 2 if is_bit_set(tmp[pos - 1]) else 0
+        self.protection.temp_high_internal = (byte_data & 0x00000002)*2
         # charge over voltage alarm
-        # TODO: check if "self.soc_reset_requested is False" works,
-        # else use "self.soc_reset_last_reached < int(time()) - (60 * 60)"
-        self.protection.voltage_high = 2 if is_bit_set(tmp[pos - 2]) else 0
+        self.protection.voltage_high = (byte_data & 0x00000020)*2
         # discharge under voltage alarm
-        self.protection.voltage_low = 2 if is_bit_set(tmp[pos - 3]) else 0
+        self.protection.voltage_low = (byte_data & 0x00000800)*2
         # charge overcurrent alarm
-        self.protection.current_over = 1 if is_bit_set(tmp[pos - 5]) else 0
+        self.protection.current_over = (byte_data & 0x00000040)*2
         # discharge over current alarm
-        self.protection.current_under = 1 if is_bit_set(tmp[pos - 6]) else 0
+        self.protection.current_under = (byte_data & 0x00002000)*2
         # core differential pressure alarm OR unit overvoltage alarm
-        self.protection.cell_imbalance = (
-            2 if is_bit_set(tmp[pos - 7]) else 1 if is_bit_set(tmp[pos - 10]) else 0
-        )
+        self.protection.cell_imbalance = (0)
         # unit undervoltage alarm
-        self.protection.voltage_cell_low = 1 if is_bit_set(tmp[pos - 11]) else 0
+        self.protection.voltage_cell_low = (byte_data & 0x00001000)*2
         # battery overtemperature alarm OR overtemperature alarm in the battery box
-        alarm_temp_high = (
-            1 if is_bit_set(tmp[pos - 4]) or is_bit_set(tmp[pos - 8]) else 0
-        )
-        # battery low temperature alarm
-        alarm_temp_low = 1 if is_bit_set(tmp[pos - 9]) else 0
-        # check if low/high temp alarm arise during charging
-        self.protection.temp_high_charge = (
-            1 if self.current > 0 and alarm_temp_high == 1 else 0
-        )
-        self.protection.temp_low_charge = (
-            1 if self.current > 0 and alarm_temp_low == 1 else 0
-        )
+        self.protection.temp_high_charge = (byte_data & 0x00000100)*2
+        self.protection.temp_low_charge = (byte_data & 0x00000200)*2
         # check if low/high temp alarm arise during discharging
-        self.protection.temp_high_discharge = (
-            1 if self.current <= 0 and alarm_temp_high == 1 else 0
-        )
-        self.protection.temp_low_discharge = (
-            1 if self.current <= 0 and alarm_temp_low == 1 else 0
-        )
+        self.protection.temp_high_discharge = (byte_data & 0x00008000)*2
+        self.protection.temp_low_discharge = 0
 
-    def read_serial_data_jkbms(self, command: str) -> bool:
+    def read_serial_data_jkbms_pb(self, command: str, length: int) -> bool:
         """
         use the read_serial_data() function to read the data and then do BMS specific checks (crc, start bytes, etc)
         :param command: the command to be sent to the bms
@@ -319,31 +362,23 @@ class Jkbms_pb(Battery):
         data = read_serial_data(
             command,
             self.port,
-            self.baud,
-            self.LENGTH_POS,
-            0,
-            307,
-            self.LENGTH_SIZE,
+            self.baud_rate,
+            self.LENGTH_POS, # ignored
+            self.LENGTH_CHECK, # ignored
+            length,
+            self.LENGTH_SIZE, # ignored
         )
         if data is False:
             return False
 
-        start, length = unpack_from(">HH", data)
-        end, crc_hi, crc_lo = unpack_from(">BHH", data[-5:])
+        #be = ''.join(format(x, ' 02X') for x in data)
+        #logger.error(be)
 
-        s = sum(data[0:-4])
+        # I never understood the CRC algorithm in the message, 
+        # so we check the header and the length and that's it
 
-        logger.debug("bytearray: " + utils.bytearray_to_string(data))
-
-        if start == 0x4E57 and end == 0x68 and s == crc_lo:
-            return data[10 : length - 7]
-        elif s != crc_lo:
-            logger.error(
-                "CRC checksum mismatch: Expected 0x%04x, Got 0x%04x" % (crc_lo, s)
-            )
+        if(data[0]==0x55 and data[1]==0xAA):
             return data
-            return False
         else:
             logger.error(">>> ERROR: Incorrect Reply ")
-            return data
             return False
