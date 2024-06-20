@@ -230,11 +230,11 @@ class Jkbms_pb(Battery):
         logger.error("Temp 3:"+str(temp2))
 
         # Battery voltage
-        self.voltage = unpack_from("<i", status_data, 150)[0] / 1000
+        self.voltage = unpack_from("<I", status_data, 150)[0] / 1000
         logger.error("voltage: "+str(self.voltage)+"V")
 
         # Battery ampere
-        self.current = unpack_from("<i", status_data, 154)[0] / 1000
+        self.current = unpack_from("<i", status_data, 158)[0] / 1000
         logger.error("Current:"+str(self.current))
 
         # SOC
