@@ -48,6 +48,8 @@ class Jkbms_pb(Battery):
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
         status_data = self.read_serial_data_jkbms_pb(self.command_settings,300)
+        if (status_data == False):
+                return False
         VolSmartSleep = unpack_from("<i", status_data, 6)[0]/1000
         VolCellUV = unpack_from("<i", status_data, 10)[0]/1000
         VolCellUVPR = unpack_from("<i", status_data, 14)[0]/1000
@@ -245,7 +247,7 @@ class Jkbms_pb(Battery):
         self.cycles = unpack_from("<i", status_data, 182)[0]
 
         # capacity
-        self.capacity_remain = unpack_from("<i", status_data, 186)[0]
+        self.capacity_remain = unpack_from("<i", status_data, 174)[0] / 1000
 
         # fuses
         self.to_protection_bits(unpack_from("<I", status_data, 166)[0])
