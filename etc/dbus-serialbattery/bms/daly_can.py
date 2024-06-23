@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+
+# NOTES
+# Added by https://github.com/SamuelBrucksch
+# https://github.com/Louisvdw/dbus-serialbattery/pull/169
+
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Battery, Cell
 from utils import (
@@ -12,10 +18,6 @@ from utils import (
 )
 from struct import unpack_from
 import can
-
-"""
-https://github.com/Louisvdw/dbus-serialbattery/pull/169
-"""
 
 
 class Daly_Can(Battery):
@@ -86,6 +88,8 @@ class Daly_Can(Battery):
 
         result = self.read_status_data(self.can_bus)
 
+        result = result and self.read_soc_data(self.can_bus)
+
         return result
 
     def get_settings(self):
@@ -132,6 +136,9 @@ class Daly_Can(Battery):
             state,
             self.cycles,
         ) = unpack_from(">bb??bhx", status_data)
+
+        if self.cell_count == 0:
+            return False
 
         self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
         self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count

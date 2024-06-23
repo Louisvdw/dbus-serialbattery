@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+# NOTES
+# Added by https://github.com/IrisCrimson
+
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 from battery import Battery, Cell
 from utils import (
@@ -14,13 +19,6 @@ from utils import (
 from struct import unpack_from
 import can
 import time
-
-"""
-https://github.com/Louisvdw/dbus-serialbattery/compare/dev...IrisCrimson:dbus-serialbattery:jkbms_can
-
-# Restrictions seen from code:
--
-"""
 
 
 class Jkbms_Can(Battery):

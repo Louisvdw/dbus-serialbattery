@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 # known limitations:
 #   - only BMS variants with 2 cell temperature sensors supported
 #   - some "interesting" datapoints are not read (e. g. registers 52: switch type, 62: bootloader and firmware version)
