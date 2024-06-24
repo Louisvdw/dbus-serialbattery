@@ -1074,7 +1074,6 @@ class DbusHelper:
                     "Non blocking exception occurred: "
                     + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
                 )
-                pass
 
         # Update TimeToGo and/or TimeToSoC
         try:
@@ -1153,7 +1152,6 @@ class DbusHelper:
                 "Non blocking exception occurred: "
                 + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
-            pass
 
         # save settings every 15 seconds to dbus
         if int(time()) % 15:
