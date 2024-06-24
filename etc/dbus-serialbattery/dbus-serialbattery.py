@@ -50,7 +50,7 @@ supported_bms_types = [
     {"bms": HeltecModbus, "baud": 9600},
     {"bms": HLPdataBMS4S, "baud": 9600},
     {"bms": Jkbms, "baud": 115200},
-    {"bms": Jkbms_pb, "baud": 115200},
+    {"bms": Jkbms_pb, "baud": 115200, "address": b"\x01"},
     {"bms": Lifepower, "baud": 9600},
     {"bms": LltJbd, "baud": 9600},
     {"bms": Renogy, "baud": 9600, "address": b"\x30"},
