@@ -13,15 +13,24 @@ class Jkbms_pb(Battery):
         self.type = self.BATTERYTYPE
         self.unique_identifier_tmp = ""
         self.cell_count = 0
+        self.address = address
 
     BATTERYTYPE = "Jkbms_pb"
     LENGTH_CHECK = 0 # ignored
     LENGTH_POS = 2 # ignored
     LENGTH_SIZE = "H" # ignored
-    CURRENT_ZERO_CONSTANT = 32768
-    command_status = b"\x01\x10\x16\x20\x00\x01\x02\x00\x00\xD6\xF1"
-    command_settings = b"\x01\x10\x16\x1E\x00\x01\x02\x00\x00\xD2\x2F"
-    command_about = b"\x01\x10\x16\x1C\x00\x01\x02\x00\x00\xD3\xCD"
+
+    @property
+    def command_status(self):
+        return self.address + b"\x10\x16\x20\x00\x01\x02\x00\x00\xD6\xF1"
+
+    @property
+    def command_settings(self):
+        return self.address + b"\x10\x16\x1E\x00\x01\x02\x00\x00\xD2\x2F"
+
+    @property
+    def command_about(self):
+        return self.address + b"\x10\x16\x1C\x00\x01\x02\x00\x00\xD3\xCD"
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -48,8 +57,9 @@ class Jkbms_pb(Battery):
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
         status_data = self.read_serial_data_jkbms_pb(self.command_settings,300)
-        if (status_data == False):
-                return False
+        if status_data is False:
+            return False
+
         VolSmartSleep = unpack_from("<i", status_data, 6)[0]/1000
         VolCellUV = unpack_from("<i", status_data, 10)[0]/1000
         VolCellUVPR = unpack_from("<i", status_data, 14)[0]/1000
@@ -158,19 +168,11 @@ class Jkbms_pb(Battery):
         # This will be called for every iteration (1 second)
         # Return True if success, False for failure
         result = self.read_status_data()
-
         return result
 
-    def get_data(self, bytes, idcode, start, length):
-        # logger.debug("start "+str(start) + " length " + str(length))
-        # logger.debug(binascii.hexlify(bytearray(bytes[start:start + 1 + length])).decode('ascii'))
-        start = bytes.find(idcode, start, start + 1 + length)
-        if start < 0:
-            return False
-        return bytes[start + 1 : start + length + 1]
-
+    
     def read_status_data(self):
-        status_data = self.read_serial_data_jkbms_pb(self.command_status,299) #307)
+        status_data = self.read_serial_data_jkbms_pb(self.command_status,299)
         # check if connection success
         if status_data is False:
             return False
@@ -179,69 +181,30 @@ class Jkbms_pb(Battery):
 #        be = ''.join(format(x, ' 02X') for x in status_data)
 #        logger.error(be)
 
-#55 adress
-#AA function
-#EB 90 02 05 no idea what this is 235, 144, 2, 5
-#[6] 04 0D .. cell voltage 1
-#[8] 04 0D .. cell voltage 2
-#FF FF 00 00  Cell sta?
-#06 0D avg voltage
-#02 00 max diff
-#02 max nr
-#00 min nr
-#[144] D1 00 temp mos .. 00 D1 = 209 -> 20.9
-#[146] 00 00 00 00 
-#[150] 58 D0 00 00 ... battery voltage
-#[154] 00 00 00 00 ... battery mWatt 
-#[158] 00 00 00 00 ... battery mA
-#[162] C8 00 ... Temp sensor 1
-#[164] CB 00 ... Temp sensor 2
-#[166] 00 00 00 00 .. bits
-#[170] 00 00 .. balance current
-#[172] 00 .. balancer state ..0..1..2
-#[173] 64 .. soc state
-#[174] 84 45 04 00 soc cap remain
-#[178] C0 45 04 00 SOCFullChargeCap
-#[182] 00 00 00 00 cycle count
-#[186] 1B 00 00 00 cycle remaining capacity
-#[190] 64 SOH
-#[191] 00 Precharge
-#[192] 00 00 User alarm
-#[194] 0B B5 03 00 runtime
-#[198] 00 00 charge / discharge
-#[200] 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 00 01 00 00 00 9D 03 00 00 00 00 EC 70 3F 40 00 00 00 00 D5 14 00 00 00 01 01 01 04 06 00 00 95 0C 02 00 00 00 00 00 D1 00 C5 00 CD 00 E8 03 B0 56 5B 08 11 00 00 00 80 51 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FE FF 7F DC 2F 01 01 B0 07 00 00 00 62 01 10 16 20 00 01 04 4B
-
         # cell voltages
         for c in range(self.cell_count):
                 if((unpack_from("<H", status_data, c * 2 + 6)[0] / 1000)!=0):
                         self.cells[c].voltage = (
                                 unpack_from("<H", status_data, c * 2 + 6)[0] / 1000)
-                        logger.error("Cell "+str(c)+" voltage:"+str(self.cells[c].voltage)+"V")
 
         # MOSFET temperature
         temp_mos = unpack_from("<h", status_data, 144)[0] / 10
         self.to_temp(0, temp_mos if temp_mos < 99 else (100 - temp_mos))
-        logger.error("Mos Temperature: "+str(temp_mos))
 
         # Temperature sensors
         temp1 = unpack_from("<h", status_data, 162)[0] / 10
         temp2 = unpack_from("<h", status_data, 164)[0] / 10
         self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
         self.to_temp(2, temp2 if temp2 < 99 else (100 - temp2))
-        logger.error("Temp 2:"+str(temp1))
-        logger.error("Temp 3:"+str(temp2))
 
         # Battery voltage
         self.voltage = unpack_from("<I", status_data, 150)[0] / 1000
-        logger.error("voltage: "+str(self.voltage)+"V")
 
         # Battery ampere
         self.current = unpack_from("<i", status_data, 158)[0] / 1000
-        logger.error("Current:"+str(self.current))
 
         # SOC
         self.soc = unpack_from("<B", status_data, 173)[0]
-        logger.error("SOC: "+str(self.soc)+"%")
 
         # cycles
         self.cycles = unpack_from("<i", status_data, 182)[0]
@@ -270,6 +233,18 @@ class Jkbms_pb(Battery):
                     self.cells[c].balance = True
                 else:
                     self.cells[c].balance = False
+
+        # logging
+        """
+        for c in range(self.cell_count):
+                logger.error("Cell "+str(c)+" voltage:"+str(self.cells[c].voltage)+"V")
+        logger.error("Temp 2:"+str(temp1))
+        logger.error("Temp 3:"+str(temp2))
+        logger.error("voltage: "+str(self.voltage)+"V")
+        logger.error("Current:"+str(self.current))
+        logger.error("SOC: "+str(self.soc)+"%")
+        logger.error("Mos Temperature: "+str(temp_mos))
+        """
 
         return True
 
