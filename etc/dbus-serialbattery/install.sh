@@ -36,8 +36,17 @@ echo " done."
 
 
 
+# show current installed version
+if [ -f "/data/etc/dbus-serialbattery/utils.py" ]; then
+    current_version=$(grep DRIVER_VERSION /data/etc/dbus-serialbattery/utils.py | awk -F'"' '{print $2}')
+    echo
+    echo "** Currently installed version: v$current_version **"
+fi
+
+
+
 echo
-PS3=$'\nSelect which version you want to install and enter the corresponding number [1]: '
+PS3=$'\nSelect which version you want to install and enter the corresponding number: '
 
 # create list of versions
 version_list=(
@@ -153,7 +162,7 @@ if [ "$version" = "nightly build \"$latest_release_mrmanuel_nightly\" (mr-manuel
 
         # create a select menu
         echo
-        PS3=$'\nSelect the branch you want to install: '
+        PS3=$'\nSelect the branch you want to install and enter the corresponding number: '
 
         select branch in $branches
         do

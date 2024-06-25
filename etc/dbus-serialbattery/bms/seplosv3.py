@@ -64,13 +64,13 @@ class Seplosv3(Battery):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
         # Return True if success, False for failure
+        found = False
 
         # This will cycle through all the slave addresses to find the BMS.
         for self.slaveaddress in self.slaveaddresses:
             mbdev = self.get_modbus(self.slaveaddress)
-            logger.info(
-                f"Start testing for Seplos v3 on slave address {self.slaveaddress}"
-            )
+            if len(self.slaveaddresses) > 1:
+                logger.info(f"|- on slave address {self.slaveaddress}")
 
             for n in range(1, RETRYCNT):
                 try:
@@ -121,7 +121,7 @@ class Seplosv3(Battery):
 
         # give the user a feedback that no BMS was found
         if not found:
-            logger.error(">>> ERROR: No Seplos v3 found - returning")
+            logger.error(">>> No reply - returning")
 
         return found
 

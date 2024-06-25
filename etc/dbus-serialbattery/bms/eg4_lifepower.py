@@ -8,9 +8,9 @@ import re
 import sys
 
 
-class Lifepower(Battery):
+class EG4_Lifepower(Battery):
     def __init__(self, port, baud, address):
-        super(Lifepower, self).__init__(port, baud, address)
+        super(EG4_Lifepower, self).__init__(port, baud, address)
         self.type = self.BATTERYTYPE
 
     command_general = b"\x7E\x01\x01\x00\xFE\x0D"

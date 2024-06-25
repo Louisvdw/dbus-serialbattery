@@ -6,6 +6,10 @@
 
 ## Breaking changes
 
+* Driver version greater or equal to `v1.4.20240625beta`
+
+  * `Lifepower` was renamed to `EG4_Lifepower`. You need to change it, if you have specified it in the `config.ini`.
+
 * Driver version greater or equal to `v1.2.20240219beta`
 
   * The temperature limitation variables where changed to match the other variable names.
@@ -56,6 +60,7 @@
 
 ## v1.4.x
 * Added: EG4 LL BMS by @tuxntoast
+* Changed: Renamed Lifepower to EG4_Lifepower by @mr-manuel
 
 ## v1.3.20240624
 * Added: Fields for debugging switch to float/bulk by @mr-manuel

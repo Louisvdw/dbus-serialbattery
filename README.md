@@ -1,5 +1,5 @@
 # dbus-serialbattery
-This is a driver for Venus OS devices (any GX device sold by Victron or a Raspberry Pi running the Venus OS image).
+This driver is for Venus OS devices (any GX device sold by Victron or a Raspberry Pi running the Venus OS image).
 
 The driver will communicate with a Battery Management System (BMS) that support serial (RS232, RS485 or TTL UART) and Bluetooth communication (see [BMS feature comparison](https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/features#bms-feature-comparison) for details). The data is then published to the Venus OS system (dbus). The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter/charger.
 

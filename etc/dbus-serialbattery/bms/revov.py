@@ -56,8 +56,7 @@ class Revov(Battery):
         try:
             result = self.read_gen_data()
             # get first data to show in startup log
-            if result:
-                self.refresh_data()
+            result = result and self.refresh_data()
         except Exception:
             (
                 exception_type,
@@ -229,7 +228,7 @@ class Revov(Battery):
         )
 
         if data is False:
-            logger.error("read_serial_data_revov::Serial Data is Bad")
+            logger.debug("read_serial_data_revov::Serial Data is Bad")
             return False
 
         # Its not quite modbus, but psuedo modbus'ish'
