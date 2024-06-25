@@ -54,6 +54,9 @@
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
 
+## v1.4.x
+* Added: EG4 LL BMS by @tuxntoast
+
 ## v1.3.20240624
 * Added: Fields for debugging switch to float/bulk by @mr-manuel
 * Added: Possibility to add custom polling interval to reduce the CPU load. Fixes https://github.com/Louisvdw/dbus-serialbattery/issues/1022 by @mr-manuel
