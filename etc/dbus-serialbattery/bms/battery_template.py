@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # NOTES
-# Please see "Add/Request a new BMS" https://louisvdw.github.io/dbus-serialbattery/general/supported-bms#add-by-opening-a-pull-request
+# Please see "Add/Request a new BMS" https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/supported-bms#add-by-opening-a-pull-request
 # in the documentation for a checklist what you have to do, when adding a new BMS
 
 # avoid importing wildcards

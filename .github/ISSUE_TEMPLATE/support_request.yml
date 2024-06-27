@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Before opening a support request, please check first [How to troubleshoot](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/) and the [FAQ (Frequently Asked Questions)](https://louisvdw.github.io/dbus-serialbattery/faq/) page
+        ## Before opening a support request, please check first [How to troubleshoot](https://mr-manuel.github.io/venus-os_dbus-serialbattery/troubleshoot/) and the [FAQ (Frequently Asked Questions)](https://mr-manuel.github.io/venus-os_dbus-serialbattery/faq/) page
 
         In the case you have difficulties to write in english, try the [deepl.com](https://www.deepl.com) translator.
 
@@ -15,7 +15,7 @@ body:
 
         * Please carefully read all the instructions below including the descriptions! Very often we have to request the data again, because it was not provided in the first place.
 
-        * Please try the `nightly` build first, if you are not already using it. It's very likely that the bug is already fixed. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#nightly-build) how to install it.
+        * Please try the `nightly` build first, if you are not already using it. It's very likely that the bug is already fixed. See [here](https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/install#nightly-build) how to install it.
 
         * Please read the complete [changelog](https://github.com/Louisvdw/dbus-serialbattery/blob/master/CHANGELOG.md).
 
@@ -30,16 +30,26 @@ body:
       required: true
 
   - type: input
-    id: driver_version
+    id: driver_version_installed
     attributes:
-      label: Driver version
+      label: Driver version of the currently installed driver
       description: |
-        Visible in the [driver log files](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`.
+        Visible in the [driver log files](https://mr-manuel.github.io/venus-os_dbus-serialbattery/troubleshoot/#driver-log-files) or in the remote console/GUI under `SerialBattery` -> `Device` -> `Firmware version`.
 
         ⚠️ **IMPORTANT:** Do not write `latest` and specify the exact version number, else we cannot help you.
       placeholder: e.g. v1.0.20230927beta
     validations:
       required: true
+
+  - type: input
+    id: driver_version_last_working
+    attributes:
+      label: Driver version of the last known working driver
+      description: |
+        Insert the version of the driver where the bug was not present. If you don't know, leave it empty.
+      placeholder: e.g. v1.0.20230927beta
+    validations:
+      required: false
 
   - type: dropdown
     id: venus_os_device_type
@@ -79,20 +89,23 @@ body:
       label: BMS type
       description: Select your used BMS type.
       multiple: true
-      # https://louisvdw.github.io/dbus-serialbattery/general/supported-bms
+      # https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/supported-bms
       options:
         - ANT BMS
-        - Daly Smart BMS
+        - Daly BMS
         - ECS GreenMeter
-        - HLPdataBMS4S
-        - JKBMS / Heltec BMS
-        - Life/Tian Power
+        - EG4 LiFePower (Revov, Tian Power)
+        - EG4 LL
+        - Hektec Modbus SmartBMS / YanYang BMS
+        - HLPdata BMS4S
+        - Jiabaida JDB BMS (LLT Power, Overkill Solar, Smart BMS)
+        - JKBMS (Heltec BMS)
+        - JKBMS Inverter
         - MNB spi BMS
         - Renogy BMS
-        - Revov
         - Seplos
+        - Seplos v3
         - Sinowealth
-        - Smart BMS (LLT, JBD, Overkill Solar)
     validations:
       required: true
 
@@ -132,7 +145,7 @@ body:
     attributes:
       label: Config file
       description: |
-        Paste your config file here. See [here](https://louisvdw.github.io/dbus-serialbattery/general/install#settings-locationpath) where you can find it. The content will be automatically formatted into code, so no need for backticks.
+        Paste your `config.ini` file here. See [here](https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/install#settings-locationpath) where you can find it. DO NOT COPY the `config.default.ini` here. The content will be automatically formatted into code, so no need for backticks.
       render: ini
     validations:
       required: true
@@ -142,7 +155,7 @@ body:
     attributes:
       label: Relevant log output
       description: |
-        Please copy and paste any relevant log output here. See [here](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. The content will be automatically formatted into code, so no need for backticks.
+        Please copy and paste any relevant log output here. See [here](https://mr-manuel.github.io/venus-os_dbus-serialbattery/troubleshoot/#driver-log-files) how to get the driver log files. The content will be automatically formatted into code, so no need for backticks.
         ⚠️ **IMPORTANT:** Do not forget to pipe the output through `tai64nlocal`, if you don't copy the commands from the documentation.
       render: shell
     validations:
