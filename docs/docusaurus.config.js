@@ -135,9 +135,27 @@ const config = {
         }),
 
     scripts: [{
+        src: `/${projectName}/redirect.js`,
+        async: false
+    },{
         src: `/${projectName}/matomo.js`,
         async: true
     }],
+    plugins: [
+        [
+            '@docusaurus/plugin-client-redirects',
+            {
+                redirects: [
+                    {
+                        // from page does not have to exist
+                        from: '/troubleshoot/faq',
+                        to: '/faq',
+                    },
+                ],
+            },
+        ],
+    ],
+
 };
 
 module.exports = config;

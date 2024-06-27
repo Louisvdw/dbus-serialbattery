@@ -4,6 +4,12 @@ title: Features
 sidebar_position: 2
 ---
 
+<!-- redirect to new documentation -->
+<head>
+  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/features" />
+  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/features" />
+</head>
+
 # Features
 
 The driver can handle batteries from 3 to 32 cells. It will act as Battery Monitor inside Venus OS and update the following values:

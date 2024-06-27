@@ -7,6 +7,12 @@ toc_min_heading_level: 2
 toc_max_heading_level: 4
 ---
 
+<!-- redirect to new documentation -->
+<head>
+  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/install" />
+  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/install" />
+</head>
+
 # How to install, update, disable, enable and uninstall
 
 ## 🚨 NB! Before you begin

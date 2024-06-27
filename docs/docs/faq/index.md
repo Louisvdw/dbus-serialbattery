@@ -4,6 +4,12 @@ title: FAQ (Frequently Asked Questions)
 sidebar_position: 3
 ---
 
+<!-- redirect to new documentation -->
+<head>
+  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery/faq" />
+  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery/faq" />
+</head>
+
 # FAQ (Frequently Asked Questions)
 
 ## How to change the default limits
