@@ -60,6 +60,8 @@
 
 ## v1.4.x
 * Added: EG4 LL BMS by @tuxntoast
+* Added: Show details about driver internals in GUI -> Serialbattery -> Parameters by setting `GUI_PARAMETERS_SHOW_ADDITIONAL_INFO` to `True` by @mr-manuel
+* Changed: Optimized code and error handling by @mr-manuel
 * Changed: Renamed Lifepower to EG4_Lifepower by @mr-manuel
 
 ## v1.3.20240624

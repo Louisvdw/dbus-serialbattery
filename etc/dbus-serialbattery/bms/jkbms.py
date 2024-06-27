@@ -13,11 +13,15 @@ class Jkbms(Battery):
         self.type = self.BATTERYTYPE
         self.unique_identifier_tmp = ""
 
-    BATTERYTYPE = "Jkbms"
+    BATTERYTYPE = "JKBMS"
     LENGTH_CHECK = 1
     LENGTH_POS = 2
     LENGTH_SIZE = "H"
     CURRENT_ZERO_CONSTANT = 32768
+    # byte 5 to 8 is the BMS terminal number
+    # byte 5 is default 0x00
+    # byte 6 to 8 is the dimension or ID number
+    # to test with a RS485 adapter where the address can be set
     command_status = b"\x4E\x57\x00\x13\x00\x00\x00\x00\x06\x03\x00\x00\x00\x00\x00\x00\x68\x00\x00\x01\x29"
 
     def test_connection(self):

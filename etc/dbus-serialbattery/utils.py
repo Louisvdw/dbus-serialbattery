@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.4.20240625dev"
+DRIVER_VERSION = "1.4.20240627dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -58,7 +58,9 @@ errors_in_config = []
 # save config values to constants
 
 # --------- Battery Current limits ---------
-MAX_BATTERY_CHARGE_CURRENT = float(config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"])
+MAX_BATTERY_CHARGE_CURRENT: float = float(
+    config["DEFAULT"]["MAX_BATTERY_CHARGE_CURRENT"]
+)
 """
 Defines the maximum charge current that the battery can accept.
 """
@@ -70,14 +72,14 @@ Defines the maximum discharge current that the battery can deliver.
 """
 
 # --------- Cell Voltages ---------
-MIN_CELL_VOLTAGE = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
+MIN_CELL_VOLTAGE: float = float(config["DEFAULT"]["MIN_CELL_VOLTAGE"])
 """
 Defines the minimum cell voltage that the battery can have.
 Used for:
 - Limit CVL range
 - SoC calculation (if enabled)
 """
-MAX_CELL_VOLTAGE = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
+MAX_CELL_VOLTAGE: float = float(config["DEFAULT"]["MAX_CELL_VOLTAGE"])
 """
 Defines the maximum cell voltage that the battery can have.
 Used for:
@@ -85,7 +87,7 @@ Used for:
 - SoC calculation (if enabled)
 """
 
-FLOAT_CELL_VOLTAGE = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
+FLOAT_CELL_VOLTAGE: float = float(config["DEFAULT"]["FLOAT_CELL_VOLTAGE"])
 """
 Defines the cell voltage that the battery should have when it is fully charged.
 """
@@ -104,7 +106,7 @@ if FLOAT_CELL_VOLTAGE < MIN_CELL_VOLTAGE:
         + "To ensure that the driver still works correctly, FLOAT_CELL_VOLTAGE was set to MIN_CELL_VOLTAGE. Please check the configuration."
     )
 
-SOC_RESET_VOLTAGE = float(config["DEFAULT"]["SOC_RESET_VOLTAGE"])
+SOC_RESET_VOLTAGE: float = float(config["DEFAULT"]["SOC_RESET_VOLTAGE"])
 # make some checks for most common missconfigurations
 if SOC_RESET_VOLTAGE < MAX_CELL_VOLTAGE:
     SOC_RESET_VOLTAGE = MAX_CELL_VOLTAGE
@@ -119,64 +121,64 @@ SOC_RESET_AFTER_DAYS = (
 )
 
 # --------- BMS disconnect behaviour ---------
-BLOCK_ON_DISCONNECT = "True" == config["DEFAULT"]["BLOCK_ON_DISCONNECT"]
+BLOCK_ON_DISCONNECT: bool = "True" == config["DEFAULT"]["BLOCK_ON_DISCONNECT"]
 
 # --------- Charge mode ---------
-LINEAR_LIMITATION_ENABLE = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
-LINEAR_RECALCULATION_EVERY = int(config["DEFAULT"]["LINEAR_RECALCULATION_EVERY"])
-LINEAR_RECALCULATION_ON_PERC_CHANGE = int(
+LINEAR_LIMITATION_ENABLE: bool = "True" == config["DEFAULT"]["LINEAR_LIMITATION_ENABLE"]
+LINEAR_RECALCULATION_EVERY: int = int(config["DEFAULT"]["LINEAR_RECALCULATION_EVERY"])
+LINEAR_RECALCULATION_ON_PERC_CHANGE: int = int(
     config["DEFAULT"]["LINEAR_RECALCULATION_ON_PERC_CHANGE"]
 )
 
 # --------- External current sensor ---------
-EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE = (
+EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE: str = (
     config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE"]
     if config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE"] != ""
     else None
 )
-EXTERNAL_CURRENT_SENSOR_DBUS_PATH = (
+EXTERNAL_CURRENT_SENSOR_DBUS_PATH: str = (
     config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_PATH"]
     if config["DEFAULT"]["EXTERNAL_CURRENT_SENSOR_DBUS_PATH"] != ""
     else None
 )
 
 # --------- Charge Voltage limitation (affecting CVL) ---------
-CVCM_ENABLE = "True" == config["DEFAULT"]["CVCM_ENABLE"]
+CVCM_ENABLE: bool = "True" == config["DEFAULT"]["CVCM_ENABLE"]
 """
 Charge voltage control management
 
 Limits max charging voltage (CVL). Switch from max to float voltage and back.
 """
 
-CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL = float(
+CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL: float = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL"]
 )
-CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART = float(
+CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART: float = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART"]
 )
-CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT = float(
+CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT: float = float(
     config["DEFAULT"]["CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT"]
 )
 
-MAX_VOLTAGE_TIME_SEC = int(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
-SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT = int(
+MAX_VOLTAGE_TIME_SEC: int = int(config["DEFAULT"]["MAX_VOLTAGE_TIME_SEC"])
+SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT: int = int(
     config["DEFAULT"]["SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT"]
 )
 
-CCCM_CV_ENABLE = "True" == config["DEFAULT"]["CCCM_CV_ENABLE"]
+CCCM_CV_ENABLE: bool = "True" == config["DEFAULT"]["CCCM_CV_ENABLE"]
 """
 Charge current control management referring to cell-voltage
 """
 
-DCCM_CV_ENABLE = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
+DCCM_CV_ENABLE: bool = "True" == config["DEFAULT"]["DCCM_CV_ENABLE"]
 """
 Discharge current control management referring to cell-voltage
 """
 
-CELL_VOLTAGES_WHILE_CHARGING = _get_list_from_config(
+CELL_VOLTAGES_WHILE_CHARGING: list = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_CHARGING", lambda v: float(v)
 )
-MAX_CHARGE_CURRENT_CV = _get_list_from_config(
+MAX_CHARGE_CURRENT_CV: list = _get_list_from_config(
     "DEFAULT",
     "MAX_CHARGE_CURRENT_CV_FRACTION",
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
@@ -206,10 +208,10 @@ if MAX_BATTERY_CHARGE_CURRENT not in MAX_CHARGE_CURRENT_CV:
         + "there is no value set to 1. This means that the battery will never use the maximum charge current. Please check the configuration."
     )
 
-CELL_VOLTAGES_WHILE_DISCHARGING = _get_list_from_config(
+CELL_VOLTAGES_WHILE_DISCHARGING: list = _get_list_from_config(
     "DEFAULT", "CELL_VOLTAGES_WHILE_DISCHARGING", lambda v: float(v)
 )
-MAX_DISCHARGE_CURRENT_CV = _get_list_from_config(
+MAX_DISCHARGE_CURRENT_CV: list = _get_list_from_config(
     "DEFAULT",
     "MAX_DISCHARGE_CURRENT_CV_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
@@ -233,24 +235,24 @@ if MAX_BATTERY_DISCHARGE_CURRENT not in MAX_DISCHARGE_CURRENT_CV:
 
 # --------- Cell Voltage limitation (affecting CVL) ---------
 
-CVL_ICONTROLLER_MODE = "True" == config["DEFAULT"]["CVL_ICONTROLLER_MODE"]
-CVL_ICONTROLLER_FACTOR = float(config["DEFAULT"]["CVL_ICONTROLLER_FACTOR"])
+CVL_ICONTROLLER_MODE: bool = "True" == config["DEFAULT"]["CVL_ICONTROLLER_MODE"]
+CVL_ICONTROLLER_FACTOR: float = float(config["DEFAULT"]["CVL_ICONTROLLER_FACTOR"])
 
 # --------- Temperature limitation (affecting CCL/DCL) ---------
-CCCM_T_ENABLE = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
+CCCM_T_ENABLE: bool = "True" == config["DEFAULT"]["CCCM_T_ENABLE"]
 """
 Charge current control management referring to temperature
 """
 
-DCCM_T_ENABLE = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
+DCCM_T_ENABLE: bool = "True" == config["DEFAULT"]["DCCM_T_ENABLE"]
 """
 Discharge current control management referring to temperature
 """
 
-TEMPERATURES_WHILE_CHARGING = _get_list_from_config(
+TEMPERATURES_WHILE_CHARGING: list = _get_list_from_config(
     "DEFAULT", "TEMPERATURES_WHILE_CHARGING", lambda v: float(v)
 )
-MAX_CHARGE_CURRENT_T = _get_list_from_config(
+MAX_CHARGE_CURRENT_T: list = _get_list_from_config(
     "DEFAULT",
     "MAX_CHARGE_CURRENT_T_FRACTION",
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
@@ -262,10 +264,10 @@ if MAX_BATTERY_CHARGE_CURRENT not in MAX_CHARGE_CURRENT_T:
         + "there is no value set to 1. This means that the battery will never use the maximum discharge current. Please check the configuration."
     )
 
-TEMPERATURES_WHILE_DISCHARGING = _get_list_from_config(
+TEMPERATURES_WHILE_DISCHARGING: list = _get_list_from_config(
     "DEFAULT", "TEMPERATURES_WHILE_DISCHARGING", lambda v: float(v)
 )
-MAX_DISCHARGE_CURRENT_T = _get_list_from_config(
+MAX_DISCHARGE_CURRENT_T: list = _get_list_from_config(
     "DEFAULT",
     "MAX_DISCHARGE_CURRENT_T_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
@@ -278,20 +280,20 @@ if MAX_BATTERY_DISCHARGE_CURRENT not in MAX_DISCHARGE_CURRENT_T:
     )
 
 # --------- SOC limitation (affecting CCL/DCL) ---------
-CCCM_SOC_ENABLE = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
+CCCM_SOC_ENABLE: bool = "True" == config["DEFAULT"]["CCCM_SOC_ENABLE"]
 """
 Charge current control management referring to SoC
 """
 
-DCCM_SOC_ENABLE = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
+DCCM_SOC_ENABLE: bool = "True" == config["DEFAULT"]["DCCM_SOC_ENABLE"]
 """
 Discharge current control management referring to SoC
 """
 
-SOC_WHILE_CHARGING = _get_list_from_config(
+SOC_WHILE_CHARGING: list = _get_list_from_config(
     "DEFAULT", "SOC_WHILE_CHARGING", lambda v: float(v)
 )
-MAX_CHARGE_CURRENT_SOC = _get_list_from_config(
+MAX_CHARGE_CURRENT_SOC: list = _get_list_from_config(
     "DEFAULT",
     "MAX_CHARGE_CURRENT_SOC_FRACTION",
     lambda v: MAX_BATTERY_CHARGE_CURRENT * float(v),
@@ -303,10 +305,10 @@ if MAX_BATTERY_CHARGE_CURRENT not in MAX_CHARGE_CURRENT_SOC:
         + "there is no value set to 1. This means that the battery will never use the maximum charge current. Please check the configuration."
     )
 
-SOC_WHILE_DISCHARGING = _get_list_from_config(
+SOC_WHILE_DISCHARGING: list = _get_list_from_config(
     "DEFAULT", "SOC_WHILE_DISCHARGING", lambda v: float(v)
 )
-MAX_DISCHARGE_CURRENT_SOC = _get_list_from_config(
+MAX_DISCHARGE_CURRENT_SOC: list = _get_list_from_config(
     "DEFAULT",
     "MAX_DISCHARGE_CURRENT_SOC_FRACTION",
     lambda v: MAX_BATTERY_DISCHARGE_CURRENT * float(v),
@@ -319,99 +321,102 @@ if MAX_BATTERY_DISCHARGE_CURRENT not in MAX_DISCHARGE_CURRENT_SOC:
     )
 
 # --------- Time-To-Go ---------
-TIME_TO_GO_ENABLE = "True" == config["DEFAULT"]["TIME_TO_GO_ENABLE"]
+TIME_TO_GO_ENABLE: bool = "True" == config["DEFAULT"]["TIME_TO_GO_ENABLE"]
 
 # --------- Time-To-Soc ---------
-TIME_TO_SOC_POINTS = _get_list_from_config(
+TIME_TO_SOC_POINTS: list = _get_list_from_config(
     "DEFAULT", "TIME_TO_SOC_POINTS", lambda v: int(v)
 )
-TIME_TO_SOC_VALUE_TYPE = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
-TIME_TO_SOC_RECALCULATE_EVERY = (
+TIME_TO_SOC_VALUE_TYPE: int = int(config["DEFAULT"]["TIME_TO_SOC_VALUE_TYPE"])
+TIME_TO_SOC_RECALCULATE_EVERY: int = (
     int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"])
     if int(config["DEFAULT"]["TIME_TO_SOC_RECALCULATE_EVERY"]) > 5
     else 5
 )
-TIME_TO_SOC_INC_FROM = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
+TIME_TO_SOC_INC_FROM: bool = "True" == config["DEFAULT"]["TIME_TO_SOC_INC_FROM"]
 
 # --------- SOC calculation ---------
-SOC_CALCULATION = "True" == config["DEFAULT"]["SOC_CALCULATION"]
-SOC_RESET_CURRENT = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
-SOC_RESET_TIME = int(config["DEFAULT"]["SOC_RESET_TIME"])
-SOC_CALC_CURRENT_REPORTED_BY_BMS = _get_list_from_config(
+SOC_CALCULATION: bool = "True" == config["DEFAULT"]["SOC_CALCULATION"]
+SOC_RESET_CURRENT: float = float(config["DEFAULT"]["SOC_RESET_CURRENT"])
+SOC_RESET_TIME: int = int(config["DEFAULT"]["SOC_RESET_TIME"])
+SOC_CALC_CURRENT_REPORTED_BY_BMS: list = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_REPORTED_BY_BMS", lambda v: float(v)
 )
-SOC_CALC_CURRENT_MEASURED_BY_USER = _get_list_from_config(
+SOC_CALC_CURRENT_MEASURED_BY_USER: list = _get_list_from_config(
     "DEFAULT", "SOC_CALC_CURRENT_MEASURED_BY_USER", lambda v: float(v)
 )
 # check if lists are different
 # this allows to calculate linear relationship between the two lists only if needed
 if SOC_CALC_CURRENT_REPORTED_BY_BMS == SOC_CALC_CURRENT_MEASURED_BY_USER:
-    SOC_CALC_CURRENT = False
+    SOC_CALC_CURRENT: bool = False
 else:
-    SOC_CALC_CURRENT = True
+    SOC_CALC_CURRENT: bool = True
 
 # --------- Additional settings ---------
-BMS_TYPE = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
+BMS_TYPE: list = _get_list_from_config("DEFAULT", "BMS_TYPE", lambda v: str(v))
 
-EXCLUDED_DEVICES = _get_list_from_config(
+EXCLUDED_DEVICES: list = _get_list_from_config(
     "DEFAULT", "EXCLUDED_DEVICES", lambda v: str(v)
 )
 
-POLL_INTERVAL = (
+POLL_INTERVAL: float = (
     float(config["DEFAULT"]["POLL_INTERVAL"]) * 1000
     if config["DEFAULT"]["POLL_INTERVAL"] != ""
     else None
 )
 
 # Auto reset SoC
-AUTO_RESET_SOC = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
+AUTO_RESET_SOC: bool = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
 
 # Publish the config settings to the dbus path "/Info/Config/"
-PUBLISH_CONFIG_VALUES = "True" == config["DEFAULT"]["PUBLISH_CONFIG_VALUES"]
+PUBLISH_CONFIG_VALUES: bool = "True" == config["DEFAULT"]["PUBLISH_CONFIG_VALUES"]
 
-BATTERY_CELL_DATA_FORMAT = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
+BATTERY_CELL_DATA_FORMAT: int = int(config["DEFAULT"]["BATTERY_CELL_DATA_FORMAT"])
 
-MIDPOINT_ENABLE = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
+MIDPOINT_ENABLE: bool = "True" == config["DEFAULT"]["MIDPOINT_ENABLE"]
 
-TEMP_BATTERY = int(config["DEFAULT"]["TEMP_BATTERY"])
+TEMP_BATTERY: int = int(config["DEFAULT"]["TEMP_BATTERY"])
 
-TEMP_1_NAME = config["DEFAULT"]["TEMP_1_NAME"]
-TEMP_2_NAME = config["DEFAULT"]["TEMP_2_NAME"]
-TEMP_3_NAME = config["DEFAULT"]["TEMP_3_NAME"]
-TEMP_4_NAME = config["DEFAULT"]["TEMP_4_NAME"]
+TEMP_1_NAME: str = config["DEFAULT"]["TEMP_1_NAME"]
+TEMP_2_NAME: str = config["DEFAULT"]["TEMP_2_NAME"]
+TEMP_3_NAME: str = config["DEFAULT"]["TEMP_3_NAME"]
+TEMP_4_NAME: str = config["DEFAULT"]["TEMP_4_NAME"]
 
+GUI_PARAMETERS_SHOW_ADDITIONAL_INFO: bool = (
+    "True" == config["DEFAULT"]["GUI_PARAMETERS_SHOW_ADDITIONAL_INFO"]
+)
 # --------- BMS specific settings ---------
 
 # -- Unique ID settings
-USE_PORT_AS_UNIQUE_ID = "True" == config["DEFAULT"]["USE_PORT_AS_UNIQUE_ID"]
+USE_PORT_AS_UNIQUE_ID: bool = "True" == config["DEFAULT"]["USE_PORT_AS_UNIQUE_ID"]
 
 # -- LltJbd settings
-SOC_LOW_WARNING = float(config["DEFAULT"]["SOC_LOW_WARNING"])
-SOC_LOW_ALARM = float(config["DEFAULT"]["SOC_LOW_ALARM"])
+SOC_LOW_WARNING: float = float(config["DEFAULT"]["SOC_LOW_WARNING"])
+SOC_LOW_ALARM: float = float(config["DEFAULT"]["SOC_LOW_ALARM"])
 
 # -- Daly settings
-BATTERY_CAPACITY = float(config["DEFAULT"]["BATTERY_CAPACITY"])
-INVERT_CURRENT_MEASUREMENT = int(config["DEFAULT"]["INVERT_CURRENT_MEASUREMENT"])
+BATTERY_CAPACITY: float = float(config["DEFAULT"]["BATTERY_CAPACITY"])
+INVERT_CURRENT_MEASUREMENT: int = int(config["DEFAULT"]["INVERT_CURRENT_MEASUREMENT"])
 
 # -- JK BMS settings
-JKBMS_CAN_CELL_COUNT = int(config["DEFAULT"]["JKBMS_CAN_CELL_COUNT"])
+JKBMS_CAN_CELL_COUNT: int = int(config["DEFAULT"]["JKBMS_CAN_CELL_COUNT"])
 
 # -- ESC GreenMeter and Lipro device settings
-GREENMETER_ADDRESS = int(config["DEFAULT"]["GREENMETER_ADDRESS"])
-LIPRO_START_ADDRESS = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
-LIPRO_END_ADDRESS = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
-LIPRO_CELL_COUNT = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
+GREENMETER_ADDRESS: int = int(config["DEFAULT"]["GREENMETER_ADDRESS"])
+LIPRO_START_ADDRESS: int = int(config["DEFAULT"]["LIPRO_START_ADDRESS"])
+LIPRO_END_ADDRESS: int = int(config["DEFAULT"]["LIPRO_END_ADDRESS"])
+LIPRO_CELL_COUNT: int = int(config["DEFAULT"]["LIPRO_CELL_COUNT"])
 
 # -- HeltecModbus device settings
-HELTEC_MODBUS_ADDR = _get_list_from_config(
+HELTEC_MODBUS_ADDR: list = _get_list_from_config(
     "DEFAULT", "HELTEC_MODBUS_ADDR", lambda v: int(v)
 )
 
 # -- Seplos V3 settings
-SEPLOS_USE_BMS_VALUES = "True" == config["DEFAULT"]["SEPLOS_USE_BMS_VALUES"]
+SEPLOS_USE_BMS_VALUES: bool = "True" == config["DEFAULT"]["SEPLOS_USE_BMS_VALUES"]
 
 # --------- Battery monitor specific settings ---------
-VOLTAGE_DROP = float(config["DEFAULT"]["VOLTAGE_DROP"])
+VOLTAGE_DROP: float = float(config["DEFAULT"]["VOLTAGE_DROP"])
 
 
 # --------- Functions ---------
