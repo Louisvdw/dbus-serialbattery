@@ -5,8 +5,10 @@ The driver will communicate with a Battery Management System (BMS) that support 
 
 ## History
 The first version of this driver was released by [Louisvdw](https://github.com/Louisvdw/dbus-serialbattery) in September 2020.
-In February 2023 I (mr-manuel) made my first PR, since Louis did not have time anymore to contribute to this project.
-With the release of `v1.0.0` I became the main developer of this project and since then I'm maintaining and updating it.
+
+In February 2023 I ([mr-manuel](https://github.com/mr-manuel)) made my first PR, since Louis did not have time anymore to contribute to this project.
+
+With the release of `v1.0.0` I became the main developer of this project. From then on, I have been maintaining the project and developing it further. I'm also solving 99% of the issues on GitHub.
 
 A big thanks to [Louisvdw](https://github.com/Louisvdw/dbus-serialbattery) for the initiation of this project.
 

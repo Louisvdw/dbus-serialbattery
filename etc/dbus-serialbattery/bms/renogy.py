@@ -42,7 +42,13 @@ class Renogy(Battery):
     # BMS warning and protection config
 
     def unique_identifier(self) -> str:
-        return self.serial_number
+        """
+        Override the unique_identifier method to return the serial number if it exists, else restore default method.
+        """
+        if self.serial_number is not None:
+            return self.serial_number
+        else:
+            return Battery.unique_identifier(self)
 
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
@@ -128,8 +134,13 @@ class Renogy(Battery):
         capacity = self.read_serial_data_renogy(self.command_capacity)
         self.capacity = unpack(">L", capacity)[0] / 1000.0
 
-        serial_number = self.read_serial_data_renogy(self.command_serial_number)
-        self.serial_number = unpack("16s", serial_number)[0].decode("utf-8")
+        try:
+            serial_number = self.read_serial_data_renogy(self.command_serial_number)
+            self.serial_number = unpack("16s", serial_number)[0].decode("utf-8")
+        except Exception:
+            logger.debug(f"serial number: {serial_number}")
+            self.serial_number = None
+            pass
 
         return True
 

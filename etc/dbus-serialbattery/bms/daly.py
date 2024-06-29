@@ -114,7 +114,7 @@ class Daly(Battery):
                 result = self.read_soc_data(ser)
                 self.reset_soc = self.soc if self.soc else 0
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_soc_data - result: "
                         + str(result)
                         + " - runtime: "
@@ -124,7 +124,7 @@ class Daly(Battery):
 
                 result = self.read_fed_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_fed_data - result: "
                         + str(result)
                         + " - runtime: "
@@ -134,7 +134,7 @@ class Daly(Battery):
 
                 result = self.read_cell_voltage_range_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_cell_voltage_range_data - result: "
                         + str(result)
                         + " - runtime: "
@@ -144,7 +144,7 @@ class Daly(Battery):
 
                 self.write_soc_and_datetime(ser)
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: write_soc_and_datetime - result: "
                         + str(result)
                         + " - runtime: "
@@ -154,7 +154,7 @@ class Daly(Battery):
 
                 result = self.read_alarm_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_alarm_data - result: "
                         + str(result)
                         + " - runtime: "
@@ -164,7 +164,7 @@ class Daly(Battery):
 
                 result = self.read_temperature_range_data(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_temperature_range_data - result: "
                         + str(result)
                         + " - runtime: "
@@ -174,7 +174,7 @@ class Daly(Battery):
 
                 result = self.read_balance_state(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_balance_state - result: "
                         + str(result)
                         + " - runtime: "
@@ -184,7 +184,7 @@ class Daly(Battery):
 
                 result = self.read_cells_volts(ser) and result
                 if self.runtime > 0.200:  # TROUBLESHOOTING for no reply errors
-                    logger.info(
+                    logger.debug(
                         "  |- refresh_data: read_cells_volts - result: "
                         + str(result)
                         + " - runtime: "
@@ -201,7 +201,10 @@ class Daly(Battery):
             logger.warning("Couldn't open serial port")
 
         if not result:  # TROUBLESHOOTING for no reply errors
-            logger.info("refresh_data: result: " + str(result))
+            logger.info(
+                f"refresh_data: result: {result}."
+                + " If you don't see this warning very often, you can ignore it."
+            )
 
         return result
 

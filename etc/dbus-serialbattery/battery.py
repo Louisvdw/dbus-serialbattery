@@ -174,7 +174,11 @@ class Battery(ABC):
         :return: the unique identifier
         """
         if utils.USE_PORT_AS_UNIQUE_ID:
-            return self.port
+            return self.port + (
+                "__" + utils.bytearray_to_string(self.address).replace("\\", "0")
+                if self.address is not None
+                else ""
+            )
         else:
             string = (
                 "".join(filter(str.isalnum, str(self.hardware_version))) + "_"
@@ -185,7 +189,15 @@ class Battery(ABC):
             return string
 
     def connection_name(self) -> str:
-        return "Serial " + self.port
+        return (
+            "Serial "
+            + self.port
+            + (
+                "__" + utils.bytearray_to_string(self.address).replace("\\", "0")
+                if self.address is not None
+                else ""
+            )
+        )
 
     def custom_name(self) -> str:
         return "SerialBattery(" + self.type + ")"

@@ -37,7 +37,7 @@ def _get_list_from_config(
 
 
 # Constants
-DRIVER_VERSION = "1.4.20240627dev"
+DRIVER_VERSION = "1.4.20240629dev"
 zero_char = chr(48)
 degree_sign = "\N{DEGREE SIGN}"
 
@@ -364,6 +364,9 @@ POLL_INTERVAL: float = (
     if config["DEFAULT"]["POLL_INTERVAL"] != ""
     else None
 )
+"""
+Poll interval in milliseconds
+"""
 
 # Auto reset SoC
 AUTO_RESET_SOC: bool = "True" == config["DEFAULT"]["AUTO_RESET_SOC"]
@@ -415,7 +418,7 @@ HELTEC_MODBUS_ADDR: list = _get_list_from_config(
 # -- Seplos V3 settings
 SEPLOS_USE_BMS_VALUES: bool = "True" == config["DEFAULT"]["SEPLOS_USE_BMS_VALUES"]
 
-# --------- Battery monitor specific settings ---------
+# --------- Voltage drop ---------
 VOLTAGE_DROP: float = float(config["DEFAULT"]["VOLTAGE_DROP"])
 
 

@@ -60,9 +60,11 @@
 
 ## v1.4.x
 * Added: EG4 LL BMS by @tuxntoast
+* Added: JKBMS PB Model with https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/39 by @KoljaWindeler
 * Added: Show details about driver internals in GUI -> Serialbattery -> Parameters by setting `GUI_PARAMETERS_SHOW_ADDITIONAL_INFO` to `True` by @mr-manuel
 * Changed: Optimized code and error handling by @mr-manuel
 * Changed: Renamed Lifepower to EG4_Lifepower by @mr-manuel
+* Changed: Renogy BMS - Fixes for unknown serial number by @mr-manuel
 
 ## v1.3.20240624
 * Added: Fields for debugging switch to float/bulk by @mr-manuel
