@@ -263,7 +263,6 @@ class DbusHelper:
                                     "AllowMaxVoltage could not be converted to type int: "
                                     + str(value["AllowMaxVoltage"])
                                 )
-                                pass
 
                         # check if the battery has CustomName set
                         if "CustomName" in value and value["CustomName"] != "":
@@ -287,7 +286,6 @@ class DbusHelper:
                                     "MaxVoltageStartTime could not be converted to type int: "
                                     + str(value["MaxVoltageStartTime"])
                                 )
-                                pass
 
                         # check if the battery has SocCalc set
                         # load SOC from dbus only if SOC_CALCULATION is enabled
@@ -307,7 +305,6 @@ class DbusHelper:
                                         "SocCalc could not be converted to type float: "
                                         + str(value["SocCalc"])
                                     )
-                                    pass
                             else:
                                 logger.debug("Soc_calc not found in dbus")
 
@@ -329,7 +326,6 @@ class DbusHelper:
                                     "SocResetLastReached could not be converted to type int: "
                                     + str(value["SocResetLastReached"])
                                 )
-                                pass
 
                     # check the last seen time and remove the battery it it was not seen for 30 days
                     elif "LastSeen" in value and int(value["LastSeen"]) < int(
@@ -481,9 +477,11 @@ class DbusHelper:
 
     # this function is called when the battery is initiated
     def setup_vedbus(self):
-        # Set up dbus service and device instance
-        # and notify of all the attributes we intend to update
-        # This is only called once when a battery is initiated
+        """
+        Set up dbus service and device instance
+        and notify of all the attributes we intend to update
+        This is only called once when a battery is initiated
+        """
         self.setup_instance()
         logger.info("%s" % (self._dbusname))
 
@@ -909,6 +907,8 @@ class DbusHelper:
 
         # Update battery extras
         self._dbusservice["/State"] = self.battery.state
+        # https://github.com/victronenergy/veutil/blob/master/inc/veutil/ve_regs_payload.h
+        # https://github.com/victronenergy/veutil/blob/master/src/qt/bms_error.cpp
         self._dbusservice["/ErrorCode"] = self.battery.error_code
         self._dbusservice["/History/ChargeCycles"] = self.battery.cycles
         self._dbusservice["/History/TotalAhDrawn"] = self.battery.total_ah_drawn

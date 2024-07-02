@@ -524,7 +524,7 @@ class Battery(ABC):
                     if self.soc_calc <= utils.SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT:
                         # set state to error, to show in the GUI that something is wrong
                         self.state = 10
-                        self.error_code = 31
+                        self.error_code = 8
 
                         # write to log, that reset to float was not possible
                         logger.error(

@@ -255,7 +255,7 @@ def main():
     # check config, if there are any invalid values trigger "settings incorrect" error
     if not utils.validate_config_values():
         battery.state = 10
-        battery.error_code = 31
+        battery.error_code = 119
 
     # use external current sensor if configured
     try:
