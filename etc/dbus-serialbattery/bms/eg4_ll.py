@@ -75,6 +75,9 @@ class EG4_LL(Battery):
     command_get_stats = b"\x01\x03\x00\x00\x00\x27\x05\xD0"  # Pulled from PC Client
     command_get_config = b"\x01\x03\x00\x2D\x00\x5B\x94\x38"  # Pulled from PC Client
 
+    def unique_identifier(self) -> str:
+        return self.serial_number
+
     def test_connection(self):
         # call a function that will connect to the battery, send a command and retrieve the result.
         # The result or call should be unique to this BMS. Battery name or version, etc.
@@ -158,7 +161,7 @@ class EG4_LL(Battery):
         self.version = (self.BATTERYTYPE + " ver ( " + str(result[0:29]), "utf-8" + ")")
         self.custom_field = result[2:27].decode("utf-8")
         self.hardware_version = result[27:33].decode("utf-8")
-        self.unique_identifier = result[33:49].decode("utf-8")
+        self.serial_number = result[33:49].decode("utf-8")
 
         return True
 
