@@ -150,7 +150,7 @@ class Jkbms_pb(Battery):
             status_data[22:26].decode("utf-8")
             + " / "
             + status_data[30:34].decode("utf-8")
-        )
+        ).replace("\x00", "")
         sw_version = status_data[30:34].decode("utf-8")  # will be overridden
 
         self.unique_identifier_tmp = serial_nr
