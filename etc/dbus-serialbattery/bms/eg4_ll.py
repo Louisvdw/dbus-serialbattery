@@ -235,7 +235,7 @@ class EG4_LL(Battery):
         self.cell_average = cell_average / self.cell_count
 
         if status_hex == "00":
-            status_code = "Stanby"
+            status_code = "Standby"
         elif status_hex == "01":
             status_code = "Charging"
         elif status_hex == "02":
@@ -352,7 +352,7 @@ class EG4_LL(Battery):
         logger.info("===== HW Info =====")
         logger.info(f"Battery Make/Model: {str(self.custom_field)}")
         logger.info(f"Hardware Version: {str(self.hardware_version)}")
-        logger.info(f"Serial Number: {str(self.unique_identifier)}")
+        logger.info(f"Serial Number: {str(self.unique_identifier())}")
         logger.info("===== BMS Data =====")
         logger.info(
             "Cell Total Voltage: "
