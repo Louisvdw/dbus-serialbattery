@@ -6,8 +6,8 @@ sidebar_position: 2
 
 <!-- redirect to new documentation -->
 <head>
-  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/features" />
-  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/features" />
+  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/features" />
+  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/features" />
 </head>
 
 # Features

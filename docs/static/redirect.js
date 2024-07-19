@@ -5,7 +5,7 @@ function redirect(){
         var url = window.location.href;
 
         url = url.replace(window.origin, 'https://mr-manuel.github.io');
-        url = url.replace('/dbus-serialbattery/', '/venus-os_dbus-serialbattery/');
+        url = url.replace('/dbus-serialbattery/', '/venus-os_dbus-serialbattery_docs/');
 
         // redirect to new domain
         console.log(url);

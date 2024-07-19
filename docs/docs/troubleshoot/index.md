@@ -9,8 +9,8 @@ toc_max_heading_level: 4
 
 <!-- redirect to new documentation -->
 <head>
-  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery/troubleshoot" />
-  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery/troubleshoot" />
+  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/troubleshoot" />
+  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/troubleshoot" />
 </head>
 
 # How to troubleshoot

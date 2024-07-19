@@ -9,8 +9,8 @@ toc_max_heading_level: 4
 
 <!-- redirect to new documentation -->
 <head>
-  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/supported-bms" />
-  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery/general/supported-bms" />
+  <meta http-equiv="refresh" content="1; url=https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/supported-bms" />
+  <link rel="canonical" href="https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/supported-bms" />
 </head>
 
 # Supported BMS
