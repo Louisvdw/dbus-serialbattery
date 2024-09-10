@@ -104,6 +104,8 @@ mkdir /opt/victronenergy/dbus-serialbattery/bms
 cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery &>/dev/null
 cp -f /data/etc/dbus-serialbattery/bms/* /opt/victronenergy/dbus-serialbattery/bms &>/dev/null
 cp -rf /data/etc/dbus-serialbattery/service /opt/victronenergy/service-templates/dbus-serialbattery
+chmod +x /opt/victronenergy/dbus-serialbattery/*.sh
+chmod +x /opt/victronenergy/service-templates/dbus-serialbattery/*
 bash /data/etc/dbus-serialbattery/install-qml.sh
 
 # check if serial-starter.d was deleted
