@@ -14,6 +14,7 @@ toc_max_heading_level: 4
 Disabled by default since driver version `v1.0.0` as it causes other issues. More informations can be found in [Add other use case (grid meter) or ignore devices - ANT BMS check missing](https://github.com/Louisvdw/dbus-serialbattery/issues/479) and if it was fixed. See [How to enable a disabled BMS](../general/install#how-to-enable-a-disabled-bms) to enable the BMS.
 
 ### &bull; Daly Smart BMS
+Parallel BMS supported via multiple USB-UART adapters or single/multiple USB-RS485 buses.
 Including:
 #### - Sinowealth based Daly BMS
 Disabled by default since driver version `v0.14.0` as it causes other issues. See [How to enable a disabled BMS](../general/install#how-to-enable-a-disabled-bms) to enable the BMS.

@@ -765,7 +765,7 @@ class Daly(Battery):
 
         # logger.info(f"reply: {utils.bytearray_to_string(reply)}")  # debug
 
-        if id != 1 or length != 8 or cmd != expected_reply[0]:
+        if (63 + id) != self.command_address[0] or length != 8 or cmd != expected_reply[0]:
             logger.debug(
                 f"read_sentence {utils.bytearray_to_string(expected_reply)}: wrong header"
             )

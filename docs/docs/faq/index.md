@@ -319,3 +319,9 @@ Now reboot the device. If this doesn't help, then download/unpack and reinstall 
 ## `tar: conf/serial-starter.d: Cannot open: File exists`
 
 See [this page](../general/install#downgrade-from--v100-to--v0143).
+
+## Configure multiple Daly BMS for parallel operation (or RS485 bus)
+Use Daly's Windows application `BMS Tools` to set the board number. (Not currently found on Daly's public site)
+Using the mobile app `SMART BMS` to set the board number will not correctly set it.
+Set a different board number for each BMS.
+Specify the board addresses via MODBUS_ADDRESSES in config.ini (see config.default.ini)
