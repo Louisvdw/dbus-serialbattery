@@ -1,6 +1,6 @@
 function redirect(){
     // redirect to new documentation
-    if(window.location.pathname !== '/dbus-serialbattery/' && window.origin !== 'http://localhost:3000') {
+    if(window.origin !== 'http://localhost:3000') {
 
         var url = window.location.href;
 
