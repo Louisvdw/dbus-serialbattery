@@ -7,7 +7,7 @@ Development of this driver continues in [@mr-manuel's](https://github.com/mr-man
 Many thanks to all the users who have used this driver.
 
 Greetings,<br>
-Louisvdw
+dbus-serialbattery Team
 
 -----
 
