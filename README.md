@@ -1,16 +1,29 @@
+# 🚨 This repository was archived 🚨
+
+After many months of inactivity, this repository has been archived for research purposes.
+
+Development of this driver continues in [@mr-manuel's](https://github.com/mr-manuel) repository, which can be found here: [github.com/mr-manuel/venus-os_dbus-serialbattery](https://github.com/mr-manuel/venus-os_dbus-serialbattery)
+
+Many thanks to all the users who have used this driver.
+
+Greetings,<br>
+dbus-serialbattery Team
+
+-----
+
 # dbus-serialbattery
 This is a driver for Venus OS devices (any GX device sold by Victron or a Raspberry Pi running the Venus OS image).
 
-The driver will communicate with a Battery Management System (BMS) that support serial (RS232, RS485 or TTL UART) and Bluetooth communication (see [BMS feature comparison](https://louisvdw.github.io/dbus-serialbattery/general/features#bms-feature-comparison) for details). The data is then published to the Venus OS system (dbus). The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter/charger.
+The driver will communicate with a Battery Management System (BMS) that support serial (RS232, RS485 or TTL UART) and Bluetooth communication (see [BMS feature comparison](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/features#bms-feature-comparison) for details). The data is then published to the Venus OS system (dbus). The main purpose is to act as a Battery Monitor in your GX and supply State of Charge (SoC) and other values to the inverter/charger.
 
 ## Documentation
 
-* [Introduction](https://louisvdw.github.io/dbus-serialbattery/)
-* [Features](https://louisvdw.github.io/dbus-serialbattery/general/features)
-* [Supported BMS](https://louisvdw.github.io/dbus-serialbattery/general/supported-bms)
-* [How to install, update, disable, enable and uninstall](https://louisvdw.github.io/dbus-serialbattery/general/install)
-* [How to troubleshoot](https://louisvdw.github.io/dbus-serialbattery/troubleshoot/)
-* [FAQ](https://louisvdw.github.io/dbus-serialbattery/faq/)
+* [Introduction](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/)
+* [Features](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/features)
+* [Supported BMS](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/supported-bms)
+* [How to install, update, disable, enable and uninstall](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/install)
+* [How to troubleshoot](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/troubleshoot/)
+* [FAQ](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/faq/)
 
 ### Supporting this project
 If you find this driver helpful please consider supporting this project. You can buy me a Ko-Fi or get in contact, if you would like to donate hardware for development.
@@ -37,7 +50,7 @@ velib_python to the `PYTHONPATH` environment variable.
 
 Make sure the GitHub Actions run fine in your repository. In order to make the GitHub Actions run please select in your repository settings under `Actions` -> `General` -> `Actions permissions` the option `Allow all actions and reusable workflows`. Check also in your repository settings under `Actions` -> `General` -> `Workflow permissions` if `Read and write permissions` are selected. This will check your code for Flake8 and Black Lint errors. [Here](https://py-vscode.readthedocs.io/en/latest/files/linting.html) is a short instruction on how to set up Flake8 and Black Lint checks in VS Code. This will save you a lot of time.
 
-See this checklist, if you want to [add a new BMS](https://louisvdw.github.io/dbus-serialbattery/general/supported-bms#add-by-opening-a-pull-request)
+See this checklist, if you want to [add a new BMS](https://mr-manuel.github.io/venus-os_dbus-serialbattery_docs/general/supported-bms#add-by-opening-a-pull-request)
 
 #### How it works
 * Each supported BMS needs to implement the abstract base class `Battery` from `battery.py`.
