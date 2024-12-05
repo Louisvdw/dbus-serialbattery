@@ -1,0 +1,22 @@
+name: New issue
+# title: ""
+labels: ["bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🚨 This repository was archived 🚨
+
+        After many months of inactivity, this repository has been archived for research purposes.
+
+        Development of this driver continues in [@mr-manuel's](https://github.com/mr-manuel) repository, which can be found here: [github.com/mr-manuel/venus-os_dbus-serialbattery](https://github.com/mr-manuel/venus-os_dbus-serialbattery)
+
+        DO NOT OPEN NEW ISSUES OR PULL REQUESTS IN THIS REPOSITORY.
+
+  - type: input
+    id: noinput
+    attributes:
+      label: Leave empty
+    validations:
+      required: true
