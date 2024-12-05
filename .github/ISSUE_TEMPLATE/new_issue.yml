@@ -1,4 +1,5 @@
 name: New issue
+description: Open a new issue
 # title: ""
 labels: ["bug"]
 assignees: []
